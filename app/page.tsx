@@ -5,14 +5,21 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { API_ENDPOINTS } from "@/lib/config";
 import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -26,29 +33,28 @@ export default function LoginPage() {
     try {
       // Llamada a la API de login
       const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al iniciar sesión');
+        throw new Error(data.message || "Error al iniciar sesión");
       }
 
       // Login exitoso
-      console.log('Login exitoso:', data);
-      
+      console.log("Login exitoso:", data);
+
       // Guardar en Zustand (que también guarda en localStorage)
       login(data.data.token, data.data.user);
 
       // Redirigir a sucursales
-      router.push('/sucursales');
-      
+      router.push("/sucursales");
     } catch (err: any) {
-      console.error('Error en login:', err);
-      setError(err.message || 'Error al conectar con el servidor');
+      console.error("Error en login:", err);
+      setError(err.message || "Error al conectar con el servidor");
     } finally {
       setIsLoading(false);
     }
@@ -59,23 +65,37 @@ export default function LoginPage() {
       {/* Efectos de fondo animados */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-[#2E7DDF]/30 to-[#0D4C92]/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-[#B88B5C]/20 to-[#2E7DDF]/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div
+          className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-[#B88B5C]/20 to-[#2E7DDF]/30 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
       </div>
 
       {/* Patrón de textura sutil */}
-      <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle, #FFFFFF 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+      <div
+        className="absolute inset-0 opacity-5"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, #FFFFFF 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+        }}
+      ></div>
 
       {/* Contenedor principal */}
       <div className="relative z-10 w-full max-w-md px-4">
         {/* Logo y título de la app */}
         <div className="mb-8 text-center">
           <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-2xl bg-white shadow-2xl shadow-[#0D4C92]/50 border-4 border-[#2E7DDF]/30">
-            <span className="text-5xl font-bold text-[#0D4C92] tracking-tighter">H</span>
+            <span className="text-5xl font-bold text-[#0D4C92] tracking-tighter">
+              H
+            </span>
           </div>
           <h1 className="text-5xl font-bold text-white mb-2 tracking-tight drop-shadow-lg">
             Heroica
           </h1>
-          <p className="text-white/90 text-lg font-medium">Sistema de Contabilidad</p>
+          <p className="text-white/90 text-lg font-medium">
+            Sistema de Contabilidad
+          </p>
         </div>
 
         {/* Card de login con efecto glassmorphism */}
@@ -111,7 +131,10 @@ export default function LoginPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-[#0D4C92] font-semibold">
+                <Label
+                  htmlFor="password"
+                  className="text-[#0D4C92] font-semibold"
+                >
                   Contraseña
                 </Label>
                 <Input

@@ -4,9 +4,22 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { API_ENDPOINTS } from "@/lib/config";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -26,7 +39,7 @@ export default function SucursalesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isHydrated, setIsHydrated] = useState(false);
-  
+
   // Estados para el modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -34,7 +47,7 @@ export default function SucursalesPage() {
     nombre: "",
     razon_social: "",
     cuit: "",
-    direccion: ""
+    direccion: "",
   });
 
   // Esperar a que Zustand se hidrate desde localStorage
@@ -48,7 +61,7 @@ export default function SucursalesPage() {
 
     // Verificar autenticación
     if (!isAuthenticated) {
-      router.push('/');
+      router.push("/");
       return;
     }
 
@@ -59,13 +72,13 @@ export default function SucursalesPage() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || 'Error al cargar sucursales');
+          throw new Error(data.message || "Error al cargar sucursales");
         }
 
         setSucursales(data.data);
       } catch (err: any) {
-        console.error('Error al cargar sucursales:', err);
-        setError(err.message || 'Error al cargar sucursales');
+        console.error("Error al cargar sucursales:", err);
+        setError(err.message || "Error al cargar sucursales");
       } finally {
         setIsLoading(false);
       }
@@ -76,12 +89,12 @@ export default function SucursalesPage() {
 
   const handleLogout = () => {
     logout();
-    router.push('/');
+    router.push("/");
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleCreateSucursal = async (e: React.FormEvent) => {
@@ -91,32 +104,31 @@ export default function SucursalesPage() {
 
     try {
       const response = await fetch(API_ENDPOINTS.SUCURSALES.CREATE, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al crear sucursal');
+        throw new Error(data.message || "Error al crear sucursal");
       }
 
       // Agregar la nueva sucursal a la lista
-      setSucursales(prev => [...prev, { ...data.data, activo: true }]);
-      
+      setSucursales((prev) => [...prev, { ...data.data, activo: true }]);
+
       // Cerrar modal y limpiar formulario
       setIsModalOpen(false);
       setFormData({
         nombre: "",
         razon_social: "",
         cuit: "",
-        direccion: ""
+        direccion: "",
       });
-
     } catch (err: any) {
-      console.error('Error al crear sucursal:', err);
-      setError(err.message || 'Error al crear sucursal');
+      console.error("Error al crear sucursal:", err);
+      setError(err.message || "Error al crear sucursal");
     } finally {
       setIsCreating(false);
     }
@@ -124,7 +136,9 @@ export default function SucursalesPage() {
 
   // Estados para el modal de eliminación
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [sucursalToDelete, setSucursalToDelete] = useState<Sucursal | null>(null);
+  const [sucursalToDelete, setSucursalToDelete] = useState<Sucursal | null>(
+    null,
+  );
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeleteClick = (e: React.MouseEvent, sucursal: Sucursal) => {
@@ -140,26 +154,28 @@ export default function SucursalesPage() {
     setError("");
 
     try {
-      const response = await fetch(API_ENDPOINTS.SUCURSALES.DELETE(sucursalToDelete.id), {
-        method: 'DELETE'
-      });
+      const response = await fetch(
+        API_ENDPOINTS.SUCURSALES.DELETE(sucursalToDelete.id),
+        {
+          method: "DELETE",
+        },
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al eliminar sucursal');
+        throw new Error(data.message || "Error al eliminar sucursal");
       }
 
       // Remover la sucursal de la lista
-      setSucursales(prev => prev.filter(s => s.id !== sucursalToDelete.id));
-      
+      setSucursales((prev) => prev.filter((s) => s.id !== sucursalToDelete.id));
+
       // Cerrar modal
       setDeleteModalOpen(false);
       setSucursalToDelete(null);
-
     } catch (err: any) {
-      console.error('Error al eliminar sucursal:', err);
-      setError(err.message || 'Error al eliminar sucursal');
+      console.error("Error al eliminar sucursal:", err);
+      setError(err.message || "Error al eliminar sucursal");
     } finally {
       setIsDeleting(false);
     }
@@ -211,7 +227,9 @@ export default function SucursalesPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h2 className="text-4xl font-bold text-white mb-2">Sucursales</h2>
-          <p className="text-white/80">Selecciona una sucursal para continuar</p>
+          <p className="text-white/80">
+            Selecciona una sucursal para continuar
+          </p>
         </div>
 
         {error && (
@@ -246,7 +264,11 @@ export default function SucursalesPage() {
                     stroke="currentColor"
                     className="w-4 h-4"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                    />
                   </svg>
                 </button>
 
@@ -260,20 +282,30 @@ export default function SucursalesPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
-                    <p className="text-xs text-[#A5A5A5] font-semibold uppercase">CUIT</p>
-                    <p className="text-sm text-[#0D4C92] font-medium">{sucursal.cuit}</p>
+                    <p className="text-xs text-[#A5A5A5] font-semibold uppercase">
+                      CUIT
+                    </p>
+                    <p className="text-sm text-[#0D4C92] font-medium">
+                      {sucursal.cuit}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#A5A5A5] font-semibold uppercase">Dirección</p>
-                    <p className="text-sm text-[#0D4C92]">{sucursal.direccion}</p>
+                    <p className="text-xs text-[#A5A5A5] font-semibold uppercase">
+                      Dirección
+                    </p>
+                    <p className="text-sm text-[#0D4C92]">
+                      {sucursal.direccion}
+                    </p>
                   </div>
                   <div className="pt-2">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      sucursal.activo 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {sucursal.activo ? '● Activa' : '● Inactiva'}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        sucursal.activo
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {sucursal.activo ? "● Activa" : "● Inactiva"}
                     </span>
                   </div>
                 </CardContent>
@@ -284,7 +316,9 @@ export default function SucursalesPage() {
 
         {!isLoading && sucursales.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-white/80 text-lg">No hay sucursales disponibles</p>
+            <p className="text-white/80 text-lg">
+              No hay sucursales disponibles
+            </p>
           </div>
         )}
       </main>
@@ -303,7 +337,11 @@ export default function SucursalesPage() {
           stroke="currentColor"
           className="w-8 h-8"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 4.5v15m7.5-7.5h-15"
+          />
         </svg>
       </button>
 
@@ -318,11 +356,14 @@ export default function SucursalesPage() {
               Completa los datos para crear una nueva sucursal
             </DialogDescription>
           </DialogHeader>
-          
+
           <form onSubmit={handleCreateSucursal}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="nombre" className="text-[#0D4C92] font-semibold">
+                <Label
+                  htmlFor="nombre"
+                  className="text-[#0D4C92] font-semibold"
+                >
                   Nombre de la Sucursal *
                 </Label>
                 <Input
@@ -337,7 +378,10 @@ export default function SucursalesPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="razon_social" className="text-[#0D4C92] font-semibold">
+                <Label
+                  htmlFor="razon_social"
+                  className="text-[#0D4C92] font-semibold"
+                >
                   Razón Social *
                 </Label>
                 <Input
@@ -367,7 +411,10 @@ export default function SucursalesPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="direccion" className="text-[#0D4C92] font-semibold">
+                <Label
+                  htmlFor="direccion"
+                  className="text-[#0D4C92] font-semibold"
+                >
                   Dirección *
                 </Label>
                 <Input
@@ -419,16 +466,23 @@ export default function SucursalesPage() {
               Confirmar Eliminación
             </DialogTitle>
             <DialogDescription className="text-[#A5A5A5]">
-              Esta acción no se puede deshacer. ¿Estás seguro de que deseas eliminar esta sucursal?
+              Esta acción no se puede deshacer. ¿Estás seguro de que deseas
+              eliminar esta sucursal?
             </DialogDescription>
           </DialogHeader>
-          
+
           {sucursalToDelete && (
             <div className="py-4 space-y-2">
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="font-semibold text-[#0D4C92]">{sucursalToDelete.nombre}</p>
-                <p className="text-sm text-[#A5A5A5]">{sucursalToDelete.razon_social}</p>
-                <p className="text-sm text-[#A5A5A5]">CUIT: {sucursalToDelete.cuit}</p>
+                <p className="font-semibold text-[#0D4C92]">
+                  {sucursalToDelete.nombre}
+                </p>
+                <p className="text-sm text-[#A5A5A5]">
+                  {sucursalToDelete.razon_social}
+                </p>
+                <p className="text-sm text-[#A5A5A5]">
+                  CUIT: {sucursalToDelete.cuit}
+                </p>
               </div>
             </div>
           )}

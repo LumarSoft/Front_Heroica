@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { API_ENDPOINTS } from "@/lib/config";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,7 +39,7 @@ interface Transaction {
   concepto: string;
   monto: number | string; // Puede venir como string desde la API
   descripcion?: string;
-  prioridad: 'baja' | 'media' | 'alta';
+  prioridad: "baja" | "media" | "alta";
   tipo_movimiento: string;
   estado: string;
 }
@@ -51,16 +57,17 @@ export default function CajaEfectivoPage() {
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [isStateDialogOpen, setIsStateDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Form data para el dialog de detalles
   const [formData, setFormData] = useState({
     fecha: "",
     concepto: "",
     monto: "",
     descripcion: "",
-    prioridad: "media" as 'baja' | 'media' | 'alta',
+    prioridad: "media" as "baja" | "media" | "alta",
   });
 
   // Estado para el cambio de estado
@@ -79,7 +86,7 @@ export default function CajaEfectivoPage() {
     if (!isHydrated) return;
 
     if (!isAuthenticated) {
-      router.push('/');
+      router.push("/");
       return;
     }
 
@@ -93,19 +100,20 @@ export default function CajaEfectivoPage() {
       setIsLoading(true);
       setError("");
 
-      const response = await fetch(API_ENDPOINTS.MOVIMIENTOS.GET_BY_SUCURSAL(Number(params.id)));
+      const response = await fetch(
+        API_ENDPOINTS.MOVIMIENTOS.GET_BY_SUCURSAL(Number(params.id)),
+      );
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al cargar movimientos');
+        throw new Error(data.message || "Error al cargar movimientos");
       }
 
       setSaldoReal(data.data.saldo_real || []);
       setSaldoNecesario(data.data.saldo_necesario || []);
-
     } catch (err: any) {
-      console.error('Error al cargar movimientos:', err);
-      setError(err.message || 'Error al cargar movimientos');
+      console.error("Error al cargar movimientos:", err);
+      setError(err.message || "Error al cargar movimientos");
     } finally {
       setIsLoading(false);
     }
@@ -114,27 +122,27 @@ export default function CajaEfectivoPage() {
   // Función para formatear fechas de ISO a dd/mm/aaaa
   const formatFecha = (fechaISO: string) => {
     const date = new Date(fechaISO);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
 
   // Función para formatear montos
   const formatMonto = (monto: number | string) => {
-    const montoNum = typeof monto === 'string' ? parseFloat(monto) : monto;
-    const formatted = new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
+    const montoNum = typeof monto === "string" ? parseFloat(monto) : monto;
+    const formatted = new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: "ARS",
     }).format(Math.abs(montoNum));
-    
+
     return montoNum < 0 ? `-${formatted}` : formatted;
   };
 
   // Función para calcular el total de una tabla
   const calcularTotal = (transactions: Transaction[]) => {
     return transactions.reduce((sum, t) => {
-      const monto = typeof t.monto === 'string' ? parseFloat(t.monto) : t.monto;
+      const monto = typeof t.monto === "string" ? parseFloat(t.monto) : t.monto;
       return sum + monto;
     }, 0);
   };
@@ -173,36 +181,38 @@ export default function CajaEfectivoPage() {
       setIsSaving(true);
       setError("");
 
-      const response = await fetch(API_ENDPOINTS.MOVIMIENTOS.UPDATE(selectedTransaction.id), {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fecha: formData.fecha,
-          concepto: formData.concepto,
-          monto: parseFloat(formData.monto),
-          descripcion: formData.descripcion,
-          prioridad: formData.prioridad,
-        }),
-      });
+      const response = await fetch(
+        API_ENDPOINTS.MOVIMIENTOS.UPDATE(selectedTransaction.id),
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fecha: formData.fecha,
+            concepto: formData.concepto,
+            monto: parseFloat(formData.monto),
+            descripcion: formData.descripcion,
+            prioridad: formData.prioridad,
+          }),
+        },
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al actualizar movimiento');
+        throw new Error(data.message || "Error al actualizar movimiento");
       }
 
       setSuccessMessage("Movimiento actualizado exitosamente");
       setIsDetailsDialogOpen(false);
-      
+
       // Recargar movimientos
       await fetchMovimientos();
 
       // Limpiar mensaje después de 3 segundos
       setTimeout(() => setSuccessMessage(""), 3000);
-
     } catch (err: any) {
-      console.error('Error al actualizar movimiento:', err);
-      setError(err.message || 'Error al actualizar movimiento');
+      console.error("Error al actualizar movimiento:", err);
+      setError(err.message || "Error al actualizar movimiento");
     } finally {
       setIsSaving(false);
     }
@@ -216,30 +226,32 @@ export default function CajaEfectivoPage() {
       setIsSaving(true);
       setError("");
 
-      const response = await fetch(API_ENDPOINTS.MOVIMIENTOS.UPDATE_ESTADO(selectedTransaction.id), {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: nuevoEstado }),
-      });
+      const response = await fetch(
+        API_ENDPOINTS.MOVIMIENTOS.UPDATE_ESTADO(selectedTransaction.id),
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ estado: nuevoEstado }),
+        },
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al cambiar estado');
+        throw new Error(data.message || "Error al cambiar estado");
       }
 
       setSuccessMessage("Estado actualizado exitosamente");
       setIsStateDialogOpen(false);
-      
+
       // Recargar movimientos
       await fetchMovimientos();
 
       // Limpiar mensaje después de 3 segundos
       setTimeout(() => setSuccessMessage(""), 3000);
-
     } catch (err: any) {
-      console.error('Error al cambiar estado:', err);
-      setError(err.message || 'Error al cambiar estado');
+      console.error("Error al cambiar estado:", err);
+      setError(err.message || "Error al cambiar estado");
     } finally {
       setIsSaving(false);
     }
@@ -253,37 +265,41 @@ export default function CajaEfectivoPage() {
       setIsSaving(true);
       setError("");
 
-      const response = await fetch(API_ENDPOINTS.MOVIMIENTOS.DELETE(selectedTransaction.id), {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        API_ENDPOINTS.MOVIMIENTOS.DELETE(selectedTransaction.id),
+        {
+          method: "DELETE",
+        },
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al eliminar movimiento');
+        throw new Error(data.message || "Error al eliminar movimiento");
       }
 
       setSuccessMessage("Movimiento eliminado exitosamente");
       setIsDeleteDialogOpen(false);
-      
+
       // Recargar movimientos
       await fetchMovimientos();
 
       // Limpiar mensaje después de 3 segundos
       setTimeout(() => setSuccessMessage(""), 3000);
-
     } catch (err: any) {
-      console.error('Error al eliminar movimiento:', err);
-      setError(err.message || 'Error al eliminar movimiento');
+      console.error("Error al eliminar movimiento:", err);
+      setError(err.message || "Error al eliminar movimiento");
     } finally {
       setIsSaving(false);
     }
   };
 
   // Manejar cambios en el formulario
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   if (!isHydrated || !isAuthenticated) {
@@ -295,17 +311,17 @@ export default function CajaEfectivoPage() {
   }
 
   // Componente de tabla reutilizable
-  const TransactionTable = ({ 
-    title, 
-    description, 
-    transactions 
-  }: { 
-    title: string; 
-    description: string; 
-    transactions: Transaction[] 
+  const TransactionTable = ({
+    title,
+    description,
+    transactions,
+  }: {
+    title: string;
+    description: string;
+    transactions: Transaction[];
   }) => {
     const total = calcularTotal(transactions);
-    
+
     return (
       <Card className="border-white/20 bg-white/95 backdrop-blur-xl shadow-xl">
         <CardHeader>
@@ -320,7 +336,9 @@ export default function CajaEfectivoPage() {
             </div>
             <div className="text-right">
               <p className="text-sm text-[#A5A5A5] font-medium">Total</p>
-              <p className={`text-2xl font-bold ${total >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <p
+                className={`text-2xl font-bold ${total >= 0 ? "text-green-600" : "text-red-600"}`}
+              >
                 {formatMonto(total)}
               </p>
             </div>
@@ -331,25 +349,43 @@ export default function CajaEfectivoPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-[#0D4C92]/5 hover:bg-[#0D4C92]/10">
-                  <TableHead className="font-bold text-[#0D4C92]">Fecha</TableHead>
-                  <TableHead className="font-bold text-[#0D4C92]">Concepto</TableHead>
-                  <TableHead className="font-bold text-[#0D4C92] text-right">Monto</TableHead>
-                  <TableHead className="font-bold text-[#0D4C92] text-center">Acciones</TableHead>
+                  <TableHead className="font-bold text-[#0D4C92]">
+                    Fecha
+                  </TableHead>
+                  <TableHead className="font-bold text-[#0D4C92]">
+                    Concepto
+                  </TableHead>
+                  <TableHead className="font-bold text-[#0D4C92] text-right">
+                    Monto
+                  </TableHead>
+                  <TableHead className="font-bold text-[#0D4C92] text-center">
+                    Acciones
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {transactions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-[#A5A5A5] py-8">
+                    <TableCell
+                      colSpan={4}
+                      className="text-center text-[#A5A5A5] py-8"
+                    >
                       No hay movimientos registrados
                     </TableCell>
                   </TableRow>
                 ) : (
                   transactions.map((transaction) => (
-                    <TableRow key={transaction.id} className="hover:bg-[#0D4C92]/5">
-                      <TableCell className="font-medium">{formatFecha(transaction.fecha)}</TableCell>
+                    <TableRow
+                      key={transaction.id}
+                      className="hover:bg-[#0D4C92]/5"
+                    >
+                      <TableCell className="font-medium">
+                        {formatFecha(transaction.fecha)}
+                      </TableCell>
                       <TableCell>{transaction.concepto}</TableCell>
-                      <TableCell className={`text-right font-semibold ${transaction.monto >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <TableCell
+                        className={`text-right font-semibold ${transaction.monto >= 0 ? "text-green-600" : "text-red-600"}`}
+                      >
                         {formatMonto(transaction.monto)}
                       </TableCell>
                       <TableCell className="text-center">
@@ -360,9 +396,24 @@ export default function CajaEfectivoPage() {
                             onClick={() => handleOpenDetails(transaction)}
                             className="bg-[#0D4C92] text-white hover:bg-[#2E7DDF] border-none"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 mr-1">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={2}
+                              stroke="currentColor"
+                              className="w-4 h-4 mr-1"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
                             </svg>
                           </Button>
                           <Button
@@ -371,8 +422,19 @@ export default function CajaEfectivoPage() {
                             onClick={() => handleOpenStateChange(transaction)}
                             className="bg-[#2E7DDF] text-white hover:bg-[#0D4C92] border-none"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 mr-1">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={2}
+                              stroke="currentColor"
+                              className="w-4 h-4 mr-1"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                              />
                             </svg>
                           </Button>
                           <Button
@@ -381,8 +443,19 @@ export default function CajaEfectivoPage() {
                             onClick={() => handleOpenDelete(transaction)}
                             className="bg-red-500 text-white hover:bg-red-600 border-none"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 mr-1">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={2}
+                              stroke="currentColor"
+                              className="w-4 h-4 mr-1"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                              />
                             </svg>
                           </Button>
                         </div>
@@ -409,14 +482,29 @@ export default function CajaEfectivoPage() {
               variant="outline"
               className="bg-white/20 border-white/30 text-white hover:bg-white/30"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 mr-2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-5 h-5 mr-2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+                />
               </svg>
               Volver
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-white">Caja en Efectivo</h1>
-              <p className="text-sm text-white/80">Gestión de movimientos de efectivo</p>
+              <h1 className="text-2xl font-bold text-white">
+                Caja en Efectivo
+              </h1>
+              <p className="text-sm text-white/80">
+                Gestión de movimientos de efectivo
+              </p>
             </div>
           </div>
         </div>
@@ -430,10 +518,12 @@ export default function CajaEfectivoPage() {
             <p className="text-sm text-red-600 font-medium">⚠️ {error}</p>
           </div>
         )}
-        
+
         {successMessage && (
           <div className="mb-4 p-4 rounded-lg bg-green-50 border border-green-200">
-            <p className="text-sm text-green-600 font-medium">✓ {successMessage}</p>
+            <p className="text-sm text-green-600 font-medium">
+              ✓ {successMessage}
+            </p>
           </div>
         )}
 
@@ -443,14 +533,14 @@ export default function CajaEfectivoPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <TransactionTable 
-              title="Saldo Real" 
+            <TransactionTable
+              title="Saldo Real"
               description="Movimientos de efectivo confirmados"
               transactions={saldoReal}
             />
-            
-            <TransactionTable 
-              title="Saldo Necesario" 
+
+            <TransactionTable
+              title="Saldo Necesario"
               description="Pagos y compromisos programados"
               transactions={saldoNecesario}
             />
@@ -462,14 +552,18 @@ export default function CajaEfectivoPage() {
       <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
         <DialogContent className="sm:max-w-[500px] bg-white">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-[#0D4C92]">Detalles del Movimiento</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-[#0D4C92]">
+              Detalles del Movimiento
+            </DialogTitle>
             <DialogDescription className="text-[#A5A5A5]">
               Edita la información del movimiento de caja
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="fecha" className="text-[#0D4C92] font-semibold">Fecha</Label>
+              <Label htmlFor="fecha" className="text-[#0D4C92] font-semibold">
+                Fecha
+              </Label>
               <Input
                 id="fecha"
                 name="fecha"
@@ -480,7 +574,12 @@ export default function CajaEfectivoPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="concepto" className="text-[#0D4C92] font-semibold">Concepto</Label>
+              <Label
+                htmlFor="concepto"
+                className="text-[#0D4C92] font-semibold"
+              >
+                Concepto
+              </Label>
               <Input
                 id="concepto"
                 name="concepto"
@@ -490,7 +589,9 @@ export default function CajaEfectivoPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="monto" className="text-[#0D4C92] font-semibold">Monto</Label>
+              <Label htmlFor="monto" className="text-[#0D4C92] font-semibold">
+                Monto
+              </Label>
               <Input
                 id="monto"
                 name="monto"
@@ -501,7 +602,12 @@ export default function CajaEfectivoPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="descripcion" className="text-[#0D4C92] font-semibold">Descripción</Label>
+              <Label
+                htmlFor="descripcion"
+                className="text-[#0D4C92] font-semibold"
+              >
+                Descripción
+              </Label>
               <Input
                 id="descripcion"
                 name="descripcion"
@@ -511,7 +617,12 @@ export default function CajaEfectivoPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="prioridad" className="text-[#0D4C92] font-semibold">Prioridad</Label>
+              <Label
+                htmlFor="prioridad"
+                className="text-[#0D4C92] font-semibold"
+              >
+                Prioridad
+              </Label>
               <select
                 id="prioridad"
                 name="prioridad"
@@ -539,7 +650,7 @@ export default function CajaEfectivoPage() {
               disabled={isSaving}
               className="bg-gradient-to-r from-[#0D4C92] to-[#2E7DDF] text-white hover:from-[#0D4C92]/90 hover:to-[#2E7DDF]/90"
             >
-              {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+              {isSaving ? "Guardando..." : "Guardar Cambios"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -549,14 +660,18 @@ export default function CajaEfectivoPage() {
       <Dialog open={isStateDialogOpen} onOpenChange={setIsStateDialogOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-[#0D4C92]">Cambiar Estado</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-[#0D4C92]">
+              Cambiar Estado
+            </DialogTitle>
             <DialogDescription className="text-[#A5A5A5]">
               Selecciona el nuevo estado para este movimiento
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="estado" className="text-[#0D4C92] font-semibold">Nuevo Estado</Label>
+              <Label htmlFor="estado" className="text-[#0D4C92] font-semibold">
+                Nuevo Estado
+              </Label>
               <select
                 id="estado"
                 value={nuevoEstado}
@@ -584,7 +699,7 @@ export default function CajaEfectivoPage() {
               disabled={isSaving}
               className="bg-gradient-to-r from-[#0D4C92] to-[#2E7DDF] text-white hover:from-[#0D4C92]/90 hover:to-[#2E7DDF]/90"
             >
-              {isSaving ? 'Guardando...' : 'Cambiar Estado'}
+              {isSaving ? "Guardando..." : "Cambiar Estado"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -594,9 +709,12 @@ export default function CajaEfectivoPage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-red-600">Confirmar Eliminación</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-red-600">
+              Confirmar Eliminación
+            </DialogTitle>
             <DialogDescription className="text-[#A5A5A5]">
-              ¿Estás seguro de que deseas eliminar este movimiento? Esta acción no se puede deshacer.
+              ¿Estás seguro de que deseas eliminar este movimiento? Esta acción
+              no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -613,7 +731,7 @@ export default function CajaEfectivoPage() {
               disabled={isSaving}
               className="bg-red-500 text-white hover:bg-red-600"
             >
-              {isSaving ? 'Eliminando...' : 'Eliminar'}
+              {isSaving ? "Eliminando..." : "Eliminar"}
             </Button>
           </DialogFooter>
         </DialogContent>
