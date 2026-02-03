@@ -14,4 +14,10 @@ export const API_ENDPOINTS = {
     UPDATE: (id: number) => `${API_URL}/api/sucursales/${id}`,
     DELETE: (id: number) => `${API_URL}/api/sucursales/${id}`,
   },
+  MOVIMIENTOS: {
+    GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/movimientos/${sucursalId}`,
+    UPDATE: (id: number) => `${API_URL}/api/movimientos/${id}`,
+    UPDATE_ESTADO: (id: number) => `${API_URL}/api/movimientos/${id}/estado`,
+    DELETE: (id: number) => `${API_URL}/api/movimientos/${id}`,
+  },
 };
