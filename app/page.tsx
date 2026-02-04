@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { API_ENDPOINTS } from "@/lib/config";
 import { useAuthStore } from "@/store/authStore";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -52,6 +53,7 @@ export default function LoginPage() {
 
       // Redirigir a sucursales
       router.push("/sucursales");
+
     } catch (err: any) {
       console.error("Error en login:", err);
       setError(err.message || "Error al conectar con el servidor");
@@ -85,21 +87,20 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md px-4">
         {/* Logo y título de la app */}
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 mb-4 rounded-2xl bg-white shadow-2xl shadow-[#0D4C92]/50 border-4 border-[#2E7DDF]/30">
-            <span className="text-5xl font-bold text-[#0D4C92] tracking-tighter">
-              H
-            </span>
-          </div>
-          <h1 className="text-5xl font-bold text-white mb-2 tracking-tight drop-shadow-lg">
-            Heroica
-          </h1>
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            className="mx-auto mb-4"
+            width={200}
+            height={200}
+          />
           <p className="text-white/90 text-lg font-medium">
             Sistema de Contabilidad
           </p>
-        </div>
+        </div >
 
         {/* Card de login con efecto glassmorphism */}
-        <Card className="border-white/20 bg-white/95 backdrop-blur-xl shadow-2xl">
+        < Card className="border-white/20 bg-white/95 backdrop-blur-xl shadow-2xl" >
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-[#0D4C92]">
               Iniciar Sesión
@@ -174,20 +175,20 @@ export default function LoginPage() {
               </p>
             </CardFooter>
           </form>
-        </Card>
+        </Card >
 
         {/* Detalle decorativo con color madera */}
-        <div className="mt-6 flex items-center justify-center space-x-2">
+        < div className="mt-6 flex items-center justify-center space-x-2" >
           <div className="h-px w-16 bg-gradient-to-r from-transparent to-[#B88B5C]/50"></div>
           <div className="w-2 h-2 rounded-full bg-[#B88B5C]"></div>
           <div className="h-px w-16 bg-gradient-to-l from-transparent to-[#B88B5C]/50"></div>
-        </div>
+        </div >
 
         {/* Footer */}
-        <p className="mt-6 text-center text-sm text-white/70">
-          © 2026 Heroica. Todos los derechos reservados.
-        </p>
-      </div>
-    </div>
+        < p className="mt-6 text-center text-sm text-white/70" >
+          © 2026 Heroica.Todos los derechos reservados.
+        </p >
+      </div >
+    </div >
   );
 }
