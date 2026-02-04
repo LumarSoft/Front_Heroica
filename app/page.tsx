@@ -311,12 +311,12 @@ export default function LoginPage() {
                     Correo Electrónico
                   </p>
                   <p className="text-sm font-medium text-[#1A1A1A]">
-                    admin@heroica.com
+                    lumarsoftarg@gmail.com
                   </p>
                 </div>
               </div>
               <a
-                href="mailto:admin@heroica.com?subject=Solicitud de acceso al sistema&body=Hola, me gustaría solicitar acceso al sistema de contabilidad Heroica."
+                href="mailto:lumarsoftarg@gmail.com?subject=Solicitud de acceso al sistema&body=Hola, me gustaría solicitar acceso al sistema de contabilidad Heroica."
                 className="block w-full"
               >
                 <Button
