@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Image from "next/image";
+import Navbar from "@/components/Navbar";
 
 interface Sucursal {
   id: number;
@@ -196,52 +196,12 @@ export default function SucursalesPage() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
-      {/* Header Mejorado */}
-      <header className="bg-white border-b border-[#E0E0E0] shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo Section */}
-            <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold text-[#002868]">HEROICA</h1>
-              <div className="h-6 w-px bg-[#E0E0E0] hidden sm:block"></div>
-              <span className="text-sm text-[#666666] hidden sm:block">
-                Sistema de Contabilidad
-              </span>
-            </div>
-
-            {/* User Section */}
-            <div className="flex items-center gap-4">
-              <div className="text-right hidden md:block">
-                <p className="text-sm font-semibold text-[#1A1A1A]">
-                  {user?.nombre}
-                </p>
-                <p className="text-xs text-[#666666]">{user?.rol}</p>
-              </div>
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="w-4 h-4 sm:mr-2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"
-                  />
-                </svg>
-                <span className="hidden sm:inline">Cerrar Sesión</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Navbar */}
+      <Navbar
+        userName={user?.nombre}
+        userRole={user?.rol}
+        onLogout={handleLogout}
+      />
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-12">
@@ -250,7 +210,7 @@ export default function SucursalesPage() {
             Sucursales
           </h2>
           <p className="text-[#666666] text-lg">
-            Selecciona una sucursal para gestionar su tesorería
+            Selecciona una sucursal para gestionar.
           </p>
         </div>
 

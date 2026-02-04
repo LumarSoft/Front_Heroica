@@ -104,31 +104,31 @@ export default function PagosPendientesPage() {
     }).format(montoNum);
   };
 
-  // Función para obtener el color del badge de estado
+  // Función para obtener el color del badge de estado (COLORES MEJORADOS)
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case "pendiente":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-amber-50 text-amber-700 border border-amber-200";
       case "aprobado":
-        return "bg-green-100 text-green-800";
+        return "bg-emerald-50 text-emerald-700 border border-emerald-200";
       case "rechazado":
-        return "bg-red-100 text-red-800";
+        return "bg-rose-50 text-rose-700 border border-rose-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-50 text-gray-700 border border-gray-200";
     }
   };
 
-  // Función para obtener el color del badge de prioridad
+  // Función para obtener el color del badge de prioridad (COLORES MEJORADOS)
   const getPrioridadColor = (prioridad: string) => {
     switch (prioridad) {
       case "alta":
-        return "bg-red-100 text-red-800";
+        return "bg-rose-50 text-rose-700 border border-rose-200";
       case "media":
-        return "bg-orange-100 text-orange-800";
+        return "bg-orange-50 text-orange-700 border border-orange-200";
       case "baja":
-        return "bg-blue-100 text-blue-800";
+        return "bg-[#002868]/5 text-[#002868] border border-[#002868]/20";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-50 text-gray-700 border border-gray-200";
     }
   };
 
@@ -141,15 +141,16 @@ export default function PagosPendientesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-b border-[#E0E0E0] shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
+      {/* Header Premium con Glassmorphism */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-[#E0E0E0]/50 sticky top-0 z-50 shadow-sm">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center gap-4">
             <Button
               onClick={() => router.push(`/sucursales/${params.id}`)}
               variant="outline"
-              className="bg-[#002868] border-[#002868] text-white hover:bg-[#003d8f]"
+              size="sm"
+              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -157,7 +158,7 @@ export default function PagosPendientesPage() {
                 viewBox="0 0 24 24"
                 strokeWidth={2}
                 stroke="currentColor"
-                className="w-5 h-5 mr-2"
+                className="w-4 h-4 mr-1"
               >
                 <path
                   strokeLinecap="round"
@@ -180,14 +181,14 @@ export default function PagosPendientesPage() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-6 py-8">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
           </div>
         ) : (
           <Card className="border-[#E0E0E0] bg-white shadow-lg">
-            <CardHeader>
+            <CardHeader className="border-b border-[#E0E0E0]">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-2xl font-bold text-[#002868]">
@@ -198,39 +199,41 @@ export default function PagosPendientesPage() {
                   </CardDescription>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-[#666666] font-medium">
+                  <p className="text-sm text-[#666666] font-medium mb-1">
                     Total de pagos
                   </p>
-                  <p className="text-2xl font-bold text-[#002868]">
-                    {pagosPendientes.length}
-                  </p>
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#002868]/10 border-2 border-[#002868]/20">
+                    <p className="text-xl font-bold text-[#002868]">
+                      {pagosPendientes.length}
+                    </p>
+                  </div>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="rounded-md border border-[#E0E0E0]">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-[#F5F5F5] hover:bg-[#F5F5F5]">
-                      <TableHead className="font-bold text-[#002868]">
+                    <TableRow className="bg-[#F8F9FA] hover:bg-[#F8F9FA] border-b-2 border-[#E0E0E0]">
+                      <TableHead className="font-bold text-[#002868] text-sm">
                         Fecha
                       </TableHead>
-                      <TableHead className="font-bold text-[#002868]">
+                      <TableHead className="font-bold text-[#002868] text-sm">
                         Concepto
                       </TableHead>
-                      <TableHead className="font-bold text-[#002868]">
+                      <TableHead className="font-bold text-[#002868] text-sm">
                         Proveedor
                       </TableHead>
-                      <TableHead className="font-bold text-[#002868] text-right">
+                      <TableHead className="font-bold text-[#002868] text-sm text-right">
                         Monto
                       </TableHead>
-                      <TableHead className="font-bold text-[#002868] text-center">
+                      <TableHead className="font-bold text-[#002868] text-sm text-center">
                         Prioridad
                       </TableHead>
-                      <TableHead className="font-bold text-[#002868] text-center">
+                      <TableHead className="font-bold text-[#002868] text-sm text-center">
                         Estado
                       </TableHead>
-                      <TableHead className="font-bold text-[#002868] text-center">
+                      <TableHead className="font-bold text-[#002868] text-sm text-center">
                         Acciones
                       </TableHead>
                     </TableRow>
@@ -240,28 +243,48 @@ export default function PagosPendientesPage() {
                       <TableRow>
                         <TableCell
                           colSpan={7}
-                          className="text-center text-[#666666] py-8"
+                          className="text-center text-[#666666] py-12"
                         >
-                          No hay pagos pendientes
+                          <div className="flex flex-col items-center gap-2">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-12 h-12 text-[#666666]/50"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"
+                              />
+                            </svg>
+                            <p className="font-medium">No hay pagos pendientes</p>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ) : (
-                      pagosPendientes.map((pago) => (
+                      pagosPendientes.map((pago, index) => (
                         <TableRow
                           key={pago.id}
-                          className="hover:bg-[#F5F5F5] transition-colors"
+                          className="hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50"
                         >
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium text-[#1A1A1A]">
                             {formatFecha(pago.fecha)}
                           </TableCell>
-                          <TableCell>{pago.concepto}</TableCell>
-                          <TableCell>{pago.proveedor}</TableCell>
-                          <TableCell className="text-right font-semibold text-[#002868]">
+                          <TableCell className="text-[#1A1A1A]">
+                            {pago.concepto}
+                          </TableCell>
+                          <TableCell className="text-[#666666]">
+                            {pago.proveedor}
+                          </TableCell>
+                          <TableCell className="text-right font-bold text-[#002868] text-base">
                             {formatMonto(pago.monto)}
                           </TableCell>
                           <TableCell className="text-center">
                             <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPrioridadColor(pago.prioridad)}`}
+                              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPrioridadColor(pago.prioridad)}`}
                             >
                               {pago.prioridad.charAt(0).toUpperCase() +
                                 pago.prioridad.slice(1)}
@@ -269,7 +292,7 @@ export default function PagosPendientesPage() {
                           </TableCell>
                           <TableCell className="text-center">
                             <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEstadoColor(pago.estado)}`}
+                              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getEstadoColor(pago.estado)}`}
                             >
                               {pago.estado.charAt(0).toUpperCase() +
                                 pago.estado.slice(1)}
@@ -277,16 +300,17 @@ export default function PagosPendientesPage() {
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex items-center justify-center gap-2">
+                              {/* Botón Aprobar */}
                               <Button
                                 size="sm"
-                                variant="outline"
-                                className="bg-green-500 text-white hover:bg-green-600 border-none cursor-pointer"
+                                className="bg-emerald-500 hover:bg-emerald-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all"
+                                title="Aprobar pago"
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
                                   fill="none"
                                   viewBox="0 0 24 24"
-                                  strokeWidth={2}
+                                  strokeWidth={2.5}
                                   stroke="currentColor"
                                   className="w-4 h-4"
                                 >
@@ -297,16 +321,17 @@ export default function PagosPendientesPage() {
                                   />
                                 </svg>
                               </Button>
+                              {/* Botón Rechazar */}
                               <Button
                                 size="sm"
-                                variant="outline"
-                                className="bg-red-500 text-white hover:bg-red-600 border-none cursor-pointer"
+                                className="bg-rose-500 hover:bg-rose-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all"
+                                title="Rechazar pago"
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
                                   fill="none"
                                   viewBox="0 0 24 24"
-                                  strokeWidth={2}
+                                  strokeWidth={2.5}
                                   stroke="currentColor"
                                   className="w-4 h-4"
                                 >

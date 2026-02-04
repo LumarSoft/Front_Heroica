@@ -10,12 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import Navbar from "@/components/Navbar";
 
 export default function CajaBancoPage() {
   const router = useRouter();
   const params = useParams();
-  const { isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Esperar a que Zustand se hidrate desde localStorage
@@ -40,74 +40,142 @@ export default function CajaBancoPage() {
     );
   }
 
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+  };
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-b border-[#E0E0E0] shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center space-x-4">
-            <Button
-              onClick={() => router.push(`/sucursales/${params.id}`)}
-              variant="outline"
-              className="bg-[#002868] border-[#002868] text-white hover:bg-[#003d8f]"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-5 h-5 mr-2"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-                />
-              </svg>
-              Volver
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-[#002868]">Caja en Banco</h1>
-              <p className="text-sm text-[#666666]">
-                Gestión de cuentas bancarias y transacciones
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
+      {/* Navbar */}
+      <Navbar
+        userName={user?.nombre}
+        userRole={user?.rol}
+        onLogout={handleLogout}
+        showBackButton={true}
+        backUrl={`/sucursales/${params.id}`}
+      />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-6 py-8">
         <Card className="border-[#E0E0E0] bg-white shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-[#002868]">
-              Caja en Banco
-            </CardTitle>
-            <CardDescription className="text-[#666666]">
-              Contenido en desarrollo
-            </CardDescription>
-          </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-center py-16">
-              <div className="text-center space-y-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-24 h-24 mx-auto text-[#002868]/30"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"
-                  />
-                </svg>
-                <p className="text-[#666666] text-lg">
-                  Esta sección está en desarrollo
-                </p>
+            <div className="flex items-center justify-center py-24">
+              <div className="text-center space-y-6 max-w-md">
+                {/* Icono de banco con estilo premium */}
+                <div className="relative">
+                  <div className="w-32 h-32 mx-auto rounded-2xl bg-gradient-to-br from-[#002868]/10 to-[#002868]/5 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-16 h-16 text-[#002868]"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"
+                      />
+                    </svg>
+                  </div>
+                  {/* Badge "Próximamente" */}
+                  <div className="absolute -top-2 -right-2">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                      Próximamente
+                    </span>
+                  </div>
+                </div>
+
+                {/* Texto informativo */}
+                <div className="space-y-3">
+                  <h3 className="text-xl font-bold text-[#002868]">
+                    Funcionalidad en Desarrollo
+                  </h3>
+                  <p className="text-[#666666] leading-relaxed">
+                    Estamos trabajando en esta sección para brindarte la mejor
+                    experiencia en la gestión de tus cuentas bancarias y
+                    transacciones.
+                  </p>
+                </div>
+
+                {/* Lista de características futuras */}
+                <div className="bg-[#F8F9FA] rounded-lg p-6 text-left">
+                  <p className="text-sm font-semibold text-[#002868] mb-3">
+                    Características próximas:
+                  </p>
+                  <ul className="space-y-2 text-sm text-[#666666]">
+                    <li className="flex items-start gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                        className="w-4 h-4 text-[#002868] mt-0.5 flex-shrink-0"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                      <span>Gestión de cuentas bancarias</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                        className="w-4 h-4 text-[#002868] mt-0.5 flex-shrink-0"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                      <span>Registro de transacciones bancarias</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                        className="w-4 h-4 text-[#002868] mt-0.5 flex-shrink-0"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                      <span>Conciliación bancaria</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                        className="w-4 h-4 text-[#002868] mt-0.5 flex-shrink-0"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                      <span>Reportes y análisis de movimientos</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           </CardContent>

@@ -71,58 +71,69 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      {/* Lado izquierdo - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#002868] to-[#003d8f] relative overflow-hidden">
+      {/* Lado izquierdo - Branding CON FONDO BLANCO */}
+      <div className="hidden lg:flex lg:w-1/2 bg-white relative overflow-hidden">
         {/* Patrón decorativo */}
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, #002868 1px, transparent 1px)",
+            backgroundSize: "30px 30px",
+          }}
+        ></div>
+
+        {/* Contenido del branding */}
+        <div className="relative z-10 flex flex-col justify-center items-center w-full px-16">
+          <div className="max-w-lg text-center">
+            {/* Logo SVG */}
+            <img
+              src="/HEROICA.svg"
+              alt="Heroica"
+              className="h-20 mb-6 mx-auto"
+            />
+
+            {/* Separador */}
+            <div className="h-[1px] w-32 bg-gradient-to-r from-[#002868]/20 via-[#002868]/50 to-[#002868]/20 mb-10 mx-auto"></div>
+
+            <div className="space-y-4">
+              {/* Título del módulo */}
+              <h2 className="text-sm uppercase tracking-[0.3em] font-semibold text-[#002868]/70 font-sans">
+                Sistema administrativo
+              </h2>
+
+              {/* La frase */}
+              <p className="text-3xl font-light leading-tight max-w-sm mx-auto text-[#002868] border-l-2 border-[#002868]/20 pl-6 italic">
+                "Claridad en las cuentas, <br />
+                <span className="opacity-60">integridad en los resultados."</span>
+              </p>
+            </div>
+          </div>
+        </div>
+        {/* Elemento decorativo inferior */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#002868]/5 to-transparent"></div>
+      </div>
+
+      {/* Lado derecho - Formulario de login - AZUL en Desktop, BLANCO en Mobile */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white lg:bg-gradient-to-br lg:from-[#002868] lg:to-[#003d8f] relative overflow-hidden">
+        {/* Patrón decorativo - Solo visible en Desktop */}
+        <div
+          className="hidden lg:block absolute inset-0 opacity-10"
           style={{
             backgroundImage:
               "radial-gradient(circle, #FFFFFF 1px, transparent 1px)",
             backgroundSize: "30px 30px",
           }}
         ></div>
-
-        {/* Contenido del branding */}
-        <div className="relative z-10 flex flex-col justify-center items-start w-full px-16 text-white font-serif">
-          <div className="max-w-lg">
-            {/* Logotipo: Usamos tracking-widest y una fuente con serifa para imitar el logo */}
-            <h1 className="text-7xl font-medium mb-2 tracking-[0.2em] uppercase leading-none italic">
-              Heroica
-            </h1>
-
-            {/* Separador más elegante: más fino y con un ancho que equilibre el texto */}
-            <div className="h-[1px] w-32 bg-gradient-to-r from-white/80 to-transparent mb-10"></div>
-
-            <div className="space-y-4">
-              {/* Título del módulo: Fuente Sans para contraste y profesionalismo */}
-              <h2 className="text-sm uppercase tracking-[0.3em] font-semibold text-white/90 font-sans">
-                Módulo de Tesorería
-              </h2>
-
-              {/* La frase que elegiste, con un estilo más editorial */}
-              <p className="text-3xl font-light leading-tight max-w-sm border-l border-white/20 pl-6 italic">
-                "Claridad en las cuentas, <br />
-                <span className="opacity-70">integridad en los resultados."</span>
-              </p>
-            </div>
-          </div>
-        </div>
-        {/* Elemento decorativo inferior */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/20 to-transparent"></div>
-      </div>
-
-      {/* Lado derecho - Formulario de login */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-[#F5F5F5]">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md relative z-10">
           {/* Logo móvil */}
           <div className="lg:hidden text-center mb-8">
-            <h1 className="text-4xl font-bold text-[#002868] mb-2">HEROICA</h1>
+            <img src="/HEROICA.svg" alt="Heroica" className="h-12 mx-auto mb-2" />
             <p className="text-[#666666]">Sistema de Contabilidad</p>
           </div>
 
           {/* Card de login */}
-          <Card className="border-[#E0E0E0] bg-white shadow-xl">
+          <Card className="border-[#E0E0E0] lg:border-white/20 bg-white lg:bg-white/95 lg:backdrop-blur-sm shadow-xl lg:shadow-2xl">
             <CardHeader className="space-y-2 pb-6">
               <CardTitle className="text-3xl font-bold text-[#002868]">
                 Iniciar Sesión
@@ -269,7 +280,7 @@ export default function LoginPage() {
           </Card>
 
           {/* Footer */}
-          <p className="mt-8 text-center text-sm text-[#666666]">
+          <p className="mt-8 text-center text-sm text-[#666666] lg:text-white/70">
             © 2026 Heroica. Todos los derechos reservados.
           </p>
         </div>

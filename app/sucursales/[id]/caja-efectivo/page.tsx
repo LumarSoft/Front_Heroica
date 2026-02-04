@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Navbar from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -47,7 +48,7 @@ interface Transaction {
 export default function CajaEfectivoPage() {
   const router = useRouter();
   const params = useParams();
-  const { isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const [isHydrated, setIsHydrated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -324,7 +325,7 @@ export default function CajaEfectivoPage() {
 
     return (
       <Card className="border-[#E0E0E0] bg-white shadow-lg">
-        <CardHeader>
+        <CardHeader className="border-b border-[#E0E0E0]">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-2xl font-bold text-[#002868]">
@@ -335,12 +336,14 @@ export default function CajaEfectivoPage() {
               </CardDescription>
             </div>
             <div className="text-right">
-              <p className="text-sm text-[#666666] font-medium">Total</p>
-              <p
-                className={`text-2xl font-bold ${total >= 0 ? "text-green-600" : "text-red-600"}`}
-              >
-                {formatMonto(total)}
-              </p>
+              <p className="text-sm text-[#666666] font-medium mb-1">Total</p>
+              <div className={`inline-flex items-center justify-center px-4 py-2 rounded-lg ${total >= 0 ? "bg-emerald-50 border border-emerald-200" : "bg-rose-50 border border-rose-200"}`}>
+                <p
+                  className={`text-2xl font-bold ${total >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+                >
+                  {formatMonto(total)}
+                </p>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -348,17 +351,17 @@ export default function CajaEfectivoPage() {
           <div className="rounded-md border border-[#E0E0E0]">
             <Table>
               <TableHeader>
-                <TableRow className="bg-[#F5F5F5] hover:bg-[#F5F5F5]">
-                  <TableHead className="font-bold text-[#002868]">
+                <TableRow className="bg-[#F8F9FA] hover:bg-[#F8F9FA] border-b-2 border-[#E0E0E0]">
+                  <TableHead className="font-bold text-[#002868] text-sm">
                     Fecha
                   </TableHead>
-                  <TableHead className="font-bold text-[#002868]">
+                  <TableHead className="font-bold text-[#002868] text-sm">
                     Concepto
                   </TableHead>
-                  <TableHead className="font-bold text-[#002868] text-right">
+                  <TableHead className="font-bold text-[#002868] text-sm text-right">
                     Monto
                   </TableHead>
-                  <TableHead className="font-bold text-[#002868] text-center">
+                  <TableHead className="font-bold text-[#002868] text-sm text-center">
                     Acciones
                   </TableHead>
                 </TableRow>
@@ -368,23 +371,39 @@ export default function CajaEfectivoPage() {
                   <TableRow>
                     <TableCell
                       colSpan={4}
-                      className="text-center text-[#666666] py-8"
+                      className="text-center text-[#666666] py-12"
                     >
-                      No hay movimientos registrados
+                      <div className="flex flex-col items-center gap-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-12 h-12 text-[#666666]/50"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"
+                          />
+                        </svg>
+                        <p className="font-medium">No hay movimientos registrados</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
                   transactions.map((transaction) => (
                     <TableRow
                       key={transaction.id}
-                      className="hover:bg-[#F5F5F5] transition-colors"
+                      className="hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50"
                     >
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium text-[#1A1A1A]">
                         {formatFecha(transaction.fecha)}
                       </TableCell>
-                      <TableCell>{transaction.concepto}</TableCell>
+                      <TableCell className="text-[#1A1A1A]">{transaction.concepto}</TableCell>
                       <TableCell
-                        className={`text-right font-semibold ${transaction.monto >= 0 ? "text-green-600" : "text-red-600"}`}
+                        className={`text-right font-bold text-base ${transaction.monto >= 0 ? "text-emerald-700" : "text-rose-700"}`}
                       >
                         {formatMonto(transaction.monto)}
                       </TableCell>
@@ -392,9 +411,9 @@ export default function CajaEfectivoPage() {
                         <div className="flex items-center justify-center gap-2">
                           <Button
                             size="sm"
-                            variant="outline"
                             onClick={() => handleOpenDetails(transaction)}
-                            className="bg-[#002868] text-white hover:bg-[#003d8f] border-none cursor-pointer"
+                            className="bg-[#002868] hover:bg-[#003d8f] text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all flex items-center justify-center"
+                            title="Ver detalles"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -402,7 +421,7 @@ export default function CajaEfectivoPage() {
                               viewBox="0 0 24 24"
                               strokeWidth={2}
                               stroke="currentColor"
-                              className="w-4 h-4 mr-1"
+                              className="w-4 h-4"
                             >
                               <path
                                 strokeLinecap="round"
@@ -418,9 +437,9 @@ export default function CajaEfectivoPage() {
                           </Button>
                           <Button
                             size="sm"
-                            variant="outline"
                             onClick={() => handleOpenStateChange(transaction)}
-                            className="bg-[#002868] text-white hover:bg-[#003d8f] border-none cursor-pointer"
+                            className="bg-[#002868] hover:bg-[#003d8f] text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all flex items-center justify-center"
+                            title="Cambiar estado"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -428,7 +447,7 @@ export default function CajaEfectivoPage() {
                               viewBox="0 0 24 24"
                               strokeWidth={2}
                               stroke="currentColor"
-                              className="w-4 h-4 mr-1"
+                              className="w-4 h-4"
                             >
                               <path
                                 strokeLinecap="round"
@@ -439,9 +458,9 @@ export default function CajaEfectivoPage() {
                           </Button>
                           <Button
                             size="sm"
-                            variant="outline"
                             onClick={() => handleOpenDelete(transaction)}
-                            className="bg-red-500 text-white hover:bg-red-600 border-none cursor-pointer"
+                            className="bg-rose-500 hover:bg-rose-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all flex items-center justify-center"
+                            title="Eliminar movimiento"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -449,7 +468,7 @@ export default function CajaEfectivoPage() {
                               viewBox="0 0 24 24"
                               strokeWidth={2}
                               stroke="currentColor"
-                              className="w-4 h-4 mr-1"
+                              className="w-4 h-4"
                             >
                               <path
                                 strokeLinecap="round"
@@ -471,47 +490,24 @@ export default function CajaEfectivoPage() {
     );
   };
 
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+  };
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-b border-[#E0E0E0] shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center space-x-4">
-            <Button
-              onClick={() => router.push(`/sucursales/${params.id}`)}
-              variant="outline"
-              className="bg-[#002868] border-[#002868] text-white hover:bg-[#003d8f]"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-5 h-5 mr-2"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-                />
-              </svg>
-              Volver
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-[#002868]">
-                Caja en Efectivo
-              </h1>
-              <p className="text-sm text-[#666666]">
-                Gestión de movimientos de efectivo
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
+      {/* Navbar */}
+      <Navbar
+        userName={user?.nombre}
+        userRole={user?.rol}
+        onLogout={handleLogout}
+        showBackButton={true}
+        backUrl={`/sucursales/${params.id}`}
+      />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-6 py-8">
         {/* Mensajes de error y éxito */}
         {error && (
           <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200">
@@ -548,14 +544,19 @@ export default function CajaEfectivoPage() {
         )}
       </main>
 
-      {/* Dialog de Detalles */}
+      {/* Dialog de Detalles - MEJORADO */}
       <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-[#002868]">
+        <DialogContent className="sm:max-w-[500px] bg-white border-[#E0E0E0] shadow-2xl">
+          <DialogHeader className="border-b border-[#E0E0E0] pb-4">
+            <DialogTitle className="text-2xl font-bold text-[#002868] flex items-center gap-2">
+              <div className="w-10 h-10 rounded-lg bg-[#002868]/10 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#002868]">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                </svg>
+              </div>
               Detalles del Movimiento
             </DialogTitle>
-            <DialogDescription className="text-[#666666]">
+            <DialogDescription className="text-[#666666] mt-2">
               Edita la información del movimiento de caja
             </DialogDescription>
           </DialogHeader>
@@ -640,7 +641,7 @@ export default function CajaEfectivoPage() {
             <Button
               variant="outline"
               onClick={() => setIsDetailsDialogOpen(false)}
-              className="border-[#E0E0E0] text-[#1A1A1A] hover:bg-[#F5F5F5]"
+              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer"
               disabled={isSaving}
             >
               Cancelar
@@ -648,7 +649,7 @@ export default function CajaEfectivoPage() {
             <Button
               onClick={handleSaveDetails}
               disabled={isSaving}
-              className="bg-[#002868] text-white hover:bg-[#003d8f]"
+              className="bg-[#002868] text-white hover:bg-[#003d8f] cursor-pointer"
             >
               {isSaving ? "Guardando..." : "Guardar Cambios"}
             </Button>
@@ -656,14 +657,19 @@ export default function CajaEfectivoPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de Cambio de Estado */}
+      {/* Dialog de Cambio de Estado - MEJORADO */}
       <Dialog open={isStateDialogOpen} onOpenChange={setIsStateDialogOpen}>
-        <DialogContent className="sm:max-w-[400px] bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-[#002868]">
+        <DialogContent className="sm:max-w-[400px] bg-white border-[#E0E0E0] shadow-2xl">
+          <DialogHeader className="border-b border-[#E0E0E0] pb-4">
+            <DialogTitle className="text-2xl font-bold text-[#002868] flex items-center gap-2">
+              <div className="w-10 h-10 rounded-lg bg-[#002868]/10 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-[#002868]">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+              </div>
               Cambiar Estado
             </DialogTitle>
-            <DialogDescription className="text-[#666666]">
+            <DialogDescription className="text-[#666666] mt-2">
               Selecciona el nuevo estado para este movimiento
             </DialogDescription>
           </DialogHeader>
@@ -689,7 +695,7 @@ export default function CajaEfectivoPage() {
             <Button
               variant="outline"
               onClick={() => setIsStateDialogOpen(false)}
-              className="border-[#E0E0E0] text-[#1A1A1A] hover:bg-[#F5F5F5]"
+              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer"
               disabled={isSaving}
             >
               Cancelar
@@ -697,7 +703,7 @@ export default function CajaEfectivoPage() {
             <Button
               onClick={handleSaveStateChange}
               disabled={isSaving}
-              className="bg-[#002868] text-white hover:bg-[#003d8f]"
+              className="bg-[#002868] text-white hover:bg-[#003d8f] cursor-pointer"
             >
               {isSaving ? "Guardando..." : "Cambiar Estado"}
             </Button>
@@ -705,14 +711,19 @@ export default function CajaEfectivoPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de Confirmación de Eliminación */}
+      {/* Dialog de Confirmación de Eliminación - MEJORADO */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[400px] bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-red-600">
+        <DialogContent className="sm:max-w-[400px] bg-white border-rose-200 shadow-2xl">
+          <DialogHeader className="border-b border-rose-100 pb-4">
+            <DialogTitle className="text-2xl font-bold text-rose-600 flex items-center gap-2">
+              <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-rose-600">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
               Confirmar Eliminación
             </DialogTitle>
-            <DialogDescription className="text-[#666666]">
+            <DialogDescription className="text-[#666666] mt-2">
               ¿Estás seguro de que deseas eliminar este movimiento? Esta acción
               no se puede deshacer.
             </DialogDescription>
@@ -721,7 +732,7 @@ export default function CajaEfectivoPage() {
             <Button
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
-              className="border-[#E0E0E0] text-[#1A1A1A] hover:bg-[#F5F5F5]"
+              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer"
               disabled={isSaving}
             >
               Cancelar
@@ -729,7 +740,7 @@ export default function CajaEfectivoPage() {
             <Button
               onClick={handleDelete}
               disabled={isSaving}
-              className="bg-red-500 text-white hover:bg-red-600"
+              className="bg-rose-500 text-white hover:bg-rose-600 cursor-pointer"
             >
               {isSaving ? "Eliminando..." : "Eliminar"}
             </Button>
