@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Image from "next/image";
 
 interface Sucursal {
   id: number;
@@ -199,11 +200,13 @@ export default function SucursalesPage() {
       <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-xl bg-white shadow-lg flex items-center justify-center">
-              <span className="text-2xl font-bold text-[#0D4C92]">H</span>
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={96}
+              height={96}
+            />
             <div>
-              <h1 className="text-xl font-bold text-white">Heroica</h1>
               <p className="text-sm text-white/80">Sistema de Contabilidad</p>
             </div>
           </div>
@@ -299,11 +302,10 @@ export default function SucursalesPage() {
                   </div>
                   <div className="pt-2">
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        sucursal.activo
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${sucursal.activo
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                        }`}
                     >
                       {sucursal.activo ? "● Activa" : "● Inactiva"}
                     </span>
