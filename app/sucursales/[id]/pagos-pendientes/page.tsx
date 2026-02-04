@@ -134,22 +134,22 @@ export default function PagosPendientesPage() {
 
   if (!isHydrated || !isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0D4C92] via-[#2E7DDF] to-[#0D4C92] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0D4C92] via-[#2E7DDF] to-[#0D4C92]">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
+      <header className="bg-white border-b border-[#E0E0E0] shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center space-x-4">
             <Button
               onClick={() => router.push(`/sucursales/${params.id}`)}
               variant="outline"
-              className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+              className="bg-[#002868] border-[#002868] text-white hover:bg-[#003d8f]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -168,10 +168,10 @@ export default function PagosPendientesPage() {
               Volver
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-[#002868]">
                 Pagos Pendientes de Autorización
               </h1>
-              <p className="text-sm text-white/80">
+              <p className="text-sm text-[#666666]">
                 Gestión de pagos pendientes de aprobación
               </p>
             </div>
@@ -183,54 +183,54 @@ export default function PagosPendientesPage() {
       <main className="container mx-auto px-4 py-8">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-12 h-12 border-4 border-[#0D4C92]/30 border-t-[#0D4C92] rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
           </div>
         ) : (
-          <Card className="border-white/20 bg-white/95 backdrop-blur-xl shadow-xl">
+          <Card className="border-[#E0E0E0] bg-white shadow-lg">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-2xl font-bold text-[#0D4C92]">
+                  <CardTitle className="text-2xl font-bold text-[#002868]">
                     Pagos Pendientes
                   </CardTitle>
-                  <CardDescription className="text-[#A5A5A5]">
+                  <CardDescription className="text-[#666666]">
                     Lista de pagos que requieren autorización
                   </CardDescription>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-[#A5A5A5] font-medium">
+                  <p className="text-sm text-[#666666] font-medium">
                     Total de pagos
                   </p>
-                  <p className="text-2xl font-bold text-[#0D4C92]">
+                  <p className="text-2xl font-bold text-[#002868]">
                     {pagosPendientes.length}
                   </p>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border border-[#A5A5A5]/20">
+              <div className="rounded-md border border-[#E0E0E0]">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-[#0D4C92]/5 hover:bg-[#0D4C92]/10">
-                      <TableHead className="font-bold text-[#0D4C92]">
+                    <TableRow className="bg-[#F5F5F5] hover:bg-[#F5F5F5]">
+                      <TableHead className="font-bold text-[#002868]">
                         Fecha
                       </TableHead>
-                      <TableHead className="font-bold text-[#0D4C92]">
+                      <TableHead className="font-bold text-[#002868]">
                         Concepto
                       </TableHead>
-                      <TableHead className="font-bold text-[#0D4C92]">
+                      <TableHead className="font-bold text-[#002868]">
                         Proveedor
                       </TableHead>
-                      <TableHead className="font-bold text-[#0D4C92] text-right">
+                      <TableHead className="font-bold text-[#002868] text-right">
                         Monto
                       </TableHead>
-                      <TableHead className="font-bold text-[#0D4C92] text-center">
+                      <TableHead className="font-bold text-[#002868] text-center">
                         Prioridad
                       </TableHead>
-                      <TableHead className="font-bold text-[#0D4C92] text-center">
+                      <TableHead className="font-bold text-[#002868] text-center">
                         Estado
                       </TableHead>
-                      <TableHead className="font-bold text-[#0D4C92] text-center">
+                      <TableHead className="font-bold text-[#002868] text-center">
                         Acciones
                       </TableHead>
                     </TableRow>
@@ -240,7 +240,7 @@ export default function PagosPendientesPage() {
                       <TableRow>
                         <TableCell
                           colSpan={7}
-                          className="text-center text-[#A5A5A5] py-8"
+                          className="text-center text-[#666666] py-8"
                         >
                           No hay pagos pendientes
                         </TableCell>
@@ -249,14 +249,14 @@ export default function PagosPendientesPage() {
                       pagosPendientes.map((pago) => (
                         <TableRow
                           key={pago.id}
-                          className="hover:bg-[#0D4C92]/5"
+                          className="hover:bg-[#F5F5F5] transition-colors"
                         >
                           <TableCell className="font-medium">
                             {formatFecha(pago.fecha)}
                           </TableCell>
                           <TableCell>{pago.concepto}</TableCell>
                           <TableCell>{pago.proveedor}</TableCell>
-                          <TableCell className="text-right font-semibold text-[#0D4C92]">
+                          <TableCell className="text-right font-semibold text-[#002868]">
                             {formatMonto(pago.monto)}
                           </TableCell>
                           <TableCell className="text-center">
@@ -280,7 +280,7 @@ export default function PagosPendientesPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="bg-green-500 text-white hover:bg-green-600 border-none"
+                                className="bg-green-500 text-white hover:bg-green-600 border-none cursor-pointer"
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
@@ -300,7 +300,7 @@ export default function PagosPendientesPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="bg-red-500 text-white hover:bg-red-600 border-none"
+                                className="bg-red-500 text-white hover:bg-red-600 border-none cursor-pointer"
                               >
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"

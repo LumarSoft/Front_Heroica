@@ -188,37 +188,32 @@ export default function SucursalesPage() {
 
   if (!isHydrated || !isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0D4C92] via-[#2E7DDF] to-[#0D4C92] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0D4C92] via-[#2E7DDF] to-[#0D4C92]">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
+      <header className="bg-white border-b border-[#E0E0E0] shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <Image
-              src="/logo.png"
-              alt="Logo"
-              width={96}
-              height={96}
-            />
+            <h1 className="text-2xl font-bold text-[#002868]">HEROICA</h1>
             <div>
-              <p className="text-sm text-white/80">Sistema de Contabilidad</p>
+              <p className="text-sm text-[#666666]">Sistema de Contabilidad</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-right">
-              <p className="text-sm font-medium text-white">{user?.nombre}</p>
-              <p className="text-xs text-white/70">{user?.rol}</p>
+              <p className="text-sm font-medium text-[#1A1A1A]">{user?.nombre}</p>
+              <p className="text-xs text-[#666666]">{user?.rol}</p>
             </div>
             <Button
               onClick={handleLogout}
               variant="outline"
-              className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+              className="bg-[#002868] border-[#002868] text-white hover:bg-[#003d8f]"
             >
               Cerrar Sesión
             </Button>
@@ -229,8 +224,8 @@ export default function SucursalesPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-4xl font-bold text-white mb-2">Sucursales</h2>
-          <p className="text-white/80">
+          <h2 className="text-4xl font-bold text-[#002868] mb-2">Sucursales</h2>
+          <p className="text-[#666666]">
             Selecciona una sucursal para continuar
           </p>
         </div>
@@ -243,20 +238,20 @@ export default function SucursalesPage() {
 
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
-            <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sucursales.map((sucursal) => (
               <Card
                 key={sucursal.id}
-                className="border-white/20 bg-white/95 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all hover:scale-[1.02] cursor-pointer relative"
+                className="border-[#E0E0E0] bg-white shadow-lg hover:shadow-xl hover:border-[#002868] transition-all hover:scale-[1.02] cursor-pointer relative"
                 onClick={() => handleSucursalClick(sucursal.id)}
               >
                 {/* Botón de eliminar */}
                 <button
                   onClick={(e) => handleDeleteClick(e, sucursal)}
-                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 transition-all flex items-center justify-center shadow-sm hover:shadow-md z-10"
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 transition-all flex items-center justify-center shadow-sm hover:shadow-md z-10 cursor-pointer"
                   aria-label="Eliminar sucursal"
                 >
                   <svg
@@ -276,27 +271,27 @@ export default function SucursalesPage() {
                 </button>
 
                 <CardHeader>
-                  <CardTitle className="text-[#0D4C92] text-xl pr-8">
+                  <CardTitle className="text-[#002868] text-xl pr-8">
                     {sucursal.nombre}
                   </CardTitle>
-                  <CardDescription className="text-[#A5A5A5]">
+                  <CardDescription className="text-[#666666]">
                     {sucursal.razon_social}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
-                    <p className="text-xs text-[#A5A5A5] font-semibold uppercase">
+                    <p className="text-xs text-[#666666] font-semibold uppercase">
                       CUIT
                     </p>
-                    <p className="text-sm text-[#0D4C92] font-medium">
+                    <p className="text-sm text-[#1A1A1A] font-medium">
                       {sucursal.cuit}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-[#A5A5A5] font-semibold uppercase">
+                    <p className="text-xs text-[#666666] font-semibold uppercase">
                       Dirección
                     </p>
-                    <p className="text-sm text-[#0D4C92]">
+                    <p className="text-sm text-[#1A1A1A]">
                       {sucursal.direccion}
                     </p>
                   </div>
@@ -318,7 +313,7 @@ export default function SucursalesPage() {
 
         {!isLoading && sucursales.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-white/80 text-lg">
+            <p className="text-[#666666] text-lg">
               No hay sucursales disponibles
             </p>
           </div>
@@ -328,7 +323,7 @@ export default function SucursalesPage() {
       {/* Botón flotante para agregar sucursal */}
       <button
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-[#0D4C92] to-[#2E7DDF] text-white rounded-full shadow-2xl hover:shadow-[#2E7DDF]/50 hover:scale-110 transition-all flex items-center justify-center group"
+        className="fixed bottom-8 right-8 w-16 h-16 bg-[#002868] text-white rounded-full shadow-2xl hover:bg-[#003d8f] hover:scale-110 transition-all flex items-center justify-center group cursor-pointer"
         aria-label="Agregar sucursal"
       >
         <svg
@@ -351,10 +346,10 @@ export default function SucursalesPage() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-[#0D4C92]">
+            <DialogTitle className="text-2xl font-bold text-[#002868]">
               Nueva Sucursal
             </DialogTitle>
-            <DialogDescription className="text-[#A5A5A5]">
+            <DialogDescription className="text-[#666666]">
               Completa los datos para crear una nueva sucursal
             </DialogDescription>
           </DialogHeader>
@@ -364,7 +359,7 @@ export default function SucursalesPage() {
               <div className="space-y-2">
                 <Label
                   htmlFor="nombre"
-                  className="text-[#0D4C92] font-semibold"
+                  className="text-[#002868] font-semibold"
                 >
                   Nombre de la Sucursal *
                 </Label>
@@ -375,14 +370,14 @@ export default function SucursalesPage() {
                   value={formData.nombre}
                   onChange={handleInputChange}
                   required
-                  className="border-[#A5A5A5]/30 focus:border-[#2E7DDF] focus:ring-[#2E7DDF]"
+                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label
                   htmlFor="razon_social"
-                  className="text-[#0D4C92] font-semibold"
+                  className="text-[#002868] font-semibold"
                 >
                   Razón Social *
                 </Label>
@@ -393,12 +388,12 @@ export default function SucursalesPage() {
                   value={formData.razon_social}
                   onChange={handleInputChange}
                   required
-                  className="border-[#A5A5A5]/30 focus:border-[#2E7DDF] focus:ring-[#2E7DDF]"
+                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="cuit" className="text-[#0D4C92] font-semibold">
+                <Label htmlFor="cuit" className="text-[#002868] font-semibold">
                   CUIT *
                 </Label>
                 <Input
@@ -408,14 +403,14 @@ export default function SucursalesPage() {
                   value={formData.cuit}
                   onChange={handleInputChange}
                   required
-                  className="border-[#A5A5A5]/30 focus:border-[#2E7DDF] focus:ring-[#2E7DDF]"
+                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label
                   htmlFor="direccion"
-                  className="text-[#0D4C92] font-semibold"
+                  className="text-[#002868] font-semibold"
                 >
                   Dirección *
                 </Label>
@@ -426,7 +421,7 @@ export default function SucursalesPage() {
                   value={formData.direccion}
                   onChange={handleInputChange}
                   required
-                  className="border-[#A5A5A5]/30 focus:border-[#2E7DDF] focus:ring-[#2E7DDF]"
+                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                 />
               </div>
             </div>
@@ -437,18 +432,18 @@ export default function SucursalesPage() {
                 variant="outline"
                 onClick={() => setIsModalOpen(false)}
                 disabled={isCreating}
-                className="border-[#A5A5A5]/30"
+                className="border-[#E0E0E0] text-[#1A1A1A] hover:bg-[#F5F5F5]"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 disabled={isCreating}
-                className="bg-gradient-to-r from-[#0D4C92] to-[#2E7DDF] hover:from-[#0D4C92]/90 hover:to-[#2E7DDF]/90 text-white"
+                className="bg-[#002868] hover:bg-[#003d8f] text-white"
               >
                 {isCreating ? (
                   <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
                     <span>Creando...</span>
                   </div>
                 ) : (
@@ -467,7 +462,7 @@ export default function SucursalesPage() {
             <DialogTitle className="text-2xl font-bold text-red-600">
               Confirmar Eliminación
             </DialogTitle>
-            <DialogDescription className="text-[#A5A5A5]">
+            <DialogDescription className="text-[#666666]">
               Esta acción no se puede deshacer. ¿Estás seguro de que deseas
               eliminar esta sucursal?
             </DialogDescription>
@@ -475,14 +470,14 @@ export default function SucursalesPage() {
 
           {sucursalToDelete && (
             <div className="py-4 space-y-2">
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="font-semibold text-[#0D4C92]">
+              <div className="p-4 bg-[#F5F5F5] rounded-lg border border-[#E0E0E0]">
+                <p className="font-semibold text-[#002868]">
                   {sucursalToDelete.nombre}
                 </p>
-                <p className="text-sm text-[#A5A5A5]">
+                <p className="text-sm text-[#666666]">
                   {sucursalToDelete.razon_social}
                 </p>
-                <p className="text-sm text-[#A5A5A5]">
+                <p className="text-sm text-[#666666]">
                   CUIT: {sucursalToDelete.cuit}
                 </p>
               </div>
@@ -495,7 +490,7 @@ export default function SucursalesPage() {
               variant="outline"
               onClick={() => setDeleteModalOpen(false)}
               disabled={isDeleting}
-              className="border-[#A5A5A5]/30"
+              className="border-[#E0E0E0] text-[#1A1A1A] hover:bg-[#F5F5F5]"
             >
               Cancelar
             </Button>
@@ -517,6 +512,6 @@ export default function SucursalesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   );
 }

@@ -48,37 +48,38 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.21 0.006 285.885);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.705 0.015 286.067);
+  /* Identidad Corporativa Heroica - White Mode */
+  --background: #FFFFFF; /* Blanco puro para fondos */
+  --foreground: #1A1A1A; /* Gris oscuro para texto principal */
+  --card: #FFFFFF; /* Blanco para tarjetas */
+  --card-foreground: #1A1A1A; /* Texto en tarjetas */
+  --popover: #FFFFFF; /* Blanco para popovers */
+  --popover-foreground: #1A1A1A; /* Texto en popovers */
+  --primary: #002868; /* Azul Marino - Color primario de marca */
+  --primary-foreground: #FFFFFF; /* Texto blanco sobre azul marino */
+  --secondary: #F5F5F5; /* Gris muy claro para fondos secundarios */
+  --secondary-foreground: #1A1A1A; /* Texto oscuro en fondos secundarios */
+  --muted: #F5F5F5; /* Gris claro para elementos apagados */
+  --muted-foreground: #666666; /* Gris medio para texto secundario */
+  --accent: #002868; /* Azul Marino para acentos */
+  --accent-foreground: #FFFFFF; /* Texto blanco en acentos */
+  --destructive: #DC2626; /* Rojo para acciones destructivas */
+  --border: #E0E0E0; /* Gris claro para bordes */
+  --input: #E0E0E0; /* Gris claro para inputs */
+  --ring: #002868; /* Azul Marino para focus rings */
+  --chart-1: #002868; /* Azul Marino para gráficos */
+  --chart-2: #0047AB; /* Azul más claro */
+  --chart-3: #4A90E2; /* Azul cielo */
+  --chart-4: #7CB9E8; /* Azul claro */
+  --chart-5: #B0D4F1; /* Azul muy claro */
+  --sidebar: #FFFFFF; /* Blanco para sidebar */
+  --sidebar-foreground: #1A1A1A; /* Texto oscuro en sidebar */
+  --sidebar-primary: #002868; /* Azul Marino para elementos primarios */
+  --sidebar-primary-foreground: #FFFFFF; /* Texto blanco */
+  --sidebar-accent: #F5F5F5; /* Gris claro para acentos */
+  --sidebar-accent-foreground: #1A1A1A; /* Texto oscuro */
+  --sidebar-border: #E0E0E0; /* Bordes grises */
+  --sidebar-ring: #002868; /* Focus ring azul marino */
 }
 
 .dark {

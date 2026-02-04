@@ -128,28 +128,28 @@ export default function SucursalDetailPage() {
 
   if (!isHydrated || !isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0D4C92] via-[#2E7DDF] to-[#0D4C92] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0D4C92] via-[#2E7DDF] to-[#0D4C92] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (!sucursal) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0D4C92] via-[#2E7DDF] to-[#0D4C92] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <p className="text-white text-xl mb-4">Sucursal no encontrada</p>
+          <p className="text-[#1A1A1A] text-xl mb-4">Sucursal no encontrada</p>
           <Button
             onClick={() => router.push("/sucursales")}
-            className="bg-white text-[#0D4C92]"
+            className="bg-[#002868] text-white hover:bg-[#003d8f]"
           >
             Volver a Sucursales
           </Button>
@@ -159,15 +159,15 @@ export default function SucursalDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0D4C92] via-[#2E7DDF] to-[#0D4C92]">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
+      <header className="bg-white border-b border-[#E0E0E0] shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center space-x-4">
             <Button
               onClick={() => router.push("/sucursales")}
               variant="outline"
-              className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+              className="bg-[#002868] border-[#002868] text-white hover:bg-[#003d8f]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -186,10 +186,10 @@ export default function SucursalDetailPage() {
               Volver
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-[#002868]">
                 {sucursal.nombre}
               </h1>
-              <p className="text-sm text-white/80">{sucursal.razon_social}</p>
+              <p className="text-sm text-[#666666]">{sucursal.razon_social}</p>
             </div>
           </div>
         </div>
@@ -199,12 +199,12 @@ export default function SucursalDetailPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Información de la Sucursal */}
-          <Card className="border-white/20 bg-white/95 backdrop-blur-xl shadow-xl">
+          <Card className="border-[#E0E0E0] bg-white shadow-lg">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold text-[#0D4C92]">
+              <CardTitle className="text-2xl font-bold text-[#002868]">
                 Información de la Sucursal
               </CardTitle>
-              <CardDescription className="text-[#A5A5A5]">
+              <CardDescription className="text-[#666666]">
                 Edita los datos de la sucursal
               </CardDescription>
             </CardHeader>
@@ -227,7 +227,7 @@ export default function SucursalDetailPage() {
                 <div className="space-y-2">
                   <Label
                     htmlFor="nombre"
-                    className="text-[#0D4C92] font-semibold"
+                    className="text-[#002868] font-semibold"
                   >
                     Nombre de la Sucursal *
                   </Label>
@@ -237,14 +237,14 @@ export default function SucursalDetailPage() {
                     value={formData.nombre}
                     onChange={handleInputChange}
                     required
-                    className="border-[#A5A5A5]/30 focus:border-[#2E7DDF] focus:ring-[#2E7DDF]"
+                    className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label
                     htmlFor="razon_social"
-                    className="text-[#0D4C92] font-semibold"
+                    className="text-[#002868] font-semibold"
                   >
                     Razón Social *
                   </Label>
@@ -254,14 +254,14 @@ export default function SucursalDetailPage() {
                     value={formData.razon_social}
                     onChange={handleInputChange}
                     required
-                    className="border-[#A5A5A5]/30 focus:border-[#2E7DDF] focus:ring-[#2E7DDF]"
+                    className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label
                     htmlFor="cuit"
-                    className="text-[#0D4C92] font-semibold"
+                    className="text-[#002868] font-semibold"
                   >
                     CUIT *
                   </Label>
@@ -271,14 +271,14 @@ export default function SucursalDetailPage() {
                     value={formData.cuit}
                     onChange={handleInputChange}
                     required
-                    className="border-[#A5A5A5]/30 focus:border-[#2E7DDF] focus:ring-[#2E7DDF]"
+                    className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label
                     htmlFor="direccion"
-                    className="text-[#0D4C92] font-semibold"
+                    className="text-[#002868] font-semibold"
                   >
                     Dirección *
                   </Label>
@@ -288,18 +288,18 @@ export default function SucursalDetailPage() {
                     value={formData.direccion}
                     onChange={handleInputChange}
                     required
-                    className="border-[#A5A5A5]/30 focus:border-[#2E7DDF] focus:ring-[#2E7DDF]"
+                    className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
 
                 <Button
                   type="submit"
                   disabled={isSaving}
-                  className="w-full bg-gradient-to-r from-[#0D4C92] to-[#2E7DDF] hover:from-[#0D4C92]/90 hover:to-[#2E7DDF]/90 text-white"
+                  className="w-full bg-[#002868] hover:bg-[#003d8f] text-white"
                 >
                   {isSaving ? (
                     <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
                       <span>Guardando...</span>
                     </div>
                   ) : (
@@ -312,12 +312,12 @@ export default function SucursalDetailPage() {
 
           {/* Gestión de Cajas */}
           <div className="space-y-6">
-            <Card className="border-white/20 bg-white/95 backdrop-blur-xl shadow-xl">
+            <Card className="border-[#E0E0E0] bg-white shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl font-bold text-[#0D4C92]">
+                <CardTitle className="text-2xl font-bold text-[#002868]">
                   Gestión de Cajas
                 </CardTitle>
-                <CardDescription className="text-[#A5A5A5]">
+                <CardDescription className="text-[#666666]">
                   Administra las cajas de la sucursal
                 </CardDescription>
               </CardHeader>
@@ -327,7 +327,7 @@ export default function SucursalDetailPage() {
                   onClick={() =>
                     router.push(`/sucursales/${params.id}/caja-efectivo`)
                   }
-                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-[#0D4C92] to-[#2E7DDF] p-6 text-left shadow-lg hover:shadow-2xl transition-all hover:scale-[1.02]"
+                  className="w-full group relative overflow-hidden rounded-xl bg-[#002868] p-6 text-left shadow-lg hover:shadow-xl hover:bg-[#003d8f] transition-all cursor-pointer"
                 >
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-2">
@@ -353,7 +353,7 @@ export default function SucursalDetailPage() {
                       Gestiona los movimientos de efectivo de la sucursal
                     </p>
                   </div>
-                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all"></div>
+                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-all"></div>
                 </button>
 
                 {/* Botón Caja en Banco */}
@@ -361,7 +361,7 @@ export default function SucursalDetailPage() {
                   onClick={() =>
                     router.push(`/sucursales/${params.id}/caja-banco`)
                   }
-                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-[#2E7DDF] to-[#0D4C92] p-6 text-left shadow-lg hover:shadow-2xl transition-all hover:scale-[1.02]"
+                  className="w-full group relative overflow-hidden rounded-xl bg-[#002868] p-6 text-left shadow-lg hover:shadow-xl hover:bg-[#003d8f] transition-all cursor-pointer"
                 >
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-2">
@@ -387,7 +387,7 @@ export default function SucursalDetailPage() {
                       Administra las cuentas bancarias y transacciones
                     </p>
                   </div>
-                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all"></div>
+                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-all"></div>
                 </button>
 
                 {/* Botón Pagos pendientes de autorizacion*/}
@@ -395,7 +395,7 @@ export default function SucursalDetailPage() {
                   onClick={() =>
                     router.push(`/sucursales/${params.id}/pagos-pendientes`)
                   }
-                  className="w-full group relative overflow-hidden rounded-xl bg-gradient-to-r from-[#2E7DDF] to-[#0D4C92] p-6 text-left shadow-lg hover:shadow-2xl transition-all hover:scale-[1.02]"
+                  className="w-full group relative overflow-hidden rounded-xl bg-[#002868] p-6 text-left shadow-lg hover:shadow-xl hover:bg-[#003d8f] transition-all cursor-pointer"
                 >
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-2">
@@ -422,7 +422,7 @@ export default function SucursalDetailPage() {
                       sucursal
                     </p>
                   </div>
-                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all"></div>
+                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-all"></div>
                 </button>
               </CardContent>
             </Card>

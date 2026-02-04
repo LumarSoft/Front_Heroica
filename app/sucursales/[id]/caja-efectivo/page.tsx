@@ -304,8 +304,8 @@ export default function CajaEfectivoPage() {
 
   if (!isHydrated || !isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0D4C92] via-[#2E7DDF] to-[#0D4C92] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -323,19 +323,19 @@ export default function CajaEfectivoPage() {
     const total = calcularTotal(transactions);
 
     return (
-      <Card className="border-white/20 bg-white/95 backdrop-blur-xl shadow-xl">
+      <Card className="border-[#E0E0E0] bg-white shadow-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl font-bold text-[#0D4C92]">
+              <CardTitle className="text-2xl font-bold text-[#002868]">
                 {title}
               </CardTitle>
-              <CardDescription className="text-[#A5A5A5]">
+              <CardDescription className="text-[#666666]">
                 {description}
               </CardDescription>
             </div>
             <div className="text-right">
-              <p className="text-sm text-[#A5A5A5] font-medium">Total</p>
+              <p className="text-sm text-[#666666] font-medium">Total</p>
               <p
                 className={`text-2xl font-bold ${total >= 0 ? "text-green-600" : "text-red-600"}`}
               >
@@ -345,20 +345,20 @@ export default function CajaEfectivoPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border border-[#A5A5A5]/20">
+          <div className="rounded-md border border-[#E0E0E0]">
             <Table>
               <TableHeader>
-                <TableRow className="bg-[#0D4C92]/5 hover:bg-[#0D4C92]/10">
-                  <TableHead className="font-bold text-[#0D4C92]">
+                <TableRow className="bg-[#F5F5F5] hover:bg-[#F5F5F5]">
+                  <TableHead className="font-bold text-[#002868]">
                     Fecha
                   </TableHead>
-                  <TableHead className="font-bold text-[#0D4C92]">
+                  <TableHead className="font-bold text-[#002868]">
                     Concepto
                   </TableHead>
-                  <TableHead className="font-bold text-[#0D4C92] text-right">
+                  <TableHead className="font-bold text-[#002868] text-right">
                     Monto
                   </TableHead>
-                  <TableHead className="font-bold text-[#0D4C92] text-center">
+                  <TableHead className="font-bold text-[#002868] text-center">
                     Acciones
                   </TableHead>
                 </TableRow>
@@ -368,7 +368,7 @@ export default function CajaEfectivoPage() {
                   <TableRow>
                     <TableCell
                       colSpan={4}
-                      className="text-center text-[#A5A5A5] py-8"
+                      className="text-center text-[#666666] py-8"
                     >
                       No hay movimientos registrados
                     </TableCell>
@@ -377,7 +377,7 @@ export default function CajaEfectivoPage() {
                   transactions.map((transaction) => (
                     <TableRow
                       key={transaction.id}
-                      className="hover:bg-[#0D4C92]/5"
+                      className="hover:bg-[#F5F5F5] transition-colors"
                     >
                       <TableCell className="font-medium">
                         {formatFecha(transaction.fecha)}
@@ -394,7 +394,7 @@ export default function CajaEfectivoPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleOpenDetails(transaction)}
-                            className="bg-[#0D4C92] text-white hover:bg-[#2E7DDF] border-none"
+                            className="bg-[#002868] text-white hover:bg-[#003d8f] border-none cursor-pointer"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -420,7 +420,7 @@ export default function CajaEfectivoPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleOpenStateChange(transaction)}
-                            className="bg-[#2E7DDF] text-white hover:bg-[#0D4C92] border-none"
+                            className="bg-[#002868] text-white hover:bg-[#003d8f] border-none cursor-pointer"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -441,7 +441,7 @@ export default function CajaEfectivoPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleOpenDelete(transaction)}
-                            className="bg-red-500 text-white hover:bg-red-600 border-none"
+                            className="bg-red-500 text-white hover:bg-red-600 border-none cursor-pointer"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -472,15 +472,15 @@ export default function CajaEfectivoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0D4C92] via-[#2E7DDF] to-[#0D4C92]">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white/10 backdrop-blur-md border-b border-white/20">
+      <header className="bg-white border-b border-[#E0E0E0] shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center space-x-4">
             <Button
               onClick={() => router.push(`/sucursales/${params.id}`)}
               variant="outline"
-              className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+              className="bg-[#002868] border-[#002868] text-white hover:bg-[#003d8f]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -499,10 +499,10 @@ export default function CajaEfectivoPage() {
               Volver
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-[#002868]">
                 Caja en Efectivo
               </h1>
-              <p className="text-sm text-white/80">
+              <p className="text-sm text-[#666666]">
                 Gestión de movimientos de efectivo
               </p>
             </div>
@@ -529,7 +529,7 @@ export default function CajaEfectivoPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-12 h-12 border-4 border-[#0D4C92]/30 border-t-[#0D4C92] rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -552,16 +552,16 @@ export default function CajaEfectivoPage() {
       <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
         <DialogContent className="sm:max-w-[500px] bg-white">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-[#0D4C92]">
+            <DialogTitle className="text-2xl font-bold text-[#002868]">
               Detalles del Movimiento
             </DialogTitle>
-            <DialogDescription className="text-[#A5A5A5]">
+            <DialogDescription className="text-[#666666]">
               Edita la información del movimiento de caja
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="fecha" className="text-[#0D4C92] font-semibold">
+              <Label htmlFor="fecha" className="text-[#002868] font-semibold">
                 Fecha
               </Label>
               <Input
@@ -570,13 +570,13 @@ export default function CajaEfectivoPage() {
                 type="date"
                 value={formData.fecha}
                 onChange={handleInputChange}
-                className="border-[#A5A5A5]/30 focus:border-[#2E7DDF]"
+                className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
               />
             </div>
             <div className="space-y-2">
               <Label
                 htmlFor="concepto"
-                className="text-[#0D4C92] font-semibold"
+                className="text-[#002868] font-semibold"
               >
                 Concepto
               </Label>
@@ -585,11 +585,11 @@ export default function CajaEfectivoPage() {
                 name="concepto"
                 value={formData.concepto}
                 onChange={handleInputChange}
-                className="border-[#A5A5A5]/30 focus:border-[#2E7DDF]"
+                className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="monto" className="text-[#0D4C92] font-semibold">
+              <Label htmlFor="monto" className="text-[#002868] font-semibold">
                 Monto
               </Label>
               <Input
@@ -598,13 +598,13 @@ export default function CajaEfectivoPage() {
                 type="number"
                 value={formData.monto}
                 onChange={handleInputChange}
-                className="border-[#A5A5A5]/30 focus:border-[#2E7DDF]"
+                className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
               />
             </div>
             <div className="space-y-2">
               <Label
                 htmlFor="descripcion"
-                className="text-[#0D4C92] font-semibold"
+                className="text-[#002868] font-semibold"
               >
                 Descripción
               </Label>
@@ -613,13 +613,13 @@ export default function CajaEfectivoPage() {
                 name="descripcion"
                 value={formData.descripcion}
                 onChange={handleInputChange}
-                className="border-[#A5A5A5]/30 focus:border-[#2E7DDF]"
+                className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
               />
             </div>
             <div className="space-y-2">
               <Label
                 htmlFor="prioridad"
-                className="text-[#0D4C92] font-semibold"
+                className="text-[#002868] font-semibold"
               >
                 Prioridad
               </Label>
@@ -628,7 +628,7 @@ export default function CajaEfectivoPage() {
                 name="prioridad"
                 value={formData.prioridad}
                 onChange={handleInputChange}
-                className="w-full rounded-md border border-[#A5A5A5]/30 px-3 py-2 focus:border-[#2E7DDF] focus:outline-none focus:ring-1 focus:ring-[#2E7DDF]"
+                className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
               >
                 <option value="baja">Baja</option>
                 <option value="media">Media</option>
@@ -640,7 +640,7 @@ export default function CajaEfectivoPage() {
             <Button
               variant="outline"
               onClick={() => setIsDetailsDialogOpen(false)}
-              className="border-[#A5A5A5]/30"
+              className="border-[#E0E0E0] text-[#1A1A1A] hover:bg-[#F5F5F5]"
               disabled={isSaving}
             >
               Cancelar
@@ -648,7 +648,7 @@ export default function CajaEfectivoPage() {
             <Button
               onClick={handleSaveDetails}
               disabled={isSaving}
-              className="bg-gradient-to-r from-[#0D4C92] to-[#2E7DDF] text-white hover:from-[#0D4C92]/90 hover:to-[#2E7DDF]/90"
+              className="bg-[#002868] text-white hover:bg-[#003d8f]"
             >
               {isSaving ? "Guardando..." : "Guardar Cambios"}
             </Button>
@@ -660,23 +660,23 @@ export default function CajaEfectivoPage() {
       <Dialog open={isStateDialogOpen} onOpenChange={setIsStateDialogOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-[#0D4C92]">
+            <DialogTitle className="text-2xl font-bold text-[#002868]">
               Cambiar Estado
             </DialogTitle>
-            <DialogDescription className="text-[#A5A5A5]">
+            <DialogDescription className="text-[#666666]">
               Selecciona el nuevo estado para este movimiento
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="estado" className="text-[#0D4C92] font-semibold">
+              <Label htmlFor="estado" className="text-[#002868] font-semibold">
                 Nuevo Estado
               </Label>
               <select
                 id="estado"
                 value={nuevoEstado}
                 onChange={(e) => setNuevoEstado(e.target.value)}
-                className="w-full rounded-md border border-[#A5A5A5]/30 px-3 py-2 focus:border-[#2E7DDF] focus:outline-none focus:ring-1 focus:ring-[#2E7DDF]"
+                className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
               >
                 <option value="pendiente">Pendiente</option>
                 <option value="aprobado">Aprobado</option>
@@ -689,7 +689,7 @@ export default function CajaEfectivoPage() {
             <Button
               variant="outline"
               onClick={() => setIsStateDialogOpen(false)}
-              className="border-[#A5A5A5]/30"
+              className="border-[#E0E0E0] text-[#1A1A1A] hover:bg-[#F5F5F5]"
               disabled={isSaving}
             >
               Cancelar
@@ -697,7 +697,7 @@ export default function CajaEfectivoPage() {
             <Button
               onClick={handleSaveStateChange}
               disabled={isSaving}
-              className="bg-gradient-to-r from-[#0D4C92] to-[#2E7DDF] text-white hover:from-[#0D4C92]/90 hover:to-[#2E7DDF]/90"
+              className="bg-[#002868] text-white hover:bg-[#003d8f]"
             >
               {isSaving ? "Guardando..." : "Cambiar Estado"}
             </Button>
@@ -712,7 +712,7 @@ export default function CajaEfectivoPage() {
             <DialogTitle className="text-2xl font-bold text-red-600">
               Confirmar Eliminación
             </DialogTitle>
-            <DialogDescription className="text-[#A5A5A5]">
+            <DialogDescription className="text-[#666666]">
               ¿Estás seguro de que deseas eliminar este movimiento? Esta acción
               no se puede deshacer.
             </DialogDescription>
@@ -721,7 +721,7 @@ export default function CajaEfectivoPage() {
             <Button
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
-              className="border-[#A5A5A5]/30"
+              className="border-[#E0E0E0] text-[#1A1A1A] hover:bg-[#F5F5F5]"
               disabled={isSaving}
             >
               Cancelar
