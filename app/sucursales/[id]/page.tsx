@@ -159,15 +159,16 @@ export default function SucursalDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-b border-[#E0E0E0] shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-[#F8F9FA]">
+      {/* Header Mejorado */}
+      <header className="bg-white border-b border-[#E0E0E0] shadow-sm sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center gap-4">
+            {/* Botón Volver */}
             <Button
               onClick={() => router.push("/sucursales")}
               variant="outline"
-              className="bg-[#002868] border-[#002868] text-white hover:bg-[#003d8f]"
+              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -175,7 +176,7 @@ export default function SucursalDetailPage() {
                 viewBox="0 0 24 24"
                 strokeWidth={2}
                 stroke="currentColor"
-                className="w-5 h-5 mr-2"
+                className="w-4 h-4 mr-2"
               >
                 <path
                   strokeLinecap="round"
@@ -185,21 +186,26 @@ export default function SucursalDetailPage() {
               </svg>
               Volver
             </Button>
+
+            {/* Separador */}
+            <div className="h-6 w-px bg-[#E0E0E0]"></div>
+
+            {/* Info de Sucursal */}
             <div>
-              <h1 className="text-2xl font-bold text-[#002868]">
+              <h1 className="text-xl font-bold text-[#002868]">
                 {sucursal.nombre}
               </h1>
-              <p className="text-sm text-[#666666]">{sucursal.razon_social}</p>
+              <p className="text-xs text-[#666666]">{sucursal.razon_social}</p>
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <main className="container mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Información de la Sucursal */}
-          <Card className="border-[#E0E0E0] bg-white shadow-lg">
+          <Card className="border-[#E0E0E0] bg-white shadow-md hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-[#002868]">
                 Información de la Sucursal
@@ -210,13 +216,13 @@ export default function SucursalDetailPage() {
             </CardHeader>
             <CardContent>
               {error && (
-                <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
+                <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 animate-in fade-in slide-in-from-top-2">
                   <p className="text-sm text-red-600 font-medium">⚠️ {error}</p>
                 </div>
               )}
 
               {successMessage && (
-                <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200">
+                <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 animate-in fade-in slide-in-from-top-2">
                   <p className="text-sm text-green-600 font-medium">
                     ✓ {successMessage}
                   </p>
@@ -295,7 +301,7 @@ export default function SucursalDetailPage() {
                 <Button
                   type="submit"
                   disabled={isSaving}
-                  className="w-full bg-[#002868] hover:bg-[#003d8f] text-white"
+                  className="w-full bg-[#002868] hover:bg-[#003d8f] text-white cursor-pointer"
                 >
                   {isSaving ? (
                     <div className="flex items-center space-x-2">
@@ -312,7 +318,7 @@ export default function SucursalDetailPage() {
 
           {/* Gestión de Cajas */}
           <div className="space-y-6">
-            <Card className="border-[#E0E0E0] bg-white shadow-lg">
+            <Card className="border-[#E0E0E0] bg-white shadow-md">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold text-[#002868]">
                   Gestión de Cajas
@@ -327,20 +333,17 @@ export default function SucursalDetailPage() {
                   onClick={() =>
                     router.push(`/sucursales/${params.id}/caja-efectivo`)
                   }
-                  className="w-full group relative overflow-hidden rounded-xl bg-[#002868] p-6 text-left shadow-lg hover:shadow-xl hover:bg-[#003d8f] transition-all cursor-pointer"
+                  className="w-full group bg-white border-2 border-[#E0E0E0] hover:border-[#002868] rounded-xl p-6 text-left shadow-sm hover:shadow-md transition-all cursor-pointer"
                 >
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-2xl font-bold text-white">
-                        Caja en Efectivo
-                      </h3>
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-[#002868]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#002868]/20 transition-colors">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
                         strokeWidth={2}
                         stroke="currentColor"
-                        className="w-8 h-8 text-white/80"
+                        className="w-6 h-6 text-[#002868]"
                       >
                         <path
                           strokeLinecap="round"
@@ -349,11 +352,29 @@ export default function SucursalDetailPage() {
                         />
                       </svg>
                     </div>
-                    <p className="text-white/90 text-sm">
-                      Gestiona los movimientos de efectivo de la sucursal
-                    </p>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-[#002868] mb-1 group-hover:text-[#003d8f] transition-colors">
+                        Caja en Efectivo
+                      </h3>
+                      <p className="text-sm text-[#666666]">
+                        Gestiona los movimientos de efectivo de la sucursal
+                      </p>
+                    </div>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-5 h-5 text-[#666666] group-hover:text-[#002868] group-hover:translate-x-1 transition-all"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                      />
+                    </svg>
                   </div>
-                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-all"></div>
                 </button>
 
                 {/* Botón Caja en Banco */}
@@ -361,20 +382,17 @@ export default function SucursalDetailPage() {
                   onClick={() =>
                     router.push(`/sucursales/${params.id}/caja-banco`)
                   }
-                  className="w-full group relative overflow-hidden rounded-xl bg-[#002868] p-6 text-left shadow-lg hover:shadow-xl hover:bg-[#003d8f] transition-all cursor-pointer"
+                  className="w-full group bg-white border-2 border-[#E0E0E0] hover:border-[#002868] rounded-xl p-6 text-left shadow-sm hover:shadow-md transition-all cursor-pointer"
                 >
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-2xl font-bold text-white">
-                        Caja en Banco
-                      </h3>
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-[#002868]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#002868]/20 transition-colors">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
                         strokeWidth={2}
                         stroke="currentColor"
-                        className="w-8 h-8 text-white/80"
+                        className="w-6 h-6 text-[#002868]"
                       >
                         <path
                           strokeLinecap="round"
@@ -383,46 +401,78 @@ export default function SucursalDetailPage() {
                         />
                       </svg>
                     </div>
-                    <p className="text-white/90 text-sm">
-                      Administra las cuentas bancarias y transacciones
-                    </p>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-[#002868] mb-1 group-hover:text-[#003d8f] transition-colors">
+                        Caja en Banco
+                      </h3>
+                      <p className="text-sm text-[#666666]">
+                        Administra las cuentas bancarias y transacciones
+                      </p>
+                    </div>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-5 h-5 text-[#666666] group-hover:text-[#002868] group-hover:translate-x-1 transition-all"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                      />
+                    </svg>
                   </div>
-                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-all"></div>
                 </button>
 
-                {/* Botón Pagos pendientes de autorizacion*/}
+                {/* Botón Pagos Pendientes */}
                 <button
                   onClick={() =>
                     router.push(`/sucursales/${params.id}/pagos-pendientes`)
                   }
-                  className="w-full group relative overflow-hidden rounded-xl bg-[#002868] p-6 text-left shadow-lg hover:shadow-xl hover:bg-[#003d8f] transition-all cursor-pointer"
+                  className="w-full group bg-white border-2 border-[#E0E0E0] hover:border-[#002868] rounded-xl p-6 text-left shadow-sm hover:shadow-md transition-all cursor-pointer"
                 >
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-2xl font-bold text-white">
-                        Pagos pendientes de autorizacion
-                      </h3>
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-[#002868]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#002868]/20 transition-colors">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
                         strokeWidth={2}
                         stroke="currentColor"
-                        className="w-8 h-8 text-white/80"
+                        className="w-6 h-6 text-[#002868]"
                       >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"
+                          d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
                     </div>
-                    <p className="text-white/90 text-sm">
-                      Gestiona los pagos pendientes de autorizacion de la
-                      sucursal
-                    </p>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-[#002868] mb-1 group-hover:text-[#003d8f] transition-colors">
+                        Pagos Pendientes de Autorización
+                      </h3>
+                      <p className="text-sm text-[#666666]">
+                        Gestiona los pagos pendientes de autorización de la sucursal
+                      </p>
+                    </div>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-5 h-5 text-[#666666] group-hover:text-[#002868] group-hover:translate-x-1 transition-all"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                      />
+                    </svg>
                   </div>
-                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-all"></div>
                 </button>
               </CardContent>
             </Card>
