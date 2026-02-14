@@ -48,6 +48,11 @@ export default function SucursalDetailPage() {
     direccion: "",
   });
 
+  // Estados para totales de cajas
+  const [totalesEfectivo, setTotalesEfectivo] = useState({ total_real: 0, total_necesario: 0 });
+  const [totalesBanco, setTotalesBanco] = useState({ total_real: 0, total_necesario: 0 });
+  const [loadingTotales, setLoadingTotales] = useState(true);
+
   // Esperar a que Zustand se hidrate desde localStorage
   useEffect(() => {
     setIsHydrated(true);
@@ -89,7 +94,37 @@ export default function SucursalDetailPage() {
     };
 
     fetchSucursal();
+    fetchTotales();
   }, [isAuthenticated, isHydrated, router, params.id]);
+
+  // Función para cargar totales de las cajas
+  const fetchTotales = async () => {
+    try {
+      setLoadingTotales(true);
+
+      // Cargar totales de efectivo
+      const resEfectivo = await fetch(
+        API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(Number(params.id))
+      );
+      const dataEfectivo = await resEfectivo.json();
+      if (resEfectivo.ok) {
+        setTotalesEfectivo(dataEfectivo.data);
+      }
+
+      // Cargar totales de banco
+      const resBanco = await fetch(
+        API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(Number(params.id))
+      );
+      const dataBanco = await resBanco.json();
+      if (resBanco.ok) {
+        setTotalesBanco(dataBanco.data);
+      }
+    } catch (err) {
+      console.error('Error al cargar totales:', err);
+    } finally {
+      setLoadingTotales(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -269,6 +304,23 @@ export default function SucursalDetailPage() {
               <h3 className="text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors">
                 Caja en Efectivo
               </h3>
+
+              {/* Total de Saldo Real */}
+              {loadingTotales ? (
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <div className="w-4 h-4 border-2 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
+                  <p className="text-sm text-[#666666]">Cargando...</p>
+                </div>
+              ) : (
+                <div className="mb-3">
+                  <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide mb-1">Saldo Real</p>
+                  <p className={`text-2xl font-bold ${totalesEfectivo.total_real >= 0 ? 'text-emerald-600' : 'text-rose-600'
+                    }`}>
+                    {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(totalesEfectivo.total_real)}
+                  </p>
+                </div>
+              )}
+
               <p className="text-[#666666] text-base leading-relaxed">
                 Gestiona los movimientos de efectivo de la sucursal
               </p>
@@ -323,6 +375,23 @@ export default function SucursalDetailPage() {
               <h3 className="text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors">
                 Caja en Banco
               </h3>
+
+              {/* Total de Saldo Real */}
+              {loadingTotales ? (
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <div className="w-4 h-4 border-2 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
+                  <p className="text-sm text-[#666666]">Cargando...</p>
+                </div>
+              ) : (
+                <div className="mb-3">
+                  <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide mb-1">Saldo Real</p>
+                  <p className={`text-2xl font-bold ${totalesBanco.total_real >= 0 ? 'text-emerald-600' : 'text-rose-600'
+                    }`}>
+                    {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(totalesBanco.total_real)}
+                  </p>
+                </div>
+              )}
+
               <p className="text-[#666666] text-base leading-relaxed">
                 Administra cuentas y transacciones bancarias
               </p>
