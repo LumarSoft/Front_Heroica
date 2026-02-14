@@ -25,7 +25,18 @@ interface Sucursal {
   razon_social: string;
   cuit: string;
   direccion: string;
+  email_correspondencia?: string;
   activo: boolean;
+}
+
+interface Documento {
+  id: number;
+  sucursal_id: number;
+  nombre_archivo: string;
+  ruta_archivo: string;
+  tipo_archivo: string;
+  tamano_bytes: number;
+  fecha_subida: string;
 }
 
 export default function SucursalDetailPage() {
@@ -40,18 +51,25 @@ export default function SucursalDetailPage() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
 
   const [formData, setFormData] = useState({
     nombre: "",
     razon_social: "",
     cuit: "",
     direccion: "",
+    email_correspondencia: "",
   });
 
   // Estados para totales de cajas
   const [totalesEfectivo, setTotalesEfectivo] = useState({ total_real: 0, total_necesario: 0 });
   const [totalesBanco, setTotalesBanco] = useState({ total_real: 0, total_necesario: 0 });
   const [loadingTotales, setLoadingTotales] = useState(true);
+
+  // Estados para documentos (múltiples)
+  const [documentos, setDocumentos] = useState<Documento[]>([]);
+  const [loadingDocumentos, setLoadingDocumentos] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Esperar a que Zustand se hidrate desde localStorage
   useEffect(() => {
@@ -84,6 +102,7 @@ export default function SucursalDetailPage() {
           razon_social: data.data.razon_social,
           cuit: data.data.cuit,
           direccion: data.data.direccion,
+          email_correspondencia: data.data.email_correspondencia || "",
         });
       } catch (err: any) {
         console.error("Error al cargar sucursal:", err);
@@ -94,6 +113,7 @@ export default function SucursalDetailPage() {
     };
 
     fetchSucursal();
+    fetchDocumentos();
     fetchTotales();
   }, [isAuthenticated, isHydrated, router, params.id]);
 
@@ -165,6 +185,111 @@ export default function SucursalDetailPage() {
       setIsSaving(false);
     }
   };
+
+  // Funciones para manejo de documentos (múltiples)
+  const fetchDocumentos = async () => {
+    try {
+      setLoadingDocumentos(true);
+      const response = await fetch(
+        API_ENDPOINTS.SUCURSALES.GET_DOCUMENTOS(Number(params.id))
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        setDocumentos(data.data || []);
+      }
+    } catch (err) {
+      console.error("Error al cargar documentos:", err);
+    } finally {
+      setLoadingDocumentos(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleUploadDoc = async () => {
+    if (!selectedFile) return;
+
+    setIsUploadingDoc(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const response = await fetch(
+        API_ENDPOINTS.SUCURSALES.UPLOAD_DOCUMENTO(Number(params.id)),
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Error al subir documento");
+      }
+
+      setSuccessMessage("Documento subido exitosamente");
+      setSelectedFile(null);
+
+      // Recargar lista de documentos
+      await fetchDocumentos();
+
+      // Limpiar el input de archivo
+      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (err: any) {
+      console.error("Error al subir documento:", err);
+      setError(err.message || "Error al subir documento");
+    } finally {
+      setIsUploadingDoc(false);
+    }
+  };
+
+  const handleDownloadDoc = (docId: number) => {
+    const url = API_ENDPOINTS.SUCURSALES.DOWNLOAD_DOCUMENTO(Number(params.id), docId);
+    window.open(url, "_blank");
+  };
+
+  const handleDeleteDoc = async (docId: number, nombreArchivo: string) => {
+    if (!confirm(`¿Estás seguro de eliminar "${nombreArchivo}"?`)) return;
+
+    setError("");
+
+    try {
+      const response = await fetch(
+        API_ENDPOINTS.SUCURSALES.DELETE_DOCUMENTO(Number(params.id), docId),
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Error al eliminar documento");
+      }
+
+      setSuccessMessage("Documento eliminado exitosamente");
+
+      // Recargar lista de documentos
+      await fetchDocumentos();
+
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (err: any) {
+      console.error("Error al eliminar documento:", err);
+      setError(err.message || "Error al eliminar documento");
+    }
+  };
+
 
   if (!isHydrated || !isAuthenticated) {
     return (
@@ -475,7 +600,11 @@ export default function SucursalDetailPage() {
       </main>
 
       {/* Modal de Información de la Sucursal */}
-      <Dialog open={isInfoDialogOpen} onOpenChange={setIsInfoDialogOpen}>
+      <Dialog
+        key={sucursal?.documentacion_nombre || 'no-doc'}
+        open={isInfoDialogOpen}
+        onOpenChange={setIsInfoDialogOpen}
+      >
         <DialogContent className="sm:max-w-2xl bg-white">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-[#002868]">
@@ -570,6 +699,156 @@ export default function SucursalDetailPage() {
                     className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="email_correspondencia"
+                    className="text-[#002868] font-semibold text-sm"
+                  >
+                    📧 Email de Correspondencia
+                  </Label>
+                  <Input
+                    id="email_correspondencia"
+                    name="email_correspondencia"
+                    type="email"
+                    value={formData.email_correspondencia}
+                    onChange={handleInputChange}
+                    placeholder="correo@ejemplo.com"
+                    className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                  />
+                </div>
+              </div>
+
+              {/* Sección de Documentación */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-semibold text-[#002868] mb-4">
+                  📎 Documentación
+                </h3>
+
+                {sucursal?.documentacion_nombre ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-10 h-10 bg-[#002868] rounded-lg flex items-center justify-center flex-shrink-0">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="currentColor"
+                            className="w-5 h-5 text-white"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                            />
+                          </svg>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-[#1A1A1A] truncate" title={sucursal.documentacion_nombre}>
+                            {sucursal.documentacion_nombre}
+                          </p>
+                          <p className="text-xs text-[#666666]">Documento adjunto</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 flex-shrink-0 ml-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleDownloadDoc}
+                          className="border-[#002868] text-[#002868] hover:bg-[#002868] hover:text-white"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="currentColor"
+                            className="w-4 h-4 mr-1"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+                            />
+                          </svg>
+                          Descargar
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleDeleteDoc}
+                          className="border-rose-600 text-rose-600 hover:bg-rose-600 hover:text-white"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="currentColor"
+                            className="w-4 h-4"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                            />
+                          </svg>
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Opción para reemplazar */}
+                    <details className="text-sm">
+                      <summary className="cursor-pointer text-[#002868] hover:underline font-medium">
+                        Reemplazar documento
+                      </summary>
+                      <div className="mt-3 flex items-center gap-3">
+                        <Input
+                          id="file-upload-replace"
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg"
+                          onChange={handleFileChange}
+                          className="flex-1 border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleUploadDoc}
+                          disabled={isUploadingDoc || !selectedFile}
+                          className="bg-[#002868] hover:bg-[#003d8f] text-white"
+                        >
+                          {isUploadingDoc ? "Subiendo..." : "Subir"}
+                        </Button>
+                      </div>
+                    </details>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm text-[#666666]">
+                      Sube un archivo PDF o JPG con la documentación de la sucursal
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <Input
+                        id="file-upload"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg"
+                        onChange={handleFileChange}
+                        className="flex-1 border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleUploadDoc}
+                        disabled={isUploadingDoc || !selectedFile}
+                        className="bg-[#002868] hover:bg-[#003d8f] text-white"
+                      >
+                        {isUploadingDoc ? "Subiendo..." : "Subir"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 pt-4">

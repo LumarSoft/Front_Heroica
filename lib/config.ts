@@ -13,6 +13,11 @@ export const API_ENDPOINTS = {
     CREATE: `${API_URL}/api/sucursales`,
     UPDATE: (id: number) => `${API_URL}/api/sucursales/${id}`,
     DELETE: (id: number) => `${API_URL}/api/sucursales/${id}`,
+    // Documentos (múltiples)
+    GET_DOCUMENTOS: (id: number) => `${API_URL}/api/sucursales/${id}/documentos`,
+    UPLOAD_DOCUMENTO: (id: number) => `${API_URL}/api/sucursales/${id}/documentos`,
+    DOWNLOAD_DOCUMENTO: (sucursalId: number, docId: number) => `${API_URL}/api/sucursales/${sucursalId}/documentos/${docId}/download`,
+    DELETE_DOCUMENTO: (sucursalId: number, docId: number) => `${API_URL}/api/sucursales/${sucursalId}/documentos/${docId}`,
   },
   MOVIMIENTOS: {
     GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/movimientos/${sucursalId}`,
@@ -38,5 +43,36 @@ export const API_ENDPOINTS = {
     MOVER_A_REAL: (id: number) => `${API_URL}/api/caja-banco/${id}/mover-a-real`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/caja-banco/${id}/estado`,
     DELETE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
+  },
+  CONFIGURACION: {
+    // Categorías
+    CATEGORIAS: {
+      GET_ALL: `${API_URL}/api/configuracion/categorias`,
+      CREATE: `${API_URL}/api/configuracion/categorias`,
+      UPDATE: (id: number) => `${API_URL}/api/configuracion/categorias/${id}`,
+      DELETE: (id: number) => `${API_URL}/api/configuracion/categorias/${id}`,
+    },
+    // Subcategorías
+    SUBCATEGORIAS: {
+      GET_ALL: `${API_URL}/api/configuracion/subcategorias`,
+      GET_BY_CATEGORIA: (categoriaId: number) => `${API_URL}/api/configuracion/subcategorias?categoria_id=${categoriaId}`,
+      CREATE: `${API_URL}/api/configuracion/subcategorias`,
+      UPDATE: (id: number) => `${API_URL}/api/configuracion/subcategorias/${id}`,
+      DELETE: (id: number) => `${API_URL}/api/configuracion/subcategorias/${id}`,
+    },
+    // Bancos
+    BANCOS: {
+      GET_ALL: `${API_URL}/api/configuracion/bancos`,
+      CREATE: `${API_URL}/api/configuracion/bancos`,
+      UPDATE: (id: number) => `${API_URL}/api/configuracion/bancos/${id}`,
+      DELETE: (id: number) => `${API_URL}/api/configuracion/bancos/${id}`,
+    },
+    // Medios de Pago
+    MEDIOS_PAGO: {
+      GET_ALL: `${API_URL}/api/configuracion/medios-pago`,
+      CREATE: `${API_URL}/api/configuracion/medios-pago`,
+      UPDATE: (id: number) => `${API_URL}/api/configuracion/medios-pago/${id}`,
+      DELETE: (id: number) => `${API_URL}/api/configuracion/medios-pago/${id}`,
+    },
   },
 };
