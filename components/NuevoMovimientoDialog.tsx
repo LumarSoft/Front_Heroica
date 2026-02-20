@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,12 +22,24 @@ interface NuevoMovimientoDialogProps {
   onSuccess: () => void;
 }
 
+interface Categoria {
+  id: number;
+  nombre: string;
+}
+
+interface Subcategoria {
+  id: number;
+  categoria_id: number;
+  nombre: string;
+}
+
 export default function NuevoMovimientoDialog({
   isOpen,
   onClose,
   sucursalId,
   onSuccess,
 }: NuevoMovimientoDialogProps) {
+  const { user } = useAuthStore();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
@@ -36,7 +49,54 @@ export default function NuevoMovimientoDialog({
     descripcion: "",
     prioridad: "media" as "baja" | "media" | "alta",
     estado: "aprobado" as "pendiente" | "aprobado" | "rechazado" | "completado",
+    tipo: "ingreso",
+    categoria_id: "",
+    subcategoria_id: "",
   });
+
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
+
+  // Cargar categorías al abrir el dialog
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchCategorias();
+    }
+  }, [isOpen]);
+
+  const fetchCategorias = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL);
+      const data = await response.json();
+      if (response.ok) {
+        setCategorias(data.data || []);
+      }
+    } catch (err) {
+      console.error("Error al cargar categorías:", err);
+    }
+  };
+
+  // Cargar subcategorías cuando cambia la categoría
+  useEffect(() => {
+    if (formData.categoria_id) {
+      fetchSubcategorias(Number(formData.categoria_id));
+    } else {
+      setSubcategorias([]);
+    }
+  }, [formData.categoria_id]);
+
+  const fetchSubcategorias = async (categoriaId: number) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId));
+      const data = await response.json();
+      if (response.ok) {
+        setSubcategorias(data.data || []);
+      }
+    } catch (err) {
+      console.error("Error al cargar subcategorías:", err);
+    }
+  };
 
   // Manejar cambios en el formulario
   const handleInputChange = (
@@ -55,6 +115,9 @@ export default function NuevoMovimientoDialog({
       descripcion: "",
       prioridad: "media",
       estado: "aprobado",
+      tipo: "ingreso",
+      categoria_id: "",
+      subcategoria_id: "",
     });
     setError("");
   };
@@ -87,12 +150,16 @@ export default function NuevoMovimientoDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sucursal_id: sucursalId,
+          user_id: user?.id,
           fecha: formData.fecha,
           concepto: formData.concepto,
           monto: parseFloat(formData.monto),
           descripcion: formData.descripcion,
           prioridad: formData.prioridad,
           estado: formData.estado,
+          tipo: formData.tipo,
+          categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
+          subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
         }),
       });
 
@@ -177,20 +244,37 @@ export default function NuevoMovimientoDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="monto" className="text-[#002868] font-semibold">
-              Monto *
-            </Label>
-            <Input
-              id="monto"
-              name="monto"
-              type="number"
-              step="0.01"
-              value={formData.monto}
-              onChange={handleInputChange}
-              placeholder="Ej: 15000 (positivo para ingreso, negativo para egreso)"
-              className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="monto" className="text-[#002868] font-semibold">
+                Monto *
+              </Label>
+              <Input
+                id="monto"
+                name="monto"
+                type="number"
+                step="0.01"
+                value={formData.monto}
+                onChange={handleInputChange}
+                placeholder="Ej: 15000"
+                className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tipo" className="text-[#002868] font-semibold">
+                Tipo *
+              </Label>
+              <select
+                id="tipo"
+                name="tipo"
+                value={formData.tipo}
+                onChange={handleInputChange}
+                className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
+              >
+                <option value="ingreso">Ingreso</option>
+                <option value="egreso">Egreso</option>
+              </select>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -208,6 +292,49 @@ export default function NuevoMovimientoDialog({
               placeholder="Detalles adicionales (opcional)"
               className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="categoria_id" className="text-[#002868] font-semibold">
+                Categoría
+              </Label>
+              <select
+                id="categoria_id"
+                name="categoria_id"
+                value={formData.categoria_id}
+                onChange={handleInputChange}
+                className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
+              >
+                <option value="">Seleccione una categoría</option>
+                {categorias.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="subcategoria_id" className="text-[#002868] font-semibold">
+                Subcategoría
+              </Label>
+              <select
+                id="subcategoria_id"
+                name="subcategoria_id"
+                value={formData.subcategoria_id}
+                onChange={handleInputChange}
+                disabled={!formData.categoria_id}
+                className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868] disabled:opacity-50 disabled:bg-gray-100"
+              >
+                <option value="">Seleccione una subcategoría</option>
+                {subcategorias.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="space-y-2">

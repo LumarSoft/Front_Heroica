@@ -42,8 +42,22 @@ interface Transaction {
   monto: number | string; // Puede venir como string desde la API
   descripcion?: string;
   prioridad: "baja" | "media" | "alta";
+  tipo: "ingreso" | "egreso" | string;
   tipo_movimiento: string;
   estado: string;
+  categoria_id?: number | string;
+  subcategoria_id?: number | string;
+}
+
+interface Categoria {
+  id: number;
+  nombre: string;
+}
+
+interface Subcategoria {
+  id: number;
+  categoria_id: number;
+  nombre: string;
 }
 
 export default function CajaEfectivoPage() {
@@ -65,13 +79,15 @@ export default function CajaEfectivoPage() {
     useState<Transaction | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Form data para el dialog de detalles
   const [formData, setFormData] = useState({
     fecha: "",
     concepto: "",
     monto: "",
     descripcion: "",
     prioridad: "media" as "baja" | "media" | "alta",
+    tipo: "ingreso",
+    categoria_id: "",
+    subcategoria_id: "",
   });
 
   // Estado para el cambio de estado
@@ -81,10 +97,43 @@ export default function CajaEfectivoPage() {
   const [saldoReal, setSaldoReal] = useState<Transaction[]>([]);
   const [saldoNecesario, setSaldoNecesario] = useState<Transaction[]>([]);
 
+  // Categorías y Subcategorías
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
+
   // Esperar a que Zustand se hidrate desde localStorage
   useEffect(() => {
     setIsHydrated(true);
+    fetchCategorias();
   }, []);
+
+  const fetchCategorias = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL);
+      const data = await response.json();
+      if (response.ok) setCategorias(data.data || []);
+    } catch (err) {
+      console.error("Error al cargar categorías:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (formData.categoria_id) {
+      fetchSubcategorias(Number(formData.categoria_id));
+    } else {
+      setSubcategorias([]);
+    }
+  }, [formData.categoria_id]);
+
+  const fetchSubcategorias = async (categoriaId: number) => {
+    try {
+      const response = await fetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId));
+      const data = await response.json();
+      if (response.ok) setSubcategorias(data.data || []);
+    } catch (err) {
+      console.error("Error al cargar subcategorías:", err);
+    }
+  };
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -177,6 +226,9 @@ export default function CajaEfectivoPage() {
       monto: transaction.monto.toString(),
       descripcion: transaction.descripcion || "",
       prioridad: transaction.prioridad || "media",
+      tipo: transaction.tipo || (Number(transaction.monto) < 0 ? "egreso" : "ingreso"),
+      categoria_id: transaction.categoria_id ? transaction.categoria_id.toString() : "",
+      subcategoria_id: transaction.subcategoria_id ? transaction.subcategoria_id.toString() : "",
     });
     setIsDetailsDialogOpen(true);
   };
@@ -213,6 +265,9 @@ export default function CajaEfectivoPage() {
             monto: parseFloat(formData.monto),
             descripcion: formData.descripcion,
             prioridad: formData.prioridad,
+            tipo: formData.tipo,
+            categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
+            subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
           }),
         },
       );
@@ -336,12 +391,14 @@ export default function CajaEfectivoPage() {
     title,
     description,
     transactions,
+    customTotal,
   }: {
     title: string;
     description: string;
     transactions: Transaction[];
+    customTotal?: number;
   }) => {
-    const total = calcularTotal(transactions);
+    const total = customTotal !== undefined ? customTotal : calcularTotal(transactions);
 
     return (
       <Card className="border-[#E0E0E0] bg-white shadow-lg">
@@ -379,6 +436,9 @@ export default function CajaEfectivoPage() {
                   </TableHead>
                   <TableHead className="font-bold text-[#002868] text-sm">
                     Concepto
+                  </TableHead>
+                  <TableHead className="font-bold text-[#002868] text-sm text-center">
+                    Tipo
                   </TableHead>
                   <TableHead className="font-bold text-[#002868] text-sm text-right">
                     Monto
@@ -434,20 +494,29 @@ export default function CajaEfectivoPage() {
                       <TableCell className="text-[#1A1A1A]">
                         {transaction.concepto}
                       </TableCell>
+                      <TableCell className="text-center">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${transaction.tipo === "egreso" || (!transaction.tipo && Number(transaction.monto) < 0)
+                              ? "bg-rose-100 text-rose-800"
+                              : "bg-emerald-100 text-emerald-800"
+                            }`}
+                        >
+                          {transaction.tipo === "egreso" || (!transaction.tipo && Number(transaction.monto) < 0) ? "Egreso" : "Ingreso"}
+                        </span>
+                      </TableCell>
                       <TableCell
-                        className={`text-right font-bold text-base ${transaction.monto >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+                        className={`text-right font-bold text-base ${Number(transaction.monto) >= 0 ? "text-emerald-700" : "text-rose-700"}`}
                       >
                         {formatMonto(transaction.monto)}
                       </TableCell>
                       <TableCell className="text-center">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            transaction.prioridad === "alta"
-                              ? "bg-rose-100 text-rose-800"
-                              : transaction.prioridad === "media"
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-gray-100 text-gray-800"
-                          }`}
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${transaction.prioridad === "alta"
+                            ? "bg-rose-100 text-rose-800"
+                            : transaction.prioridad === "media"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-gray-100 text-gray-800"
+                            }`}
                         >
                           {transaction.prioridad.charAt(0).toUpperCase() +
                             transaction.prioridad.slice(1)}
@@ -455,15 +524,14 @@ export default function CajaEfectivoPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            transaction.estado === "completado"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : transaction.estado === "aprobado"
-                                ? "bg-blue-100 text-blue-800"
-                                : transaction.estado === "rechazado"
-                                  ? "bg-rose-100 text-rose-800"
-                                  : "bg-amber-100 text-amber-800"
-                          }`}
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${transaction.estado === "completado"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : transaction.estado === "aprobado"
+                              ? "bg-blue-100 text-blue-800"
+                              : transaction.estado === "rechazado"
+                                ? "bg-rose-100 text-rose-800"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
                         >
                           {transaction.estado.charAt(0).toUpperCase() +
                             transaction.estado.slice(1)}
@@ -586,7 +654,7 @@ export default function CajaEfectivoPage() {
         )}
 
         {/* Botón para nuevo movimiento */}
-        <div className="mb-6">
+        <div className="flex justify-end mb-6">
           <Button
             onClick={() => setIsNuevoMovimientoDialogOpen(true)}
             className="bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
@@ -625,6 +693,7 @@ export default function CajaEfectivoPage() {
               title="Saldo Necesario"
               description="Pagos y compromisos programados"
               transactions={saldoNecesario}
+              customTotal={calcularTotal(saldoReal) - Math.abs(calcularTotal(saldoNecesario))}
             />
           </div>
         )}
@@ -686,18 +755,35 @@ export default function CajaEfectivoPage() {
                 className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="monto" className="text-[#002868] font-semibold">
-                Monto
-              </Label>
-              <Input
-                id="monto"
-                name="monto"
-                type="number"
-                value={formData.monto}
-                onChange={handleInputChange}
-                className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="monto" className="text-[#002868] font-semibold">
+                  Monto
+                </Label>
+                <Input
+                  id="monto"
+                  name="monto"
+                  type="number"
+                  value={formData.monto}
+                  onChange={handleInputChange}
+                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tipo" className="text-[#002868] font-semibold">
+                  Tipo
+                </Label>
+                <select
+                  id="tipo"
+                  name="tipo"
+                  value={formData.tipo}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
+                >
+                  <option value="ingreso">Ingreso</option>
+                  <option value="egreso">Egreso</option>
+                </select>
+              </div>
             </div>
             <div className="space-y-2">
               <Label
@@ -732,6 +818,45 @@ export default function CajaEfectivoPage() {
                 <option value="media">Media</option>
                 <option value="alta">Alta</option>
               </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="categoria_id" className="text-[#002868] font-semibold">
+                  Categoría
+                </Label>
+                <select
+                  id="categoria_id"
+                  name="categoria_id"
+                  value={formData.categoria_id}
+                  onChange={handleInputChange}
+                  className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
+                >
+                  <option value="">Seleccione una categoría</option>
+                  {categorias.map((c) => (
+                    <option key={c.id} value={c.id}>{c.nombre}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="subcategoria_id" className="text-[#002868] font-semibold">
+                  Subcategoría
+                </Label>
+                <select
+                  id="subcategoria_id"
+                  name="subcategoria_id"
+                  value={formData.subcategoria_id}
+                  onChange={handleInputChange}
+                  disabled={!formData.categoria_id}
+                  className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868] disabled:opacity-50 disabled:bg-gray-100"
+                >
+                  <option value="">Seleccione una subcategoría</option>
+                  {subcategorias.map((s) => (
+                    <option key={s.id} value={s.id}>{s.nombre}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
           <DialogFooter>

@@ -1,0 +1,1 @@
+﻿app/sucursales/[id]/caja-efectivo/page.tsx(489,70): error TS2365: Operator '>=' cannot be applied to types 'string | number' and 'number'.
