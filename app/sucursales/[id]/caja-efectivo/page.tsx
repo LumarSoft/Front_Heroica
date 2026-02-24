@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -637,9 +638,9 @@ export default function CajaEfectivoPage() {
       />
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-6 py-8 flex flex-col h-full">
         {user?.rol === "empleado" ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-[#E0E0E0] shadow-sm">
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-[#E0E0E0] shadow-sm flex-grow">
             <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-6">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-rose-500">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -657,7 +658,7 @@ export default function CajaEfectivoPage() {
             </Button>
           </div>
         ) : (
-          <>
+          <div className="flex flex-col space-y-6 flex-grow">
             {/* Mensajes de error y éxito */}
             {error && (
               <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200">
@@ -673,11 +674,15 @@ export default function CajaEfectivoPage() {
               </div>
             )}
 
-            {/* Botón para nuevo movimiento */}
-            <div className="flex justify-end mb-6">
+            {/* Cabecera y Botón Nuevo Movimiento */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
+              <div>
+                <h1 className="text-3xl font-bold text-[#002868] mb-1">Caja Efectivo</h1>
+                <p className="text-sm text-[#666666]">Gestión de saldos y movimientos en efectivo</p>
+              </div>
               <Button
                 onClick={() => setIsNuevoMovimientoDialogOpen(true)}
-                className="bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+                className="bg-[#002868] flex-shrink-0 hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -698,26 +703,51 @@ export default function CajaEfectivoPage() {
             </div>
 
             {isLoading ? (
-              <div className="flex items-center justify-center py-16">
+              <div className="flex items-center justify-center py-16 flex-grow">
                 <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <TransactionTable
-                  title="Saldo Real"
-                  description="Movimientos de efectivo confirmados"
-                  transactions={saldoReal}
-                />
+              <Tabs defaultValue="real" className="w-full flex-grow flex flex-col">
+                <TabsList className="mb-6 grid w-full md:w-[450px] grid-cols-2 bg-[#E8EAED] p-1.5 rounded-xl h-auto">
+                  <TabsTrigger
+                    value="real"
+                    className="font-bold border-b-2 border-transparent data-[state=active]:border-[#002868] data-[state=active]:text-[#002868] data-[state=active]:bg-white rounded-lg transition-all flex flex-col items-center justify-center gap-0.5 py-3 h-auto"
+                  >
+                    <span className="text-base">Saldo Real</span>
+                    <span className={`text-sm font-medium ${calcularTotal(saldoReal) >= 0 ? "text-emerald-600" : "text-rose-600"} data-[state=active]:opacity-100 opacity-70`}>
+                      ({formatMonto(calcularTotal(saldoReal))})
+                    </span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="necesario"
+                    className="font-bold border-b-2 border-transparent data-[state=active]:border-[#002868] data-[state=active]:text-[#002868] data-[state=active]:bg-white rounded-lg transition-all flex flex-col items-center justify-center gap-0.5 py-3 h-auto"
+                  >
+                    <span className="text-base">Saldo Necesario</span>
+                    <span className={`text-sm font-medium ${calcularTotal(saldoReal) - Math.abs(calcularTotal(saldoNecesario)) >= 0 ? "text-emerald-600" : "text-rose-600"} data-[state=active]:opacity-100 opacity-70`}>
+                      ({formatMonto(calcularTotal(saldoReal) - Math.abs(calcularTotal(saldoNecesario)))})
+                    </span>
+                  </TabsTrigger>
+                </TabsList>
 
-                <TransactionTable
-                  title="Saldo Necesario"
-                  description="Pagos y compromisos programados"
-                  transactions={saldoNecesario}
-                  customTotal={calcularTotal(saldoReal) - Math.abs(calcularTotal(saldoNecesario))}
-                />
-              </div>
+                <TabsContent value="real" className="mt-0 outline-none flex-grow">
+                  <TransactionTable
+                    title="Saldo Real"
+                    description="Movimientos de efectivo confirmados"
+                    transactions={saldoReal}
+                  />
+                </TabsContent>
+
+                <TabsContent value="necesario" className="mt-0 outline-none flex-grow">
+                  <TransactionTable
+                    title="Saldo Necesario"
+                    description="Pagos y compromisos programados"
+                    transactions={saldoNecesario}
+                    customTotal={calcularTotal(saldoReal) - Math.abs(calcularTotal(saldoNecesario))}
+                  />
+                </TabsContent>
+              </Tabs>
             )}
-          </>
+          </div>
         )}
       </main>
       {user?.rol !== "empleado" && (

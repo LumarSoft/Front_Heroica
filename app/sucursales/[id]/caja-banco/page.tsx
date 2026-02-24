@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -669,99 +670,163 @@ export default function CajaBancoPage() {
       />
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
-        {/* Mensajes de error y éxito */}
-        {error && (
-          <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200">
-            <p className="text-sm text-red-600 font-medium">⚠️ {error}</p>
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="mb-4 p-4 rounded-lg bg-green-50 border border-green-200">
-            <p className="text-sm text-green-600 font-medium">
-              ✓ {successMessage}
+      <main className="container mx-auto px-6 py-8 flex flex-col h-full">
+        {user?.rol === "empleado" ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-[#E0E0E0] shadow-sm flex-grow">
+            <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-6">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-rose-500">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-[#002868] mb-2">Acceso Denegado</h2>
+            <p className="text-[#666666] text-center max-w-md">
+              No tienes permisos para gestionar la caja de bancos. Si crees que esto es un error, contacta con el administrador.
             </p>
-          </div>
-        )}
-
-        {/* Botón para nuevo movimiento */}
-        <div className="flex justify-end mb-6">
-          <Button
-            onClick={() => setIsNuevoMovimientoDialogOpen(true)}
-            className="bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-5 h-5"
+            <Button
+              onClick={() => router.push(`/sucursales/${params.id}`)}
+              className="mt-8 bg-[#002868] hover:bg-[#003d8f] text-white"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 4.5v15m7.5-7.5h-15"
-              />
-            </svg>
-            Nuevo Movimiento
-          </Button>
-        </div>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
+              Volver al inicio
+            </Button>
           </div>
         ) : (
-          <>
-            {/* Parciales por Banco */}
-            {parciales.length > 0 && (
-              <div className="mb-8">
-                <h3 className="text-xl font-bold text-[#002868] mb-4">Parciales por Banco</h3>
-                <div className="flex flex-wrap gap-2 lg:flex-nowrap lg:overflow-x-auto pb-2">
-                  {parciales.map((p) => (
-                    <Card key={p.banco_id || 'otros'} className="border-[#E0E0E0] shadow-sm hover:shadow-md transition-shadow min-w-[160px] flex-1">
-                      <CardHeader className="p-2 pb-0">
-                        <CardTitle className="text-sm font-bold text-[#1A1A1A] truncate" title={p.banco_nombre || "OTROS"}>
-                          {p.banco_nombre || "OTROS"}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-2 pt-1">
-                        <div className="flex justify-between items-center mb-0.5">
-                          <span className="text-[9px] text-[#666666] uppercase tracking-wide mr-2">Saldo Real</span>
-                          <span className={`text-xs font-semibold ${Number(p.total_real) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                            {formatMonto(p.total_real)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[9px] text-[#666666] uppercase tracking-wide mr-2">Saldo Nec</span>
-                          <span className={`text-xs font-semibold ${Number(p.total_necesario) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                            {formatMonto(p.total_necesario)}
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+          <div className="flex flex-col space-y-6 flex-grow">
+            {/* Mensajes de error y éxito */}
+            {error && (
+              <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200">
+                <p className="text-sm text-red-600 font-medium">⚠️ {error}</p>
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <TransactionTable
-                title="Saldo Real"
-                description="Movimientos de banco confirmados"
-                transactions={saldoReal}
-              />
+            {successMessage && (
+              <div className="mb-4 p-4 rounded-lg bg-green-50 border border-green-200">
+                <p className="text-sm text-green-600 font-medium">
+                  ✓ {successMessage}
+                </p>
+              </div>
+            )}
 
-              <TransactionTable
-                title="Saldo Necesario"
-                description="Pagos y compromisos programados"
-                transactions={saldoNecesario}
-                customTotal={calcularTotal(saldoReal) - Math.abs(calcularTotal(saldoNecesario))}
-              />
+            {/* Cabecera y Botón Nuevo Movimiento */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
+              <div>
+                <h1 className="text-3xl font-bold text-[#002868] mb-1">Caja Bancos</h1>
+                <p className="text-sm text-[#666666]">Gestión de saldos y movimientos bancarios</p>
+              </div>
+              <Button
+                onClick={() => setIsNuevoMovimientoDialogOpen(true)}
+                className="bg-[#002868] flex-shrink-0 hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4.5v15m7.5-7.5h-15"
+                  />
+                </svg>
+                Nuevo Movimiento
+              </Button>
             </div>
-          </>
+
+            {isLoading ? (
+              <div className="flex items-center justify-center py-16 flex-grow">
+                <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <>
+                {/* Parciales por Banco */}
+                {parciales.length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold text-[#002868] mb-3">Parciales por Banco</h3>
+                    <div className="flex flex-wrap gap-2 lg:flex-nowrap lg:overflow-x-auto pb-2">
+                      {parciales.map((p) => (
+                        <Card key={p.banco_id || 'otros'} className="border-[#E0E0E0] shadow-sm hover:shadow-md transition-shadow min-w-[160px] flex-1">
+                          <CardHeader className="p-2 pb-0">
+                            <CardTitle className="text-sm font-bold text-[#1A1A1A] truncate" title={p.banco_nombre || "OTROS"}>
+                              {p.banco_nombre || "OTROS"}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-2 pt-1">
+                            <div className="flex justify-between items-center mb-0.5">
+                              <span className="text-[9px] text-[#666666] uppercase tracking-wide mr-2">Saldo Real</span>
+                              <span className={`text-xs font-semibold ${Number(p.total_real) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                                {formatMonto(p.total_real)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-[9px] text-[#666666] uppercase tracking-wide mr-2">Saldo Nec</span>
+                              <span className={`text-xs font-semibold ${Number(p.total_necesario) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                                {formatMonto(p.total_necesario)}
+                              </span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab layout para evitar el scroll horizontal */}
+                <Tabs defaultValue="real" className="w-full flex-grow flex flex-col">
+                  <TabsList className="mb-6 flex w-full md:w-[500px] bg-transparent p-0 gap-3 h-auto border-none">
+                    <TabsTrigger
+                      value="real"
+                      className="
+        flex-1 flex flex-col items-start gap-1 px-5 py-4 h-auto
+        bg-white border-2 border-[#E0E0E0] rounded-xl shadow-sm
+        text-left transition-all duration-200
+        data-[state=active]:border-[#002868] data-[state=active]:shadow-md data-[state=active]:bg-white
+        data-[state=inactive]:opacity-60 data-[state=inactive]:hover:opacity-80 data-[state=inactive]:hover:border-[#002868]/40
+      "
+                    >
+                      <span className="text-xs font-semibold uppercase tracking-widest text-[#666666]">Saldo Real</span>
+                      <span className={`text-xl font-bold tabular-nums ${calcularTotal(saldoReal) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                        {formatMonto(calcularTotal(saldoReal))}
+                      </span>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="necesario"
+                      className="
+        flex-1 flex flex-col items-start gap-1 px-5 py-4 h-auto
+        bg-white border-2 border-[#E0E0E0] rounded-xl shadow-sm
+        text-left transition-all duration-200
+        data-[state=active]:border-[#002868] data-[state=active]:shadow-md data-[state=active]:bg-white
+        data-[state=inactive]:opacity-60 data-[state=inactive]:hover:opacity-80 data-[state=inactive]:hover:border-[#002868]/40
+      "
+                    >
+                      <span className="text-xs font-semibold uppercase tracking-widest text-[#666666]">Saldo Necesario</span>
+                      <span className={`text-xl font-bold tabular-nums ${(calcularTotal(saldoReal) - Math.abs(calcularTotal(saldoNecesario))) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                        {formatMonto(calcularTotal(saldoReal) - Math.abs(calcularTotal(saldoNecesario)))}
+                      </span>
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="real" className="mt-0 outline-none flex-grow">
+                    <TransactionTable
+                      title="Saldo Real"
+                      description="Movimientos de banco confirmados"
+                      transactions={saldoReal}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="necesario" className="mt-0 outline-none flex-grow">
+                    <TransactionTable
+                      title="Saldo Necesario"
+                      description="Pagos y compromisos programados"
+                      transactions={saldoNecesario}
+                      customTotal={calcularTotal(saldoReal) - Math.abs(calcularTotal(saldoNecesario))}
+                    />
+                  </TabsContent>
+                </Tabs>
+              </>
+            )}
+          </div>
         )}
       </main>
 
