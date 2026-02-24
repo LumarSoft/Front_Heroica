@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
+import { useParams } from "next/navigation";
+import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
 import {
   Card,
@@ -32,28 +32,40 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
+import {
+  formatFecha,
+  formatMonto,
+  calcularTotal,
+  getEstadoColor,
+  getPrioridadColor,
+  capitalize,
+} from "@/lib/formatters";
+import { StatusBadge } from "@/components/caja/StatusBadge";
+import type { PagoPendiente } from "@/lib/types";
 
-interface PagoPendiente {
-  id: number;
-  fecha: string;
-  concepto: string;
-  monto: number | string;
-  descripcion?: string;
-  estado: "pendiente" | "aprobado" | "rechazado";
-  prioridad: "baja" | "media" | "alta";
-  tipo?: string;
-}
+// Color maps para los badges
+const ESTADO_COLORS: Record<string, string> = {
+  pendiente: "bg-amber-100 text-amber-800",
+  aprobado: "bg-blue-100 text-blue-800",
+  rechazado: "bg-rose-100 text-rose-800",
+  completado: "bg-emerald-100 text-emerald-800",
+};
+
+const PRIORIDAD_COLORS: Record<string, string> = {
+  alta: "bg-rose-100 text-rose-800",
+  media: "bg-amber-100 text-amber-800",
+  baja: "bg-gray-100 text-gray-800",
+};
 
 export default function PagosPendientesPage() {
-  const router = useRouter();
   const params = useParams();
-  const { user, isAuthenticated, logout } = useAuthStore();
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isGuardLoading, handleLogout } = useAuthGuard();
 
+  const [isLoading, setIsLoading] = useState(true);
   const [pagosPendientes, setPagosPendientes] = useState<PagoPendiente[]>([]);
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+
 
   const [isAprobarDialogOpen, setIsAprobarDialogOpen] = useState(false);
   const [isRechazarDialogOpen, setIsRechazarDialogOpen] = useState(false);
@@ -62,23 +74,10 @@ export default function PagosPendientesPage() {
 
   const [tipoCaja, setTipoCaja] = useState<"efectivo" | "banco">("efectivo");
   const [motivoRechazo, setMotivoRechazo] = useState("");
-  const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] = useState(false);
+  const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] =
+    useState(false);
 
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-
-    if (!isAuthenticated) {
-      router.push("/");
-      return;
-    }
-
-    fetchPagosPendientes();
-  }, [isAuthenticated, isHydrated, router, params.id]);
-
+  // --- Fetcher ---
   const fetchPagosPendientes = async () => {
     try {
       setIsLoading(true);
@@ -102,63 +101,17 @@ export default function PagosPendientesPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    router.push("/");
-  };
-
-  const formatFecha = (fechaISO: string) => {
-    const date = new Date(fechaISO);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  const formatMonto = (monto: number | string) => {
-    const montoNum = typeof monto === "string" ? parseFloat(monto) : monto;
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-    }).format(montoNum);
-  };
-
-  const getEstadoColor = (estado: string) => {
-    switch (estado) {
-      case "pendiente":
-        return "bg-amber-100 text-amber-800";
-      case "aprobado":
-        return "bg-blue-100 text-blue-800";
-      case "rechazado":
-        return "bg-rose-100 text-rose-800";
-      case "completado":
-        return "bg-emerald-100 text-emerald-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+  useEffect(() => {
+    if (!isGuardLoading) {
+      fetchPagosPendientes();
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGuardLoading]);
 
-  const getPrioridadColor = (prioridad: string) => {
-    switch (prioridad) {
-      case "alta":
-        return "bg-rose-100 text-rose-800";
-      case "media":
-        return "bg-amber-100 text-amber-800";
-      case "baja":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  // --- Acciones ---
+  const showSuccess = (msg: string) => {
+    toast.success(msg);
   };
-
-  const calcularTotal = (transactions: PagoPendiente[]) => {
-    return transactions.reduce((sum, t) => {
-      const monto = typeof t.monto === "string" ? parseFloat(t.monto) : t.monto;
-      return sum + monto;
-    }, 0);
-  };
-
-  const total = calcularTotal(pagosPendientes);
 
   const handleOpenAprobar = (pago: PagoPendiente) => {
     setSelectedPago(pago);
@@ -192,15 +145,15 @@ export default function PagosPendientesPage() {
       );
 
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.message || "Error al aprobar pago");
       }
 
-      setSuccessMessage("Pago aprobado excitósamente. Revisa la caja correspondiente.");
+      showSuccess(
+        "Pago aprobado exitosamente. Revisa la caja correspondiente."
+      );
       setIsAprobarDialogOpen(false);
       fetchPagosPendientes();
-      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
       console.error("Error al aprobar pago:", err);
       setError(err.message || "Error al aprobar pago");
@@ -233,15 +186,13 @@ export default function PagosPendientesPage() {
       );
 
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.message || "Error al rechazar pago");
       }
 
-      setSuccessMessage("Pago rechazado exitosamente");
+      showSuccess("Pago rechazado exitosamente");
       setIsRechazarDialogOpen(false);
       fetchPagosPendientes();
-      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
       console.error("Error al rechazar pago:", err);
       setError(err.message || "Error al rechazar pago");
@@ -251,13 +202,16 @@ export default function PagosPendientesPage() {
     }
   };
 
-  if (!isHydrated || !isAuthenticated) {
+  // --- Guard de carga ---
+  if (isGuardLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
       </div>
     );
   }
+
+  const total = calcularTotal(pagosPendientes);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
@@ -276,31 +230,15 @@ export default function PagosPendientesPage() {
           </div>
         )}
 
-        {successMessage && (
-          <div className="mb-4 p-4 rounded-lg bg-green-50 border border-green-200">
-            <p className="text-sm text-green-600 font-medium">✓ {successMessage}</p>
-          </div>
-        )}
 
-        {/* Botón para nuevo movimiento */}
+        {/* Botón nuevo movimiento */}
         <div className="flex justify-end mb-6">
           <Button
             onClick={() => setIsNuevoMovimientoDialogOpen(true)}
-            className="bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+            className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-5 h-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 4.5v15m7.5-7.5h-15"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
             Nuevo Movimiento
           </Button>
@@ -308,7 +246,7 @@ export default function PagosPendientesPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
           </div>
         ) : (
           <Card className="border-[#E0E0E0] bg-white shadow-lg">
@@ -323,7 +261,9 @@ export default function PagosPendientesPage() {
                   </CardDescription>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-[#666666] font-medium mb-1">Total en Pendientes</p>
+                  <p className="text-sm text-[#666666] font-medium mb-1">
+                    Total en Pendientes
+                  </p>
                   <div
                     className={`inline-flex items-center justify-center px-4 py-2 rounded-lg ${total >= 0 ? "bg-emerald-50 border border-emerald-200" : "bg-rose-50 border border-rose-200"}`}
                   >
@@ -370,25 +310,19 @@ export default function PagosPendientesPage() {
                           <TableCell className="text-[#1A1A1A]">{pago.concepto}</TableCell>
                           <TableCell className="text-[#666666]">{pago.descripcion || "-"}</TableCell>
                           <TableCell className="text-center">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${pago.tipo === "egreso" || (!pago.tipo && Number(pago.monto) < 0)
-                              ? "bg-rose-100 text-rose-800"
-                              : "bg-emerald-100 text-emerald-800"
-                              }`}>
-                              {pago.tipo === "egreso" || (!pago.tipo && Number(pago.monto) < 0) ? "Egreso" : "Ingreso"}
-                            </span>
+                            <StatusBadge
+                              value={pago.tipo === "egreso" || (!pago.tipo && Number(pago.monto) < 0) ? "egreso" : "ingreso"}
+                              colorMap={{ egreso: "bg-rose-100 text-rose-800", ingreso: "bg-emerald-100 text-emerald-800" }}
+                            />
                           </TableCell>
                           <TableCell className={`text-right font-bold text-base ${parseFloat(pago.monto.toString()) >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
                             {formatMonto(Math.abs(parseFloat(pago.monto.toString())))}
                           </TableCell>
                           <TableCell className="text-center">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPrioridadColor(pago.prioridad)}`}>
-                              {pago.prioridad.charAt(0).toUpperCase() + pago.prioridad.slice(1)}
-                            </span>
+                            <StatusBadge value={pago.prioridad} colorMap={PRIORIDAD_COLORS} />
                           </TableCell>
                           <TableCell className="text-center">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEstadoColor(pago.estado)}`}>
-                              {pago.estado.charAt(0).toUpperCase() + pago.estado.slice(1)}
-                            </span>
+                            <StatusBadge value={pago.estado} colorMap={ESTADO_COLORS} />
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex items-center justify-center gap-2">
@@ -429,6 +363,7 @@ export default function PagosPendientesPage() {
         )}
       </main>
 
+      {/* Dialog Aprobar */}
       <Dialog open={isAprobarDialogOpen} onOpenChange={setIsAprobarDialogOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white border-[#E0E0E0] shadow-2xl">
           <DialogHeader className="border-b border-[#E0E0E0] pb-4">
@@ -460,30 +395,24 @@ export default function PagosPendientesPage() {
             {selectedPago && (
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-100 text-sm flex justify-between">
                 <span className="text-gray-600 font-medium">Monto a aprobar:</span>
-                <span className="font-bold text-[#002868]">{formatMonto(parseFloat(selectedPago.monto.toString()))}</span>
+                <span className="font-bold text-[#002868]">
+                  {formatMonto(parseFloat(selectedPago.monto.toString()))}
+                </span>
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsAprobarDialogOpen(false)}
-              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer"
-              disabled={isSaving}
-            >
+            <Button variant="outline" onClick={() => setIsAprobarDialogOpen(false)} className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer" disabled={isSaving}>
               Cancelar
             </Button>
-            <Button
-              onClick={handleAprobar}
-              disabled={isSaving}
-              className="bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer"
-            >
+            <Button onClick={handleAprobar} disabled={isSaving} className="bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">
               {isSaving ? "Aprobando..." : "Confirmar Aprobación"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Dialog Rechazar */}
       <Dialog open={isRechazarDialogOpen} onOpenChange={setIsRechazarDialogOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white border-[#E0E0E0] shadow-2xl">
           <DialogHeader className="border-b border-[#E0E0E0] pb-4">
@@ -512,19 +441,10 @@ export default function PagosPendientesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsRechazarDialogOpen(false)}
-              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer"
-              disabled={isSaving}
-            >
+            <Button variant="outline" onClick={() => setIsRechazarDialogOpen(false)} className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer" disabled={isSaving}>
               Cancelar
             </Button>
-            <Button
-              onClick={handleRechazar}
-              disabled={isSaving || !motivoRechazo.trim()}
-              className="bg-rose-600 text-white hover:bg-rose-700 cursor-pointer"
-            >
+            <Button onClick={handleRechazar} disabled={isSaving || !motivoRechazo.trim()} className="bg-rose-600 text-white hover:bg-rose-700 cursor-pointer">
               {isSaving ? "Rechazando..." : "Confirmar Rechazo"}
             </Button>
           </DialogFooter>
@@ -536,9 +456,8 @@ export default function PagosPendientesPage() {
         onClose={() => setIsNuevoMovimientoDialogOpen(false)}
         sucursalId={Number(params.id)}
         onSuccess={() => {
-          setSuccessMessage("Movimiento creado exitosamente");
+          showSuccess("Movimiento creado exitosamente");
           fetchPagosPendientes();
-          setTimeout(() => setSuccessMessage(""), 3000);
         }}
       />
     </div>

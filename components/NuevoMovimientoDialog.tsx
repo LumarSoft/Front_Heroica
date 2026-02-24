@@ -234,275 +234,313 @@ export default function NuevoMovimientoDialog({
     }
   };
 
+  const selectClasses =
+    "w-full h-10 rounded-lg border border-[#E0E0E0] bg-white px-3 py-2 text-sm text-[#1A1A1A] transition-colors hover:border-[#B0B0B0] focus:border-[#002868] focus:outline-none focus:ring-2 focus:ring-[#002868]/20 appearance-none cursor-pointer";
+  const labelClasses = "text-xs font-semibold text-[#5A6070] uppercase tracking-wider";
+  const inputClasses =
+    "h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A] transition-colors placeholder:text-[#B0B0B0] hover:border-[#B0B0B0] focus:border-[#002868] focus:ring-2 focus:ring-[#002868]/20";
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] bg-white border-[#E0E0E0] shadow-2xl">
-        <DialogHeader className="border-b border-[#E0E0E0] pb-4">
-          <DialogTitle className="text-2xl font-bold text-[#002868] flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-[#002868]/10 flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-5 h-5 text-[#002868]"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 4.5v15m7.5-7.5h-15"
-                />
-              </svg>
-            </div>
-            Nuevo Movimiento
-          </DialogTitle>
-          <DialogDescription className="text-[#666666] mt-2">
-            Registra un nuevo movimiento de efectivo
-          </DialogDescription>
-        </DialogHeader>
-
-        {error && (
-          <div className="p-3 rounded-lg bg-red-50 border border-red-200">
-            <p className="text-sm text-red-600 font-medium">⚠️ {error}</p>
-          </div>
-        )}
-
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="fecha" className="text-[#002868] font-semibold">
-              Fecha
-            </Label>
-            <Input
-              id="fecha"
-              name="fecha"
-              type="date"
-              value={formData.fecha}
-              onChange={handleInputChange}
-              className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="concepto" className="text-[#002868] font-semibold">
-              Concepto *
-            </Label>
-            <Input
-              id="concepto"
-              name="concepto"
-              value={formData.concepto}
-              onChange={handleInputChange}
-              placeholder="Ej: Venta de contado"
-              className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="monto" className="text-[#002868] font-semibold">
-                Monto *
-              </Label>
-              <Input
-                id="monto"
-                name="monto"
-                type="number"
-                step="0.01"
-                value={formData.monto}
-                onChange={handleInputChange}
-                placeholder="Ej: 15000"
-                className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tipo" className="text-[#002868] font-semibold">
-                Tipo *
-              </Label>
-              <select
-                id="tipo"
-                name="tipo"
-                value={formData.tipo}
-                onChange={handleInputChange}
-                className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
-              >
-                <option value="ingreso">Ingreso</option>
-                <option value="egreso">Egreso</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label
-              htmlFor="descripcion"
-              className="text-[#002868] font-semibold"
-            >
-              Descripción
-            </Label>
-            <Input
-              id="descripcion"
-              name="descripcion"
-              value={formData.descripcion}
-              onChange={handleInputChange}
-              placeholder="Detalles adicionales (opcional)"
-              className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="categoria_id" className="text-[#002868] font-semibold">
-                Categoría
-              </Label>
-              <select
-                id="categoria_id"
-                name="categoria_id"
-                value={formData.categoria_id}
-                onChange={handleInputChange}
-                className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
-              >
-                <option value="">Seleccione una categoría</option>
-                {categorias.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="subcategoria_id" className="text-[#002868] font-semibold">
-                Subcategoría
-              </Label>
-              <select
-                id="subcategoria_id"
-                name="subcategoria_id"
-                value={formData.subcategoria_id}
-                onChange={handleInputChange}
-                disabled={!formData.categoria_id}
-                className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868] disabled:opacity-50 disabled:bg-gray-100"
-              >
-                <option value="">Seleccione una subcategoría</option>
-                {subcategorias.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {cajaTipo === "banco" && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="comprobante" className="text-[#002868] font-semibold">
-                  N° de Comprobante
-                </Label>
-                <Input
-                  id="comprobante"
-                  name="comprobante"
-                  value={formData.comprobante}
-                  onChange={handleInputChange}
-                  placeholder="Ej: TR-000123"
-                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="banco_id" className="text-[#002868] font-semibold">
-                    Banco
-                  </Label>
-                  <select
-                    id="banco_id"
-                    name="banco_id"
-                    value={formData.banco_id}
-                    onChange={handleInputChange}
-                    className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
-                  >
-                    <option value="">Seleccione un banco</option>
-                    {bancos.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="medio_pago_id" className="text-[#002868] font-semibold">
-                    Medio de Pago
-                  </Label>
-                  <select
-                    id="medio_pago_id"
-                    name="medio_pago_id"
-                    value={formData.medio_pago_id}
-                    onChange={handleInputChange}
-                    className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
-                  >
-                    <option value="">Seleccione medio de pago</option>
-                    {mediosPago.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="prioridad" className="text-[#002868] font-semibold">
-              Prioridad
-            </Label>
-            <select
-              id="prioridad"
-              name="prioridad"
-              value={formData.prioridad}
-              onChange={handleInputChange}
-              className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
-            >
-              <option value="baja">Baja</option>
-              <option value="media">Media</option>
-              <option value="alta">Alta</option>
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="estado" className="text-[#002868] font-semibold">
-              Estado
-            </Label>
-            <select
-              id="estado"
-              name="estado"
-              value={formData.estado}
-              onChange={handleInputChange}
-              className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
-            >
-              <option value="pendiente">Pendiente</option>
-              <option value="aprobado">Aprobado</option>
-              <option value="completado">Completado</option>
-              <option value="rechazado">Rechazado</option>
-            </select>
-          </div>
+      <DialogContent className="sm:max-w-[560px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
+        {/* ─── Header ─── */}
+        <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
+          <DialogHeader className="p-0 border-0">
+            <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
+              Nuevo movimiento
+            </DialogTitle>
+            <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
+              Registra un nuevo movimiento de {cajaTipo === "banco" ? "banco" : "efectivo"}
+            </DialogDescription>
+          </DialogHeader>
         </div>
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer"
-            disabled={isSaving}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-[#002868] text-white hover:bg-[#003d8f] cursor-pointer"
-          >
-            {isSaving ? "Guardando..." : "Crear Movimiento"}
-          </Button>
-        </DialogFooter>
+        {/* ─── Body ─── */}
+        <div className="px-8 py-6 space-y-6 max-h-[65vh] overflow-y-auto">
+
+          {/* Error */}
+          {error && (
+            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 flex items-center gap-2">
+              <span className="text-rose-500 text-sm">⚠️</span>
+              <p className="text-sm text-rose-600 font-medium">{error}</p>
+            </div>
+          )}
+
+          {/* ── Sección: Información General ── */}
+          <section className="space-y-4">
+            <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
+              <span className="w-1 h-4 bg-[#002868] rounded-full" />
+              Información general
+            </h4>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="fecha" className={labelClasses}>
+                  Fecha
+                </Label>
+                <Input
+                  id="fecha"
+                  name="fecha"
+                  type="date"
+                  value={formData.fecha}
+                  onChange={handleInputChange}
+                  className={inputClasses}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="tipo" className={labelClasses}>
+                  Tipo *
+                </Label>
+                <select
+                  id="tipo"
+                  name="tipo"
+                  value={formData.tipo}
+                  onChange={handleInputChange}
+                  className={selectClasses}
+                >
+                  <option value="ingreso">Ingreso</option>
+                  <option value="egreso">Egreso</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="concepto" className={labelClasses}>
+                Concepto *
+              </Label>
+              <Input
+                id="concepto"
+                name="concepto"
+                placeholder="Ej: Venta de contado"
+                value={formData.concepto}
+                onChange={handleInputChange}
+                className={inputClasses}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="descripcion" className={labelClasses}>
+                Descripción
+              </Label>
+              <Input
+                id="descripcion"
+                name="descripcion"
+                placeholder="Detalles adicionales (opcional)"
+                value={formData.descripcion}
+                onChange={handleInputChange}
+                className={inputClasses}
+              />
+            </div>
+          </section>
+
+          {/* ── Separador ── */}
+          <div className="border-t border-dashed border-[#E8E8E8]" />
+
+          {/* ── Sección: Detalles Financieros ── */}
+          <section className="space-y-4">
+            <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
+              <span className="w-1 h-4 bg-[#002868] rounded-full" />
+              Detalles financieros
+            </h4>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="monto" className={labelClasses}>
+                  Monto *
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#8A8F9C] select-none pointer-events-none">
+                    $
+                  </span>
+                  <Input
+                    id="monto"
+                    name="monto"
+                    type="number"
+                    step="0.01"
+                    placeholder="0,00"
+                    value={formData.monto}
+                    onChange={handleInputChange}
+                    className={`${inputClasses} pl-7`}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="prioridad" className={labelClasses}>
+                  Prioridad
+                </Label>
+                <select
+                  id="prioridad"
+                  name="prioridad"
+                  value={formData.prioridad}
+                  onChange={handleInputChange}
+                  className={selectClasses}
+                >
+                  <option value="baja">Baja</option>
+                  <option value="media">Media</option>
+                  <option value="alta">Alta</option>
+                </select>
+              </div>
+            </div>
+
+            {cajaTipo === "banco" && (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="comprobante" className={labelClasses}>
+                    N° Comprobante
+                  </Label>
+                  <Input
+                    id="comprobante"
+                    name="comprobante"
+                    placeholder="Ej: 0001-00012345"
+                    value={formData.comprobante}
+                    onChange={handleInputChange}
+                    className={inputClasses}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="banco_id" className={labelClasses}>
+                      Banco
+                    </Label>
+                    <select
+                      id="banco_id"
+                      name="banco_id"
+                      value={formData.banco_id}
+                      onChange={handleInputChange}
+                      className={selectClasses}
+                    >
+                      <option value="">Seleccione un banco</option>
+                      {bancos.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="medio_pago_id" className={labelClasses}>
+                      Medio de Pago
+                    </Label>
+                    <select
+                      id="medio_pago_id"
+                      name="medio_pago_id"
+                      value={formData.medio_pago_id}
+                      onChange={handleInputChange}
+                      className={selectClasses}
+                    >
+                      <option value="">Seleccione medio de pago</option>
+                      {mediosPago.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </>
+            )}
+          </section>
+
+          {/* ── Separador ── */}
+          <div className="border-t border-dashed border-[#E8E8E8]" />
+
+          {/* ── Sección: Categorización y Estado ── */}
+          <section className="space-y-4">
+            <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
+              <span className="w-1 h-4 bg-[#002868] rounded-full" />
+              Categorización y estado
+            </h4>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="categoria_id" className={labelClasses}>
+                  Categoría
+                </Label>
+                <select
+                  id="categoria_id"
+                  name="categoria_id"
+                  value={formData.categoria_id}
+                  onChange={handleInputChange}
+                  className={selectClasses}
+                >
+                  <option value="">Seleccione categoría</option>
+                  {categorias.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="subcategoria_id" className={labelClasses}>
+                  Subcategoría
+                </Label>
+                <select
+                  id="subcategoria_id"
+                  name="subcategoria_id"
+                  value={formData.subcategoria_id}
+                  onChange={handleInputChange}
+                  disabled={!formData.categoria_id}
+                  className={`${selectClasses} disabled:opacity-40 disabled:bg-[#FAFAFA] disabled:cursor-not-allowed`}
+                >
+                  <option value="">Seleccione subcategoría</option>
+                  {subcategorias.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="estado" className={labelClasses}>
+                Estado
+              </Label>
+              <select
+                id="estado"
+                name="estado"
+                value={formData.estado}
+                onChange={handleInputChange}
+                className={selectClasses}
+              >
+                <option value="pendiente">Pendiente</option>
+                <option value="aprobado">Aprobado</option>
+                <option value="completado">Completado</option>
+                <option value="rechazado">Rechazado</option>
+              </select>
+            </div>
+          </section>
+        </div>
+
+        {/* ─── Footer ─── */}
+        <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
+          <DialogFooter className="sm:justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              disabled={isSaving}
+              className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] hover:border-[#C0C0C0] transition-all cursor-pointer"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm hover:shadow-md transition-all cursor-pointer"
+            >
+              {isSaving ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Creando…
+                </span>
+              ) : (
+                "Crear movimiento"
+              )}
+            </Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

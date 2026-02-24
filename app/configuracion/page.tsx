@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import { API_ENDPOINTS } from "@/lib/config";
 import { Button } from "@/components/ui/button";
@@ -83,7 +84,6 @@ export default function ConfiguracionPage() {
     const [medioPagoForm, setMedioPagoForm] = useState({ id: 0, nombre: "", descripcion: "" });
 
     const [error, setError] = useState("");
-    const [successMessage, setSuccessMessage] = useState("");
 
     useEffect(() => {
         setIsHydrated(true);
@@ -158,11 +158,11 @@ export default function ConfiguracionPage() {
 
             const data = await res.json();
             if (data.success) {
-                setSuccessMessage(data.message);
+                toast.success(data.message);
                 setIsCategoriaDialogOpen(false);
                 setCategoriaForm({ id: 0, nombre: "", descripcion: "" });
                 await fetchCategorias();
-                setTimeout(() => setSuccessMessage(""), 3000);
+
             } else {
                 setError(data.message);
             }
@@ -182,9 +182,9 @@ export default function ConfiguracionPage() {
             });
             const data = await res.json();
             if (data.success) {
-                setSuccessMessage(data.message);
+                toast.success(data.message);
                 await fetchCategorias();
-                setTimeout(() => setSuccessMessage(""), 3000);
+
             }
         } catch (err) {
             setError("Error al eliminar categoría");
@@ -208,11 +208,11 @@ export default function ConfiguracionPage() {
 
             const data = await res.json();
             if (data.success) {
-                setSuccessMessage(data.message);
+                toast.success(data.message);
                 setIsSubcategoriaDialogOpen(false);
                 setSubcategoriaForm({ id: 0, categoria_id: 0, nombre: "", descripcion: "" });
                 await fetchSubcategorias();
-                setTimeout(() => setSuccessMessage(""), 3000);
+
             } else {
                 setError(data.message);
             }
@@ -232,9 +232,9 @@ export default function ConfiguracionPage() {
             });
             const data = await res.json();
             if (data.success) {
-                setSuccessMessage(data.message);
+                toast.success(data.message);
                 await fetchSubcategorias();
-                setTimeout(() => setSuccessMessage(""), 3000);
+
             }
         } catch (err) {
             setError("Error al eliminar subcategoría");
@@ -258,11 +258,11 @@ export default function ConfiguracionPage() {
 
             const data = await res.json();
             if (data.success) {
-                setSuccessMessage(data.message);
+                toast.success(data.message);
                 setIsBancoDialogOpen(false);
                 setBancoForm({ id: 0, nombre: "", codigo: "" });
                 await fetchBancos();
-                setTimeout(() => setSuccessMessage(""), 3000);
+
             } else {
                 setError(data.message);
             }
@@ -282,9 +282,9 @@ export default function ConfiguracionPage() {
             });
             const data = await res.json();
             if (data.success) {
-                setSuccessMessage(data.message);
+                toast.success(data.message);
                 await fetchBancos();
-                setTimeout(() => setSuccessMessage(""), 3000);
+
             }
         } catch (err) {
             setError("Error al eliminar banco");
@@ -308,11 +308,11 @@ export default function ConfiguracionPage() {
 
             const data = await res.json();
             if (data.success) {
-                setSuccessMessage(data.message);
+                toast.success(data.message);
                 setIsMedioPagoDialogOpen(false);
                 setMedioPagoForm({ id: 0, nombre: "", descripcion: "" });
                 await fetchMediosPago();
-                setTimeout(() => setSuccessMessage(""), 3000);
+
             } else {
                 setError(data.message);
             }
@@ -332,9 +332,9 @@ export default function ConfiguracionPage() {
             });
             const data = await res.json();
             if (data.success) {
-                setSuccessMessage(data.message);
+                toast.success(data.message);
                 await fetchMediosPago();
-                setTimeout(() => setSuccessMessage(""), 3000);
+
             }
         } catch (err) {
             setError("Error al eliminar medio de pago");
@@ -389,14 +389,7 @@ export default function ConfiguracionPage() {
                 </div>
             </header>
 
-            {/* Messages */}
-            {successMessage && (
-                <div className="container mx-auto px-6 pt-4">
-                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg">
-                        {successMessage}
-                    </div>
-                </div>
-            )}
+
             {error && (
                 <div className="container mx-auto px-6 pt-4">
                     <div className="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-lg">

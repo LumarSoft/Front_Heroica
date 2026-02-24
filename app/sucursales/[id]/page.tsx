@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
+import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
 import {
   Card,
@@ -18,39 +18,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-interface Sucursal {
-  id: number;
-  nombre: string;
-  razon_social: string;
-  cuit: string;
-  direccion: string;
-  email_correspondencia?: string;
-  activo: boolean;
-}
-
-interface Documento {
-  id: number;
-  sucursal_id: number;
-  nombre_archivo: string;
-  ruta_archivo: string;
-  tipo_archivo: string;
-  tamano_bytes: number;
-  fecha_subida: string;
-}
+import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { formatMonto } from "@/lib/formatters";
+import type { Sucursal, Documento } from "@/lib/types";
 
 export default function SucursalDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const { user, isAuthenticated } = useAuthStore();
-  const [isHydrated, setIsHydrated] = useState(false);
+  const { user, isGuardLoading } = useAuthGuard();
   const [pendingCount, setPendingCount] = useState(0);
 
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
 
@@ -72,18 +53,8 @@ export default function SucursalDetailPage() {
   const [loadingDocumentos, setLoadingDocumentos] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // Esperar a que Zustand se hidrate desde localStorage
   useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-
-    if (!isAuthenticated) {
-      router.push("/");
-      return;
-    }
+    if (isGuardLoading) return;
 
     // Cargar datos de la sucursal
     const fetchSucursal = async () => {
@@ -116,7 +87,8 @@ export default function SucursalDetailPage() {
     fetchSucursal();
     fetchDocumentos();
     fetchTotales();
-  }, [isAuthenticated, isHydrated, router, params.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGuardLoading, params.id]);
 
   // Función para cargar totales de las cajas
   const fetchTotales = async () => {
@@ -177,7 +149,7 @@ export default function SucursalDetailPage() {
     e.preventDefault();
     setIsSaving(true);
     setError("");
-    setSuccessMessage("");
+
 
     try {
       const response = await fetch(
@@ -196,10 +168,7 @@ export default function SucursalDetailPage() {
       }
 
       setSucursal(data.data);
-      setSuccessMessage("Sucursal actualizada exitosamente");
-
-      // Limpiar mensaje después de 3 segundos
-      setTimeout(() => setSuccessMessage(""), 3000);
+      toast.success("Sucursal actualizada exitosamente");
     } catch (err: any) {
       console.error("Error al actualizar sucursal:", err);
       setError(err.message || "Error al actualizar sucursal");
@@ -257,7 +226,7 @@ export default function SucursalDetailPage() {
         throw new Error(data.message || "Error al subir documento");
       }
 
-      setSuccessMessage("Documento subido exitosamente");
+      toast.success("Documento subido exitosamente");
       setSelectedFile(null);
 
       // Recargar lista de documentos
@@ -267,7 +236,7 @@ export default function SucursalDetailPage() {
       const fileInput = document.getElementById("file-upload") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
 
-      setTimeout(() => setSuccessMessage(""), 3000);
+
     } catch (err: any) {
       console.error("Error al subir documento:", err);
       setError(err.message || "Error al subir documento");
@@ -300,12 +269,10 @@ export default function SucursalDetailPage() {
         throw new Error(data.message || "Error al eliminar documento");
       }
 
-      setSuccessMessage("Documento eliminado exitosamente");
+      toast.success("Documento eliminado exitosamente");
 
       // Recargar lista de documentos
       await fetchDocumentos();
-
-      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err: any) {
       console.error("Error al eliminar documento:", err);
       setError(err.message || "Error al eliminar documento");
@@ -313,7 +280,7 @@ export default function SucursalDetailPage() {
   };
 
 
-  if (!isHydrated || !isAuthenticated) {
+  if (isGuardLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
@@ -463,7 +430,7 @@ export default function SucursalDetailPage() {
                   <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide mb-1">Saldo Real</p>
                   <p className={`text-2xl font-bold ${totalesEfectivo.total_real >= 0 ? 'text-emerald-600' : 'text-rose-600'
                     }`}>
-                    {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(totalesEfectivo.total_real)}
+                    {formatMonto(totalesEfectivo.total_real)}
                   </p>
                   {totalesEfectivo.ultima_actualizacion && (
                     <p className="text-xs text-slate-400 mt-1">
@@ -542,7 +509,7 @@ export default function SucursalDetailPage() {
                   <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide mb-1">Saldo Real</p>
                   <p className={`text-2xl font-bold ${totalesBanco.total_real >= 0 ? 'text-emerald-600' : 'text-rose-600'
                     }`}>
-                    {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(totalesBanco.total_real)}
+                    {formatMonto(totalesBanco.total_real)}
                   </p>
                 </div>
               )}
@@ -656,13 +623,7 @@ export default function SucursalDetailPage() {
               </div>
             )}
 
-            {successMessage && (
-              <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200">
-                <p className="text-sm text-green-600 font-medium">
-                  ✓ {successMessage}
-                </p>
-              </div>
-            )}
+
 
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

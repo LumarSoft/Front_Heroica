@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
 import { API_ENDPOINTS } from "@/lib/config";
 import {
   Card,
@@ -23,23 +22,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
-
-interface Sucursal {
-  id: number;
-  nombre: string;
-  razon_social: string;
-  cuit: string;
-  direccion: string;
-  activo: boolean;
-}
+import { useAuthGuard } from "@/hooks/use-auth-guard";
+import type { Sucursal } from "@/lib/types";
 
 export default function SucursalesPage() {
   const router = useRouter();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isGuardLoading, handleLogout } = useAuthGuard();
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isHydrated, setIsHydrated] = useState(false);
 
   // Estados para el modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,20 +42,8 @@ export default function SucursalesPage() {
     direccion: "",
   });
 
-  // Esperar a que Zustand se hidrate desde localStorage
   useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    // No verificar autenticación hasta que se haya hidratado
-    if (!isHydrated) return;
-
-    // Verificar autenticación
-    if (!isAuthenticated) {
-      router.push("/");
-      return;
-    }
+    if (isGuardLoading) return;
 
     // Cargar sucursales desde la API
     const fetchSucursales = async () => {
@@ -86,12 +65,7 @@ export default function SucursalesPage() {
     };
 
     fetchSucursales();
-  }, [isAuthenticated, isHydrated, router]);
-
-  const handleLogout = () => {
-    logout();
-    router.push("/");
-  };
+  }, [isGuardLoading]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -186,7 +160,7 @@ export default function SucursalesPage() {
     router.push(`/sucursales/${id}`);
   };
 
-  if (!isHydrated || !isAuthenticated) {
+  if (isGuardLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
