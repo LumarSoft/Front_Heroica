@@ -29,6 +29,7 @@ export const API_ENDPOINTS = {
     DELETE: (id: number) => `${API_URL}/api/movimientos/${id}`,
   },
   PAGOS_PENDIENTES: {
+    GET_ALL: `${API_URL}/api/pagos-pendientes/all`,
     GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/pagos-pendientes/${sucursalId}`,
     CREATE: `${API_URL}/api/pagos-pendientes`,
     APROBAR: (id: number) => `${API_URL}/api/pagos-pendientes/${id}/aprobar`,

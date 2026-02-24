@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { API_ENDPOINTS } from "@/lib/config";
 
 interface NavbarProps {
     userName?: string;
@@ -112,6 +114,7 @@ export default function Navbar({
                                 </div>
                             </div>
                         )}
+
 
                         {/* Configuration Button (Admin Only) */}
                         {userRole === "admin" && (

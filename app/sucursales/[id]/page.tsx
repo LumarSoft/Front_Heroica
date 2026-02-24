@@ -42,8 +42,9 @@ interface Documento {
 export default function SucursalDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const { isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const [isHydrated, setIsHydrated] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,8 +63,8 @@ export default function SucursalDetailPage() {
   });
 
   // Estados para totales de cajas
-  const [totalesEfectivo, setTotalesEfectivo] = useState({ total_real: 0, total_necesario: 0 });
-  const [totalesBanco, setTotalesBanco] = useState({ total_real: 0, total_necesario: 0 });
+  const [totalesEfectivo, setTotalesEfectivo] = useState({ total_real: 0, total_necesario: 0, ultima_actualizacion: null as string | null });
+  const [totalesBanco, setTotalesBanco] = useState({ total_real: 0, total_necesario: 0, ultima_actualizacion: null as string | null });
   const [loadingTotales, setLoadingTotales] = useState(true);
 
   // Estados para documentos (múltiples)
@@ -145,6 +146,27 @@ export default function SucursalDetailPage() {
       setLoadingTotales(false);
     }
   };
+
+  useEffect(() => {
+    if (user?.rol === "admin") {
+      const fetchPendingCount = async () => {
+        try {
+          const response = await fetch(`${API_ENDPOINTS.PAGOS_PENDIENTES.GET_ALL}?estado=pendiente`);
+          if (response.ok) {
+            const data = await response.json();
+            setPendingCount(data.data.length);
+          }
+        } catch (error) {
+          console.error("Error fetching pending payments:", error);
+        }
+      };
+
+      fetchPendingCount();
+      // Polling every 30 seconds
+      const interval = setInterval(fetchPendingCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user?.rol]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -443,6 +465,14 @@ export default function SucursalDetailPage() {
                     }`}>
                     {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(totalesEfectivo.total_real)}
                   </p>
+                  {totalesEfectivo.ultima_actualizacion && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      Última act: {new Date(totalesEfectivo.ultima_actualizacion).toLocaleString('es-AR', {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                      })}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -568,8 +598,13 @@ export default function SucursalDetailPage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors">
+              <h3 className="text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors relative inline-block">
                 Pagos Pendientes
+                {user?.rol === "admin" && pendingCount > 0 && (
+                  <span className="absolute -top-3 -right-6 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white ring-2 ring-white shadow-lg animate-bounce">
+                    {pendingCount > 9 ? "9+" : pendingCount}
+                  </span>
+                )}
               </h3>
               <p className="text-[#666666] text-base leading-relaxed">
                 Gestiona pagos pendientes de autorización
@@ -879,7 +914,7 @@ export default function SucursalDetailPage() {
             </form>
           </div>
         </DialogContent>
-      </Dialog>
-    </div>
+      </Dialog >
+    </div >
   );
 }

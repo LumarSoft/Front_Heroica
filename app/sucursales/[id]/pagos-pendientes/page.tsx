@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
+import NuevoMovimientoDialog from "@/components/NuevoMovimientoDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -61,6 +62,7 @@ export default function PagosPendientesPage() {
 
   const [tipoCaja, setTipoCaja] = useState<"efectivo" | "banco">("efectivo");
   const [motivoRechazo, setMotivoRechazo] = useState("");
+  const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -280,6 +282,30 @@ export default function PagosPendientesPage() {
           </div>
         )}
 
+        {/* Botón para nuevo movimiento */}
+        <div className="flex justify-end mb-6">
+          <Button
+            onClick={() => setIsNuevoMovimientoDialogOpen(true)}
+            className="bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-5 h-5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4.5v15m7.5-7.5h-15"
+              />
+            </svg>
+            Nuevo Movimiento
+          </Button>
+        </div>
+
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
@@ -345,8 +371,8 @@ export default function PagosPendientesPage() {
                           <TableCell className="text-[#666666]">{pago.descripcion || "-"}</TableCell>
                           <TableCell className="text-center">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${pago.tipo === "egreso" || (!pago.tipo && Number(pago.monto) < 0)
-                                ? "bg-rose-100 text-rose-800"
-                                : "bg-emerald-100 text-emerald-800"
+                              ? "bg-rose-100 text-rose-800"
+                              : "bg-emerald-100 text-emerald-800"
                               }`}>
                               {pago.tipo === "egreso" || (!pago.tipo && Number(pago.monto) < 0) ? "Egreso" : "Ingreso"}
                             </span>
@@ -366,7 +392,7 @@ export default function PagosPendientesPage() {
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex items-center justify-center gap-2">
-                              {pago.estado === "pendiente" && (
+                              {pago.estado === "pendiente" && user?.rol !== "empleado" && (
                                 <>
                                   <Button
                                     size="sm"
@@ -504,6 +530,17 @@ export default function PagosPendientesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <NuevoMovimientoDialog
+        isOpen={isNuevoMovimientoDialogOpen}
+        onClose={() => setIsNuevoMovimientoDialogOpen(false)}
+        sucursalId={Number(params.id)}
+        onSuccess={() => {
+          setSuccessMessage("Movimiento creado exitosamente");
+          fetchPagosPendientes();
+          setTimeout(() => setSuccessMessage(""), 3000);
+        }}
+      />
     </div>
   );
 }

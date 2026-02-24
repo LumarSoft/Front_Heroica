@@ -497,8 +497,8 @@ export default function CajaEfectivoPage() {
                       <TableCell className="text-center">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${transaction.tipo === "egreso" || (!transaction.tipo && Number(transaction.monto) < 0)
-                              ? "bg-rose-100 text-rose-800"
-                              : "bg-emerald-100 text-emerald-800"
+                            ? "bg-rose-100 text-rose-800"
+                            : "bg-emerald-100 text-emerald-800"
                             }`}
                         >
                           {transaction.tipo === "egreso" || (!transaction.tipo && Number(transaction.monto) < 0) ? "Egreso" : "Ingreso"}
@@ -638,371 +638,395 @@ export default function CajaEfectivoPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
-        {/* Mensajes de error y éxito */}
-        {error && (
-          <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200">
-            <p className="text-sm text-red-600 font-medium">⚠️ {error}</p>
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="mb-4 p-4 rounded-lg bg-green-50 border border-green-200">
-            <p className="text-sm text-green-600 font-medium">
-              ✓ {successMessage}
+        {user?.rol === "empleado" ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-[#E0E0E0] shadow-sm">
+            <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-6">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-rose-500">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-[#002868] mb-2">Acceso Denegado</h2>
+            <p className="text-[#666666] text-center max-w-md">
+              No tienes permisos para gestionar la caja de efectivo. Si crees que esto es un error, contacta con el administrador.
             </p>
-          </div>
-        )}
-
-        {/* Botón para nuevo movimiento */}
-        <div className="flex justify-end mb-6">
-          <Button
-            onClick={() => setIsNuevoMovimientoDialogOpen(true)}
-            className="bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-5 h-5"
+            <Button
+              onClick={() => router.push(`/sucursales/${params.id}`)}
+              className="mt-8 bg-[#002868] hover:bg-[#003d8f] text-white"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 4.5v15m7.5-7.5h-15"
-              />
-            </svg>
-            Nuevo Movimiento
-          </Button>
-        </div>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
+              Volver al inicio
+            </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <TransactionTable
-              title="Saldo Real"
-              description="Movimientos de efectivo confirmados"
-              transactions={saldoReal}
-            />
+          <>
+            {/* Mensajes de error y éxito */}
+            {error && (
+              <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200">
+                <p className="text-sm text-red-600 font-medium">⚠️ {error}</p>
+              </div>
+            )}
 
-            <TransactionTable
-              title="Saldo Necesario"
-              description="Pagos y compromisos programados"
-              transactions={saldoNecesario}
-              customTotal={calcularTotal(saldoReal) - Math.abs(calcularTotal(saldoNecesario))}
-            />
-          </div>
-        )}
-      </main>
+            {successMessage && (
+              <div className="mb-4 p-4 rounded-lg bg-green-50 border border-green-200">
+                <p className="text-sm text-green-600 font-medium">
+                  ✓ {successMessage}
+                </p>
+              </div>
+            )}
 
-      {/* Dialog de Detalles - MEJORADO */}
-      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-white border-[#E0E0E0] shadow-2xl">
-          <DialogHeader className="border-b border-[#E0E0E0] pb-4">
-            <DialogTitle className="text-2xl font-bold text-[#002868] flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-[#002868]/10 flex items-center justify-center">
+            {/* Botón para nuevo movimiento */}
+            <div className="flex justify-end mb-6">
+              <Button
+                onClick={() => setIsNuevoMovimientoDialogOpen(true)}
+                className="bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className="w-5 h-5 text-[#002868]"
+                  className="w-5 h-5"
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                    d="M12 4.5v15m7.5-7.5h-15"
                   />
                 </svg>
+                Nuevo Movimiento
+              </Button>
+            </div>
+
+            {isLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
               </div>
-              Detalles del Movimiento
-            </DialogTitle>
-            <DialogDescription className="text-[#666666] mt-2">
-              Edita la información del movimiento de caja
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="fecha" className="text-[#002868] font-semibold">
-                Fecha
-              </Label>
-              <Input
-                id="fecha"
-                name="fecha"
-                type="date"
-                value={formData.fecha}
-                onChange={handleInputChange}
-                className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="concepto"
-                className="text-[#002868] font-semibold"
-              >
-                Concepto
-              </Label>
-              <Input
-                id="concepto"
-                name="concepto"
-                value={formData.concepto}
-                onChange={handleInputChange}
-                className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="monto" className="text-[#002868] font-semibold">
-                  Monto
-                </Label>
-                <Input
-                  id="monto"
-                  name="monto"
-                  type="number"
-                  value={formData.monto}
-                  onChange={handleInputChange}
-                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <TransactionTable
+                  title="Saldo Real"
+                  description="Movimientos de efectivo confirmados"
+                  transactions={saldoReal}
+                />
+
+                <TransactionTable
+                  title="Saldo Necesario"
+                  description="Pagos y compromisos programados"
+                  transactions={saldoNecesario}
+                  customTotal={calcularTotal(saldoReal) - Math.abs(calcularTotal(saldoNecesario))}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="tipo" className="text-[#002868] font-semibold">
-                  Tipo
-                </Label>
-                <select
-                  id="tipo"
-                  name="tipo"
-                  value={formData.tipo}
-                  onChange={handleInputChange}
-                  className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
-                >
-                  <option value="ingreso">Ingreso</option>
-                  <option value="egreso">Egreso</option>
-                </select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="descripcion"
-                className="text-[#002868] font-semibold"
-              >
-                Descripción
-              </Label>
-              <Input
-                id="descripcion"
-                name="descripcion"
-                value={formData.descripcion}
-                onChange={handleInputChange}
-                className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="prioridad"
-                className="text-[#002868] font-semibold"
-              >
-                Prioridad
-              </Label>
-              <select
-                id="prioridad"
-                name="prioridad"
-                value={formData.prioridad}
-                onChange={handleInputChange}
-                className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
-              >
-                <option value="baja">Baja</option>
-                <option value="media">Media</option>
-                <option value="alta">Alta</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="categoria_id" className="text-[#002868] font-semibold">
-                  Categoría
-                </Label>
-                <select
-                  id="categoria_id"
-                  name="categoria_id"
-                  value={formData.categoria_id}
-                  onChange={handleInputChange}
-                  className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
-                >
-                  <option value="">Seleccione una categoría</option>
-                  {categorias.map((c) => (
-                    <option key={c.id} value={c.id}>{c.nombre}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="subcategoria_id" className="text-[#002868] font-semibold">
-                  Subcategoría
-                </Label>
-                <select
-                  id="subcategoria_id"
-                  name="subcategoria_id"
-                  value={formData.subcategoria_id}
-                  onChange={handleInputChange}
-                  disabled={!formData.categoria_id}
-                  className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868] disabled:opacity-50 disabled:bg-gray-100"
-                >
-                  <option value="">Seleccione una subcategoría</option>
-                  {subcategorias.map((s) => (
-                    <option key={s.id} value={s.id}>{s.nombre}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDetailsDialogOpen(false)}
-              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer"
-              disabled={isSaving}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSaveDetails}
-              disabled={isSaving}
-              className="bg-[#002868] text-white hover:bg-[#003d8f] cursor-pointer"
-            >
-              {isSaving ? "Guardando..." : "Guardar Cambios"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog de Cambio de Estado - MEJORADO */}
-      <Dialog open={isStateDialogOpen} onOpenChange={setIsStateDialogOpen}>
-        <DialogContent className="sm:max-w-[400px] bg-white border-[#E0E0E0] shadow-2xl">
-          <DialogHeader className="border-b border-[#E0E0E0] pb-4">
-            <DialogTitle className="text-2xl font-bold text-[#002868] flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-[#002868]/10 flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="w-5 h-5 text-[#002868]"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+            )}
+          </>
+        )}
+      </main>
+      {user?.rol !== "empleado" && (
+        <>
+          {/* Dialog de Detalles - MEJORADO */}
+          <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+            <DialogContent className="sm:max-w-[500px] bg-white border-[#E0E0E0] shadow-2xl">
+              <DialogHeader className="border-b border-[#E0E0E0] pb-4">
+                <DialogTitle className="text-2xl font-bold text-[#002868] flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-lg bg-[#002868]/10 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-5 h-5 text-[#002868]"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                      />
+                    </svg>
+                  </div>
+                  Detalles del Movimiento
+                </DialogTitle>
+                <DialogDescription className="text-[#666666] mt-2">
+                  Edita la información del movimiento de caja
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fecha" className="text-[#002868] font-semibold">
+                    Fecha
+                  </Label>
+                  <Input
+                    id="fecha"
+                    name="fecha"
+                    type="date"
+                    value={formData.fecha}
+                    onChange={handleInputChange}
+                    className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
-                </svg>
-              </div>
-              Cambiar Estado
-            </DialogTitle>
-            <DialogDescription className="text-[#666666] mt-2">
-              Selecciona el nuevo estado para este movimiento
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="estado" className="text-[#002868] font-semibold">
-                Nuevo Estado
-              </Label>
-              <select
-                id="estado"
-                value={nuevoEstado}
-                onChange={(e) => setNuevoEstado(e.target.value)}
-                className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
-              >
-                <option value="pendiente">Pendiente</option>
-                <option value="aprobado">Aprobado</option>
-                <option value="rechazado">Rechazado</option>
-                <option value="completado">Completado</option>
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsStateDialogOpen(false)}
-              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer"
-              disabled={isSaving}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSaveStateChange}
-              disabled={isSaving}
-              className="bg-[#002868] text-white hover:bg-[#003d8f] cursor-pointer"
-            >
-              {isSaving ? "Guardando..." : "Cambiar Estado"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog de Confirmación de Eliminación - MEJORADO */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[400px] bg-white border-rose-200 shadow-2xl">
-          <DialogHeader className="border-b border-rose-100 pb-4">
-            <DialogTitle className="text-2xl font-bold text-rose-600 flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="w-5 h-5 text-rose-600"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="concepto"
+                    className="text-[#002868] font-semibold"
+                  >
+                    Concepto
+                  </Label>
+                  <Input
+                    id="concepto"
+                    name="concepto"
+                    value={formData.concepto}
+                    onChange={handleInputChange}
+                    className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
-                </svg>
-              </div>
-              Confirmar Eliminación
-            </DialogTitle>
-            <DialogDescription className="text-[#666666] mt-2">
-              ¿Estás seguro de que deseas eliminar este movimiento? Esta acción
-              no se puede deshacer.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer"
-              disabled={isSaving}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleDelete}
-              disabled={isSaving}
-              className="bg-rose-500 text-white hover:bg-rose-600 cursor-pointer"
-            >
-              {isSaving ? "Eliminando..." : "Eliminar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="monto" className="text-[#002868] font-semibold">
+                      Monto
+                    </Label>
+                    <Input
+                      id="monto"
+                      name="monto"
+                      type="number"
+                      value={formData.monto}
+                      onChange={handleInputChange}
+                      className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tipo" className="text-[#002868] font-semibold">
+                      Tipo
+                    </Label>
+                    <select
+                      id="tipo"
+                      name="tipo"
+                      value={formData.tipo}
+                      onChange={handleInputChange}
+                      className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
+                    >
+                      <option value="ingreso">Ingreso</option>
+                      <option value="egreso">Egreso</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="descripcion"
+                    className="text-[#002868] font-semibold"
+                  >
+                    Descripción
+                  </Label>
+                  <Input
+                    id="descripcion"
+                    name="descripcion"
+                    value={formData.descripcion}
+                    onChange={handleInputChange}
+                    className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="prioridad"
+                    className="text-[#002868] font-semibold"
+                  >
+                    Prioridad
+                  </Label>
+                  <select
+                    id="prioridad"
+                    name="prioridad"
+                    value={formData.prioridad}
+                    onChange={handleInputChange}
+                    className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
+                  >
+                    <option value="baja">Baja</option>
+                    <option value="media">Media</option>
+                    <option value="alta">Alta</option>
+                  </select>
+                </div>
 
-      {/* Dialog de Nuevo Movimiento */}
-      <NuevoMovimientoDialog
-        isOpen={isNuevoMovimientoDialogOpen}
-        onClose={() => setIsNuevoMovimientoDialogOpen(false)}
-        sucursalId={Number(params.id)}
-        onSuccess={() => {
-          setSuccessMessage("Movimiento creado exitosamente");
-          fetchMovimientos();
-          setTimeout(() => setSuccessMessage(""), 3000);
-        }}
-      />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="categoria_id" className="text-[#002868] font-semibold">
+                      Categoría
+                    </Label>
+                    <select
+                      id="categoria_id"
+                      name="categoria_id"
+                      value={formData.categoria_id}
+                      onChange={handleInputChange}
+                      className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
+                    >
+                      <option value="">Seleccione una categoría</option>
+                      {categorias.map((c) => (
+                        <option key={c.id} value={c.id}>{c.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subcategoria_id" className="text-[#002868] font-semibold">
+                      Subcategoría
+                    </Label>
+                    <select
+                      id="subcategoria_id"
+                      name="subcategoria_id"
+                      value={formData.subcategoria_id}
+                      onChange={handleInputChange}
+                      disabled={!formData.categoria_id}
+                      className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868] disabled:opacity-50 disabled:bg-gray-100"
+                    >
+                      <option value="">Seleccione una subcategoría</option>
+                      {subcategorias.map((s) => (
+                        <option key={s.id} value={s.id}>{s.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDetailsDialogOpen(false)}
+                  className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer"
+                  disabled={isSaving}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleSaveDetails}
+                  disabled={isSaving}
+                  className="bg-[#002868] text-white hover:bg-[#003d8f] cursor-pointer"
+                >
+                  {isSaving ? "Guardando..." : "Guardar Cambios"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog >
+
+          {/* Dialog de Cambio de Estado - MEJORADO */}
+          < Dialog open={isStateDialogOpen} onOpenChange={setIsStateDialogOpen} >
+            <DialogContent className="sm:max-w-[400px] bg-white border-[#E0E0E0] shadow-2xl">
+              <DialogHeader className="border-b border-[#E0E0E0] pb-4">
+                <DialogTitle className="text-2xl font-bold text-[#002868] flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-lg bg-[#002868]/10 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-5 h-5 text-[#002868]"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                      />
+                    </svg>
+                  </div>
+                  Cambiar Estado
+                </DialogTitle>
+                <DialogDescription className="text-[#666666] mt-2">
+                  Selecciona el nuevo estado para este movimiento
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="estado" className="text-[#002868] font-semibold">
+                    Nuevo Estado
+                  </Label>
+                  <select
+                    id="estado"
+                    value={nuevoEstado}
+                    onChange={(e) => setNuevoEstado(e.target.value)}
+                    className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
+                  >
+                    <option value="pendiente">Pendiente</option>
+                    <option value="aprobado">Aprobado</option>
+                    <option value="rechazado">Rechazado</option>
+                    <option value="completado">Completado</option>
+                  </select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsStateDialogOpen(false)}
+                  className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer"
+                  disabled={isSaving}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleSaveStateChange}
+                  disabled={isSaving}
+                  className="bg-[#002868] text-white hover:bg-[#003d8f] cursor-pointer"
+                >
+                  {isSaving ? "Guardando..." : "Cambiar Estado"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog >
+
+          {/* Dialog de Confirmación de Eliminación - MEJORADO */}
+          < Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen} >
+            <DialogContent className="sm:max-w-[400px] bg-white border-rose-200 shadow-2xl">
+              <DialogHeader className="border-b border-rose-100 pb-4">
+                <DialogTitle className="text-2xl font-bold text-rose-600 flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-5 h-5 text-rose-600"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                      />
+                    </svg>
+                  </div>
+                  Confirmar Eliminación
+                </DialogTitle>
+                <DialogDescription className="text-[#666666] mt-2">
+                  ¿Estás seguro de que deseas eliminar este movimiento? Esta acción
+                  no se puede deshacer.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDeleteDialogOpen(false)}
+                  className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer"
+                  disabled={isSaving}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleDelete}
+                  disabled={isSaving}
+                  className="bg-rose-500 text-white hover:bg-rose-600 cursor-pointer"
+                >
+                  {isSaving ? "Eliminando..." : "Eliminar"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog >
+
+          <NuevoMovimientoDialog
+            isOpen={isNuevoMovimientoDialogOpen}
+            onClose={() => setIsNuevoMovimientoDialogOpen(false)}
+            sucursalId={Number(params.id)}
+            onSuccess={() => {
+              setSuccessMessage("Movimiento creado exitosamente");
+              fetchMovimientos();
+              setTimeout(() => setSuccessMessage(""), 3000);
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }
