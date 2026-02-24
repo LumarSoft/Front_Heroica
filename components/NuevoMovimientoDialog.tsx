@@ -20,6 +20,7 @@ interface NuevoMovimientoDialogProps {
   onClose: () => void;
   sucursalId: number;
   onSuccess: () => void;
+  cajaTipo?: "efectivo" | "banco";
 }
 
 interface Categoria {
@@ -33,11 +34,22 @@ interface Subcategoria {
   nombre: string;
 }
 
+interface Banco {
+  id: number;
+  nombre: string;
+}
+
+interface MedioPago {
+  id: number;
+  nombre: string;
+}
+
 export default function NuevoMovimientoDialog({
   isOpen,
   onClose,
   sucursalId,
   onSuccess,
+  cajaTipo = "efectivo",
 }: NuevoMovimientoDialogProps) {
   const { user } = useAuthStore();
   const [isSaving, setIsSaving] = useState(false);
@@ -52,18 +64,27 @@ export default function NuevoMovimientoDialog({
     tipo: "ingreso",
     categoria_id: "",
     subcategoria_id: "",
+    comprobante: "",
+    banco_id: "",
+    medio_pago_id: "",
   });
 
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
+  const [bancos, setBancos] = useState<Banco[]>([]);
+  const [mediosPago, setMediosPago] = useState<MedioPago[]>([]);
 
-  // Cargar categorías al abrir el dialog
+  // Cargar datos al abrir el dialog
 
   useEffect(() => {
     if (isOpen) {
       fetchCategorias();
+      if (cajaTipo === "banco") {
+        fetchBancos();
+        fetchMediosPago();
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, cajaTipo]);
 
   const fetchCategorias = async () => {
     try {
@@ -74,6 +95,30 @@ export default function NuevoMovimientoDialog({
       }
     } catch (err) {
       console.error("Error al cargar categorías:", err);
+    }
+  };
+
+  const fetchBancos = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL);
+      const data = await response.json();
+      if (response.ok) {
+        setBancos(data.data || []);
+      }
+    } catch (err) {
+      console.error("Error al cargar bancos:", err);
+    }
+  };
+
+  const fetchMediosPago = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL);
+      const data = await response.json();
+      if (response.ok) {
+        setMediosPago(data.data || []);
+      }
+    } catch (err) {
+      console.error("Error al cargar medios de pago:", err);
     }
   };
 
@@ -118,6 +163,9 @@ export default function NuevoMovimientoDialog({
       tipo: "ingreso",
       categoria_id: "",
       subcategoria_id: "",
+      comprobante: "",
+      banco_id: "",
+      medio_pago_id: "",
     });
     setError("");
   };
@@ -145,7 +193,9 @@ export default function NuevoMovimientoDialog({
       setIsSaving(true);
       setError("");
 
-      const response = await fetch(API_ENDPOINTS.MOVIMIENTOS.CREATE_EFECTIVO, {
+      const endpoint = cajaTipo === "banco" ? API_ENDPOINTS.CAJA_BANCO.CREATE : API_ENDPOINTS.MOVIMIENTOS.CREATE_EFECTIVO;
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -160,6 +210,9 @@ export default function NuevoMovimientoDialog({
           tipo: formData.tipo,
           categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
           subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
+          comprobante: formData.comprobante,
+          banco_id: formData.banco_id ? Number(formData.banco_id) : null,
+          medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
         }),
       });
 
@@ -336,6 +389,66 @@ export default function NuevoMovimientoDialog({
               </select>
             </div>
           </div>
+
+          {cajaTipo === "banco" && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="comprobante" className="text-[#002868] font-semibold">
+                  N° de Comprobante
+                </Label>
+                <Input
+                  id="comprobante"
+                  name="comprobante"
+                  value={formData.comprobante}
+                  onChange={handleInputChange}
+                  placeholder="Ej: TR-000123"
+                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="banco_id" className="text-[#002868] font-semibold">
+                    Banco
+                  </Label>
+                  <select
+                    id="banco_id"
+                    name="banco_id"
+                    value={formData.banco_id}
+                    onChange={handleInputChange}
+                    className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
+                  >
+                    <option value="">Seleccione un banco</option>
+                    {bancos.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="medio_pago_id" className="text-[#002868] font-semibold">
+                    Medio de Pago
+                  </Label>
+                  <select
+                    id="medio_pago_id"
+                    name="medio_pago_id"
+                    value={formData.medio_pago_id}
+                    onChange={handleInputChange}
+                    className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
+                  >
+                    <option value="">Seleccione medio de pago</option>
+                    {mediosPago.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="prioridad" className="text-[#002868] font-semibold">
