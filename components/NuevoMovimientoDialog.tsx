@@ -21,6 +21,7 @@ interface NuevoMovimientoDialogProps {
   sucursalId: number;
   onSuccess: () => void;
   cajaTipo?: "efectivo" | "banco";
+  isPagoPendiente?: boolean;
 }
 
 interface Categoria {
@@ -50,6 +51,7 @@ export default function NuevoMovimientoDialog({
   sucursalId,
   onSuccess,
   cajaTipo = "efectivo",
+  isPagoPendiente = false,
 }: NuevoMovimientoDialogProps) {
   const { user } = useAuthStore();
   const [isSaving, setIsSaving] = useState(false);
@@ -60,7 +62,7 @@ export default function NuevoMovimientoDialog({
     monto: "",
     descripcion: "",
     prioridad: "media" as "baja" | "media" | "alta",
-    estado: "aprobado" as "pendiente" | "aprobado" | "rechazado" | "completado",
+    estado: (isPagoPendiente ? "pendiente" : "aprobado") as "pendiente" | "aprobado" | "rechazado" | "completado",
     tipo: "ingreso",
     categoria_id: "",
     subcategoria_id: "",
@@ -159,7 +161,7 @@ export default function NuevoMovimientoDialog({
       monto: "",
       descripcion: "",
       prioridad: "media",
-      estado: "aprobado",
+      estado: isPagoPendiente ? "pendiente" : "aprobado",
       tipo: "ingreso",
       categoria_id: "",
       subcategoria_id: "",
@@ -193,27 +195,45 @@ export default function NuevoMovimientoDialog({
       setIsSaving(true);
       setError("");
 
-      const endpoint = cajaTipo === "banco" ? API_ENDPOINTS.CAJA_BANCO.CREATE : API_ENDPOINTS.MOVIMIENTOS.CREATE_EFECTIVO;
+      const endpoint = isPagoPendiente
+        ? API_ENDPOINTS.PAGOS_PENDIENTES.CREATE
+        : (cajaTipo === "banco" ? API_ENDPOINTS.CAJA_BANCO.CREATE : API_ENDPOINTS.MOVIMIENTOS.CREATE_EFECTIVO);
+
+      const body = isPagoPendiente ? {
+        sucursal_id: sucursalId,
+        user_id: user?.id,
+        fecha: formData.fecha,
+        concepto: formData.concepto,
+        descripcion: formData.descripcion,
+        monto: parseFloat(formData.monto),
+        tipo_movimiento: cajaTipo, // 'banco' o 'efectivo'
+        prioridad: formData.prioridad,
+        tipo: formData.tipo, // 'ingreso' o 'egreso'
+        categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
+        subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
+        banco_id: formData.banco_id ? Number(formData.banco_id) : null,
+        medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
+      } : {
+        sucursal_id: sucursalId,
+        user_id: user?.id,
+        fecha: formData.fecha,
+        concepto: formData.concepto,
+        monto: parseFloat(formData.monto),
+        descripcion: formData.descripcion,
+        prioridad: formData.prioridad,
+        estado: formData.estado,
+        tipo: formData.tipo,
+        categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
+        subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
+        comprobante: formData.comprobante,
+        banco_id: formData.banco_id ? Number(formData.banco_id) : null,
+        medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
+      };
 
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sucursal_id: sucursalId,
-          user_id: user?.id,
-          fecha: formData.fecha,
-          concepto: formData.concepto,
-          monto: parseFloat(formData.monto),
-          descripcion: formData.descripcion,
-          prioridad: formData.prioridad,
-          estado: formData.estado,
-          tipo: formData.tipo,
-          categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
-          subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
-          comprobante: formData.comprobante,
-          banco_id: formData.banco_id ? Number(formData.banco_id) : null,
-          medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -494,23 +514,25 @@ export default function NuevoMovimientoDialog({
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="estado" className={labelClasses}>
-                Estado
-              </Label>
-              <select
-                id="estado"
-                name="estado"
-                value={formData.estado}
-                onChange={handleInputChange}
-                className={selectClasses}
-              >
-                <option value="pendiente">Pendiente</option>
-                <option value="aprobado">Aprobado</option>
-                <option value="completado">Completado</option>
-                <option value="rechazado">Rechazado</option>
-              </select>
-            </div>
+            {!isPagoPendiente && (
+              <div className="space-y-1.5">
+                <Label htmlFor="estado" className={labelClasses}>
+                  Estado
+                </Label>
+                <select
+                  id="estado"
+                  name="estado"
+                  value={formData.estado}
+                  onChange={handleInputChange}
+                  className={selectClasses}
+                >
+                  <option value="pendiente">Pendiente</option>
+                  <option value="aprobado">Aprobado</option>
+                  <option value="completado">Completado</option>
+                  <option value="rechazado">Rechazado</option>
+                </select>
+              </div>
+            )}
           </section>
         </div>
 

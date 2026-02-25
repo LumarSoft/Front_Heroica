@@ -64,6 +64,8 @@ export default function PagosPendientesPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [pagosPendientes, setPagosPendientes] = useState<PagoPendiente[]>([]);
+  const [historial, setHistorial] = useState<PagoPendiente[]>([]);
+  const [activeTab, setActiveTab] = useState<"pendientes" | "historial">("pendientes");
   const [error, setError] = useState("");
 
 
@@ -77,7 +79,7 @@ export default function PagosPendientesPage() {
   const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] =
     useState(false);
 
-  // --- Fetcher ---
+  // --- Fetchers ---
   const fetchPagosPendientes = async () => {
     try {
       setIsLoading(true);
@@ -101,12 +103,40 @@ export default function PagosPendientesPage() {
     }
   };
 
+  const fetchHistorial = async () => {
+    if (!user) return;
+    try {
+      setIsLoading(true);
+      setError("");
+
+      const response = await fetch(
+        API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(user.id)
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Error al cargar historial");
+      }
+
+      setHistorial(data.data || []);
+    } catch (err: any) {
+      console.error("Error al cargar historial:", err);
+      setError(err.message || "Error al cargar historial");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!isGuardLoading) {
-      fetchPagosPendientes();
+      if (activeTab === "pendientes") {
+        fetchPagosPendientes();
+      } else {
+        fetchHistorial();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isGuardLoading]);
+  }, [isGuardLoading, activeTab]);
 
   // --- Acciones ---
   const showSuccess = (msg: string) => {
@@ -212,6 +242,8 @@ export default function PagosPendientesPage() {
   }
 
   const total = calcularTotal(pagosPendientes);
+  const isEmployee = user?.rol === "empleado";
+  const displayData = activeTab === "pendientes" ? pagosPendientes : historial;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
@@ -230,12 +262,16 @@ export default function PagosPendientesPage() {
           </div>
         )}
 
+        {/* Header y Botón Nuevo */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-[#002868]">Pagos Pendientes</h1>
+            <p className="text-[#666666] mt-1">Gestión y seguimiento de movimientos por autorizar</p>
+          </div>
 
-        {/* Botón nuevo movimiento */}
-        <div className="flex justify-end mb-6">
           <Button
             onClick={() => setIsNuevoMovimientoDialogOpen(true)}
-            className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+            className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 self-end md:self-auto"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -244,36 +280,64 @@ export default function PagosPendientesPage() {
           </Button>
         </div>
 
+        {/* Tabs para Empleados */}
+        {isEmployee && (
+          <div className="flex mb-6 bg-white/50 p-1 rounded-xl border border-[#E0E0E0] w-fit">
+            <button
+              onClick={() => setActiveTab("pendientes")}
+              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${activeTab === "pendientes"
+                ? "bg-[#002868] text-white shadow-md"
+                : "text-[#666666] hover:bg-[#F0F0F0]"
+                }`}
+            >
+              Mis Pendientes
+            </button>
+            <button
+              onClick={() => setActiveTab("historial")}
+              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${activeTab === "historial"
+                ? "bg-[#002868] text-white shadow-md"
+                : "text-[#666666] hover:bg-[#F0F0F0]"
+                }`}
+            >
+              Mi Historial
+            </button>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
           </div>
         ) : (
-          <Card className="border-[#E0E0E0] bg-white shadow-lg">
-            <CardHeader className="border-b border-[#E0E0E0]">
+          <Card className="border-[#E0E0E0] bg-white shadow-lg overflow-hidden">
+            <CardHeader className="border-b border-[#E0E0E0] bg-[#F8F9FA]/50">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-2xl font-bold text-[#002868]">
-                    Pagos Pendientes
+                  <CardTitle className="text-xl font-bold text-[#002868]">
+                    {activeTab === "pendientes" ? "Pendientes de Autorización" : "Historial de Solicitudes"}
                   </CardTitle>
                   <CardDescription className="text-[#666666]">
-                    Movimientos esperando autorización
+                    {activeTab === "pendientes"
+                      ? "Movimientos esperando revisión de un administrador"
+                      : "Registro de movimientos procesados y su estado final"}
                   </CardDescription>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-[#666666] font-medium mb-1">
-                    Total en Pendientes
-                  </p>
-                  <div
-                    className={`inline-flex items-center justify-center px-4 py-2 rounded-lg ${total >= 0 ? "bg-emerald-50 border border-emerald-200" : "bg-rose-50 border border-rose-200"}`}
-                  >
-                    <p
-                      className={`text-2xl font-bold ${total >= 0 ? "text-emerald-700" : "text-rose-700"}`}
-                    >
-                      {formatMonto(Math.abs(total))}
+                {activeTab === "pendientes" && (
+                  <div className="text-right">
+                    <p className="text-xs text-[#666666] font-bold uppercase tracking-wider mb-1">
+                      Total Pendiente
                     </p>
+                    <div
+                      className={`inline-flex items-center justify-center px-4 py-1.5 rounded-lg ${total >= 0 ? "bg-emerald-50 border border-emerald-200" : "bg-rose-50 border border-rose-200"}`}
+                    >
+                      <p
+                        className={`text-xl font-black ${total >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+                      >
+                        {formatMonto(Math.abs(total))}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -281,42 +345,52 @@ export default function PagosPendientesPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-[#F8F9FA] hover:bg-[#F8F9FA] border-b-2 border-[#E0E0E0]">
-                      <TableHead className="font-bold text-[#002868] text-sm">Fecha</TableHead>
-                      <TableHead className="font-bold text-[#002868] text-sm">Concepto</TableHead>
-                      <TableHead className="font-bold text-[#002868] text-sm">Descripción</TableHead>
-                      <TableHead className="font-bold text-[#002868] text-sm text-center">Tipo</TableHead>
-                      <TableHead className="font-bold text-[#002868] text-sm text-right">Monto</TableHead>
-                      <TableHead className="font-bold text-[#002868] text-sm text-center">Prioridad</TableHead>
-                      <TableHead className="font-bold text-[#002868] text-sm text-center">Estado</TableHead>
-                      <TableHead className="font-bold text-[#002868] text-sm text-center">Acciones</TableHead>
+                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Fecha</TableHead>
+                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Concepto</TableHead>
+                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-right">Monto</TableHead>
+                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Tipo</TableHead>
+                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Prioridad</TableHead>
+                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Estado</TableHead>
+                      {activeTab === "historial" && (
+                        <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Resolución</TableHead>
+                      )}
+                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {pagosPendientes.length === 0 ? (
+                    {displayData.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center text-[#666666] py-12">
-                          <div className="flex flex-col items-center gap-2">
-                            <svg className="w-12 h-12 text-[#666666]/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-                            </svg>
-                            <p className="font-medium">No hay pagos pendientes</p>
+                        <TableCell colSpan={activeTab === "historial" ? 8 : 7} className="text-center text-[#666666] py-16">
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
+                              <svg className="w-8 h-8 text-[#666666]/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                              </svg>
+                            </div>
+                            <p className="font-medium">No se encontraron movimientos registrados</p>
                           </div>
                         </TableCell>
                       </TableRow>
                     ) : (
-                      pagosPendientes.map((pago) => (
+                      displayData.map((pago) => (
                         <TableRow key={pago.id} className="hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50">
-                          <TableCell className="font-medium text-[#1A1A1A]">{formatFecha(pago.fecha)}</TableCell>
-                          <TableCell className="text-[#1A1A1A]">{pago.concepto}</TableCell>
-                          <TableCell className="text-[#666666]">{pago.descripcion || "-"}</TableCell>
+                          <TableCell className="font-medium text-[#1A1A1A]">
+                            {formatFecha(pago.fecha)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-[#1A1A1A]">{pago.concepto}</span>
+                              <span className="text-xs text-[#666666] truncate max-w-[200px]">{pago.descripcion || "-"}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className={`text-right font-black text-sm ${parseFloat(pago.monto.toString()) >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                            {formatMonto(Math.abs(parseFloat(pago.monto.toString())))}
+                          </TableCell>
                           <TableCell className="text-center">
                             <StatusBadge
                               value={pago.tipo === "egreso" || (!pago.tipo && Number(pago.monto) < 0) ? "egreso" : "ingreso"}
                               colorMap={{ egreso: "bg-rose-100 text-rose-800", ingreso: "bg-emerald-100 text-emerald-800" }}
                             />
-                          </TableCell>
-                          <TableCell className={`text-right font-bold text-base ${parseFloat(pago.monto.toString()) >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                            {formatMonto(Math.abs(parseFloat(pago.monto.toString())))}
                           </TableCell>
                           <TableCell className="text-center">
                             <StatusBadge value={pago.prioridad} colorMap={PRIORIDAD_COLORS} />
@@ -324,6 +398,26 @@ export default function PagosPendientesPage() {
                           <TableCell className="text-center">
                             <StatusBadge value={pago.estado} colorMap={ESTADO_COLORS} />
                           </TableCell>
+                          {activeTab === "historial" && (
+                            <TableCell>
+                              <div className="flex flex-col gap-0.5">
+                                {pago.estado === "aprobado" && (
+                                  <span className="text-xs font-medium text-emerald-600">Aprobado por {pago.usuario_revisor_nombre || "Admin"}</span>
+                                )}
+                                {pago.estado === "rechazado" && (
+                                  <>
+                                    <span className="text-xs font-bold text-rose-600">Rechazado por {pago.usuario_revisor_nombre || "Admin"}</span>
+                                    <span className="text-[11px] text-[#666666] italic leading-tight">
+                                      "{pago.motivo_rechazo || "Sin motivo especificado"}"
+                                    </span>
+                                  </>
+                                )}
+                                {pago.estado === "pendiente" && (
+                                  <span className="text-xs text-[#8A8F9C]">En revisión...</span>
+                                )}
+                              </div>
+                            </TableCell>
+                          )}
                           <TableCell className="text-center">
                             <div className="flex items-center justify-center gap-2">
                               {pago.estado === "pendiente" && user?.rol !== "empleado" && (
@@ -331,7 +425,7 @@ export default function PagosPendientesPage() {
                                   <Button
                                     size="sm"
                                     onClick={() => handleOpenAprobar(pago)}
-                                    className="bg-emerald-500 hover:bg-emerald-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all flex items-center justify-center"
+                                    className="bg-emerald-500 hover:bg-emerald-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg"
                                     title="Aprobar pago"
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
@@ -341,7 +435,7 @@ export default function PagosPendientesPage() {
                                   <Button
                                     size="sm"
                                     onClick={() => handleOpenRechazar(pago)}
-                                    className="bg-rose-500 hover:bg-rose-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all flex items-center justify-center"
+                                    className="bg-rose-500 hover:bg-rose-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg"
                                     title="Rechazar pago"
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
@@ -349,6 +443,28 @@ export default function PagosPendientesPage() {
                                     </svg>
                                   </Button>
                                 </>
+                              )}
+                              {activeTab === "pendientes" && (pago.estado === "pendiente") && (isEmployee || user?.rol === "admin") && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={async () => {
+                                    if (confirm("\u00BFEst\u00E1s seguro de eliminar esta solicitud pendiente?")) {
+                                      try {
+                                        const res = await fetch(API_ENDPOINTS.PAGOS_PENDIENTES.DELETE(pago.id), { method: 'DELETE' });
+                                        if (res.ok) {
+                                          toast.success("Solicitud eliminada");
+                                          fetchPagosPendientes();
+                                        }
+                                      } catch (e) { toast.error("Error al eliminar"); }
+                                    }
+                                  }}
+                                  className="h-8 w-8 p-0 text-[#8A8F9C] hover:text-rose-600 transition-colors"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                  </svg>
+                                </Button>
                               )}
                             </div>
                           </TableCell>
@@ -365,48 +481,58 @@ export default function PagosPendientesPage() {
 
       {/* Dialog Aprobar */}
       <Dialog open={isAprobarDialogOpen} onOpenChange={setIsAprobarDialogOpen}>
-        <DialogContent className="sm:max-w-[400px] bg-white border-[#E0E0E0] shadow-2xl">
-          <DialogHeader className="border-b border-[#E0E0E0] pb-4">
-            <DialogTitle className="text-2xl font-bold text-[#002868] flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+        <DialogContent className="sm:max-w-[400px] bg-white border-[#E0E0E0] shadow-2xl rounded-2xl p-0 overflow-hidden">
+          <DialogHeader className="p-6 border-b border-[#F0F0F0] bg-[#F8F9FA]/50">
+            <DialogTitle className="text-xl font-bold text-[#002868] flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-emerald-600">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              Aprobar Pago
+              Aprobar Movimiento
             </DialogTitle>
             <DialogDescription className="text-[#666666] mt-2">
-              Seleccione la caja destino para este movimiento aprobado.
+              Indica en qué caja se registrará este movimiento.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="p-6 space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="tipoCaja" className="text-[#002868] font-semibold">Caja Destino</Label>
+              <Label htmlFor="tipoCaja" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Caja Destino</Label>
               <select
                 id="tipoCaja"
                 value={tipoCaja}
                 onChange={(e) => setTipoCaja(e.target.value as "efectivo" | "banco")}
-                className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 text-sm focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
+                className="w-full h-11 rounded-xl border border-[#E0E0E0] px-4 py-2 text-sm focus:border-[#002868] focus:outline-none focus:ring-4 focus:ring-[#002868]/10 transition-all appearance-none bg-white cursor-pointer"
               >
-                <option value="efectivo">Caja Efectivo</option>
-                <option value="banco">Caja Banco</option>
+                <option value="efectivo">Caja Efectivo (Sucursal)</option>
+                <option value="banco">Caja Banco / Transferencia</option>
               </select>
             </div>
             {selectedPago && (
-              <div className="p-3 bg-gray-50 rounded-lg border border-gray-100 text-sm flex justify-between">
-                <span className="text-gray-600 font-medium">Monto a aprobar:</span>
-                <span className="font-bold text-[#002868]">
-                  {formatMonto(parseFloat(selectedPago.monto.toString()))}
-                </span>
+              <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mb-1">Monto a Autorizar</p>
+                  <p className="text-xl font-black text-emerald-700">
+                    {formatMonto(parseFloat(selectedPago.monto.toString()))}
+                  </p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
+                  <span className="text-emerald-500 font-bold">$</span>
+                </div>
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAprobarDialogOpen(false)} className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer" disabled={isSaving}>
+          <DialogFooter className="p-6 bg-[#F8F9FA]/50 border-t border-[#F0F0F0] sm:justify-end gap-3">
+            <Button variant="outline" onClick={() => setIsAprobarDialogOpen(false)} className="h-11 px-6 rounded-xl border-[#E0E0E0] text-[#5A6070] font-semibold hover:bg-white hover:text-[#1A1A1A] transition-all cursor-pointer" disabled={isSaving}>
               Cancelar
             </Button>
-            <Button onClick={handleAprobar} disabled={isSaving} className="bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">
-              {isSaving ? "Aprobando..." : "Confirmar Aprobación"}
+            <Button onClick={handleAprobar} disabled={isSaving} className="h-11 px-8 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer">
+              {isSaving ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Procesando...
+                </span>
+              ) : "Autorizar Pago"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -414,37 +540,43 @@ export default function PagosPendientesPage() {
 
       {/* Dialog Rechazar */}
       <Dialog open={isRechazarDialogOpen} onOpenChange={setIsRechazarDialogOpen}>
-        <DialogContent className="sm:max-w-[400px] bg-white border-[#E0E0E0] shadow-2xl">
-          <DialogHeader className="border-b border-[#E0E0E0] pb-4">
-            <DialogTitle className="text-2xl font-bold text-[#002868] flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-rose-500/10 flex items-center justify-center">
+        <DialogContent className="sm:max-w-[420px] bg-white border-[#E0E0E0] shadow-2xl rounded-2xl p-0 overflow-hidden">
+          <DialogHeader className="p-6 border-b border-[#F0F0F0] bg-[#F8F9FA]/50">
+            <DialogTitle className="text-xl font-bold text-[#002868] flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-rose-600">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              Rechazar Pago
+              Rechazar Movimiento
             </DialogTitle>
             <DialogDescription className="text-[#666666] mt-2">
-              Por favor indique el motivo del rechazo.
+              Explica brevemente por qué se rechaza esta solicitud.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="p-6 space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="motivoRechazo" className="text-[#002868] font-semibold">Motivo de Rechazo</Label>
-              <Input
+              <Label htmlFor="motivoRechazo" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Justificación del rechazo</Label>
+              <textarea
                 id="motivoRechazo"
                 value={motivoRechazo}
                 onChange={(e) => setMotivoRechazo(e.target.value)}
-                placeholder="Ingrese un motivo..."
-                className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                placeholder="Ej: Monto incorrecto o falta comprobante..."
+                rows={3}
+                className="w-full rounded-xl border border-[#E0E0E0] px-4 py-3 text-sm focus:border-rose-500 focus:outline-none focus:ring-4 focus:ring-rose-500/10 transition-all resize-none"
               />
+              <p className="text-[10px] text-[#8A8F9C]">Este mensaje será visible para el empleado en su historial.</p>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRechazarDialogOpen(false)} className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#1A1A1A] cursor-pointer" disabled={isSaving}>
+          <DialogFooter className="p-6 bg-[#F8F9FA]/50 border-t border-[#F0F0F0] sm:justify-end gap-3">
+            <Button variant="outline" onClick={() => setIsRechazarDialogOpen(false)} className="h-11 px-6 rounded-xl border-[#E0E0E0] text-[#5A6070] font-semibold hover:bg-white transition-all cursor-pointer" disabled={isSaving}>
               Cancelar
             </Button>
-            <Button onClick={handleRechazar} disabled={isSaving || !motivoRechazo.trim()} className="bg-rose-600 text-white hover:bg-rose-700 cursor-pointer">
+            <Button
+              onClick={handleRechazar}
+              disabled={isSaving || !motivoRechazo.trim()}
+              className="h-11 px-8 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 shadow-lg shadow-rose-600/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:shadow-none"
+            >
               {isSaving ? "Rechazando..." : "Confirmar Rechazo"}
             </Button>
           </DialogFooter>
@@ -455,11 +587,14 @@ export default function PagosPendientesPage() {
         isOpen={isNuevoMovimientoDialogOpen}
         onClose={() => setIsNuevoMovimientoDialogOpen(false)}
         sucursalId={Number(params.id)}
+        isPagoPendiente={true}
         onSuccess={() => {
-          showSuccess("Movimiento creado exitosamente");
-          fetchPagosPendientes();
+          showSuccess("Solicitud de movimiento creada correctamente");
+          if (activeTab === "pendientes") fetchPagosPendientes();
+          else fetchHistorial();
         }}
       />
     </div>
   );
 }
+

@@ -35,6 +35,7 @@ export const API_ENDPOINTS = {
     APROBAR: (id: number) => `${API_URL}/api/pagos-pendientes/${id}/aprobar`,
     RECHAZAR: (id: number) => `${API_URL}/api/pagos-pendientes/${id}/rechazar`,
     DELETE: (id: number) => `${API_URL}/api/pagos-pendientes/${id}`,
+    GET_HISTORIAL: (userId: number) => `${API_URL}/api/pagos-pendientes/historial/${userId}`,
   },
   CAJA_BANCO: {
     GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/caja-banco/${sucursalId}`,

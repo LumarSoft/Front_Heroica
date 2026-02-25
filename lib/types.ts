@@ -38,6 +38,10 @@ export interface PagoPendiente {
     estado: "pendiente" | "aprobado" | "rechazado";
     prioridad: "baja" | "media" | "alta";
     tipo?: string;
+    motivo_rechazo?: string;
+    usuario_creador_nombre?: string;
+    usuario_revisor_nombre?: string;
+    created_at?: string;
 }
 
 export interface Categoria {
