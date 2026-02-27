@@ -4,10 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,8 +41,16 @@ export default function SucursalDetailPage() {
   });
 
   // Estados para totales de cajas
-  const [totalesEfectivo, setTotalesEfectivo] = useState({ total_real: 0, total_necesario: 0, ultima_actualizacion: null as string | null });
-  const [totalesBanco, setTotalesBanco] = useState({ total_real: 0, total_necesario: 0, ultima_actualizacion: null as string | null });
+  const [totalesEfectivo, setTotalesEfectivo] = useState({
+    total_real: 0,
+    total_necesario: 0,
+    ultima_actualizacion: null as string | null,
+  });
+  const [totalesBanco, setTotalesBanco] = useState({
+    total_real: 0,
+    total_necesario: 0,
+    ultima_actualizacion: null as string | null,
+  });
   const [loadingTotales, setLoadingTotales] = useState(true);
 
   // Estados para documentos (múltiples)
@@ -97,7 +102,7 @@ export default function SucursalDetailPage() {
 
       // Cargar totales de efectivo
       const resEfectivo = await fetch(
-        API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(Number(params.id))
+        API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(Number(params.id)),
       );
       const dataEfectivo = await resEfectivo.json();
       if (resEfectivo.ok) {
@@ -106,14 +111,14 @@ export default function SucursalDetailPage() {
 
       // Cargar totales de banco
       const resBanco = await fetch(
-        API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(Number(params.id))
+        API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(Number(params.id)),
       );
       const dataBanco = await resBanco.json();
       if (resBanco.ok) {
         setTotalesBanco(dataBanco.data);
       }
     } catch (err) {
-      console.error('Error al cargar totales:', err);
+      console.error("Error al cargar totales:", err);
     } finally {
       setLoadingTotales(false);
     }
@@ -123,7 +128,9 @@ export default function SucursalDetailPage() {
     if (user?.rol === "admin") {
       const fetchPendingCount = async () => {
         try {
-          const response = await fetch(`${API_ENDPOINTS.PAGOS_PENDIENTES.GET_ALL}?estado=pendiente`);
+          const response = await fetch(
+            `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_ALL}?estado=pendiente`,
+          );
           if (response.ok) {
             const data = await response.json();
             setPendingCount(data.data.length);
@@ -149,7 +156,6 @@ export default function SucursalDetailPage() {
     e.preventDefault();
     setIsSaving(true);
     setError("");
-
 
     try {
       const response = await fetch(
@@ -182,7 +188,7 @@ export default function SucursalDetailPage() {
     try {
       setLoadingDocumentos(true);
       const response = await fetch(
-        API_ENDPOINTS.SUCURSALES.GET_DOCUMENTOS(Number(params.id))
+        API_ENDPOINTS.SUCURSALES.GET_DOCUMENTOS(Number(params.id)),
       );
       const data = await response.json();
 
@@ -217,7 +223,7 @@ export default function SucursalDetailPage() {
         {
           method: "POST",
           body: formData,
-        }
+        },
       );
 
       const data = await response.json();
@@ -233,10 +239,10 @@ export default function SucursalDetailPage() {
       await fetchDocumentos();
 
       // Limpiar el input de archivo
-      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      const fileInput = document.getElementById(
+        "file-upload",
+      ) as HTMLInputElement;
       if (fileInput) fileInput.value = "";
-
-
     } catch (err: any) {
       console.error("Error al subir documento:", err);
       setError(err.message || "Error al subir documento");
@@ -246,7 +252,10 @@ export default function SucursalDetailPage() {
   };
 
   const handleDownloadDoc = (docId: number) => {
-    const url = API_ENDPOINTS.SUCURSALES.DOWNLOAD_DOCUMENTO(Number(params.id), docId);
+    const url = API_ENDPOINTS.SUCURSALES.DOWNLOAD_DOCUMENTO(
+      Number(params.id),
+      docId,
+    );
     window.open(url, "_blank");
   };
 
@@ -260,7 +269,7 @@ export default function SucursalDetailPage() {
         API_ENDPOINTS.SUCURSALES.DELETE_DOCUMENTO(Number(params.id), docId),
         {
           method: "DELETE",
-        }
+        },
       );
 
       const data = await response.json();
@@ -278,7 +287,6 @@ export default function SucursalDetailPage() {
       setError(err.message || "Error al eliminar documento");
     }
   };
-
 
   if (isGuardLoading) {
     return (
@@ -392,7 +400,9 @@ export default function SucursalDetailPage() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Caja en Efectivo */}
           <Card
-            onClick={() => router.push(`/sucursales/${params.id}/caja-efectivo`)}
+            onClick={() =>
+              router.push(`/sucursales/${params.id}/caja-efectivo`)
+            }
             className="border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
           >
             {/* Decoración de fondo */}
@@ -427,16 +437,29 @@ export default function SucursalDetailPage() {
                 </div>
               ) : (
                 <div className="mb-3">
-                  <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide mb-1">Saldo Real</p>
-                  <p className={`text-2xl font-bold ${totalesEfectivo.total_real >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                    }`}>
+                  <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide mb-1">
+                    Saldo Real
+                  </p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      totalesEfectivo.total_real >= 0
+                        ? "text-emerald-600"
+                        : "text-rose-600"
+                    }`}
+                  >
                     {formatMonto(totalesEfectivo.total_real)}
                   </p>
                   {totalesEfectivo.ultima_actualizacion && (
                     <p className="text-xs text-slate-400 mt-1">
-                      Última act: {new Date(totalesEfectivo.ultima_actualizacion).toLocaleString('es-AR', {
-                        day: '2-digit', month: '2-digit', year: 'numeric',
-                        hour: '2-digit', minute: '2-digit'
+                      Última act:{" "}
+                      {new Date(
+                        totalesEfectivo.ultima_actualizacion,
+                      ).toLocaleString("es-AR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
                       })}
                     </p>
                   )}
@@ -506,9 +529,16 @@ export default function SucursalDetailPage() {
                 </div>
               ) : (
                 <div className="mb-3">
-                  <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide mb-1">Saldo Real</p>
-                  <p className={`text-2xl font-bold ${totalesBanco.total_real >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                    }`}>
+                  <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide mb-1">
+                    Saldo Real
+                  </p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      totalesBanco.total_real >= 0
+                        ? "text-emerald-600"
+                        : "text-rose-600"
+                    }`}
+                  >
                     {formatMonto(totalesBanco.total_real)}
                   </p>
                 </div>
@@ -542,7 +572,9 @@ export default function SucursalDetailPage() {
 
           {/* Pagos Pendientes de Autorización */}
           <Card
-            onClick={() => router.push(`/sucursales/${params.id}/pagos-pendientes`)}
+            onClick={() =>
+              router.push(`/sucursales/${params.id}/pagos-pendientes`)
+            }
             className="border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
           >
             {/* Decoración de fondo */}
@@ -602,10 +634,7 @@ export default function SucursalDetailPage() {
       </main>
 
       {/* Modal de Información de la Sucursal */}
-      <Dialog
-        open={isInfoDialogOpen}
-        onOpenChange={setIsInfoDialogOpen}
-      >
+      <Dialog open={isInfoDialogOpen} onOpenChange={setIsInfoDialogOpen}>
         <DialogContent className="sm:max-w-2xl bg-white">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-[#002868]">
@@ -622,8 +651,6 @@ export default function SucursalDetailPage() {
                 <p className="text-sm text-red-600 font-medium">⚠️ {error}</p>
               </div>
             )}
-
-
 
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -752,11 +779,17 @@ export default function SucursalDetailPage() {
                                 </svg>
                               </div>
                               <div className="min-w-0 flex-1">
-                                <p className="font-medium text-sm text-[#1A1A1A] truncate" title={doc.nombre_archivo}>
+                                <p
+                                  className="font-medium text-sm text-[#1A1A1A] truncate"
+                                  title={doc.nombre_archivo}
+                                >
                                   {doc.nombre_archivo}
                                 </p>
                                 <p className="text-xs text-[#666666]">
-                                  {new Date(doc.fecha_subida).toLocaleDateString('es-AR')} • {(doc.tamano_bytes / 1024).toFixed(1)} KB
+                                  {new Date(
+                                    doc.fecha_subida,
+                                  ).toLocaleDateString("es-AR")}{" "}
+                                  • {(doc.tamano_bytes / 1024).toFixed(1)} KB
                                 </p>
                               </div>
                             </div>
@@ -787,7 +820,9 @@ export default function SucursalDetailPage() {
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleDeleteDoc(doc.id, doc.nombre_archivo)}
+                                onClick={() =>
+                                  handleDeleteDoc(doc.id, doc.nombre_archivo)
+                                }
                                 className="border-rose-600 text-rose-600 hover:bg-rose-600 hover:text-white h-8 px-2"
                               >
                                 <svg
@@ -816,8 +851,7 @@ export default function SucursalDetailPage() {
                       <p className="text-sm text-[#666666] mb-3">
                         {documentos.length === 0
                           ? "Sube archivos PDF o JPG con la documentación de la sucursal"
-                          : "Agregar más documentos"
-                        }
+                          : "Agregar más documentos"}
                       </p>
                       <div className="flex items-center gap-3">
                         <Input
@@ -875,7 +909,7 @@ export default function SucursalDetailPage() {
             </form>
           </div>
         </DialogContent>
-      </Dialog >
-    </div >
+      </Dialog>
+    </div>
   );
 }
