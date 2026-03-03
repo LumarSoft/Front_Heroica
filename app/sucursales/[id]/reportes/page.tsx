@@ -298,7 +298,7 @@ export default function ReportesPage() {
             {/* ── 1 · Resumen General ──────────────────────────────────────── */}
             <section>
               <SectionHeading number="1" title="Resumen General del Período" />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <SummaryCard
                   label="Ingresos Totales"
                   value={formatMonto(reportData.resumen.ingresos)}
@@ -324,6 +324,13 @@ export default function ReportesPage() {
                       : "Equilibrio"
                   }
                 />
+                <SummaryCard
+                  label="Deudas Activas"
+                  value={formatMonto(reportData.resumen.deudas || 0)}
+                  accent="orange"
+                  icon="⚠️"
+                  sub="Histórico total"
+                />
               </div>
             </section>
 
@@ -341,10 +348,7 @@ export default function ReportesPage() {
                 currentData={currentIngresosData}
                 currentTotal={currentIngresosTotal}
                 selectedCategory={selectedIngresoCategory}
-                onSliceClick={(name, hasSubs) => {
-                  if (!hasSubs) return;
-                  setSelectedIngresoCategory((prev) => (prev === name ? null : name));
-                }}
+                onSliceClick={(name) => setSelectedIngresoCategory(name)}
                 onBack={() => setSelectedIngresoCategory(null)}
                 colorOffset={0}
                 emptyMessage="No hay ingresos registrados en el período"
@@ -366,10 +370,7 @@ export default function ReportesPage() {
                 currentData={currentEgresosData}
                 currentTotal={currentEgresosTotal}
                 selectedCategory={selectedEgresoCategory}
-                onSliceClick={(name, hasSubs) => {
-                  if (!hasSubs) return;
-                  setSelectedEgresoCategory((prev) => (prev === name ? null : name));
-                }}
+                onSliceClick={(name) => setSelectedEgresoCategory(name)}
                 onBack={() => setSelectedEgresoCategory(null)}
                 colorOffset={4}
                 emptyMessage="No hay egresos registrados"
@@ -377,7 +378,13 @@ export default function ReportesPage() {
               />
             </section>
 
-            {/* ── Print: Detalle extendido ──────────────────────────────────── */}
+            {/* ── 4 · Deudas ──────────────────────────────────────── */}
+            <section className="mt-8">
+              <SectionHeading number="4" title="Listado de Deudas" className="mt-4" />
+              <DeudaPanel deudas={reportData.detalles?.deudas || []} />
+            </section>
+
+                        {/* ── Print: Detalle extendido ──────────────────────────────────── */}
             <div className="page-break-before mt-12 hidden print:block">
               <h2 className="text-xl font-bold text-slate-800 mb-4 border-b-2 border-slate-200 pb-2">
                 Detalle de Movimientos Principales
@@ -429,6 +436,7 @@ const accentMap: Record<string, { border: string; text: string; bg: string }> = 
   rose:    { border: "border-l-rose-500",    text: "text-rose-600",    bg: "bg-rose-50"    },
   blue:    { border: "border-l-blue-500",    text: "text-blue-600",    bg: "bg-blue-50"    },
   red:     { border: "border-l-red-600",     text: "text-red-700",     bg: "bg-red-50"     },
+  orange:  { border: "border-l-orange-500",  text: "text-orange-600",  bg: "bg-orange-50"  },
 };
 
 function SummaryCard({
@@ -471,21 +479,22 @@ function BreakdownPanel({
   currentTotal,
   selectedCategory,
   onSliceClick,
-  onBack,
   colorOffset,
   emptyMessage,
   valueColorClass,
+  onBack,
 }: {
   breakdownData: any[];
   currentData: any[];
   currentTotal: number;
   selectedCategory: string | null;
-  onSliceClick: (name: string, hasSubs: boolean) => void;
+  onSliceClick: (name: string) => void;
   onBack: () => void;
   colorOffset: number;
   emptyMessage: string;
   valueColorClass: string;
 }) {
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
       {/* Pie */}
@@ -517,7 +526,7 @@ function BreakdownPanel({
                         transition: "opacity 0.2s",
                         opacity: isDimmed ? 0.5 : 1,
                       }}
-                      onClick={() => onSliceClick(entry.name, hasSubs)}
+                      onClick={() => hasSubs && onSliceClick(entry.name)}
                     />
                   );
                 })}
@@ -554,7 +563,7 @@ function BreakdownPanel({
                 total={currentTotal}
                 color={color}
                 isClickable={isClickable}
-                onClick={() => onSliceClick(item.name, true)}
+                onClick={() => onSliceClick(item.name)}
               />
             );
           })}
@@ -579,4 +588,103 @@ function BreakdownPanel({
       </div>
     </div>
   );
-}   
+}
+
+// ─── DeudaPanel ───────────────────────────────────────────────────────────────
+function getAntiguedad(fechaStr: string): { label: string; colorClass: string; dotClass: string } {
+  const fecha = new Date(fechaStr);
+  const hoy = new Date();
+  const dias = Math.floor((hoy.getTime() - fecha.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (dias <= 7)  return { label: "Esta semana",   colorClass: "text-emerald-600 bg-emerald-50 border-emerald-200", dotClass: "bg-emerald-400" };
+  if (dias <= 30) return { label: `Hace ${dias}d`,  colorClass: "text-amber-600 bg-amber-50 border-amber-200",     dotClass: "bg-amber-400"  };
+  if (dias <= 90) return { label: `Hace ${dias}d`,  colorClass: "text-orange-600 bg-orange-50 border-orange-200",  dotClass: "bg-orange-400" };
+  return           { label: `Hace ${dias}d`,        colorClass: "text-rose-600 bg-rose-50 border-rose-200",        dotClass: "bg-rose-400"   };
+}
+
+function DeudaPanel({ deudas }: { deudas: any[] }) {
+  const total = deudas.reduce((acc: number, d: any) => acc + Math.abs(d.monto), 0);
+
+  if (deudas.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-12 flex flex-col items-center justify-center gap-3">
+        <span className="text-4xl">✅</span>
+        <p className="text-slate-500 font-medium">Sin deudas registradas</p>
+        <p className="text-slate-400 text-sm">No hay deudas pendientes en este período.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Summary bar */}
+      <div className="bg-orange-50 border border-orange-200 rounded-xl px-5 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">⚠️</span>
+          <div>
+            <p className="text-xs font-semibold text-orange-700 uppercase tracking-wider">Total adeudado</p>
+            <p className="text-2xl font-extrabold text-orange-600 tabular-nums">{formatMonto(total)}</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-orange-500 font-medium">{deudas.length} deuda{deudas.length !== 1 ? "s" : ""} pendiente{deudas.length !== 1 ? "s" : ""}</p>
+          <div className="flex items-center gap-2 mt-1.5 justify-end flex-wrap">
+            <span className="flex items-center gap-1 text-xs text-emerald-600"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"/>≤7 días</span>
+            <span className="flex items-center gap-1 text-xs text-amber-600"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block"/>≤30 días</span>
+            <span className="flex items-center gap-1 text-xs text-orange-600"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block"/>≤90 días</span>
+            <span className="flex items-center gap-1 text-xs text-rose-600"><span className="w-2 h-2 rounded-full bg-rose-400 inline-block"/>90 días</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Deuda cards */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 divide-y divide-slate-100 overflow-hidden">
+        {deudas.map((deuda: any, i: number) => {
+          const antig = getAntiguedad(deuda.fecha);
+          return (
+            <div key={deuda.id ?? i} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors">
+              {/* Dot indicator */}
+              <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${antig.dotClass}`} />
+
+              {/* Main info */}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-slate-800 truncate">
+                  {deuda.concepto || "Sin concepto"}
+                </p>
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                  <span className="text-xs text-slate-400">
+                    {new Date(deuda.fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" })}
+                  </span>
+                  {deuda.categoria_nombre && (
+                    <>
+                      <span className="text-slate-300">·</span>
+                      <span className="text-xs text-slate-500 font-medium">{deuda.categoria_nombre}</span>
+                    </>
+                  )}
+                  {deuda.subcategoria_nombre && (
+                    <>
+                      <span className="text-slate-300">/</span>
+                      <span className="text-xs text-slate-400">{deuda.subcategoria_nombre}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Antiguedad badge */}
+              <span className={`text-xs font-semibold px-2 py-1 rounded-full border flex-shrink-0 ${antig.colorClass}`}>
+                {antig.label}
+              </span>
+
+              {/* Amount */}
+              <div className="text-right flex-shrink-0 w-28">
+                <span className="font-bold text-orange-600 tabular-nums text-sm">
+                  {formatMonto(Math.abs(deuda.monto))}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
