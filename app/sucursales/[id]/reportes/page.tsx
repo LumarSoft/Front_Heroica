@@ -37,6 +37,120 @@ const COLORS = [
   "#a4de6c",
 ];
 
+// ─── Custom Tooltip for Pie Charts ───────────────────────────────────────────
+const CustomPieTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const item = payload[0];
+    return (
+      <div className="bg-white border border-slate-200 rounded-lg shadow-lg px-3 py-2 text-sm">
+        <p className="font-semibold text-slate-800">{item.name}</p>
+        <p className="text-slate-600">{formatMonto(item.value)}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
+// ─── Progress Row Component ───────────────────────────────────────────────────
+function DistributionRow({
+  item,
+  index,
+  total,
+  color,
+  isClickable,
+  isBack = false,
+  onClick,
+}: {
+  item: any;
+  index: number;
+  total: number;
+  color: string;
+  isClickable: boolean;
+  isBack?: boolean;
+  onClick?: () => void;
+}) {
+  const pct = total > 0 ? (item.value / total) * 100 : 0;
+
+  return (
+    <div
+      className={`group rounded-lg p-3 transition-all duration-150 ${
+        isClickable
+          ? "cursor-pointer hover:bg-slate-100 active:scale-[0.99]"
+          : ""
+      }`}
+      onClick={isClickable ? onClick : undefined}
+    >
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+            style={{ backgroundColor: color }}
+          />
+          <span
+            className={`text-sm font-medium text-slate-700 truncate ${
+              isClickable ? "group-hover:text-slate-900" : ""
+            }`}
+          >
+            {item.name}
+            {isClickable && !isBack && (
+              <span className="ml-1 text-xs text-slate-400 group-hover:text-slate-500">
+                ▸
+              </span>
+            )}
+            {isClickable && isBack && (
+              <span className="ml-1 text-xs text-slate-400 group-hover:text-slate-500">
+                ↩
+              </span>
+            )}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+          <span className="text-xs font-mono text-slate-500 w-10 text-right">
+            {pct.toFixed(1)}%
+          </span>
+          <span className="text-sm font-bold text-slate-800 w-28 text-right tabular-nums">
+            {formatMonto(item.value)}
+          </span>
+        </div>
+      </div>
+      {/* Progress bar */}
+      <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${pct}%`, backgroundColor: color }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─── Breadcrumb for drill-down ────────────────────────────────────────────────
+function DrillDownBreadcrumb({
+  root,
+  selected,
+  onBack,
+  colorClass,
+}: {
+  root: string;
+  selected: string | null;
+  onBack: () => void;
+  colorClass: string;
+}) {
+  if (!selected) return null;
+  return (
+    <nav className="flex items-center gap-1.5 text-sm mb-1">
+      <button
+        onClick={onBack}
+        className={`font-medium underline underline-offset-2 decoration-dotted transition-colors ${colorClass}`}
+      >
+        {root}
+      </button>
+      <span className="text-slate-400">›</span>
+      <span className="font-semibold text-slate-800">{selected}</span>
+    </nav>
+  );
+}
+
 export default function ReportesPage() {
   const router = useRouter();
   const params = useParams();
@@ -46,7 +160,13 @@ export default function ReportesPage() {
   const [reportData, setReportData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Inicializar fechas (último mes por default)
+  const [selectedIngresoCategory, setSelectedIngresoCategory] = useState<
+    string | null
+  >(null);
+  const [selectedEgresoCategory, setSelectedEgresoCategory] = useState<
+    string | null
+  >(null);
+
   const today = new Date();
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(today.getDate() - 30);
@@ -66,19 +186,20 @@ export default function ReportesPage() {
   const fetchSucursal = async () => {
     try {
       const response = await fetch(
-        API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)),
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/sucursales/${params.id}`,
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
       setSucursal(data.data);
     } catch (err: any) {
-      console.error("Error al cargar sucursal:", err);
       toast.error(err.message || "Error al cargar sucursal");
     }
   };
 
   const fetchReportData = async () => {
     setIsLoading(true);
+    setSelectedIngresoCategory(null);
+    setSelectedEgresoCategory(null);
     try {
       const url = `http://localhost:3001/api/reportes/${params.id}?startDate=${startDate}T00:00:00&endDate=${endDate}T23:59:59`;
       const response = await fetch(url);
@@ -86,28 +207,70 @@ export default function ReportesPage() {
       if (!response.ok) throw new Error(data.message);
       setReportData(data.data);
     } catch (err: any) {
-      console.error("Error al cargar reportes:", err);
       toast.error(err.message || "Error al cargar reportes");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+  // ── Computed data ────────────────────────────────────────────────────────────
+  const currentIngresosData = useMemo(() => {
+    if (!reportData?.ingresosBreakdown) return [];
+    if (selectedIngresoCategory) {
+      const cat = reportData.ingresosBreakdown.find(
+        (c: any) => c.name === selectedIngresoCategory,
+      );
+      return cat ? cat.subcategorias : [];
+    }
+    return reportData.ingresosBreakdown;
+  }, [reportData, selectedIngresoCategory]);
+
+  const currentIngresosTotal = useMemo(() => {
+    if (!reportData?.ingresosBreakdown) return 0;
+    if (selectedIngresoCategory) {
+      const cat = reportData.ingresosBreakdown.find(
+        (c: any) => c.name === selectedIngresoCategory,
+      );
+      return cat ? cat.value : 0;
+    }
+    return reportData.resumen.ingresos;
+  }, [reportData, selectedIngresoCategory]);
+
+  const currentEgresosData = useMemo(() => {
+    if (!reportData?.egresosBreakdown) return [];
+    if (selectedEgresoCategory) {
+      const cat = reportData.egresosBreakdown.find(
+        (c: any) => c.name === selectedEgresoCategory,
+      );
+      return cat ? cat.subcategorias : [];
+    }
+    return reportData.egresosBreakdown;
+  }, [reportData, selectedEgresoCategory]);
+
+  const currentEgresosTotal = useMemo(() => {
+    if (!reportData?.egresosBreakdown) return 0;
+    if (selectedEgresoCategory) {
+      const cat = reportData.egresosBreakdown.find(
+        (c: any) => c.name === selectedEgresoCategory,
+      );
+      return cat ? cat.value : 0;
+    }
+    return reportData.resumen.egresos;
+  }, [reportData, selectedEgresoCategory]);
+
+  const handlePrint = () => window.print();
 
   if (isGuardLoading || (!sucursal && isLoading)) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED] pb-24">
-      {/* Header */}
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-[#E0E0E0]/50 sticky top-0 z-50 shadow-sm print:hidden">
         <div className="container mx-auto px-6 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -128,7 +291,10 @@ export default function ReportesPage() {
 
             <div className="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-gray-100">
               <div className="flex items-center gap-2">
-                <Label htmlFor="start" className="text-sm font-medium">
+                <Label
+                  htmlFor="start"
+                  className="text-sm font-medium whitespace-nowrap"
+                >
                   Desde
                 </Label>
                 <Input
@@ -139,9 +305,12 @@ export default function ReportesPage() {
                   className="w-auto h-9"
                 />
               </div>
-              <span className="text-slate-300">-</span>
+              <span className="text-slate-300">–</span>
               <div className="flex items-center gap-2">
-                <Label htmlFor="end" className="text-sm font-medium">
+                <Label
+                  htmlFor="end"
+                  className="text-sm font-medium whitespace-nowrap"
+                >
                   Hasta
                 </Label>
                 <Input
@@ -167,319 +336,527 @@ export default function ReportesPage() {
       <main className="container mx-auto px-6 py-8">
         {isLoading && !reportData ? (
           <div className="flex justify-center p-20">
-            <div className="w-10 h-10 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
+            <div className="w-10 h-10 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
           </div>
         ) : reportData ? (
-          <div className="space-y-8 print:space-y-4">
-            {/* INICIO REPORTE IMPRIMIBLE */}
+          <div className="space-y-10 print:space-y-4">
+            {/* Print header */}
             <div className="hidden print:block text-center mb-6">
               <h2 className="text-3xl font-bold text-slate-800">
                 Reporte de Resultados
               </h2>
               <p className="text-slate-600">Sucursal: {sucursal?.nombre}</p>
               <p className="text-slate-500 text-sm">
-                Período: {new Date(startDate).toLocaleDateString()} -{" "}
+                Período: {new Date(startDate).toLocaleDateString()} –{" "}
                 {new Date(endDate).toLocaleDateString()}
               </p>
             </div>
 
-            {/* 1 - Resumen General */}
-            <div>
-              <h2 className="text-xl font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
-                <span>1️⃣ Resumen General del Período</span>
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="border-l-4 border-l-emerald-500 shadow-md transform hover:-translate-y-1 transition duration-300">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-widest">
-                      Ingresos Totales
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-4xl font-extrabold text-emerald-600">
-                      {formatMonto(reportData.resumen.ingresos)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border-l-4 border-l-rose-500 shadow-md transform hover:-translate-y-1 transition duration-300">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-widest">
-                      Egresos Totales
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-4xl font-extrabold text-rose-600">
-                      {formatMonto(reportData.resumen.egresos)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card
-                  className={`border-l-4 shadow-md transform hover:-translate-y-1 transition duration-300 ${reportData.resumen.resultado >= 0 ? "border-l-blue-500" : "border-l-red-600"}`}
-                >
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-widest">
-                      Resultado Neto
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p
-                      className={`text-4xl font-extrabold ${reportData.resumen.resultado >= 0 ? "text-blue-600" : "text-red-700"}`}
-                    >
-                      {formatMonto(reportData.resumen.resultado)}
-                    </p>
-                    <p className="text-xs font-semibold mt-1 opacity-70">
-                      {reportData.resumen.resultado > 0
-                        ? "Ganancia"
-                        : reportData.resumen.resultado < 0
-                          ? "Pérdida"
-                          : "Equilibrio"}
-                    </p>
-                  </CardContent>
-                </Card>
+            {/* ── 1 · Resumen General ──────────────────────────────────────── */}
+            <section>
+              <SectionHeading number="1" title="Resumen General del Período" />
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                <SummaryCard
+                  label="Ingresos Totales"
+                  value={formatMonto(reportData.resumen.ingresos)}
+                  accent="emerald"
+                  icon="↑"
+                />
+                <SummaryCard
+                  label="Egresos Totales"
+                  value={formatMonto(reportData.resumen.egresos)}
+                  accent="rose"
+                  icon="↓"
+                />
+                <SummaryCard
+                  label="Resultado Neto"
+                  value={formatMonto(reportData.resumen.resultado)}
+                  accent={reportData.resumen.resultado >= 0 ? "blue" : "red"}
+                  icon={reportData.resumen.resultado >= 0 ? "=" : "!"}
+                  sub={
+                    reportData.resumen.resultado > 0
+                      ? "Ganancia"
+                      : reportData.resumen.resultado < 0
+                        ? "Pérdida"
+                        : "Equilibrio"
+                  }
+                />
+                <SummaryCard
+                  label="Deudas Activas"
+                  value={formatMonto(reportData.resumen.deudas || 0)}
+                  accent="orange"
+                  icon="⚠️"
+                  sub="Histórico total"
+                />
               </div>
-            </div>
+            </section>
 
-            {/* 2 - Discriminado de Ingresos */}
-            <div>
-              <h2 className="text-xl font-bold text-[#1A1A1A] mb-4 mt-12 flex items-center gap-2">
-                <span>2️⃣ Discriminado de Ingresos</span>
-              </h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                <div className="h-80 flex items-center justify-center">
-                  {reportData.ingresosBreakdown.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={reportData.ingresosBreakdown}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={70}
-                          outerRadius={100}
-                          fill="#8884d8"
-                          paddingAngle={5}
-                          dataKey="value"
-                          label={({ name, percent }: any) =>
-                            `${name} ${((percent || 0) * 100).toFixed(0)}%`
-                          }
-                        >
-                          {reportData.ingresosBreakdown.map(
-                            (entry: any, index: number) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[index % COLORS.length]}
-                              />
-                            ),
-                          )}
-                        </Pie>
-                        <RechartsTooltip
-                          formatter={(value: any) => formatMonto(value || 0)}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p className="text-slate-400">
-                      No hay ingresos registrados en el período
-                    </p>
-                  )}
-                </div>
-                <div className="bg-slate-50 rounded-lg p-5 overflow-auto max-h-80">
-                  <h3 className="font-semibold text-slate-700 mb-3 border-b pb-2">
-                    Distribución de Ingresos
-                  </h3>
-                  <div className="space-y-3">
-                    {reportData.ingresosBreakdown.map(
-                      (item: any, i: number) => (
-                        <div
-                          key={i}
-                          className="flex justify-between items-center group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span
-                              className="w-3 h-3 rounded-full"
-                              style={{
-                                backgroundColor: COLORS[i % COLORS.length],
-                              }}
-                            ></span>
-                            <span className="text-sm font-medium text-slate-700 group-hover:text-black">
-                              {item.name}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm font-bold text-slate-800">
-                              {formatMonto(item.value)}
-                            </span>
-                            <span className="text-xs text-slate-500 ml-2 block w-10 text-right">
-                              {(
-                                (item.value / reportData.resumen.ingresos) *
-                                100
-                              ).toFixed(1)}
-                              %
-                            </span>
-                          </div>
-                        </div>
-                      ),
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* ── 2 · Ingresos ─────────────────────────────────────────────── */}
+            <section>
+              <SectionHeading
+                number="2"
+                title="Discriminado de Ingresos"
+                className="mt-4"
+              />
+              <DrillDownBreadcrumb
+                root="Todas las categorías"
+                selected={selectedIngresoCategory}
+                onBack={() => setSelectedIngresoCategory(null)}
+                colorClass="text-emerald-600 hover:text-emerald-700"
+              />
+              <BreakdownPanel
+                breakdownData={reportData.ingresosBreakdown}
+                currentData={currentIngresosData}
+                currentTotal={currentIngresosTotal}
+                selectedCategory={selectedIngresoCategory}
+                onSliceClick={(name) => setSelectedIngresoCategory(name)}
+                onBack={() => setSelectedIngresoCategory(null)}
+                colorOffset={0}
+                emptyMessage="No hay ingresos registrados en el período"
+                valueColorClass="text-emerald-700"
+              />
+            </section>
 
-            {/* 3 - Discriminado de Egresos */}
-            <div className="page-break-before">
-              <h2 className="text-xl font-bold text-[#1A1A1A] mb-4 mt-12 flex items-center gap-2">
-                <span>3️⃣ Discriminado de Egresos</span>
-              </h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                <div className="h-80 flex items-center justify-center">
-                  {reportData.egresosBreakdown.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={reportData.egresosBreakdown}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={100}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {reportData.egresosBreakdown.map(
-                            (entry: any, index: number) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[(index + 4) % COLORS.length]}
-                              />
-                            ),
-                          )}
-                        </Pie>
-                        <RechartsTooltip
-                          formatter={(value: any) => formatMonto(value || 0)}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p className="text-slate-400">No hay egresos registrados</p>
-                  )}
-                </div>
+            {/* ── 3 · Egresos ──────────────────────────────────────────────── */}
+            <section className="page-break-before">
+              <SectionHeading
+                number="3"
+                title="Discriminado de Egresos"
+                className="mt-4"
+              />
+              <DrillDownBreadcrumb
+                root="Todas las categorías"
+                selected={selectedEgresoCategory}
+                onBack={() => setSelectedEgresoCategory(null)}
+                colorClass="text-rose-500 hover:text-rose-600"
+              />
+              <BreakdownPanel
+                breakdownData={reportData.egresosBreakdown}
+                currentData={currentEgresosData}
+                currentTotal={currentEgresosTotal}
+                selectedCategory={selectedEgresoCategory}
+                onSliceClick={(name) => setSelectedEgresoCategory(name)}
+                onBack={() => setSelectedEgresoCategory(null)}
+                colorOffset={4}
+                emptyMessage="No hay egresos registrados"
+                valueColorClass="text-rose-600"
+              />
+            </section>
 
-                <div className="h-80">
-                  {reportData.egresosBreakdown.length > 0 && (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={reportData.egresosBreakdown.slice(0, 5)}
-                        layout="vertical"
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          horizontal={true}
-                          vertical={false}
-                          stroke="#E5E7EB"
-                        />
-                        <XAxis
-                          type="number"
-                          tickFormatter={(v) => `$${v / 1000}k`}
-                        />
-                        <YAxis
-                          type="category"
-                          dataKey="name"
-                          width={100}
-                          tick={{ fontSize: 12 }}
-                        />
-                        <RechartsTooltip
-                          cursor={{ fill: "#f3f4f6" }}
-                          formatter={(value: any) => formatMonto(value || 0)}
-                        />
-                        <Bar
-                          dataKey="value"
-                          fill="#ef4444"
-                          radius={[0, 4, 4, 0]}
-                          barSize={20}
-                        >
-                          {reportData.egresosBreakdown.map(
-                            (entry: any, index: number) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[(index + 4) % COLORS.length]}
-                              />
-                            ),
-                          )}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  )}
-                </div>
+            {/* ── 4 · Deudas ──────────────────────────────────────── */}
+            <section className="mt-8">
+              <SectionHeading
+                number="4"
+                title="Listado de Deudas"
+                className="mt-4"
+              />
+              <DeudaPanel deudas={reportData.detalles?.deudas || []} />
+            </section>
 
-                <div className="lg:col-span-2 mt-4 bg-slate-50 rounded-lg p-5">
-                  <h3 className="font-semibold text-slate-700 mb-3 border-b pb-2">
-                    Top 10 Egresos (Categorías)
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
-                    {reportData.egresosBreakdown
-                      .slice(0, 10)
-                      .map((item: any, i: number) => (
-                        <div
-                          key={i}
-                          className="flex justify-between items-center border-b border-white pb-1"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs bg-slate-200 text-slate-500 w-5 h-5 flex items-center justify-center rounded-full">
-                              {i + 1}
-                            </span>
-                            <span className="text-sm text-slate-700">
-                              {item.name}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm font-semibold text-rose-600">
-                              {formatMonto(item.value)}
-                            </span>
-                            <span className="text-xs text-slate-500 ml-2">
-                              {(
-                                (item.value / reportData.resumen.egresos) *
-                                100
-                              ).toFixed(1)}
-                              %
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 4 - Detalle Extendido (Opcional si es mucho, al imprimir sirve) */}
+            {/* ── Print: Detalle extendido ──────────────────────────────────── */}
             <div className="page-break-before mt-12 hidden print:block">
-              <h2 className="text-xl font-bold text-[#1A1A1A] mb-4 border-b-2 border-slate-200 pb-2">
+              <h2 className="text-xl font-bold text-slate-800 mb-4 border-b-2 border-slate-200 pb-2">
                 Detalle de Movimientos Principales
               </h2>
-              <div className="text-sm">
-                <p className="text-center italic text-slate-500 mt-10">
-                  En esta sección impresa podría ir el listado detallado de
-                  movimientos (Ingresos y Egresos) de requerirse por el analista
-                  temporalmente limitados a top 50, u omitida en vistas
-                  resumidas.
-                </p>
-              </div>
+              <p className="text-center italic text-slate-500 mt-10 text-sm">
+                En esta sección podría ir el listado detallado de movimientos
+                (Ingresos y Egresos).
+              </p>
             </div>
           </div>
         ) : null}
       </main>
 
-      {/* Print Styles */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        @media print {
-          body { background: white !important; }
-          .page-break-before { page-break-before: always; }
-          .shadow-sm, .shadow-md { box-shadow: none !important; }
-          .border { border: 1px solid #e2e8f0 !important; }
-        }
-      `,
+          @media print {
+            body { background: white !important; }
+            .page-break-before { page-break-before: always; }
+            .shadow-sm, .shadow-md { box-shadow: none !important; }
+          }
+        `,
         }}
       />
+    </div>
+  );
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function SectionHeading({
+  number,
+  title,
+  className = "",
+}: {
+  number: string;
+  title: string;
+  className?: string;
+}) {
+  return (
+    <h2
+      className={`text-lg font-bold text-slate-800 mb-4 flex items-center gap-2.5 ${className}`}
+    >
+      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#002868] text-white text-xs font-bold">
+        {number}
+      </span>
+      {title}
+    </h2>
+  );
+}
+
+const accentMap: Record<string, { border: string; text: string; bg: string }> =
+  {
+    emerald: {
+      border: "border-l-emerald-500",
+      text: "text-emerald-600",
+      bg: "bg-emerald-50",
+    },
+    rose: {
+      border: "border-l-rose-500",
+      text: "text-rose-600",
+      bg: "bg-rose-50",
+    },
+    blue: {
+      border: "border-l-blue-500",
+      text: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    red: { border: "border-l-red-600", text: "text-red-700", bg: "bg-red-50" },
+    orange: {
+      border: "border-l-orange-500",
+      text: "text-orange-600",
+      bg: "bg-orange-50",
+    },
+  };
+
+function SummaryCard({
+  label,
+  value,
+  accent,
+  icon,
+  sub,
+}: {
+  label: string;
+  value: string;
+  accent: string;
+  icon?: string;
+  sub?: string;
+}) {
+  const a = accentMap[accent] ?? accentMap.blue;
+  return (
+    <Card
+      className={`border-l-4 ${a.border} shadow-sm hover:shadow-md transition-shadow duration-200`}
+    >
+      <CardHeader className="pb-1 pt-4 px-5">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+            {label}
+          </CardTitle>
+          {icon && (
+            <span className={`text-lg font-bold ${a.text} opacity-40`}>
+              {icon}
+            </span>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="px-5 pb-4">
+        <p className={`text-3xl font-extrabold ${a.text} tabular-nums`}>
+          {value}
+        </p>
+        {sub && (
+          <p className="text-xs font-semibold mt-1 text-slate-400">{sub}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function BreakdownPanel({
+  breakdownData,
+  currentData,
+  currentTotal,
+  selectedCategory,
+  onSliceClick,
+  colorOffset,
+  emptyMessage,
+  valueColorClass,
+  onBack,
+}: {
+  breakdownData: any[];
+  currentData: any[];
+  currentTotal: number;
+  selectedCategory: string | null;
+  onSliceClick: (name: string) => void;
+  onBack: () => void;
+  colorOffset: number;
+  emptyMessage: string;
+  valueColorClass: string;
+}) {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+      {/* Pie */}
+      <div className="h-72 flex items-center justify-center">
+        {breakdownData?.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={breakdownData}
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {breakdownData.map((entry: any, index: number) => {
+                  const color = COLORS[(index + colorOffset) % COLORS.length];
+                  const isSelected = selectedCategory === entry.name;
+                  const isDimmed = selectedCategory && !isSelected;
+                  const hasSubs = entry.subcategorias?.length > 0;
+                  return (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={isDimmed ? "#E5E7EB" : color}
+                      stroke={isSelected ? "#1e293b" : "transparent"}
+                      strokeWidth={isSelected ? 2 : 0}
+                      style={{
+                        cursor: hasSubs ? "pointer" : "default",
+                        transition: "opacity 0.2s",
+                        opacity: isDimmed ? 0.5 : 1,
+                      }}
+                      onClick={() => hasSubs && onSliceClick(entry.name)}
+                    />
+                  );
+                })}
+              </Pie>
+              <RechartsTooltip content={<CustomPieTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <p className="text-slate-400 text-sm">{emptyMessage}</p>
+        )}
+      </div>
+
+      {/* List */}
+      <div className="flex flex-col">
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
+          {selectedCategory
+            ? `Subcategorías de "${selectedCategory}"`
+            : "Por categoría — clic para desglosar ▸"}
+        </p>
+        <div className="space-y-1 overflow-auto max-h-64 pr-1">
+          {currentData.map((item: any, i: number) => {
+            const color = selectedCategory
+              ? COLORS[
+                  (breakdownData.findIndex(
+                    (c: any) => c.name === selectedCategory,
+                  ) +
+                    colorOffset) %
+                    COLORS.length
+                ]
+              : COLORS[(i + colorOffset) % COLORS.length];
+            const isClickable =
+              !selectedCategory && item.subcategorias?.length > 0;
+            return (
+              <DistributionRow
+                key={i}
+                item={item}
+                index={i}
+                total={currentTotal}
+                color={color}
+                isClickable={isClickable}
+                onClick={() => onSliceClick(item.name)}
+              />
+            );
+          })}
+        </div>
+        {/* Total row + back button */}
+        <div className="mt-3 pt-3 border-t border-slate-200 flex justify-between items-center px-3">
+          {selectedCategory ? (
+            <button
+              onClick={onBack}
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors group"
+            >
+              <span className="group-hover:-translate-x-0.5 transition-transform">
+                ←
+              </span>
+              Volver a categorías
+            </button>
+          ) : (
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Total
+            </span>
+          )}
+          <span
+            className={`text-base font-extrabold tabular-nums ${valueColorClass}`}
+          >
+            {formatMonto(currentTotal)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── DeudaPanel ───────────────────────────────────────────────────────────────
+function getAntiguedad(fechaStr: string): {
+  label: string;
+  colorClass: string;
+  dotClass: string;
+} {
+  const fecha = new Date(fechaStr);
+  const hoy = new Date();
+  const dias = Math.floor(
+    (hoy.getTime() - fecha.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
+  if (dias <= 7)
+    return {
+      label: "Esta semana",
+      colorClass: "text-emerald-600 bg-emerald-50 border-emerald-200",
+      dotClass: "bg-emerald-400",
+    };
+  if (dias <= 30)
+    return {
+      label: `Hace ${dias}d`,
+      colorClass: "text-amber-600 bg-amber-50 border-amber-200",
+      dotClass: "bg-amber-400",
+    };
+  if (dias <= 90)
+    return {
+      label: `Hace ${dias}d`,
+      colorClass: "text-orange-600 bg-orange-50 border-orange-200",
+      dotClass: "bg-orange-400",
+    };
+  return {
+    label: `Hace ${dias}d`,
+    colorClass: "text-rose-600 bg-rose-50 border-rose-200",
+    dotClass: "bg-rose-400",
+  };
+}
+
+function DeudaPanel({ deudas }: { deudas: any[] }) {
+  const total = deudas.reduce(
+    (acc: number, d: any) => acc + Math.abs(d.monto),
+    0,
+  );
+
+  if (deudas.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-12 flex flex-col items-center justify-center gap-3">
+        <span className="text-4xl">✅</span>
+        <p className="text-slate-500 font-medium">Sin deudas registradas</p>
+        <p className="text-slate-400 text-sm">
+          No hay deudas pendientes en este período.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Summary bar */}
+      <div className="bg-orange-50 border border-orange-200 rounded-xl px-5 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">⚠️</span>
+          <div>
+            <p className="text-xs font-semibold text-orange-700 uppercase tracking-wider">
+              Total adeudado
+            </p>
+            <p className="text-2xl font-extrabold text-orange-600 tabular-nums">
+              {formatMonto(total)}
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-orange-500 font-medium">
+            {deudas.length} deuda{deudas.length !== 1 ? "s" : ""} pendiente
+            {deudas.length !== 1 ? "s" : ""}
+          </p>
+          <div className="flex items-center gap-2 mt-1.5 justify-end flex-wrap">
+            <span className="flex items-center gap-1 text-xs text-emerald-600">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+              ≤7 días
+            </span>
+            <span className="flex items-center gap-1 text-xs text-amber-600">
+              <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+              ≤30 días
+            </span>
+            <span className="flex items-center gap-1 text-xs text-orange-600">
+              <span className="w-2 h-2 rounded-full bg-orange-400 inline-block" />
+              ≤90 días
+            </span>
+            <span className="flex items-center gap-1 text-xs text-rose-600">
+              <span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />
+              90 días
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Deuda cards */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 divide-y divide-slate-100 overflow-hidden">
+        {deudas.map((deuda: any, i: number) => {
+          const antig = getAntiguedad(deuda.fecha);
+          return (
+            <div
+              key={deuda.id ?? i}
+              className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors"
+            >
+              {/* Dot indicator */}
+              <span
+                className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${antig.dotClass}`}
+              />
+
+              {/* Main info */}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-slate-800 truncate">
+                  {deuda.concepto || "Sin concepto"}
+                </p>
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                  <span className="text-xs text-slate-400">
+                    {new Date(deuda.fecha).toLocaleDateString("es-AR", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                  {deuda.categoria_nombre && (
+                    <>
+                      <span className="text-slate-300">·</span>
+                      <span className="text-xs text-slate-500 font-medium">
+                        {deuda.categoria_nombre}
+                      </span>
+                    </>
+                  )}
+                  {deuda.subcategoria_nombre && (
+                    <>
+                      <span className="text-slate-300">/</span>
+                      <span className="text-xs text-slate-400">
+                        {deuda.subcategoria_nombre}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Antiguedad badge */}
+              <span
+                className={`text-xs font-semibold px-2 py-1 rounded-full border flex-shrink-0 ${antig.colorClass}`}
+              >
+                {antig.label}
+              </span>
+
+              {/* Amount */}
+              <div className="text-right flex-shrink-0 w-28">
+                <span className="font-bold text-orange-600 tabular-nums text-sm">
+                  {formatMonto(Math.abs(deuda.monto))}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

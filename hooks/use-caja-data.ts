@@ -55,6 +55,7 @@ function getEndpoints(tipo: "efectivo" | "banco") {
             getTotales: API_ENDPOINTS.CAJA_BANCO.GET_TOTALES,
             update: API_ENDPOINTS.CAJA_BANCO.UPDATE,
             updateEstado: API_ENDPOINTS.CAJA_BANCO.UPDATE_ESTADO,
+            toggleDeuda: API_ENDPOINTS.CAJA_BANCO.TOGGLE_DEUDA,
             deleteMovimiento: API_ENDPOINTS.CAJA_BANCO.DELETE,
         };
     }
@@ -63,6 +64,7 @@ function getEndpoints(tipo: "efectivo" | "banco") {
         getTotales: API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES,
         update: API_ENDPOINTS.MOVIMIENTOS.UPDATE,
         updateEstado: API_ENDPOINTS.MOVIMIENTOS.UPDATE_ESTADO,
+        toggleDeuda: API_ENDPOINTS.MOVIMIENTOS.TOGGLE_DEUDA,
         deleteMovimiento: API_ENDPOINTS.MOVIMIENTOS.DELETE,
     };
 }
@@ -90,6 +92,9 @@ export function useCajaData(tipo: "efectivo" | "banco") {
     const [saldoNecesario, setSaldoNecesario] = useState<Transaction[]>([]);
     const [parciales, setParciales] = useState<BancoParcial[]>([]);
 
+    // --- Filtro por fechas ---
+    const [fechaHasta, setFechaHasta] = useState("");
+
     // --- Catálogos ---
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
@@ -100,6 +105,7 @@ export function useCajaData(tipo: "efectivo" | "banco") {
     const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
     const [isStateDialogOpen, setIsStateDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isDeudaDialogOpen, setIsDeudaDialogOpen] = useState(false);
     const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] =
         useState(false);
     const [selectedTransaction, setSelectedTransaction] =
@@ -117,6 +123,18 @@ export function useCajaData(tipo: "efectivo" | "banco") {
     const showSuccess = useCallback((msg: string) => {
         toast.success(msg);
     }, []);
+
+    const fetchTotales = useCallback(async () => {
+        try {
+            const response = await fetch(endpoints.getTotales(sucursalId));
+            const data = await response.json();
+            if (response.ok) {
+                setParciales(data.data?.parciales || []);
+            }
+        } catch (err) {
+            console.error("Error al cargar totales:", err);
+        }
+    }, [endpoints, sucursalId]);
 
     const fetchMovimientos = useCallback(async () => {
         try {
@@ -153,6 +171,8 @@ export function useCajaData(tipo: "efectivo" | "banco") {
                 );
 
             setSaldoReal(movimientosCompletados);
+            // Saldo necesario incluye TODOS los aprobados/pendientes (incluyendo deuda),
+            // pero la deuda se identifica con es_deuda=1 para excluirla del total en UI
             setSaldoNecesario(movimientosAprobados);
         } catch (err: any) {
             console.error("Error al cargar movimientos:", err);
@@ -160,19 +180,10 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         } finally {
             setIsLoading(false);
         }
-    }, [endpoints, sucursalId]);
+        // Refrescar totales/parciales del API al finalizar
+        fetchTotales();
+    }, [endpoints, sucursalId, fetchTotales]);
 
-    const fetchTotales = useCallback(async () => {
-        try {
-            const response = await fetch(endpoints.getTotales(sucursalId));
-            const data = await response.json();
-            if (response.ok) {
-                setParciales(data.data?.parciales || []);
-            }
-        } catch (err) {
-            console.error("Error al cargar totales:", err);
-        }
-    }, [endpoints, sucursalId]);
 
     const fetchCategorias = useCallback(async () => {
         try {
@@ -272,6 +283,11 @@ export function useCajaData(tipo: "efectivo" | "banco") {
     const handleOpenDelete = (transaction: Transaction) => {
         setSelectedTransaction(transaction);
         setIsDeleteDialogOpen(true);
+    };
+
+    const handleOpenDeuda = (transaction: Transaction) => {
+        setSelectedTransaction(transaction);
+        setIsDeudaDialogOpen(true);
     };
 
     // =============================================
@@ -388,6 +404,43 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         }
     };
 
+    const handleSaveDeuda = async (esDeuda: boolean, fechaOriginalVencimiento?: string) => {
+        if (!selectedTransaction) return;
+
+        try {
+            setIsSaving(true);
+            setError("");
+
+            const body: Record<string, unknown> = { es_deuda: esDeuda ? 1 : 0 };
+            if (esDeuda && fechaOriginalVencimiento) {
+                body.fecha_original_vencimiento = fechaOriginalVencimiento;
+            }
+
+            const response = await fetch(
+                endpoints.toggleDeuda(selectedTransaction.id),
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                }
+            );
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || "Error al actualizar deuda");
+            }
+
+            showSuccess(esDeuda ? "Deuda activada exitosamente" : "Deuda desactivada exitosamente");
+            setIsDeudaDialogOpen(false);
+            await fetchMovimientos();
+        } catch (err: any) {
+            console.error("Error al actualizar deuda:", err);
+            setError(err.message || "Error al actualizar deuda");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
@@ -407,20 +460,77 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         fetchMediosPago();
     }, [fetchMovimientos, fetchTotales, fetchCategorias, fetchBancos, fetchMediosPago]);
 
+    // =============================================
+    // Filtro por fechas (client-side)
+    // =============================================
+
+    const filtrarPorFecha = (list: Transaction[]) => {
+        if (!fechaHasta) return list;
+        return list.filter((m) => {
+            const fechaMov = m.fecha ? m.fecha.split("T")[0] : "";
+            if (fechaHasta && fechaMov > fechaHasta) return false;
+            return true;
+        });
+    };
+
+    const saldoRealFiltrado = saldoReal; // El saldo real es siempre al día, sin filtro de fecha
+    const saldoNecesarioFiltrado = filtrarPorFecha(saldoNecesario);
+    const saldoNecesarioSinDeudaFiltrado = saldoNecesarioFiltrado.filter((m) => !m.es_deuda);
+
+    // Parciales filtrados: agrupar saldoRealFiltrado + saldoNecesarioSinDeudaFiltrado por banco_id
+    const parcialesFiltrados: BancoParcial[] = (() => {
+        const map = new Map<string | number, BancoParcial>();
+        const addToBanco = (m: Transaction, tipo: "real" | "necesario") => {
+            const key = m.banco_id ?? "otros";
+            if (!map.has(key)) {
+                map.set(key, {
+                    banco_id: (m.banco_id as number) ?? 0,
+                    banco_nombre: m.banco_nombre ?? "OTROS",
+                    total_real: 0,
+                    total_necesario: 0,
+                });
+            }
+            const entry = map.get(key)!;
+            const monto = Number(m.monto) || 0;
+            if (tipo === "real") entry.total_real = (Number(entry.total_real) || 0) + monto;
+            else entry.total_necesario = (Number(entry.total_necesario) || 0) + monto;
+        };
+        saldoRealFiltrado.forEach((m) => addToBanco(m, "real"));
+        saldoNecesarioSinDeudaFiltrado.forEach((m) => addToBanco(m, "necesario"));
+        return Array.from(map.values());
+    })();
+
+    const limpiarFiltros = () => {
+        setFechaHasta("");
+    };
+
     return {
         // Estado
         isLoading,
         error,
         sucursalId,
 
-        // Datos
+        // Datos (todos los movimientos, sin filtro)
         saldoReal,
         saldoNecesario,
+        saldoNecesarioSinDeuda: saldoNecesario.filter((m) => !m.es_deuda),
         parciales,
         categorias,
         subcategorias,
         bancos,
         mediosPago,
+
+        // Datos filtrados por fecha
+        saldoRealFiltrado,
+        saldoNecesarioFiltrado,
+        saldoNecesarioSinDeudaFiltrado,
+        parcialesFiltrados,
+
+        // Filtro de fechas
+        fechaHasta,
+        setFechaHasta,
+        limpiarFiltros,
+        hayFiltroActivo: !!(fechaHasta),
 
         // Estado de dialogs
         isDetailsDialogOpen,
@@ -429,6 +539,8 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         setIsStateDialogOpen,
         isDeleteDialogOpen,
         setIsDeleteDialogOpen,
+        isDeudaDialogOpen,
+        setIsDeudaDialogOpen,
         isNuevoMovimientoDialogOpen,
         setIsNuevoMovimientoDialogOpen,
         selectedTransaction,
@@ -444,9 +556,11 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         handleOpenDetails,
         handleOpenStateChange,
         handleOpenDelete,
+        handleOpenDeuda,
         handleSaveDetails,
         handleSaveStateChange,
         handleDelete,
+        handleSaveDeuda,
 
         // Fetchers
         initialize,

@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: number) => `${API_URL}/api/movimientos/${id}`,
     MOVER_A_REAL: (id: number) => `${API_URL}/api/movimientos/efectivo/${id}/mover-a-real`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/movimientos/${id}/estado`,
+    TOGGLE_DEUDA: (id: number) => `${API_URL}/api/movimientos/${id}/deuda`,
     DELETE: (id: number) => `${API_URL}/api/movimientos/${id}`,
   },
   PAGOS_PENDIENTES: {
@@ -44,6 +45,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
     MOVER_A_REAL: (id: number) => `${API_URL}/api/caja-banco/${id}/mover-a-real`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/caja-banco/${id}/estado`,
+    TOGGLE_DEUDA: (id: number) => `${API_URL}/api/caja-banco/${id}/deuda`,
     DELETE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
   },
   CONFIGURACION: {

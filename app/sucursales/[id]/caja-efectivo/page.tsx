@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -14,10 +14,12 @@ import {
   TransactionTable,
   getEfectivoColumns,
 } from "@/components/caja/TransactionTable";
+import { DateRangeFilter } from "@/components/caja/DateRangeFilter";
 import {
   DetailsDialog,
   StateDialog,
   DeleteDialog,
+  DeudaDialog,
 } from "@/components/caja/TransactionDialogs";
 
 const columns = getEfectivoColumns();
@@ -27,6 +29,7 @@ export default function CajaEfectivoPage() {
   const params = useParams();
   const { user, isGuardLoading, handleLogout } = useAuthGuard();
   const caja = useCajaData("efectivo");
+  const [activeTab, setActiveTab] = useState("real");
 
   // Inicializar datos al montar (solo si auth está lista)
   useEffect(() => {
@@ -112,43 +115,58 @@ export default function CajaEfectivoPage() {
                 <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
               </div>
             ) : (
-              <CajaTabs
-                saldoReal={caja.saldoReal}
-                saldoNecesario={caja.saldoNecesario}
-              >
-                <TabsContent
-                  value="real"
-                  className="mt-0 outline-none flex-grow"
+              <>
+                {/* Filtro por fechas */}
+                <DateRangeFilter
+                  fechaHasta={caja.fechaHasta}
+                  onHastaChange={caja.setFechaHasta}
+                  onLimpiar={caja.limpiarFiltros}
+                  hayFiltro={caja.hayFiltroActivo}
+                />
+
+                <CajaTabs
+                  saldoReal={caja.saldoRealFiltrado}
+                  saldoNecesario={caja.saldoNecesarioSinDeudaFiltrado}
+                  value={activeTab}
+                  onValueChange={setActiveTab}
                 >
-                  <TransactionTable
-                    title="Saldo Real"
-                    description="Movimientos de efectivo confirmados para el periodo actual."
-                    transactions={caja.saldoReal}
-                    columns={columns}
-                    onViewDetails={caja.handleOpenDetails}
-                    onChangeState={caja.handleOpenStateChange}
-                    onDelete={caja.handleOpenDelete}
-                  />
-                </TabsContent>
-                <TabsContent
-                  value="necesario"
-                  className="mt-0 outline-none flex-grow"
-                >
-                  <TransactionTable
-                    title="Saldo Necesario"
-                    description="Pagos y compromisos en efectivo programados."
-                    transactions={caja.saldoNecesario}
-                    customTotal={
-                      calcularTotal(caja.saldoReal) -
-                      Math.abs(calcularTotal(caja.saldoNecesario))
-                    }
-                    columns={columns}
-                    onViewDetails={caja.handleOpenDetails}
-                    onChangeState={caja.handleOpenStateChange}
-                    onDelete={caja.handleOpenDelete}
-                  />
-                </TabsContent>
-              </CajaTabs>
+                  <TabsContent
+                    value="real"
+                    className="mt-0 outline-none flex-grow"
+                  >
+                    <TransactionTable
+                      title="Saldo Real"
+                      description="Movimientos de efectivo confirmados para el periodo actual."
+                      transactions={caja.saldoRealFiltrado}
+                      columns={columns}
+                      onViewDetails={caja.handleOpenDetails}
+                      onChangeState={caja.handleOpenStateChange}
+                      onDelete={caja.handleOpenDelete}
+                    />
+                  </TabsContent>
+                  <TabsContent
+                    value="necesario"
+                    className="mt-0 outline-none flex-grow"
+                  >
+                    <TransactionTable
+                      title="Saldo Necesario"
+                      description="Pagos y compromisos en efectivo programados."
+                      transactions={caja.saldoNecesarioFiltrado}
+                      customTotal={
+                        calcularTotal(caja.saldoRealFiltrado) -
+                        Math.abs(
+                          calcularTotal(caja.saldoNecesarioSinDeudaFiltrado),
+                        )
+                      }
+                      columns={columns}
+                      onViewDetails={caja.handleOpenDetails}
+                      onChangeState={caja.handleOpenStateChange}
+                      onDelete={caja.handleOpenDelete}
+                      onToggleDeuda={caja.handleOpenDeuda}
+                    />
+                  </TabsContent>
+                </CajaTabs>
+              </>
             )}
           </div>
         )}
@@ -182,6 +200,14 @@ export default function CajaEfectivoPage() {
         open={caja.isDeleteDialogOpen}
         onOpenChange={caja.setIsDeleteDialogOpen}
         onConfirm={caja.handleDelete}
+        isSaving={caja.isSaving}
+      />
+
+      <DeudaDialog
+        open={caja.isDeudaDialogOpen}
+        onOpenChange={caja.setIsDeudaDialogOpen}
+        transaction={caja.selectedTransaction}
+        onSave={caja.handleSaveDeuda}
         isSaving={caja.isSaving}
       />
 
