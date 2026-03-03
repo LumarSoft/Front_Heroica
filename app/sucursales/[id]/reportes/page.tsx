@@ -51,9 +51,8 @@ function DistributionRow({
 
   return (
     <div
-      className={`group rounded-lg p-3 transition-all duration-150 ${
-        isClickable ? "cursor-pointer hover:bg-slate-100 active:scale-[0.99]" : ""
-      }`}
+      className={`group rounded-lg p-3 transition-all duration-150 ${isClickable ? "cursor-pointer hover:bg-slate-100 active:scale-[0.99]" : ""
+        }`}
       onClick={isClickable ? onClick : undefined}
     >
       <div className="flex items-center justify-between mb-1.5">
@@ -63,9 +62,8 @@ function DistributionRow({
             style={{ backgroundColor: color }}
           />
           <span
-            className={`text-sm font-medium text-slate-700 truncate ${
-              isClickable ? "group-hover:text-slate-900" : ""
-            }`}
+            className={`text-sm font-medium text-slate-700 truncate ${isClickable ? "group-hover:text-slate-900" : ""
+              }`}
           >
             {item.name}
             {isClickable && !isBack && (
@@ -151,7 +149,7 @@ export default function ReportesPage() {
 
   const fetchSucursal = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/sucursales/${params.id}`);
+      const response = await fetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)));
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
       setSucursal(data.data);
@@ -165,7 +163,7 @@ export default function ReportesPage() {
     setSelectedIngresoCategory(null);
     setSelectedEgresoCategory(null);
     try {
-      const url = `http://localhost:3001/api/reportes/${params.id}?startDate=${startDate}T00:00:00&endDate=${endDate}T23:59:59`;
+      const url = API_ENDPOINTS.REPORTES.GET_BY_SUCURSAL(params.id as string, startDate, endDate);
       const response = await fetch(url);
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
@@ -320,8 +318,8 @@ export default function ReportesPage() {
                     reportData.resumen.resultado > 0
                       ? "Ganancia"
                       : reportData.resumen.resultado < 0
-                      ? "Pérdida"
-                      : "Equilibrio"
+                        ? "Pérdida"
+                        : "Equilibrio"
                   }
                 />
                 <SummaryCard
@@ -384,7 +382,7 @@ export default function ReportesPage() {
               <DeudaPanel deudas={reportData.detalles?.deudas || []} />
             </section>
 
-                        {/* ── Print: Detalle extendido ──────────────────────────────────── */}
+            {/* ── Print: Detalle extendido ──────────────────────────────────── */}
             <div className="page-break-before mt-12 hidden print:block">
               <h2 className="text-xl font-bold text-slate-800 mb-4 border-b-2 border-slate-200 pb-2">
                 Detalle de Movimientos Principales
@@ -433,10 +431,10 @@ function SectionHeading({
 
 const accentMap: Record<string, { border: string; text: string; bg: string }> = {
   emerald: { border: "border-l-emerald-500", text: "text-emerald-600", bg: "bg-emerald-50" },
-  rose:    { border: "border-l-rose-500",    text: "text-rose-600",    bg: "bg-rose-50"    },
-  blue:    { border: "border-l-blue-500",    text: "text-blue-600",    bg: "bg-blue-50"    },
-  red:     { border: "border-l-red-600",     text: "text-red-700",     bg: "bg-red-50"     },
-  orange:  { border: "border-l-orange-500",  text: "text-orange-600",  bg: "bg-orange-50"  },
+  rose: { border: "border-l-rose-500", text: "text-rose-600", bg: "bg-rose-50" },
+  blue: { border: "border-l-blue-500", text: "text-blue-600", bg: "bg-blue-50" },
+  red: { border: "border-l-red-600", text: "text-red-700", bg: "bg-red-50" },
+  orange: { border: "border-l-orange-500", text: "text-orange-600", bg: "bg-orange-50" },
 };
 
 function SummaryCard({
@@ -550,9 +548,9 @@ function BreakdownPanel({
           {currentData.map((item: any, i: number) => {
             const color = selectedCategory
               ? COLORS[
-                  (breakdownData.findIndex((c: any) => c.name === selectedCategory) + colorOffset) %
-                    COLORS.length
-                ]
+              (breakdownData.findIndex((c: any) => c.name === selectedCategory) + colorOffset) %
+              COLORS.length
+              ]
               : COLORS[(i + colorOffset) % COLORS.length];
             const isClickable = !selectedCategory && item.subcategorias?.length > 0;
             return (
@@ -596,10 +594,10 @@ function getAntiguedad(fechaStr: string): { label: string; colorClass: string; d
   const hoy = new Date();
   const dias = Math.floor((hoy.getTime() - fecha.getTime()) / (1000 * 60 * 60 * 24));
 
-  if (dias <= 7)  return { label: "Esta semana",   colorClass: "text-emerald-600 bg-emerald-50 border-emerald-200", dotClass: "bg-emerald-400" };
-  if (dias <= 30) return { label: `Hace ${dias}d`,  colorClass: "text-amber-600 bg-amber-50 border-amber-200",     dotClass: "bg-amber-400"  };
-  if (dias <= 90) return { label: `Hace ${dias}d`,  colorClass: "text-orange-600 bg-orange-50 border-orange-200",  dotClass: "bg-orange-400" };
-  return           { label: `Hace ${dias}d`,        colorClass: "text-rose-600 bg-rose-50 border-rose-200",        dotClass: "bg-rose-400"   };
+  if (dias <= 7) return { label: "Esta semana", colorClass: "text-emerald-600 bg-emerald-50 border-emerald-200", dotClass: "bg-emerald-400" };
+  if (dias <= 30) return { label: `Hace ${dias}d`, colorClass: "text-amber-600 bg-amber-50 border-amber-200", dotClass: "bg-amber-400" };
+  if (dias <= 90) return { label: `Hace ${dias}d`, colorClass: "text-orange-600 bg-orange-50 border-orange-200", dotClass: "bg-orange-400" };
+  return { label: `Hace ${dias}d`, colorClass: "text-rose-600 bg-rose-50 border-rose-200", dotClass: "bg-rose-400" };
 }
 
 function DeudaPanel({ deudas }: { deudas: any[] }) {
@@ -629,10 +627,10 @@ function DeudaPanel({ deudas }: { deudas: any[] }) {
         <div className="text-right">
           <p className="text-xs text-orange-500 font-medium">{deudas.length} deuda{deudas.length !== 1 ? "s" : ""} pendiente{deudas.length !== 1 ? "s" : ""}</p>
           <div className="flex items-center gap-2 mt-1.5 justify-end flex-wrap">
-            <span className="flex items-center gap-1 text-xs text-emerald-600"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"/>≤7 días</span>
-            <span className="flex items-center gap-1 text-xs text-amber-600"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block"/>≤30 días</span>
-            <span className="flex items-center gap-1 text-xs text-orange-600"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block"/>≤90 días</span>
-            <span className="flex items-center gap-1 text-xs text-rose-600"><span className="w-2 h-2 rounded-full bg-rose-400 inline-block"/>90 días</span>
+            <span className="flex items-center gap-1 text-xs text-emerald-600"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />≤7 días</span>
+            <span className="flex items-center gap-1 text-xs text-amber-600"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />≤30 días</span>
+            <span className="flex items-center gap-1 text-xs text-orange-600"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block" />≤90 días</span>
+            <span className="flex items-center gap-1 text-xs text-rose-600"><span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />90 días</span>
           </div>
         </div>
       </div>

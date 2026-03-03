@@ -79,4 +79,8 @@ export const API_ENDPOINTS = {
       DELETE: (id: number) => `${API_URL}/api/configuracion/medios-pago/${id}`,
     },
   },
+  REPORTES: {
+    GET_BY_SUCURSAL: (sucursalId: number | string, startDate: string, endDate: string) =>
+      `${API_URL}/api/reportes/${sucursalId}?startDate=${startDate}T00:00:00&endDate=${endDate}T23:59:59`,
+  },
 };
