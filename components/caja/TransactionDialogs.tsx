@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -424,6 +425,155 @@ export function StateDialog({
                         {isSaving ? "Guardando..." : "Cambiar Estado"}
                     </Button>
                 </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+// =============================================
+// Dialog de DEUDA
+// =============================================
+
+interface DeudaDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    transaction: { es_deuda?: number; fecha?: string; fecha_original_vencimiento?: string } | null;
+    onSave: (esDeuda: boolean, fechaOriginalVencimiento?: string) => void;
+    isSaving: boolean;
+}
+
+export function DeudaDialog({
+    open,
+    onOpenChange,
+    transaction,
+    onSave,
+    isSaving,
+}: DeudaDialogProps) {
+    const [localFecha, setLocalFecha] = useState(
+        transaction?.fecha ? transaction.fecha.split("T")[0] : ""
+    );
+
+    // Reset localFecha when dialog opens with a new transaction
+    useEffect(() => {
+        if (open) {
+            setLocalFecha(transaction?.fecha ? transaction.fecha.split("T")[0] : "");
+        }
+    }, [open, transaction]);
+
+    const esDeudaActiva = transaction?.es_deuda === 1;
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[420px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
+                {/* Header */}
+                <div className={`px-8 pt-8 pb-5 border-b ${esDeudaActiva ? "border-orange-100 bg-orange-50/40" : "border-[#F0F0F0]"}`}>
+                    <DialogHeader className="p-0 border-0">
+                        <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${esDeudaActiva ? "bg-orange-100" : "bg-[#002868]/10"}`}>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-5 h-5 ${esDeudaActiva ? "text-orange-600" : "text-[#002868]"}`}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            {esDeudaActiva ? "Deuda Activa" : "Marcar como Deuda"}
+                        </DialogTitle>
+                        <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
+                            {esDeudaActiva
+                                ? "Este movimiento está en deuda y no contabiliza en el saldo necesario."
+                                : "Al activar la deuda, este movimiento no contabilizará en el saldo necesario hasta que se libere."}
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
+
+                {/* Body */}
+                <div className="px-8 py-6 space-y-4">
+                    {esDeudaActiva ? (
+                        <div className="rounded-xl bg-orange-50 border border-orange-200 p-4 space-y-2">
+                            <p className="text-sm font-semibold text-orange-700 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                                </svg>
+                                Este movimiento está en deuda
+                            </p>
+                            {transaction?.fecha_original_vencimiento && (
+                                <p className="text-xs text-orange-600">
+                                    Fecha original de vencimiento: <span className="font-bold">
+                                        {(() => {
+                                            const partes = transaction.fecha_original_vencimiento!.split("T")[0].split("-");
+                                            return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : transaction.fecha_original_vencimiento;
+                                        })()}
+                                    </span>
+                                </p>
+                            )}
+                            <p className="text-xs text-orange-500 mt-1">
+                                Al quitar la deuda, la fecha original quedará registrada en la descripción del movimiento.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
+                                <p className="text-xs text-amber-700">
+                                    💡 Indicá la fecha original de vencimiento de este movimiento. Quedará guardada para cuando se libere la deuda.
+                                </p>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">
+                                    Fecha original de vencimiento
+                                </label>
+                                <input
+                                    type="date"
+                                    value={localFecha}
+                                    onChange={(e) => setLocalFecha(e.target.value)}
+                                    className="w-full h-10 rounded-lg border border-[#E0E0E0] bg-white px-3 py-2 text-sm text-[#1A1A1A] transition-colors hover:border-[#B0B0B0] focus:border-[#002868] focus:outline-none focus:ring-2 focus:ring-[#002868]/20"
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer */}
+                <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
+                    <DialogFooter className="sm:justify-end gap-3">
+                        <Button
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                            disabled={isSaving}
+                            className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] hover:border-[#C0C0C0] transition-all cursor-pointer"
+                        >
+                            Cancelar
+                        </Button>
+                        {esDeudaActiva ? (
+                            <Button
+                                onClick={() => onSave(false)}
+                                disabled={isSaving}
+                                className="h-10 px-6 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                            >
+                                {isSaving ? (
+                                    <span className="flex items-center gap-2">
+                                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Procesando…
+                                    </span>
+                                ) : (
+                                    "✓ Quitar Deuda"
+                                )}
+                            </Button>
+                        ) : (
+                            <Button
+                                onClick={() => onSave(true, localFecha || undefined)}
+                                disabled={isSaving}
+                                className="h-10 px-6 rounded-lg bg-orange-500 text-white font-semibold hover:bg-orange-600 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                            >
+                                {isSaving ? (
+                                    <span className="flex items-center gap-2">
+                                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Procesando…
+                                    </span>
+                                ) : (
+                                    "Activar Deuda"
+                                )}
+                            </Button>
+                        )}
+                    </DialogFooter>
+                </div>
             </DialogContent>
         </Dialog>
     );

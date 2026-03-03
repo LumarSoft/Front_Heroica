@@ -18,6 +18,7 @@ import {
   DetailsDialog,
   StateDialog,
   DeleteDialog,
+  DeudaDialog,
 } from "@/components/caja/TransactionDialogs";
 
 const columns = getEfectivoColumns();
@@ -97,7 +98,7 @@ export default function CajaEfectivoPage() {
                 <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
               </div>
             ) : (
-              <CajaTabs saldoReal={caja.saldoReal} saldoNecesario={caja.saldoNecesario}>
+              <CajaTabs saldoReal={caja.saldoReal} saldoNecesario={caja.saldoNecesarioSinDeuda}>
                 <TabsContent value="real" className="mt-0 outline-none flex-grow">
                   <TransactionTable
                     title="Saldo Real"
@@ -114,11 +115,12 @@ export default function CajaEfectivoPage() {
                     title="Saldo Necesario"
                     description="Pagos y compromisos en efectivo programados."
                     transactions={caja.saldoNecesario}
-                    customTotal={calcularTotal(caja.saldoReal) - Math.abs(calcularTotal(caja.saldoNecesario))}
+                    customTotal={calcularTotal(caja.saldoReal) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeuda))}
                     columns={columns}
                     onViewDetails={caja.handleOpenDetails}
                     onChangeState={caja.handleOpenStateChange}
                     onDelete={caja.handleOpenDelete}
+                    onToggleDeuda={caja.handleOpenDeuda}
                   />
                 </TabsContent>
               </CajaTabs>
@@ -155,6 +157,14 @@ export default function CajaEfectivoPage() {
         open={caja.isDeleteDialogOpen}
         onOpenChange={caja.setIsDeleteDialogOpen}
         onConfirm={caja.handleDelete}
+        isSaving={caja.isSaving}
+      />
+
+      <DeudaDialog
+        open={caja.isDeudaDialogOpen}
+        onOpenChange={caja.setIsDeudaDialogOpen}
+        transaction={caja.selectedTransaction}
+        onSave={caja.handleSaveDeuda}
         isSaving={caja.isSaving}
       />
 

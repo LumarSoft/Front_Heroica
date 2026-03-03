@@ -105,16 +105,34 @@ const MONTO_COLUMN: ColumnDef = {
     ),
 };
 
+/** Columna de DEUDA (opcional, solo para caja efectivo y banco) */
+const DEUDA_COLUMN: ColumnDef = {
+    key: "deuda",
+    label: "Deuda",
+    align: "center",
+    render: (t) =>
+        t.es_deuda === 1 ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 border border-orange-300 text-orange-700 text-xs font-bold">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                DEUDA
+            </span>
+        ) : (
+            <span className="text-[#B0B0B0] text-sm">—</span>
+        ),
+};
+
 // =============================================
 // Helpers para presets de columnas
 // =============================================
 
 export function getBancoColumns(): ColumnDef[] {
-    return [...BASE_COLUMNS, ...BANCO_COLUMNS, MONTO_COLUMN];
+    return [...BASE_COLUMNS, ...BANCO_COLUMNS, DEUDA_COLUMN, MONTO_COLUMN];
 }
 
 export function getEfectivoColumns(): ColumnDef[] {
-    return [...BASE_COLUMNS, ...EFECTIVO_COLUMNS, MONTO_COLUMN];
+    return [...BASE_COLUMNS, ...EFECTIVO_COLUMNS, DEUDA_COLUMN, MONTO_COLUMN];
 }
 
 // =============================================
@@ -130,6 +148,7 @@ interface TransactionTableProps {
     onViewDetails: (t: Transaction) => void;
     onChangeState: (t: Transaction) => void;
     onDelete: (t: Transaction) => void;
+    onToggleDeuda?: (t: Transaction) => void;
 }
 
 export function TransactionTable({
@@ -141,6 +160,7 @@ export function TransactionTable({
     onViewDetails,
     onChangeState,
     onDelete,
+    onToggleDeuda,
 }: TransactionTableProps) {
     const total =
         customTotal !== undefined ? customTotal : calcularTotal(transactions);
@@ -303,6 +323,23 @@ export function TransactionTable({
                                                         />
                                                     </svg>
                                                 </Button>
+                                                {/* Deuda (solo si hay handler) */}
+                                                {onToggleDeuda && (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => onToggleDeuda(transaction)}
+                                                        className={`border-none cursor-pointer shadow-sm hover:shadow-md transition-all flex items-center justify-center ${
+                                                            transaction.es_deuda === 1
+                                                                ? "bg-orange-500 hover:bg-orange-600 text-white"
+                                                                : "bg-orange-100 hover:bg-orange-200 text-orange-700"
+                                                        }`}
+                                                        title={transaction.es_deuda === 1 ? "Quitar deuda" : "Marcar como deuda"}
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    </Button>
+                                                )}
                                                 {/* Eliminar */}
                                                 <Button
                                                     size="sm"

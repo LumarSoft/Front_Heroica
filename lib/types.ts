@@ -20,6 +20,8 @@ export interface Transaction {
     medio_pago_id?: number | string;
     banco_nombre?: string;
     medio_pago_nombre?: string;
+    es_deuda?: number; // 0 = sin deuda, 1 = en deuda
+    fecha_original_vencimiento?: string; // ISO date string, guardada al activar deuda
 }
 
 export interface BancoParcial {

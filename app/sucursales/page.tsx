@@ -169,7 +169,7 @@ export default function SucursalesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
+    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       {/* Navbar */}
       <Navbar
         userName={user?.nombre}
@@ -178,7 +178,7 @@ export default function SucursalesPage() {
       />
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-12">
+      <main className="container mx-auto px-6 py-12 flex-1">
         <div className="mb-10">
           <h2 className="text-4xl font-bold text-[#002868] mb-2">
             Sucursales
@@ -342,6 +342,19 @@ export default function SucursalesPage() {
           </div>
         )}
       </main>
+
+      {/* Footer */}
+      <footer className="w-full py-6 mt-auto border-t border-[#E0E0E0] text-center text-[#666666] text-sm">
+        Developed with ❤️ by{" "}
+        <a
+          href="https://lumarsoft.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#002868] hover:underline font-semibold"
+        >
+          Lumarsoft
+        </a>
+      </footer>
 
       {/* Botón flotante para agregar sucursal */}
       <button
