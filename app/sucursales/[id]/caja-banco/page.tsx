@@ -230,20 +230,32 @@ export default function CajaBancoPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
+            {/* Saldo Real */}
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
               <span className="text-sm font-medium text-[#666666] uppercase tracking-wide">Saldo Real</span>
-              <span className={`text-lg font-bold ${Number(selectedBanco?.total_real) >= 0 ? "text-emerald-600" : "text-rose-600"
-                }`}>
+              <span className={`text-lg font-bold ${Number(selectedBanco?.total_real) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
                 {formatMonto(selectedBanco?.total_real ?? 0)}
               </span>
             </div>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-              <span className="text-sm font-medium text-[#666666] uppercase tracking-wide">Saldo Necesario</span>
-              <span className={`text-lg font-bold ${Number(selectedBanco?.total_necesario) >= 0 ? "text-emerald-600" : "text-rose-600"
-                }`}>
+            {/* Compromisos pendientes */}
+            <div className="flex items-center justify-between px-4 py-2 rounded-xl border border-dashed border-[#E0E0E0]">
+              <span className="text-xs font-medium text-[#888888] uppercase tracking-wide">Compromisos pendientes</span>
+              <span className={`text-sm font-semibold ${Number(selectedBanco?.total_necesario) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
                 {formatMonto(selectedBanco?.total_necesario ?? 0)}
               </span>
             </div>
+            {/* Saldo proyectado = real + necesario (ya negativos los egresos) */}
+            {(() => {
+              const neto = Number(selectedBanco?.total_real ?? 0) + Number(selectedBanco?.total_necesario ?? 0);
+              return (
+                <div className={`flex items-center justify-between p-4 rounded-xl border-2 ${neto >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200"}`}>
+                  <span className="text-sm font-bold text-[#333] uppercase tracking-wide">Saldo Necesario</span>
+                  <span className={`text-lg font-bold ${neto >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                    {formatMonto(neto)}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
         </DialogContent>
       </Dialog>
