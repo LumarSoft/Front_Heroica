@@ -12,6 +12,8 @@ interface CajaTabsProps {
     saldoReal: Transaction[];
     saldoNecesario: Transaction[];
     children: React.ReactNode;
+    value?: string;
+    onValueChange?: (v: string) => void;
 }
 
 /**
@@ -22,13 +24,19 @@ export function CajaTabs({
     saldoReal,
     saldoNecesario,
     children,
+    value,
+    onValueChange,
 }: CajaTabsProps) {
     const totalReal = calcularTotal(saldoReal);
     const totalNecesario = calcularTotal(saldoNecesario);
     const diferenciaTotal = totalReal - Math.abs(totalNecesario);
 
+    const tabsProps = value !== undefined
+        ? { value, onValueChange }
+        : { defaultValue: "real" };
+
     return (
-        <Tabs defaultValue="real" className="w-full flex-grow flex flex-col">
+        <Tabs {...tabsProps} className="w-full flex-grow flex flex-col">
             {/* Panel de resumen + tabs integrado */}
             <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm mb-6 px-6 py-4">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

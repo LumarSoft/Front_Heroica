@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -29,6 +29,7 @@ export default function CajaEfectivoPage() {
   const params = useParams();
   const { user, isGuardLoading, handleLogout } = useAuthGuard();
   const caja = useCajaData("efectivo");
+  const [activeTab, setActiveTab] = useState("real");
 
   // Inicializar datos al montar (solo si auth está lista)
   useEffect(() => {
@@ -108,7 +109,12 @@ export default function CajaEfectivoPage() {
                 hayFiltro={caja.hayFiltroActivo}
               />
 
-              <CajaTabs saldoReal={caja.saldoRealFiltrado} saldoNecesario={caja.saldoNecesarioSinDeudaFiltrado}>
+              <CajaTabs
+                saldoReal={caja.saldoRealFiltrado}
+                saldoNecesario={caja.saldoNecesarioSinDeudaFiltrado}
+                value={activeTab}
+                onValueChange={setActiveTab}
+              >
                 <TabsContent value="real" className="mt-0 outline-none flex-grow">
                   <TransactionTable
                     title="Saldo Real"

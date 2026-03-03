@@ -43,6 +43,7 @@ export default function CajaBancoPage() {
   const caja = useCajaData("banco");
   const [selectedBanco, setSelectedBanco] = useState<BancoParcial | null>(null);
   const [isBancoDialogOpen, setIsBancoDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("real");
 
   // Inicializar datos al montar (solo si auth está lista)
   useEffect(() => {
@@ -146,7 +147,12 @@ export default function CajaBancoPage() {
                   onLimpiar={caja.limpiarFiltros}
                   hayFiltro={caja.hayFiltroActivo}
                 />
-                <CajaTabs saldoReal={caja.saldoRealFiltrado} saldoNecesario={caja.saldoNecesarioSinDeudaFiltrado}>
+                <CajaTabs
+                  saldoReal={caja.saldoRealFiltrado}
+                  saldoNecesario={caja.saldoNecesarioSinDeudaFiltrado}
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                >
                   <TabsContent value="real" className="mt-0 outline-none flex-grow">
                     <TransactionTable
                       title="Saldo Real"
