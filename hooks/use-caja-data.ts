@@ -124,6 +124,18 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         toast.success(msg);
     }, []);
 
+    const fetchTotales = useCallback(async () => {
+        try {
+            const response = await fetch(endpoints.getTotales(sucursalId));
+            const data = await response.json();
+            if (response.ok) {
+                setParciales(data.data?.parciales || []);
+            }
+        } catch (err) {
+            console.error("Error al cargar totales:", err);
+        }
+    }, [endpoints, sucursalId]);
+
     const fetchMovimientos = useCallback(async () => {
         try {
             setIsLoading(true);
@@ -168,19 +180,10 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         } finally {
             setIsLoading(false);
         }
-    }, [endpoints, sucursalId]);
+        // Refrescar totales/parciales del API al finalizar
+        fetchTotales();
+    }, [endpoints, sucursalId, fetchTotales]);
 
-    const fetchTotales = useCallback(async () => {
-        try {
-            const response = await fetch(endpoints.getTotales(sucursalId));
-            const data = await response.json();
-            if (response.ok) {
-                setParciales(data.data?.parciales || []);
-            }
-        } catch (err) {
-            console.error("Error al cargar totales:", err);
-        }
-    }, [endpoints, sucursalId]);
 
     const fetchCategorias = useCallback(async () => {
         try {
