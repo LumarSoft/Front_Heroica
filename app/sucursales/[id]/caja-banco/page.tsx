@@ -30,6 +30,7 @@ import {
   DetailsDialog,
   StateDialog,
   DeleteDialog,
+  DeudaDialog,
 } from "@/components/caja/TransactionDialogs";
 
 const columns = getBancoColumns();
@@ -138,7 +139,7 @@ export default function CajaBancoPage() {
                 )}
 
                 {/* Tabs + Tablas */}
-                <CajaTabs saldoReal={caja.saldoReal} saldoNecesario={caja.saldoNecesario}>
+                <CajaTabs saldoReal={caja.saldoReal} saldoNecesario={caja.saldoNecesarioSinDeuda}>
                   <TabsContent value="real" className="mt-0 outline-none flex-grow">
                     <TransactionTable
                       title="Saldo Real"
@@ -155,11 +156,12 @@ export default function CajaBancoPage() {
                       title="Saldo Necesario"
                       description="Pagos y compromisos bancarios programados."
                       transactions={caja.saldoNecesario}
-                      customTotal={calcularTotal(caja.saldoReal) - Math.abs(calcularTotal(caja.saldoNecesario))}
+                      customTotal={calcularTotal(caja.saldoReal) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeuda))}
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
                       onDelete={caja.handleOpenDelete}
+                      onToggleDeuda={caja.handleOpenDeuda}
                     />
                   </TabsContent>
                 </CajaTabs>
@@ -197,6 +199,14 @@ export default function CajaBancoPage() {
         open={caja.isDeleteDialogOpen}
         onOpenChange={caja.setIsDeleteDialogOpen}
         onConfirm={caja.handleDelete}
+        isSaving={caja.isSaving}
+      />
+
+      <DeudaDialog
+        open={caja.isDeudaDialogOpen}
+        onOpenChange={caja.setIsDeudaDialogOpen}
+        transaction={caja.selectedTransaction}
+        onSave={caja.handleSaveDeuda}
         isSaving={caja.isSaving}
       />
 
