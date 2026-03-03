@@ -32,7 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard";
 import {
   formatFecha,
   formatMonto,
@@ -65,9 +65,10 @@ export default function PagosPendientesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [pagosPendientes, setPagosPendientes] = useState<PagoPendiente[]>([]);
   const [historial, setHistorial] = useState<PagoPendiente[]>([]);
-  const [activeTab, setActiveTab] = useState<"pendientes" | "historial">("pendientes");
+  const [activeTab, setActiveTab] = useState<"pendientes" | "historial">(
+    "pendientes",
+  );
   const [error, setError] = useState("");
-
 
   const [isAprobarDialogOpen, setIsAprobarDialogOpen] = useState(false);
   const [isRechazarDialogOpen, setIsRechazarDialogOpen] = useState(false);
@@ -86,7 +87,7 @@ export default function PagosPendientesPage() {
       setError("");
 
       const response = await fetch(
-        API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(Number(params.id))
+        API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(Number(params.id)),
       );
       const data = await response.json();
 
@@ -110,7 +111,7 @@ export default function PagosPendientesPage() {
       setError("");
 
       const response = await fetch(
-        API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(user.id)
+        API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(user.id),
       );
       const data = await response.json();
 
@@ -171,7 +172,7 @@ export default function PagosPendientesPage() {
             usuario_revisor_id: user.id,
             tipo_caja: tipoCaja,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -180,7 +181,7 @@ export default function PagosPendientesPage() {
       }
 
       showSuccess(
-        "Pago aprobado exitosamente. Revisa la caja correspondiente."
+        "Pago aprobado exitosamente. Revisa la caja correspondiente.",
       );
       setIsAprobarDialogOpen(false);
       fetchPagosPendientes();
@@ -212,7 +213,7 @@ export default function PagosPendientesPage() {
             usuario_revisor_id: user.id,
             motivo_rechazo: motivoRechazo,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -265,16 +266,31 @@ export default function PagosPendientesPage() {
         {/* Header y Botón Nuevo */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-[#002868]">Pagos Pendientes</h1>
-            <p className="text-[#666666] mt-1">Gestión y seguimiento de movimientos por autorizar</p>
+            <h1 className="text-3xl font-bold text-[#002868]">
+              Pagos Pendientes
+            </h1>
+            <p className="text-[#666666] mt-1">
+              Gestión y seguimiento de movimientos por autorizar
+            </p>
           </div>
 
           <Button
             onClick={() => setIsNuevoMovimientoDialogOpen(true)}
             className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 self-end md:self-auto"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-5 h-5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4.5v15m7.5-7.5h-15"
+              />
             </svg>
             Nuevo Movimiento
           </Button>
@@ -285,19 +301,21 @@ export default function PagosPendientesPage() {
           <div className="flex mb-6 bg-white/50 p-1 rounded-xl border border-[#E0E0E0] w-fit">
             <button
               onClick={() => setActiveTab("pendientes")}
-              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${activeTab === "pendientes"
-                ? "bg-[#002868] text-white shadow-md"
-                : "text-[#666666] hover:bg-[#F0F0F0]"
-                }`}
+              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
+                activeTab === "pendientes"
+                  ? "bg-[#002868] text-white shadow-md"
+                  : "text-[#666666] hover:bg-[#F0F0F0]"
+              }`}
             >
               Mis Pendientes
             </button>
             <button
               onClick={() => setActiveTab("historial")}
-              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${activeTab === "historial"
-                ? "bg-[#002868] text-white shadow-md"
-                : "text-[#666666] hover:bg-[#F0F0F0]"
-                }`}
+              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
+                activeTab === "historial"
+                  ? "bg-[#002868] text-white shadow-md"
+                  : "text-[#666666] hover:bg-[#F0F0F0]"
+              }`}
             >
               Mi Historial
             </button>
@@ -314,7 +332,9 @@ export default function PagosPendientesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-xl font-bold text-[#002868]">
-                    {activeTab === "pendientes" ? "Pendientes de Autorización" : "Historial de Solicitudes"}
+                    {activeTab === "pendientes"
+                      ? "Pendientes de Autorización"
+                      : "Historial de Solicitudes"}
                   </CardTitle>
                   <CardDescription className="text-[#666666]">
                     {activeTab === "pendientes"
@@ -345,111 +365,209 @@ export default function PagosPendientesPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-[#F8F9FA] hover:bg-[#F8F9FA] border-b-2 border-[#E0E0E0]">
-                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Fecha</TableHead>
-                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Concepto</TableHead>
-                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-right">Monto</TableHead>
-                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Tipo</TableHead>
-                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Prioridad</TableHead>
-                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Estado</TableHead>
+                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">
+                        Fecha
+                      </TableHead>
+                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">
+                        Concepto
+                      </TableHead>
+                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-right">
+                        Monto
+                      </TableHead>
+                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">
+                        Tipo
+                      </TableHead>
+                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">
+                        Prioridad
+                      </TableHead>
+                      <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">
+                        Estado
+                      </TableHead>
                       {activeTab === "historial" && (
-                        <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Resolución</TableHead>
+                        <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">
+                          Resolución
+                        </TableHead>
                       )}
-                      {activeTab === "pendientes" && user?.rol !== "empleado" && (
-                        <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Acciones</TableHead>
-                      )}
+                      {activeTab === "pendientes" &&
+                        user?.rol !== "empleado" && (
+                          <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">
+                            Acciones
+                          </TableHead>
+                        )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {displayData.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6 + (activeTab === "historial" ? 1 : 0) + (activeTab === "pendientes" && user?.rol !== "empleado" ? 1 : 0)} className="text-center text-[#666666] py-16">
+                        <TableCell
+                          colSpan={
+                            6 +
+                            (activeTab === "historial" ? 1 : 0) +
+                            (activeTab === "pendientes" &&
+                            user?.rol !== "empleado"
+                              ? 1
+                              : 0)
+                          }
+                          className="text-center text-[#666666] py-16"
+                        >
                           <div className="flex flex-col items-center gap-3">
                             <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
-                              <svg className="w-8 h-8 text-[#666666]/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                              <svg
+                                className="w-8 h-8 text-[#666666]/30"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1.5}
+                                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                                />
                               </svg>
                             </div>
-                            <p className="font-medium">No se encontraron movimientos registrados</p>
+                            <p className="font-medium">
+                              No se encontraron movimientos registrados
+                            </p>
                           </div>
                         </TableCell>
                       </TableRow>
                     ) : (
                       displayData.map((pago) => (
-                        <TableRow key={pago.id} className="hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50">
+                        <TableRow
+                          key={pago.id}
+                          className="hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50"
+                        >
                           <TableCell className="font-medium text-[#1A1A1A]">
                             {formatFecha(pago.fecha)}
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col">
-                              <span className="font-semibold text-[#1A1A1A]">{pago.concepto}</span>
-                              <span className="text-xs text-[#666666] truncate max-w-[200px]">{pago.descripcion || "-"}</span>
+                              <span className="font-semibold text-[#1A1A1A]">
+                                {pago.concepto}
+                              </span>
+                              <span className="text-xs text-[#666666] truncate max-w-[200px]">
+                                {pago.descripcion || "-"}
+                              </span>
                             </div>
                           </TableCell>
-                          <TableCell className={`text-right font-black text-sm ${parseFloat(pago.monto.toString()) >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                            {formatMonto(Math.abs(parseFloat(pago.monto.toString())))}
+                          <TableCell
+                            className={`text-right font-black text-sm ${parseFloat(pago.monto.toString()) >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+                          >
+                            {formatMonto(
+                              Math.abs(parseFloat(pago.monto.toString())),
+                            )}
                           </TableCell>
                           <TableCell className="text-center">
                             <StatusBadge
-                              value={pago.tipo === "egreso" || (!pago.tipo && Number(pago.monto) < 0) ? "egreso" : "ingreso"}
-                              colorMap={{ egreso: "bg-rose-100 text-rose-800", ingreso: "bg-emerald-100 text-emerald-800" }}
+                              value={
+                                pago.tipo === "egreso" ||
+                                (!pago.tipo && Number(pago.monto) < 0)
+                                  ? "egreso"
+                                  : "ingreso"
+                              }
+                              colorMap={{
+                                egreso: "bg-rose-100 text-rose-800",
+                                ingreso: "bg-emerald-100 text-emerald-800",
+                              }}
                             />
                           </TableCell>
                           <TableCell className="text-center">
-                            <StatusBadge value={pago.prioridad} colorMap={PRIORIDAD_COLORS} />
+                            <StatusBadge
+                              value={pago.prioridad}
+                              colorMap={PRIORIDAD_COLORS}
+                            />
                           </TableCell>
                           <TableCell className="text-center">
-                            <StatusBadge value={pago.estado} colorMap={ESTADO_COLORS} />
+                            <StatusBadge
+                              value={pago.estado}
+                              colorMap={ESTADO_COLORS}
+                            />
                           </TableCell>
                           {activeTab === "historial" && (
                             <TableCell>
                               <div className="flex flex-col gap-0.5">
                                 {pago.estado === "aprobado" && (
-                                  <span className="text-xs font-medium text-emerald-600">Aprobado por {pago.usuario_revisor_nombre || "Admin"}</span>
+                                  <span className="text-xs font-medium text-emerald-600">
+                                    Aprobado por{" "}
+                                    {pago.usuario_revisor_nombre || "Admin"}
+                                  </span>
                                 )}
                                 {pago.estado === "rechazado" && (
                                   <>
-                                    <span className="text-xs font-bold text-rose-600">Rechazado por {pago.usuario_revisor_nombre || "Admin"}</span>
+                                    <span className="text-xs font-bold text-rose-600">
+                                      Rechazado por{" "}
+                                      {pago.usuario_revisor_nombre || "Admin"}
+                                    </span>
                                     <span className="text-[11px] text-[#666666] italic leading-tight">
-                                      "{pago.motivo_rechazo || "Sin motivo especificado"}"
+                                      "
+                                      {pago.motivo_rechazo ||
+                                        "Sin motivo especificado"}
+                                      "
                                     </span>
                                   </>
                                 )}
                                 {pago.estado === "pendiente" && (
-                                  <span className="text-xs text-[#8A8F9C]">En revisión...</span>
+                                  <span className="text-xs text-[#8A8F9C]">
+                                    En revisión...
+                                  </span>
                                 )}
                               </div>
                             </TableCell>
                           )}
-                          {activeTab === "pendientes" && user?.rol !== "empleado" && (
-                            <TableCell className="text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                {pago.estado === "pendiente" && (
-                                  <>
-                                    <Button
-                                      size="sm"
-                                      onClick={() => handleOpenAprobar(pago)}
-                                      className="bg-emerald-500 hover:bg-emerald-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg"
-                                      title="Aprobar pago"
-                                    >
-                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                      </svg>
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      onClick={() => handleOpenRechazar(pago)}
-                                      className="bg-rose-500 hover:bg-rose-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg"
-                                      title="Rechazar pago"
-                                    >
-                                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                      </svg>
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
-                            </TableCell>
-                          )}
+                          {activeTab === "pendientes" &&
+                            user?.rol !== "empleado" && (
+                              <TableCell className="text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                  {pago.estado === "pendiente" && (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleOpenAprobar(pago)}
+                                        className="bg-emerald-500 hover:bg-emerald-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg"
+                                        title="Aprobar pago"
+                                      >
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                          strokeWidth={2.5}
+                                          stroke="currentColor"
+                                          className="w-4 h-4"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M4.5 12.75l6 6 9-13.5"
+                                          />
+                                        </svg>
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleOpenRechazar(pago)}
+                                        className="bg-rose-500 hover:bg-rose-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg"
+                                        title="Rechazar pago"
+                                      >
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                          strokeWidth={2.5}
+                                          stroke="currentColor"
+                                          className="w-4 h-4"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M6 18L18 6M6 6l12 12"
+                                          />
+                                        </svg>
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
+                              </TableCell>
+                            )}
                         </TableRow>
                       ))
                     )}
@@ -467,8 +585,19 @@ export default function PagosPendientesPage() {
           <DialogHeader className="p-6 border-b border-[#F0F0F0] bg-[#F8F9FA]/50">
             <DialogTitle className="text-xl font-bold text-[#002868] flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-emerald-600">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-5 h-5 text-emerald-600"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
               Aprobar Movimiento
@@ -479,11 +608,18 @@ export default function PagosPendientesPage() {
           </DialogHeader>
           <div className="p-6 space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="tipoCaja" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Caja Destino</Label>
+              <Label
+                htmlFor="tipoCaja"
+                className="text-xs font-bold text-[#5A6070] uppercase tracking-wider"
+              >
+                Caja Destino
+              </Label>
               <select
                 id="tipoCaja"
                 value={tipoCaja}
-                onChange={(e) => setTipoCaja(e.target.value as "efectivo" | "banco")}
+                onChange={(e) =>
+                  setTipoCaja(e.target.value as "efectivo" | "banco")
+                }
                 className="w-full h-11 rounded-xl border border-[#E0E0E0] px-4 py-2 text-sm focus:border-[#002868] focus:outline-none focus:ring-4 focus:ring-[#002868]/10 transition-all appearance-none bg-white cursor-pointer"
               >
                 <option value="efectivo">Caja Efectivo (Sucursal)</option>
@@ -493,7 +629,9 @@ export default function PagosPendientesPage() {
             {selectedPago && (
               <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mb-1">Monto a Autorizar</p>
+                  <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mb-1">
+                    Monto a Autorizar
+                  </p>
                   <p className="text-xl font-black text-emerald-700">
                     {formatMonto(parseFloat(selectedPago.monto.toString()))}
                   </p>
@@ -505,29 +643,54 @@ export default function PagosPendientesPage() {
             )}
           </div>
           <DialogFooter className="p-6 bg-[#F8F9FA]/50 border-t border-[#F0F0F0] sm:justify-end gap-3">
-            <Button variant="outline" onClick={() => setIsAprobarDialogOpen(false)} className="h-11 px-6 rounded-xl border-[#E0E0E0] text-[#5A6070] font-semibold hover:bg-white hover:text-[#1A1A1A] transition-all cursor-pointer" disabled={isSaving}>
+            <Button
+              variant="outline"
+              onClick={() => setIsAprobarDialogOpen(false)}
+              className="h-11 px-6 rounded-xl border-[#E0E0E0] text-[#5A6070] font-semibold hover:bg-white hover:text-[#1A1A1A] transition-all cursor-pointer"
+              disabled={isSaving}
+            >
               Cancelar
             </Button>
-            <Button onClick={handleAprobar} disabled={isSaving} className="h-11 px-8 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer">
+            <Button
+              onClick={handleAprobar}
+              disabled={isSaving}
+              className="h-11 px-8 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
+            >
               {isSaving ? (
                 <span className="flex items-center gap-2">
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Procesando...
                 </span>
-              ) : "Autorizar Pago"}
+              ) : (
+                "Autorizar Pago"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Dialog Rechazar */}
-      <Dialog open={isRechazarDialogOpen} onOpenChange={setIsRechazarDialogOpen}>
+      <Dialog
+        open={isRechazarDialogOpen}
+        onOpenChange={setIsRechazarDialogOpen}
+      >
         <DialogContent className="sm:max-w-[420px] bg-white border-[#E0E0E0] shadow-2xl rounded-2xl p-0 overflow-hidden">
           <DialogHeader className="p-6 border-b border-[#F0F0F0] bg-[#F8F9FA]/50">
             <DialogTitle className="text-xl font-bold text-[#002868] flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-rose-600">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-5 h-5 text-rose-600"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
               Rechazar Movimiento
@@ -538,7 +701,12 @@ export default function PagosPendientesPage() {
           </DialogHeader>
           <div className="p-6 space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="motivoRechazo" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Justificación del rechazo</Label>
+              <Label
+                htmlFor="motivoRechazo"
+                className="text-xs font-bold text-[#5A6070] uppercase tracking-wider"
+              >
+                Justificación del rechazo
+              </Label>
               <textarea
                 id="motivoRechazo"
                 value={motivoRechazo}
@@ -547,11 +715,18 @@ export default function PagosPendientesPage() {
                 rows={3}
                 className="w-full rounded-xl border border-[#E0E0E0] px-4 py-3 text-sm focus:border-rose-500 focus:outline-none focus:ring-4 focus:ring-rose-500/10 transition-all resize-none"
               />
-              <p className="text-[10px] text-[#8A8F9C]">Este mensaje será visible para el empleado en su historial.</p>
+              <p className="text-[10px] text-[#8A8F9C]">
+                Este mensaje será visible para el empleado en su historial.
+              </p>
             </div>
           </div>
           <DialogFooter className="p-6 bg-[#F8F9FA]/50 border-t border-[#F0F0F0] sm:justify-end gap-3">
-            <Button variant="outline" onClick={() => setIsRechazarDialogOpen(false)} className="h-11 px-6 rounded-xl border-[#E0E0E0] text-[#5A6070] font-semibold hover:bg-white transition-all cursor-pointer" disabled={isSaving}>
+            <Button
+              variant="outline"
+              onClick={() => setIsRechazarDialogOpen(false)}
+              className="h-11 px-6 rounded-xl border-[#E0E0E0] text-[#5A6070] font-semibold hover:bg-white transition-all cursor-pointer"
+              disabled={isSaving}
+            >
               Cancelar
             </Button>
             <Button
@@ -579,4 +754,3 @@ export default function PagosPendientesPage() {
     </div>
   );
 }
-

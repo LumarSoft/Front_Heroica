@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
-import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard";
 import type { Sucursal } from "@/lib/types";
 
 export default function SucursalesPage() {
@@ -180,9 +180,7 @@ export default function SucursalesPage() {
       {/* Main Content */}
       <main className="container mx-auto px-6 py-12 flex-1">
         <div className="mb-10">
-          <h2 className="text-4xl font-bold text-[#002868] mb-2">
-            Sucursales
-          </h2>
+          <h2 className="text-4xl font-bold text-[#002868] mb-2">Sucursales</h2>
           <p className="text-[#666666] text-lg">
             Selecciona una sucursal para gestionar.
           </p>
@@ -277,14 +275,16 @@ export default function SucursalesPage() {
 
                   <div className="pt-3 border-t border-[#E0E0E0]">
                     <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${sucursal.activo
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
-                        }`}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+                        sucursal.activo
+                          ? "bg-green-50 text-green-700 border border-green-200"
+                          : "bg-red-50 text-red-700 border border-red-200"
+                      }`}
                     >
                       <span
-                        className={`w-1.5 h-1.5 rounded-full ${sucursal.activo ? "bg-green-500" : "bg-red-500"
-                          }`}
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          sucursal.activo ? "bg-green-500" : "bg-red-500"
+                        }`}
                       ></span>
                       {sucursal.activo ? "Activa" : "Inactiva"}
                     </span>
@@ -548,6 +548,6 @@ export default function SucursalesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div >
+    </div>
   );
 }

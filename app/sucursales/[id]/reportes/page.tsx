@@ -4,16 +4,38 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
-import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+} from "recharts";
 import { formatMonto } from "@/lib/formatters";
 import type { Sucursal } from "@/lib/types";
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#d0ed57', '#a4de6c'];
+const COLORS = [
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#8884d8",
+  "#82ca9d",
+  "#ffc658",
+  "#d0ed57",
+  "#a4de6c",
+];
 
 export default function ReportesPage() {
   const router = useRouter();
@@ -29,7 +51,9 @@ export default function ReportesPage() {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(today.getDate() - 30);
 
-  const [startDate, setStartDate] = useState(thirtyDaysAgo.toISOString().split("T")[0]);
+  const [startDate, setStartDate] = useState(
+    thirtyDaysAgo.toISOString().split("T")[0],
+  );
   const [endDate, setEndDate] = useState(today.toISOString().split("T")[0]);
 
   useEffect(() => {
@@ -41,7 +65,9 @@ export default function ReportesPage() {
 
   const fetchSucursal = async () => {
     try {
-      const response = await fetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)));
+      const response = await fetch(
+        API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)),
+      );
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
       setSucursal(data.data);
@@ -71,7 +97,7 @@ export default function ReportesPage() {
     window.print();
   };
 
-  if (isGuardLoading || !sucursal && isLoading) {
+  if (isGuardLoading || (!sucursal && isLoading)) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
@@ -95,16 +121,16 @@ export default function ReportesPage() {
                 ← Volver
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-[#002868]">
-                  Reportes
-                </h1>
+                <h1 className="text-2xl font-bold text-[#002868]">Reportes</h1>
                 <p className="text-sm text-slate-500">{sucursal?.nombre}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-gray-100">
               <div className="flex items-center gap-2">
-                <Label htmlFor="start" className="text-sm font-medium">Desde</Label>
+                <Label htmlFor="start" className="text-sm font-medium">
+                  Desde
+                </Label>
                 <Input
                   id="start"
                   type="date"
@@ -115,7 +141,9 @@ export default function ReportesPage() {
               </div>
               <span className="text-slate-300">-</span>
               <div className="flex items-center gap-2">
-                <Label htmlFor="end" className="text-sm font-medium">Hasta</Label>
+                <Label htmlFor="end" className="text-sm font-medium">
+                  Hasta
+                </Label>
                 <Input
                   id="end"
                   type="date"
@@ -124,7 +152,11 @@ export default function ReportesPage() {
                   className="w-auto h-9"
                 />
               </div>
-              <Button variant="default" className="ml-2 h-9 bg-[#002868] text-white hover:bg-[#003d8f]" onClick={handlePrint}>
+              <Button
+                variant="default"
+                className="ml-2 h-9 bg-[#002868] text-white hover:bg-[#003d8f]"
+                onClick={handlePrint}
+              >
                 🖨️ Imprimir
               </Button>
             </div>
@@ -141,9 +173,14 @@ export default function ReportesPage() {
           <div className="space-y-8 print:space-y-4">
             {/* INICIO REPORTE IMPRIMIBLE */}
             <div className="hidden print:block text-center mb-6">
-              <h2 className="text-3xl font-bold text-slate-800">Reporte de Resultados</h2>
+              <h2 className="text-3xl font-bold text-slate-800">
+                Reporte de Resultados
+              </h2>
               <p className="text-slate-600">Sucursal: {sucursal?.nombre}</p>
-              <p className="text-slate-500 text-sm">Período: {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}</p>
+              <p className="text-slate-500 text-sm">
+                Período: {new Date(startDate).toLocaleDateString()} -{" "}
+                {new Date(endDate).toLocaleDateString()}
+              </p>
             </div>
 
             {/* 1 - Resumen General */}
@@ -154,30 +191,48 @@ export default function ReportesPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="border-l-4 border-l-emerald-500 shadow-md transform hover:-translate-y-1 transition duration-300">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-widest">Ingresos Totales</CardTitle>
+                    <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-widest">
+                      Ingresos Totales
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-4xl font-extrabold text-emerald-600">{formatMonto(reportData.resumen.ingresos)}</p>
+                    <p className="text-4xl font-extrabold text-emerald-600">
+                      {formatMonto(reportData.resumen.ingresos)}
+                    </p>
                   </CardContent>
                 </Card>
                 <Card className="border-l-4 border-l-rose-500 shadow-md transform hover:-translate-y-1 transition duration-300">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-widest">Egresos Totales</CardTitle>
+                    <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-widest">
+                      Egresos Totales
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-4xl font-extrabold text-rose-600">{formatMonto(reportData.resumen.egresos)}</p>
+                    <p className="text-4xl font-extrabold text-rose-600">
+                      {formatMonto(reportData.resumen.egresos)}
+                    </p>
                   </CardContent>
                 </Card>
-                <Card className={`border-l-4 shadow-md transform hover:-translate-y-1 transition duration-300 ${reportData.resumen.resultado >= 0 ? "border-l-blue-500" : "border-l-red-600"}`}>
+                <Card
+                  className={`border-l-4 shadow-md transform hover:-translate-y-1 transition duration-300 ${reportData.resumen.resultado >= 0 ? "border-l-blue-500" : "border-l-red-600"}`}
+                >
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-widest">Resultado Neto</CardTitle>
+                    <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-widest">
+                      Resultado Neto
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className={`text-4xl font-extrabold ${reportData.resumen.resultado >= 0 ? "text-blue-600" : "text-red-700"}`}>
+                    <p
+                      className={`text-4xl font-extrabold ${reportData.resumen.resultado >= 0 ? "text-blue-600" : "text-red-700"}`}
+                    >
                       {formatMonto(reportData.resumen.resultado)}
                     </p>
                     <p className="text-xs font-semibold mt-1 opacity-70">
-                      {reportData.resumen.resultado > 0 ? "Ganancia" : reportData.resumen.resultado < 0 ? "Pérdida" : "Equilibrio"}
+                      {reportData.resumen.resultado > 0
+                        ? "Ganancia"
+                        : reportData.resumen.resultado < 0
+                          ? "Pérdida"
+                          : "Equilibrio"}
                     </p>
                   </CardContent>
                 </Card>
@@ -203,36 +258,67 @@ export default function ReportesPage() {
                           fill="#8884d8"
                           paddingAngle={5}
                           dataKey="value"
-                          label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                          label={({ name, percent }: any) =>
+                            `${name} ${((percent || 0) * 100).toFixed(0)}%`
+                          }
                         >
-                          {reportData.ingresosBreakdown.map((entry: any, index: number) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
+                          {reportData.ingresosBreakdown.map(
+                            (entry: any, index: number) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[index % COLORS.length]}
+                              />
+                            ),
+                          )}
                         </Pie>
-                        <RechartsTooltip formatter={(value: any) => formatMonto(value || 0)} />
+                        <RechartsTooltip
+                          formatter={(value: any) => formatMonto(value || 0)}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (
-                    <p className="text-slate-400">No hay ingresos registrados en el período</p>
+                    <p className="text-slate-400">
+                      No hay ingresos registrados en el período
+                    </p>
                   )}
                 </div>
                 <div className="bg-slate-50 rounded-lg p-5 overflow-auto max-h-80">
-                  <h3 className="font-semibold text-slate-700 mb-3 border-b pb-2">Distribución de Ingresos</h3>
+                  <h3 className="font-semibold text-slate-700 mb-3 border-b pb-2">
+                    Distribución de Ingresos
+                  </h3>
                   <div className="space-y-3">
-                    {reportData.ingresosBreakdown.map((item: any, i: number) => (
-                      <div key={i} className="flex justify-between items-center group">
-                        <div className="flex items-center gap-3">
-                          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }}></span>
-                          <span className="text-sm font-medium text-slate-700 group-hover:text-black">{item.name}</span>
+                    {reportData.ingresosBreakdown.map(
+                      (item: any, i: number) => (
+                        <div
+                          key={i}
+                          className="flex justify-between items-center group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span
+                              className="w-3 h-3 rounded-full"
+                              style={{
+                                backgroundColor: COLORS[i % COLORS.length],
+                              }}
+                            ></span>
+                            <span className="text-sm font-medium text-slate-700 group-hover:text-black">
+                              {item.name}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-sm font-bold text-slate-800">
+                              {formatMonto(item.value)}
+                            </span>
+                            <span className="text-xs text-slate-500 ml-2 block w-10 text-right">
+                              {(
+                                (item.value / reportData.resumen.ingresos) *
+                                100
+                              ).toFixed(1)}
+                              %
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <span className="text-sm font-bold text-slate-800">{formatMonto(item.value)}</span>
-                          <span className="text-xs text-slate-500 ml-2 block w-10 text-right">
-                            {((item.value / reportData.resumen.ingresos) * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </div>
               </div>
@@ -257,30 +343,67 @@ export default function ReportesPage() {
                           fill="#8884d8"
                           dataKey="value"
                         >
-                          {reportData.egresosBreakdown.map((entry: any, index: number) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[(index + 4) % COLORS.length]} />
-                          ))}
+                          {reportData.egresosBreakdown.map(
+                            (entry: any, index: number) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[(index + 4) % COLORS.length]}
+                              />
+                            ),
+                          )}
                         </Pie>
-                        <RechartsTooltip formatter={(value: any) => formatMonto(value || 0)} />
+                        <RechartsTooltip
+                          formatter={(value: any) => formatMonto(value || 0)}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (
                     <p className="text-slate-400">No hay egresos registrados</p>
                   )}
                 </div>
-                
+
                 <div className="h-80">
                   {reportData.egresosBreakdown.length > 0 && (
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={reportData.egresosBreakdown.slice(0, 5)} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#E5E7EB"/>
-                        <XAxis type="number" tickFormatter={(v) => `$${(v/1000)}k`} />
-                        <YAxis type="category" dataKey="name" width={100} tick={{fontSize: 12}} />
-                        <RechartsTooltip cursor={{fill: '#f3f4f6'}} formatter={(value: any) => formatMonto(value || 0)} />
-                        <Bar dataKey="value" fill="#ef4444" radius={[0, 4, 4, 0]} barSize={20}>
-                           {reportData.egresosBreakdown.map((entry: any, index: number) => (
-                             <Cell key={`cell-${index}`} fill={COLORS[(index + 4) % COLORS.length]} />
-                           ))}
+                      <BarChart
+                        data={reportData.egresosBreakdown.slice(0, 5)}
+                        layout="vertical"
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          horizontal={true}
+                          vertical={false}
+                          stroke="#E5E7EB"
+                        />
+                        <XAxis
+                          type="number"
+                          tickFormatter={(v) => `$${v / 1000}k`}
+                        />
+                        <YAxis
+                          type="category"
+                          dataKey="name"
+                          width={100}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <RechartsTooltip
+                          cursor={{ fill: "#f3f4f6" }}
+                          formatter={(value: any) => formatMonto(value || 0)}
+                        />
+                        <Bar
+                          dataKey="value"
+                          fill="#ef4444"
+                          radius={[0, 4, 4, 0]}
+                          barSize={20}
+                        >
+                          {reportData.egresosBreakdown.map(
+                            (entry: any, index: number) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[(index + 4) % COLORS.length]}
+                              />
+                            ),
+                          )}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -288,22 +411,39 @@ export default function ReportesPage() {
                 </div>
 
                 <div className="lg:col-span-2 mt-4 bg-slate-50 rounded-lg p-5">
-                   <h3 className="font-semibold text-slate-700 mb-3 border-b pb-2">Top 10 Egresos (Categorías)</h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
-                    {reportData.egresosBreakdown.slice(0, 10).map((item: any, i: number) => (
-                      <div key={i} className="flex justify-between items-center border-b border-white pb-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs bg-slate-200 text-slate-500 w-5 h-5 flex items-center justify-center rounded-full">{i + 1}</span>
-                          <span className="text-sm text-slate-700">{item.name}</span>
+                  <h3 className="font-semibold text-slate-700 mb-3 border-b pb-2">
+                    Top 10 Egresos (Categorías)
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                    {reportData.egresosBreakdown
+                      .slice(0, 10)
+                      .map((item: any, i: number) => (
+                        <div
+                          key={i}
+                          className="flex justify-between items-center border-b border-white pb-1"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs bg-slate-200 text-slate-500 w-5 h-5 flex items-center justify-center rounded-full">
+                              {i + 1}
+                            </span>
+                            <span className="text-sm text-slate-700">
+                              {item.name}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-sm font-semibold text-rose-600">
+                              {formatMonto(item.value)}
+                            </span>
+                            <span className="text-xs text-slate-500 ml-2">
+                              {(
+                                (item.value / reportData.resumen.egresos) *
+                                100
+                              ).toFixed(1)}
+                              %
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <span className="text-sm font-semibold text-rose-600">{formatMonto(item.value)}</span>
-                          <span className="text-xs text-slate-500 ml-2">
-                            {((item.value / reportData.resumen.egresos) * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </div>
               </div>
@@ -311,27 +451,35 @@ export default function ReportesPage() {
 
             {/* 4 - Detalle Extendido (Opcional si es mucho, al imprimir sirve) */}
             <div className="page-break-before mt-12 hidden print:block">
-               <h2 className="text-xl font-bold text-[#1A1A1A] mb-4 border-b-2 border-slate-200 pb-2">
-                  Detalle de Movimientos Principales
-               </h2>
-               <div className="text-sm">
-                 <p className="text-center italic text-slate-500 mt-10">En esta sección impresa podría ir el listado detallado de movimientos (Ingresos y Egresos) de requerirse por el analista temporalmente limitados a top 50, u omitida en vistas resumidas.</p>
-               </div>
+              <h2 className="text-xl font-bold text-[#1A1A1A] mb-4 border-b-2 border-slate-200 pb-2">
+                Detalle de Movimientos Principales
+              </h2>
+              <div className="text-sm">
+                <p className="text-center italic text-slate-500 mt-10">
+                  En esta sección impresa podría ir el listado detallado de
+                  movimientos (Ingresos y Egresos) de requerirse por el analista
+                  temporalmente limitados a top 50, u omitida en vistas
+                  resumidas.
+                </p>
+              </div>
             </div>
-
           </div>
         ) : null}
       </main>
-      
+
       {/* Print Styles */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         @media print {
           body { background: white !important; }
           .page-break-before { page-break-before: always; }
           .shadow-sm, .shadow-md { box-shadow: none !important; }
           .border { border: 1px solid #e2e8f0 !important; }
         }
-      `}} />
+      `,
+        }}
+      />
     </div>
   );
 }

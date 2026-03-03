@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import NuevoMovimientoDialog from "@/components/NuevoMovimientoDialog";
-import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard";
 import { useCajaData } from "@/hooks/use-caja-data";
 import { calcularTotal } from "@/lib/formatters";
 import { PageHeader } from "@/components/caja/PageHeader";
@@ -60,13 +60,27 @@ export default function CajaEfectivoPage() {
         {user?.rol === "empleado" ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-[#E0E0E0] shadow-sm flex-grow">
             <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-6">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-rose-500">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-10 h-10 text-rose-500"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-[#002868] mb-2">Acceso Denegado</h2>
+            <h2 className="text-2xl font-bold text-[#002868] mb-2">
+              Acceso Denegado
+            </h2>
             <p className="text-[#666666] text-center max-w-md">
-              No tienes permisos para gestionar la caja de efectivo. Si crees que esto es un error, contacta con el administrador.
+              No tienes permisos para gestionar la caja de efectivo. Si crees
+              que esto es un error, contacta con el administrador.
             </p>
             <Button
               onClick={() => router.push(`/sucursales/${params.id}`)}
@@ -80,10 +94,11 @@ export default function CajaEfectivoPage() {
             {/* Mensajes */}
             {caja.error && (
               <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200">
-                <p className="text-sm text-red-600 font-medium">⚠️ {caja.error}</p>
+                <p className="text-sm text-red-600 font-medium">
+                  ⚠️ {caja.error}
+                </p>
               </div>
             )}
-
 
             {/* Cabecera */}
             <PageHeader
@@ -97,8 +112,14 @@ export default function CajaEfectivoPage() {
                 <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
               </div>
             ) : (
-              <CajaTabs saldoReal={caja.saldoReal} saldoNecesario={caja.saldoNecesario}>
-                <TabsContent value="real" className="mt-0 outline-none flex-grow">
+              <CajaTabs
+                saldoReal={caja.saldoReal}
+                saldoNecesario={caja.saldoNecesario}
+              >
+                <TabsContent
+                  value="real"
+                  className="mt-0 outline-none flex-grow"
+                >
                   <TransactionTable
                     title="Saldo Real"
                     description="Movimientos de efectivo confirmados para el periodo actual."
@@ -109,12 +130,18 @@ export default function CajaEfectivoPage() {
                     onDelete={caja.handleOpenDelete}
                   />
                 </TabsContent>
-                <TabsContent value="necesario" className="mt-0 outline-none flex-grow">
+                <TabsContent
+                  value="necesario"
+                  className="mt-0 outline-none flex-grow"
+                >
                   <TransactionTable
                     title="Saldo Necesario"
                     description="Pagos y compromisos en efectivo programados."
                     transactions={caja.saldoNecesario}
-                    customTotal={calcularTotal(caja.saldoReal) - Math.abs(calcularTotal(caja.saldoNecesario))}
+                    customTotal={
+                      calcularTotal(caja.saldoReal) -
+                      Math.abs(calcularTotal(caja.saldoNecesario))
+                    }
                     columns={columns}
                     onViewDetails={caja.handleOpenDetails}
                     onChangeState={caja.handleOpenStateChange}
