@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_ENDPOINTS } from "@/lib/config";
+import { AlertTriangle } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -190,7 +191,7 @@ export default function SucursalesPage() {
 
         {error && (
           <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 animate-in fade-in slide-in-from-top-2">
-            <p className="text-sm text-red-600 font-medium">⚠️ {error}</p>
+            <p className="text-sm text-red-600 font-medium flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" /> {error}</p>
           </div>
         )}
 

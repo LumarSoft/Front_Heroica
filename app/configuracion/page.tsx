@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import { API_ENDPOINTS } from "@/lib/config";
+import { Settings, FolderOpen, Folder, Building2, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -381,7 +382,7 @@ export default function ConfiguracionPage() {
                                 Volver
                             </Button>
                             <div>
-                                <h1 className="text-2xl font-bold text-[#002868]">⚙️ Configuración</h1>
+                                <h1 className="text-2xl font-bold text-[#002868] flex items-center gap-2"><Settings className="w-6 h-6" /> Configuración</h1>
                                 <p className="text-sm text-[#666666]">Gestión de categorías, bancos y medios de pago</p>
                             </div>
                         </div>
@@ -408,7 +409,7 @@ export default function ConfiguracionPage() {
                             : "text-[#666666] hover:text-[#002868]"
                             }`}
                     >
-                        📁 Categorías
+                        <Folder className="w-4 h-4 inline mr-1.5" /> Categorías
                     </button>
                     <button
                         onClick={() => setActiveTab("subcategorias")}
@@ -417,7 +418,7 @@ export default function ConfiguracionPage() {
                             : "text-[#666666] hover:text-[#002868]"
                             }`}
                     >
-                        📂 Subcategorías
+                        <FolderOpen className="w-4 h-4 inline mr-1.5" /> Subcategorías
                     </button>
                     <button
                         onClick={() => setActiveTab("bancos")}
@@ -426,7 +427,7 @@ export default function ConfiguracionPage() {
                             : "text-[#666666] hover:text-[#002868]"
                             }`}
                     >
-                        🏦 Bancos
+                        <Building2 className="w-4 h-4 inline mr-1.5" /> Bancos
                     </button>
                     <button
                         onClick={() => setActiveTab("medios")}
@@ -435,7 +436,7 @@ export default function ConfiguracionPage() {
                             : "text-[#666666] hover:text-[#002868]"
                             }`}
                     >
-                        💳 Medios de Pago
+                        <CreditCard className="w-4 h-4 inline mr-1.5" /> Medios de Pago
                     </button>
                 </div>
 

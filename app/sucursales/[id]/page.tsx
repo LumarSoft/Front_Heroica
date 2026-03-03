@@ -18,6 +18,7 @@ import {
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { formatMonto } from "@/lib/formatters";
 import type { Sucursal, Documento } from "@/lib/types";
+import { AlertTriangle, Mail, Paperclip } from "lucide-react";
 
 export default function SucursalDetailPage() {
   const router = useRouter();
@@ -464,11 +465,10 @@ export default function SucursalDetailPage() {
                     Saldo Real
                   </p>
                   <p
-                    className={`text-2xl font-bold ${
-                      totalesEfectivo.total_real >= 0
+                    className={`text-2xl font-bold ${totalesEfectivo.total_real >= 0
                         ? "text-emerald-600"
                         : "text-rose-600"
-                    }`}
+                      }`}
                   >
                     {formatMonto(totalesEfectivo.total_real)}
                   </p>
@@ -556,11 +556,10 @@ export default function SucursalDetailPage() {
                     Saldo Real
                   </p>
                   <p
-                    className={`text-2xl font-bold ${
-                      totalesBanco.total_real >= 0
+                    className={`text-2xl font-bold ${totalesBanco.total_real >= 0
                         ? "text-emerald-600"
                         : "text-rose-600"
-                    }`}
+                      }`}
                   >
                     {formatMonto(totalesBanco.total_real)}
                   </p>
@@ -671,7 +670,7 @@ export default function SucursalDetailPage() {
           <div className="mt-4">
             {error && (
               <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
-                <p className="text-sm text-red-600 font-medium">⚠️ {error}</p>
+                <p className="text-sm text-red-600 font-medium flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" /> {error}</p>
               </div>
             )}
 
@@ -750,7 +749,7 @@ export default function SucursalDetailPage() {
                     htmlFor="email_correspondencia"
                     className="text-[#002868] font-semibold text-sm"
                   >
-                    📧 Email de Correspondencia
+                    <Mail className="w-4 h-4 inline mr-1" /> Email de Correspondencia
                   </Label>
                   <Input
                     id="email_correspondencia"
@@ -767,7 +766,7 @@ export default function SucursalDetailPage() {
               {/* Sección de Documentación (Múltiples Archivos) */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-semibold text-[#002868] mb-4">
-                  📎 Documentación ({documentos.length})
+                  <Paperclip className="w-5 h-5 inline mr-1" /> Documentación ({documentos.length})
                 </h3>
 
                 {loadingDocumentos ? (

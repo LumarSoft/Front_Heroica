@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { formatMonto } from "@/lib/formatters";
 import type { Sucursal } from "@/lib/types";
+import { Printer, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#d0ed57', '#a4de6c'];
 
@@ -267,10 +268,11 @@ export default function ReportesPage() {
               </div>
               <Button
                 variant="default"
-                className="ml-2 h-9 bg-[#002868] text-white hover:bg-[#003d8f]"
+                className="ml-2 h-9 bg-[#002868] text-white hover:bg-[#003d8f] flex items-center gap-2"
                 onClick={handlePrint}
               >
-                🖨️ Imprimir
+                <Printer className="w-4 h-4" />
+                Imprimir
               </Button>
             </div>
           </div>
@@ -301,19 +303,19 @@ export default function ReportesPage() {
                   label="Ingresos Totales"
                   value={formatMonto(reportData.resumen.ingresos)}
                   accent="emerald"
-                  icon="↑"
+                  icon={<TrendingUp className="w-5 h-5" />}
                 />
                 <SummaryCard
                   label="Egresos Totales"
                   value={formatMonto(reportData.resumen.egresos)}
                   accent="rose"
-                  icon="↓"
+                  icon={<TrendingDown className="w-5 h-5" />}
                 />
                 <SummaryCard
                   label="Resultado Neto"
                   value={formatMonto(reportData.resumen.resultado)}
                   accent={reportData.resumen.resultado >= 0 ? "blue" : "red"}
-                  icon={reportData.resumen.resultado >= 0 ? "=" : "!"}
+                  icon={reportData.resumen.resultado >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
                   sub={
                     reportData.resumen.resultado > 0
                       ? "Ganancia"
@@ -326,7 +328,7 @@ export default function ReportesPage() {
                   label="Deudas Activas"
                   value={formatMonto(reportData.resumen.deudas || 0)}
                   accent="orange"
-                  icon="⚠️"
+                  icon={<AlertTriangle className="w-5 h-5" />}
                   sub="Histórico total"
                 />
               </div>
@@ -447,7 +449,7 @@ function SummaryCard({
   label: string;
   value: string;
   accent: string;
-  icon?: string;
+  icon?: React.ReactNode;
   sub?: string;
 }) {
   const a = accentMap[accent] ?? accentMap.blue;
@@ -459,7 +461,7 @@ function SummaryCard({
             {label}
           </CardTitle>
           {icon && (
-            <span className={`text-lg font-bold ${a.text} opacity-40`}>{icon}</span>
+            <span className={`${a.text} opacity-40`}>{icon}</span>
           )}
         </div>
       </CardHeader>
@@ -606,7 +608,7 @@ function DeudaPanel({ deudas }: { deudas: any[] }) {
   if (deudas.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-12 flex flex-col items-center justify-center gap-3">
-        <span className="text-4xl">✅</span>
+        <CheckCircle2 className="w-12 h-12 text-emerald-500" />
         <p className="text-slate-500 font-medium">Sin deudas registradas</p>
         <p className="text-slate-400 text-sm">No hay deudas pendientes en este período.</p>
       </div>
@@ -618,7 +620,7 @@ function DeudaPanel({ deudas }: { deudas: any[] }) {
       {/* Summary bar */}
       <div className="bg-orange-50 border border-orange-200 rounded-xl px-5 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">⚠️</span>
+          <AlertTriangle className="w-7 h-7 text-orange-500" />
           <div>
             <p className="text-xs font-semibold text-orange-700 uppercase tracking-wider">Total adeudado</p>
             <p className="text-2xl font-extrabold text-orange-600 tabular-nums">{formatMonto(total)}</p>

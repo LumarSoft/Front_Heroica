@@ -12,6 +12,7 @@ import NuevoMovimientoDialog from "@/components/NuevoMovimientoDialog";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useCajaData } from "@/hooks/use-caja-data";
 import { formatMonto, calcularTotal } from "@/lib/formatters";
+import { AlertTriangle } from "lucide-react";
 import { BancoParcial } from "@/lib/types";
 import {
   Dialog,
@@ -97,7 +98,7 @@ export default function CajaBancoPage() {
             {/* Mensajes */}
             {caja.error && (
               <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200">
-                <p className="text-sm text-red-600 font-medium">⚠️ {caja.error}</p>
+                <p className="text-sm text-red-600 font-medium flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" /> {caja.error}</p>
               </div>
             )}
 

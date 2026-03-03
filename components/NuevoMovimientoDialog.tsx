@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { API_ENDPOINTS } from "@/lib/config";
+import { AlertTriangle } from "lucide-react";
 
 interface NuevoMovimientoDialogProps {
   isOpen: boolean;
@@ -281,7 +282,7 @@ export default function NuevoMovimientoDialog({
           {/* Error */}
           {error && (
             <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 flex items-center gap-2">
-              <span className="text-rose-500 text-sm">⚠️</span>
+              <AlertTriangle className="w-4 h-4 text-rose-500" />
               <p className="text-sm text-rose-600 font-medium">{error}</p>
             </div>
           )}

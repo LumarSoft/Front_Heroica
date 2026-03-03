@@ -13,6 +13,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import type { Transaction, Categoria, Subcategoria, SelectOption } from "@/lib/types";
+import { Lightbulb, CheckCircle2 } from "lucide-react";
 
 // =============================================
 // Dialog de Detalles (edición de movimiento)
@@ -512,7 +513,7 @@ export function DeudaDialog({
                         <div className="space-y-3">
                             <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
                                 <p className="text-xs text-amber-700">
-                                    💡 Indicá la fecha original de vencimiento de este movimiento. Quedará guardada para cuando se libere la deuda.
+                                    <Lightbulb className="w-3.5 h-3.5 inline mr-1 text-amber-600" /> Indicá la fecha original de vencimiento de este movimiento. Quedará guardada para cuando se libere la deuda.
                                 </p>
                             </div>
                             <div className="space-y-1.5">
@@ -553,7 +554,7 @@ export function DeudaDialog({
                                         Procesando…
                                     </span>
                                 ) : (
-                                    "✓ Quitar Deuda"
+                                    <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> Quitar Deuda</span>
                                 )}
                             </Button>
                         ) : (
