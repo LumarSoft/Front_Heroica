@@ -92,6 +92,9 @@ export function useCajaData(tipo: "efectivo" | "banco") {
     const [saldoNecesario, setSaldoNecesario] = useState<Transaction[]>([]);
     const [parciales, setParciales] = useState<BancoParcial[]>([]);
 
+    // --- Filtro por fechas ---
+    const [fechaHasta, setFechaHasta] = useState("");
+
     // --- Catálogos ---
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
@@ -454,22 +457,77 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         fetchMediosPago();
     }, [fetchMovimientos, fetchTotales, fetchCategorias, fetchBancos, fetchMediosPago]);
 
+    // =============================================
+    // Filtro por fechas (client-side)
+    // =============================================
+
+    const filtrarPorFecha = (list: Transaction[]) => {
+        if (!fechaHasta) return list;
+        return list.filter((m) => {
+            const fechaMov = m.fecha ? m.fecha.split("T")[0] : "";
+            if (fechaHasta && fechaMov > fechaHasta) return false;
+            return true;
+        });
+    };
+
+    const saldoRealFiltrado = saldoReal; // El saldo real es siempre al día, sin filtro de fecha
+    const saldoNecesarioFiltrado = filtrarPorFecha(saldoNecesario);
+    const saldoNecesarioSinDeudaFiltrado = saldoNecesarioFiltrado.filter((m) => !m.es_deuda);
+
+    // Parciales filtrados: agrupar saldoRealFiltrado + saldoNecesarioSinDeudaFiltrado por banco_id
+    const parcialesFiltrados: BancoParcial[] = (() => {
+        const map = new Map<string | number, BancoParcial>();
+        const addToBanco = (m: Transaction, tipo: "real" | "necesario") => {
+            const key = m.banco_id ?? "otros";
+            if (!map.has(key)) {
+                map.set(key, {
+                    banco_id: (m.banco_id as number) ?? 0,
+                    banco_nombre: m.banco_nombre ?? "OTROS",
+                    total_real: 0,
+                    total_necesario: 0,
+                });
+            }
+            const entry = map.get(key)!;
+            const monto = Number(m.monto) || 0;
+            if (tipo === "real") entry.total_real = (Number(entry.total_real) || 0) + monto;
+            else entry.total_necesario = (Number(entry.total_necesario) || 0) + monto;
+        };
+        saldoRealFiltrado.forEach((m) => addToBanco(m, "real"));
+        saldoNecesarioSinDeudaFiltrado.forEach((m) => addToBanco(m, "necesario"));
+        return Array.from(map.values());
+    })();
+
+    const limpiarFiltros = () => {
+        setFechaHasta("");
+    };
+
     return {
         // Estado
         isLoading,
         error,
         sucursalId,
 
-        // Datos
+        // Datos (todos los movimientos, sin filtro)
         saldoReal,
         saldoNecesario,
-        // saldoNecesario sin deuda: para calcular el total correcto
         saldoNecesarioSinDeuda: saldoNecesario.filter((m) => !m.es_deuda),
         parciales,
         categorias,
         subcategorias,
         bancos,
         mediosPago,
+
+        // Datos filtrados por fecha
+        saldoRealFiltrado,
+        saldoNecesarioFiltrado,
+        saldoNecesarioSinDeudaFiltrado,
+        parcialesFiltrados,
+
+        // Filtro de fechas
+        fechaHasta,
+        setFechaHasta,
+        limpiarFiltros,
+        hayFiltroActivo: !!(fechaHasta),
 
         // Estado de dialogs
         isDetailsDialogOpen,

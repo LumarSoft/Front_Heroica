@@ -32,6 +32,7 @@ import {
   DeleteDialog,
   DeudaDialog,
 } from "@/components/caja/TransactionDialogs";
+import { DateRangeFilter } from "@/components/caja/DateRangeFilter";
 
 const columns = getBancoColumns();
 
@@ -114,11 +115,11 @@ export default function CajaBancoPage() {
             ) : (
               <>
                 {/* Parciales por Banco */}
-                {caja.parciales.length > 0 && (
+                {caja.parcialesFiltrados.length > 0 && (
                   <div className="mb-4">
                     <h3 className="text-lg font-bold text-[#002868] mb-3">Parciales por Banco</h3>
                     <div className="flex flex-wrap gap-2 lg:flex-nowrap lg:overflow-x-auto pb-2">
-                      {caja.parciales.map((p) => (
+                      {caja.parcialesFiltrados.map((p) => (
                         <Card
                           key={p.banco_id || "otros"}
                           className="border-[#E0E0E0] shadow-sm hover:shadow-lg hover:border-[#002868]/40 transition-all cursor-pointer min-w-[140px] flex-1 group"
@@ -139,12 +140,18 @@ export default function CajaBancoPage() {
                 )}
 
                 {/* Tabs + Tablas */}
-                <CajaTabs saldoReal={caja.saldoReal} saldoNecesario={caja.saldoNecesarioSinDeuda}>
+                <DateRangeFilter
+                  fechaHasta={caja.fechaHasta}
+                  onHastaChange={caja.setFechaHasta}
+                  onLimpiar={caja.limpiarFiltros}
+                  hayFiltro={caja.hayFiltroActivo}
+                />
+                <CajaTabs saldoReal={caja.saldoRealFiltrado} saldoNecesario={caja.saldoNecesarioSinDeudaFiltrado}>
                   <TabsContent value="real" className="mt-0 outline-none flex-grow">
                     <TransactionTable
                       title="Saldo Real"
                       description="Movimientos de banco confirmados para el periodo actual."
-                      transactions={caja.saldoReal}
+                      transactions={caja.saldoRealFiltrado}
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
@@ -155,8 +162,8 @@ export default function CajaBancoPage() {
                     <TransactionTable
                       title="Saldo Necesario"
                       description="Pagos y compromisos bancarios programados."
-                      transactions={caja.saldoNecesario}
-                      customTotal={calcularTotal(caja.saldoReal) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeuda))}
+                      transactions={caja.saldoNecesarioFiltrado}
+                      customTotal={calcularTotal(caja.saldoRealFiltrado) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeudaFiltrado))}
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}

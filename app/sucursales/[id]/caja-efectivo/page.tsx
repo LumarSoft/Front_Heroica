@@ -14,6 +14,7 @@ import {
   TransactionTable,
   getEfectivoColumns,
 } from "@/components/caja/TransactionTable";
+import { DateRangeFilter } from "@/components/caja/DateRangeFilter";
 import {
   DetailsDialog,
   StateDialog,
@@ -98,12 +99,21 @@ export default function CajaEfectivoPage() {
                 <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
               </div>
             ) : (
-              <CajaTabs saldoReal={caja.saldoReal} saldoNecesario={caja.saldoNecesarioSinDeuda}>
+              <>
+              {/* Filtro por fechas */}
+              <DateRangeFilter
+                fechaHasta={caja.fechaHasta}
+                onHastaChange={caja.setFechaHasta}
+                onLimpiar={caja.limpiarFiltros}
+                hayFiltro={caja.hayFiltroActivo}
+              />
+
+              <CajaTabs saldoReal={caja.saldoRealFiltrado} saldoNecesario={caja.saldoNecesarioSinDeudaFiltrado}>
                 <TabsContent value="real" className="mt-0 outline-none flex-grow">
                   <TransactionTable
                     title="Saldo Real"
                     description="Movimientos de efectivo confirmados para el periodo actual."
-                    transactions={caja.saldoReal}
+                    transactions={caja.saldoRealFiltrado}
                     columns={columns}
                     onViewDetails={caja.handleOpenDetails}
                     onChangeState={caja.handleOpenStateChange}
@@ -114,8 +124,8 @@ export default function CajaEfectivoPage() {
                   <TransactionTable
                     title="Saldo Necesario"
                     description="Pagos y compromisos en efectivo programados."
-                    transactions={caja.saldoNecesario}
-                    customTotal={calcularTotal(caja.saldoReal) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeuda))}
+                    transactions={caja.saldoNecesarioFiltrado}
+                    customTotal={calcularTotal(caja.saldoRealFiltrado) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeudaFiltrado))}
                     columns={columns}
                     onViewDetails={caja.handleOpenDetails}
                     onChangeState={caja.handleOpenStateChange}
@@ -124,6 +134,7 @@ export default function CajaEfectivoPage() {
                   />
                 </TabsContent>
               </CajaTabs>
+              </>
             )}
           </div>
         )}
