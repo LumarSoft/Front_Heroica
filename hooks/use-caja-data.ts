@@ -445,7 +445,11 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        if (name === "tipo") {
+            setFormData((prev) => ({ ...prev, [name]: value, categoria_id: "", subcategoria_id: "" }));
+        } else {
+            setFormData((prev) => ({ ...prev, [name]: value }));
+        }
     };
 
     // =============================================

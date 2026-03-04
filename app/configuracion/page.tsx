@@ -14,6 +14,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogFooter,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,7 @@ interface Categoria {
     nombre: string;
     descripcion: string;
     activo: boolean;
+    tipo: "ingreso" | "egreso";
 }
 
 interface Subcategoria {
@@ -79,7 +81,7 @@ export default function ConfiguracionPage() {
     const [isMedioPagoDialogOpen, setIsMedioPagoDialogOpen] = useState(false);
 
     // Estados de formularios
-    const [categoriaForm, setCategoriaForm] = useState({ id: 0, nombre: "", descripcion: "" });
+    const [categoriaForm, setCategoriaForm] = useState<{ id: number; nombre: string; descripcion: string; tipo: "ingreso" | "egreso" }>({ id: 0, nombre: "", descripcion: "", tipo: "egreso" });
     const [subcategoriaForm, setSubcategoriaForm] = useState({ id: 0, categoria_id: 0, nombre: "", descripcion: "" });
     const [bancoForm, setBancoForm] = useState({ id: 0, nombre: "", codigo: "" });
     const [medioPagoForm, setMedioPagoForm] = useState({ id: 0, nombre: "", descripcion: "" });
@@ -161,7 +163,7 @@ export default function ConfiguracionPage() {
             if (data.success) {
                 toast.success(data.message);
                 setIsCategoriaDialogOpen(false);
-                setCategoriaForm({ id: 0, nombre: "", descripcion: "" });
+                setCategoriaForm({ id: 0, nombre: "", descripcion: "", tipo: "egreso" });
                 await fetchCategorias();
 
             } else {
@@ -362,8 +364,9 @@ export default function ConfiguracionPage() {
                         <div className="flex items-center gap-4">
                             <Button
                                 onClick={() => router.push("/sucursales")}
-                                variant="ghost"
-                                className="text-[#002868] hover:bg-[#002868]/5"
+                                variant="outline"
+                                size="sm"
+                                className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -371,7 +374,7 @@ export default function ConfiguracionPage() {
                                     viewBox="0 0 24 24"
                                     strokeWidth={2}
                                     stroke="currentColor"
-                                    className="w-5 h-5 mr-2"
+                                    className="w-4 h-4 mr-1"
                                 >
                                     <path
                                         strokeLinecap="round"
@@ -400,8 +403,8 @@ export default function ConfiguracionPage() {
             )}
 
             {/* Tabs */}
-            <div className="container mx-auto px-6 py-6">
-                <div className="flex gap-2 mb-6 border-b border-gray-200">
+            <div className="container mx-auto px-6 py-6 flex flex-col items-center">
+                <div className="flex justify-center w-full max-w-4xl gap-2 mb-6 border-b border-gray-200">
                     <button
                         onClick={() => setActiveTab("categorias")}
                         className={`px-6 py-3 font-semibold transition-all ${activeTab === "categorias"
@@ -441,7 +444,7 @@ export default function ConfiguracionPage() {
                 </div>
 
                 {/* Content */}
-                <div className="max-w-4xl">
+                <div className="max-w-4xl w-full mx-auto">
                     {/* CATEGORÍAS */}
                     {activeTab === "categorias" && (
                         <Card>
@@ -449,7 +452,7 @@ export default function ConfiguracionPage() {
                                 <CardTitle>Categorías</CardTitle>
                                 <Button
                                     onClick={() => {
-                                        setCategoriaForm({ id: 0, nombre: "", descripcion: "" });
+                                        setCategoriaForm({ id: 0, nombre: "", descripcion: "", tipo: "egreso" });
                                         setIsCategoriaDialogOpen(true);
                                     }}
                                     className="bg-[#002868] hover:bg-[#003d8f]"
@@ -465,7 +468,12 @@ export default function ConfiguracionPage() {
                                             className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
                                         >
                                             <div>
-                                                <h3 className="font-semibold text-[#002868]">{cat.nombre}</h3>
+                                                <h3 className="font-semibold text-[#002868]">
+                                                    {cat.nombre}
+                                                    <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${cat.tipo === 'ingreso' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                                                        {cat.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}
+                                                    </span>
+                                                </h3>
                                                 {cat.descripcion && (
                                                     <p className="text-sm text-[#666666]">{cat.descripcion}</p>
                                                 )}
@@ -672,68 +680,100 @@ export default function ConfiguracionPage() {
 
             {/* DIALOG CATEGORÍA */}
             <Dialog open={isCategoriaDialogOpen} onOpenChange={setIsCategoriaDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
-                            {categoriaForm.id ? "Editar Categoría" : "Nueva Categoría"}
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
+                <DialogContent className="sm:max-w-[480px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
+                    <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
+                        <DialogHeader className="p-0 border-0">
+                            <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
+                                {categoriaForm.id ? "Editar Categoría" : "Nueva Categoría"}
+                            </DialogTitle>
+                            <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
+                                {categoriaForm.id ? "Modifica los detalles de esta categoría" : "Agrega una nueva categoría al sistema"}
+                            </DialogDescription>
+                        </DialogHeader>
+                    </div>
+                    <div className="px-8 py-6 space-y-4">
                         <div>
-                            <Label htmlFor="cat-nombre">Nombre *</Label>
+                            <Label htmlFor="cat-nombre" className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Nombre *</Label>
                             <Input
                                 id="cat-nombre"
                                 value={categoriaForm.nombre}
                                 onChange={(e) => setCategoriaForm({ ...categoriaForm, nombre: e.target.value })}
                                 placeholder="Ej: Servicios"
+                                className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
                             />
                         </div>
                         <div>
-                            <Label htmlFor="cat-desc">Descripción</Label>
+                            <Label htmlFor="cat-desc" className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Descripción</Label>
                             <Textarea
                                 id="cat-desc"
-                                value={categoriaForm.descripcion}
+                                value={categoriaForm.descripcion || ""}
                                 onChange={(e) => setCategoriaForm({ ...categoriaForm, descripcion: e.target.value })}
                                 placeholder="Descripción opcional"
+                                className="min-h-[80px] rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
                             />
                         </div>
+                        <div>
+                            <Label htmlFor="cat-tipo" className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Tipo *</Label>
+                            <Select
+                                value={categoriaForm.tipo || "egreso"}
+                                onValueChange={(value: "ingreso" | "egreso") =>
+                                    setCategoriaForm({ ...categoriaForm, tipo: value })
+                                }
+                            >
+                                <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                                    <SelectValue placeholder="Seleccione el tipo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="ingreso">Ingreso</SelectItem>
+                                    <SelectItem value="egreso">Egreso</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsCategoriaDialogOpen(false)}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button
-                            onClick={handleSaveCategoria}
-                            disabled={isSaving || !categoriaForm.nombre}
-                            className="bg-[#002868] hover:bg-[#003d8f]"
-                        >
-                            {isSaving ? "Guardando..." : "Guardar"}
-                        </Button>
-                    </DialogFooter>
+                    <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
+                        <DialogFooter className="sm:justify-end gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsCategoriaDialogOpen(false)}
+                                className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] transition-all"
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                onClick={handleSaveCategoria}
+                                disabled={isSaving || !categoriaForm.nombre}
+                                className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all"
+                            >
+                                {isSaving ? "Guardando..." : "Guardar"}
+                            </Button>
+                        </DialogFooter>
+                    </div>
                 </DialogContent>
             </Dialog>
 
             {/* DIALOG SUBCATEGORÍA */}
             <Dialog open={isSubcategoriaDialogOpen} onOpenChange={setIsSubcategoriaDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
-                            {subcategoriaForm.id ? "Editar Subcategoría" : "Nueva Subcategoría"}
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
+                <DialogContent className="sm:max-w-[480px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
+                    <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
+                        <DialogHeader className="p-0 border-0">
+                            <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
+                                {subcategoriaForm.id ? "Editar Subcategoría" : "Nueva Subcategoría"}
+                            </DialogTitle>
+                            <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
+                                {subcategoriaForm.id ? "Modifica los detalles de esta subcategoría" : "Agrega una nueva subcategoría a una categoría existente"}
+                            </DialogDescription>
+                        </DialogHeader>
+                    </div>
+                    <div className="px-8 py-6 space-y-4">
                         <div>
-                            <Label htmlFor="subcat-categoria">Categoría *</Label>
+                            <Label htmlFor="subcat-categoria" className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Categoría *</Label>
                             <Select
                                 value={subcategoriaForm.categoria_id.toString()}
                                 onValueChange={(value) =>
                                     setSubcategoriaForm({ ...subcategoriaForm, categoria_id: parseInt(value) })
                                 }
                             >
-                                <SelectTrigger>
+                                <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
                                     <SelectValue placeholder="Seleccionar categoría" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -746,131 +786,156 @@ export default function ConfiguracionPage() {
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="subcat-nombre">Nombre *</Label>
+                            <Label htmlFor="subcat-nombre" className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Nombre *</Label>
                             <Input
                                 id="subcat-nombre"
                                 value={subcategoriaForm.nombre}
                                 onChange={(e) => setSubcategoriaForm({ ...subcategoriaForm, nombre: e.target.value })}
                                 placeholder="Ej: Luz"
+                                className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
                             />
                         </div>
                         <div>
-                            <Label htmlFor="subcat-desc">Descripción</Label>
+                            <Label htmlFor="subcat-desc" className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Descripción</Label>
                             <Textarea
                                 id="subcat-desc"
-                                value={subcategoriaForm.descripcion}
+                                value={subcategoriaForm.descripcion || ""}
                                 onChange={(e) => setSubcategoriaForm({ ...subcategoriaForm, descripcion: e.target.value })}
                                 placeholder="Descripción opcional"
+                                className="min-h-[80px] rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
                             />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsSubcategoriaDialogOpen(false)}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button
-                            onClick={handleSaveSubcategoria}
-                            disabled={isSaving || !subcategoriaForm.nombre || !subcategoriaForm.categoria_id}
-                            className="bg-[#002868] hover:bg-[#003d8f]"
-                        >
-                            {isSaving ? "Guardando..." : "Guardar"}
-                        </Button>
-                    </DialogFooter>
+                    <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
+                        <DialogFooter className="sm:justify-end gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsSubcategoriaDialogOpen(false)}
+                                className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] transition-all"
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                onClick={handleSaveSubcategoria}
+                                disabled={isSaving || !subcategoriaForm.nombre || !subcategoriaForm.categoria_id}
+                                className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all"
+                            >
+                                {isSaving ? "Guardando..." : "Guardar"}
+                            </Button>
+                        </DialogFooter>
+                    </div>
                 </DialogContent>
             </Dialog>
 
             {/* DIALOG BANCO */}
             <Dialog open={isBancoDialogOpen} onOpenChange={setIsBancoDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
-                            {bancoForm.id ? "Editar Banco" : "Nuevo Banco"}
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
+                <DialogContent className="sm:max-w-[480px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
+                    <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
+                        <DialogHeader className="p-0 border-0">
+                            <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
+                                {bancoForm.id ? "Editar Banco" : "Nuevo Banco"}
+                            </DialogTitle>
+                            <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
+                                {bancoForm.id ? "Modifica los detalles de este banco" : "Agrega un nuevo banco al sistema"}
+                            </DialogDescription>
+                        </DialogHeader>
+                    </div>
+                    <div className="px-8 py-6 space-y-4">
                         <div>
-                            <Label htmlFor="banco-nombre">Nombre *</Label>
+                            <Label htmlFor="banco-nombre" className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Nombre *</Label>
                             <Input
                                 id="banco-nombre"
                                 value={bancoForm.nombre}
                                 onChange={(e) => setBancoForm({ ...bancoForm, nombre: e.target.value })}
                                 placeholder="Ej: Banco Galicia"
+                                className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
                             />
                         </div>
                         <div>
-                            <Label htmlFor="banco-codigo">Código</Label>
+                            <Label htmlFor="banco-codigo" className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Código</Label>
                             <Input
                                 id="banco-codigo"
                                 value={bancoForm.codigo}
                                 onChange={(e) => setBancoForm({ ...bancoForm, codigo: e.target.value })}
                                 placeholder="Ej: GALI"
+                                className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
                             />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsBancoDialogOpen(false)}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button
-                            onClick={handleSaveBanco}
-                            disabled={isSaving || !bancoForm.nombre}
-                            className="bg-[#002868] hover:bg-[#003d8f]"
-                        >
-                            {isSaving ? "Guardando..." : "Guardar"}
-                        </Button>
-                    </DialogFooter>
+                    <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
+                        <DialogFooter className="sm:justify-end gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsBancoDialogOpen(false)}
+                                className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] transition-all"
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                onClick={handleSaveBanco}
+                                disabled={isSaving || !bancoForm.nombre}
+                                className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all"
+                            >
+                                {isSaving ? "Guardando..." : "Guardar"}
+                            </Button>
+                        </DialogFooter>
+                    </div>
                 </DialogContent>
             </Dialog>
 
             {/* DIALOG MEDIO DE PAGO */}
             <Dialog open={isMedioPagoDialogOpen} onOpenChange={setIsMedioPagoDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
-                            {medioPagoForm.id ? "Editar Medio de Pago" : "Nuevo Medio de Pago"}
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
+                <DialogContent className="sm:max-w-[480px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
+                    <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
+                        <DialogHeader className="p-0 border-0">
+                            <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
+                                {medioPagoForm.id ? "Editar Medio de Pago" : "Nuevo Medio de Pago"}
+                            </DialogTitle>
+                            <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
+                                {medioPagoForm.id ? "Modifica los detalles de este medio de pago" : "Agrega un nuevo medio de pago al sistema"}
+                            </DialogDescription>
+                        </DialogHeader>
+                    </div>
+                    <div className="px-8 py-6 space-y-4">
                         <div>
-                            <Label htmlFor="medio-nombre">Nombre *</Label>
+                            <Label htmlFor="medio-nombre" className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Nombre *</Label>
                             <Input
                                 id="medio-nombre"
                                 value={medioPagoForm.nombre}
                                 onChange={(e) => setMedioPagoForm({ ...medioPagoForm, nombre: e.target.value })}
                                 placeholder="Ej: Transferencia"
+                                className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
                             />
                         </div>
                         <div>
-                            <Label htmlFor="medio-desc">Descripción</Label>
+                            <Label htmlFor="medio-desc" className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Descripción</Label>
                             <Textarea
                                 id="medio-desc"
-                                value={medioPagoForm.descripcion}
+                                value={medioPagoForm.descripcion || ""}
                                 onChange={(e) => setMedioPagoForm({ ...medioPagoForm, descripcion: e.target.value })}
                                 placeholder="Descripción opcional"
+                                className="min-h-[80px] rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
                             />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsMedioPagoDialogOpen(false)}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button
-                            onClick={handleSaveMedioPago}
-                            disabled={isSaving || !medioPagoForm.nombre}
-                            className="bg-[#002868] hover:bg-[#003d8f]"
-                        >
-                            {isSaving ? "Guardando..." : "Guardar"}
-                        </Button>
-                    </DialogFooter>
+                    <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
+                        <DialogFooter className="sm:justify-end gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsMedioPagoDialogOpen(false)}
+                                className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] transition-all"
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                onClick={handleSaveMedioPago}
+                                disabled={isSaving || !medioPagoForm.nombre}
+                                className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all"
+                            >
+                                {isSaving ? "Guardando..." : "Guardar"}
+                            </Button>
+                        </DialogFooter>
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>

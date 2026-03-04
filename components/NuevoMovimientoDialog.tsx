@@ -28,6 +28,7 @@ interface NuevoMovimientoDialogProps {
 interface Categoria {
   id: number;
   nombre: string;
+  tipo?: string;
 }
 
 interface Subcategoria {
@@ -151,7 +152,11 @@ export default function NuevoMovimientoDialog({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "tipo") {
+      setFormData((prev) => ({ ...prev, [name]: value, categoria_id: "", subcategoria_id: "" }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   // Resetear formulario
@@ -487,7 +492,9 @@ export default function NuevoMovimientoDialog({
                   className={selectClasses}
                 >
                   <option value="">Seleccione categoría</option>
-                  {categorias.map((c) => (
+                  {categorias
+                    .filter((c) => c.tipo === formData.tipo)
+                    .map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.nombre}
                     </option>

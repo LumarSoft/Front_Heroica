@@ -49,6 +49,7 @@ export interface PagoPendiente {
 export interface Categoria {
     id: number;
     nombre: string;
+    tipo?: "ingreso" | "egreso";
 }
 
 export interface Subcategoria {

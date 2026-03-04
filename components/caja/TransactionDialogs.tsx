@@ -280,7 +280,9 @@ export function DetailsDialog({
                                     className={selectClasses}
                                 >
                                     <option value="">Seleccione categoría</option>
-                                    {categorias.map((c) => (
+                                    {categorias
+                                        .filter((c) => c.tipo === formData.tipo)
+                                        .map((c) => (
                                         <option key={c.id} value={c.id}>
                                             {c.nombre}
                                         </option>
