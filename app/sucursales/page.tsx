@@ -69,8 +69,45 @@ export default function SucursalesPage() {
   }, [isGuardLoading]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    
+    if (name === "cuit") {
+      const digits = value.replace(/\D/g, "");
+      if (digits.length <= 11) {
+        if (digits.length > 2 && digits.length <= 10) {
+          value = `${digits.substring(0, 2)}-${digits.substring(2)}`;
+        } else if (digits.length > 10) {
+          value = `${digits.substring(0, 2)}-${digits.substring(2, 10)}-${digits.substring(10, 11)}`;
+        } else {
+          value = digits;
+        }
+      } else {
+        return; // No permitir más de 11 dígitos
+      }
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleToggleActivo = async (e: React.MouseEvent, sucursal: Sucursal) => {
+    e.stopPropagation();
+    try {
+      const response = await fetch(API_ENDPOINTS.SUCURSALES.UPDATE(sucursal.id), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...sucursal, activo: !sucursal.activo }),
+      });
+      if (!response.ok) throw new Error("Error al actualizar estado");
+      
+      setSucursales((prev) =>
+        prev.map((s) =>
+          s.id === sucursal.id ? { ...s, activo: !s.activo } : s
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      setError("Error al cambiar estado de sucursal");
+    }
   };
 
   const handleCreateSucursal = async (e: React.FormEvent) => {
@@ -276,7 +313,7 @@ export default function SucursalesPage() {
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-[#E0E0E0]">
+                  <div className="pt-3 border-t border-[#E0E0E0] flex justify-between items-center">
                     <span
                       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${sucursal.activo
                         ? "bg-green-50 text-green-700 border border-green-200"
@@ -289,13 +326,21 @@ export default function SucursalesPage() {
                       ></span>
                       {sucursal.activo ? "Activa" : "Inactiva"}
                     </span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={(e) => handleToggleActivo(e, sucursal)}
+                      className={sucursal.activo ? "text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300" : "text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 hover:border-green-300"}
+                    >
+                      {sucursal.activo ? "Desactivar" : "Activar"}
+                    </Button>
                   </div>
                 </CardContent>
 
-                {/* Botón de eliminar - esquina inferior derecha */}
+                {/* Botón de eliminar - esquina superior derecha */}
                 <button
                   onClick={(e) => handleDeleteClick(e, sucursal)}
-                  className="absolute bottom-4 right-4 w-9 h-9 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all flex items-center justify-center shadow-sm hover:shadow-md opacity-0 group-hover:opacity-100 z-10 cursor-pointer"
+                  className="absolute top-4 right-4 w-9 h-9 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all flex items-center justify-center shadow-sm hover:shadow-md opacity-0 group-hover:opacity-100 z-10 cursor-pointer"
                   aria-label="Eliminar sucursal"
                 >
                   <svg

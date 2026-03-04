@@ -75,6 +75,17 @@ export interface Documento {
     tipo_archivo: string;
     tamano_bytes: number;
     fecha_subida: string;
+    tipo_documento?: string; // Nuevo
+    fecha_vencimiento?: string; // Nuevo
+}
+
+export interface CuentaBancaria {
+    id: number;
+    sucursal_id: number;
+    cbu: string;
+    alias?: string;
+    tipo_cuenta?: string;
+    banco?: string;
 }
 
 export interface SelectOption {

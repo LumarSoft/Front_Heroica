@@ -58,6 +58,15 @@ export default function SucursalDetailPage() {
   const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [loadingDocumentos, setLoadingDocumentos] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [docToDelete, setDocToDelete] = useState<{ id: number, nombre: string } | null>(null);
+  const [isDeleteDocDialogOpen, setIsDeleteDocDialogOpen] = useState(false);
+
+  // Estados para cuentas bancarias
+  const [cuentasBancarias, setCuentasBancarias] = useState<any[]>([]);
+  const [loadingCuentas, setLoadingCuentas] = useState(false);
+  const [nuevaCuenta, setNuevaCuenta] = useState({ cbu: '', alias: '', tipo_cuenta: '', banco: '' });
+  const [isAddingCuenta, setIsAddingCuenta] = useState(false);
+  const [isSavingCuenta, setIsSavingCuenta] = useState(false);
 
   useEffect(() => {
     if (isGuardLoading) return;
@@ -93,6 +102,7 @@ export default function SucursalDetailPage() {
     fetchSucursal();
     fetchDocumentos();
     fetchTotales();
+    fetchCuentasBancarias();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGuardLoading, params.id]);
 
@@ -149,7 +159,23 @@ export default function SucursalDetailPage() {
   }, [user?.rol]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    
+    if (name === "cuit") {
+      const digits = value.replace(/\D/g, "");
+      if (digits.length <= 11) {
+        if (digits.length > 2 && digits.length <= 10) {
+          value = `${digits.substring(0, 2)}-${digits.substring(2)}`;
+        } else if (digits.length > 10) {
+          value = `${digits.substring(0, 2)}-${digits.substring(2, 10)}-${digits.substring(10, 11)}`;
+        } else {
+          value = digits;
+        }
+      } else {
+        return; // No permitir más de 11 dígitos
+      }
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -203,21 +229,28 @@ export default function SucursalDetailPage() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+  const fetchCuentasBancarias = async () => {
+    try {
+      setLoadingCuentas(true);
+      const res = await fetch(API_ENDPOINTS.CUENTAS_BANCARIAS.GET_BY_SUCURSAL(Number(params.id)));
+      const data = await res.json();
+      if (res.ok) setCuentasBancarias(data.data || []);
+    } catch (err) {
+      console.error("Error al cargar cuentas bancarias:", err);
+    } finally {
+      setLoadingCuentas(false);
     }
   };
 
-  const handleUploadDoc = async () => {
-    if (!selectedFile) return;
-
+  const handleUploadDoc = async (tipoDoc: string, fechaVenc: string, file: File) => {
     setIsUploadingDoc(true);
     setError("");
 
     try {
       const formData = new FormData();
-      formData.append("file", selectedFile);
+      formData.append("file", file);
+      formData.append("tipo_documento", tipoDoc);
+      formData.append("fecha_vencimiento", fechaVenc);
 
       const response = await fetch(
         API_ENDPOINTS.SUCURSALES.UPLOAD_DOCUMENTO(Number(params.id)),
@@ -234,21 +267,52 @@ export default function SucursalDetailPage() {
       }
 
       toast.success("Documento subido exitosamente");
-      setSelectedFile(null);
 
       // Recargar lista de documentos
       await fetchDocumentos();
 
-      // Limpiar el input de archivo
-      const fileInput = document.getElementById(
-        "file-upload",
-      ) as HTMLInputElement;
-      if (fileInput) fileInput.value = "";
     } catch (err: any) {
       console.error("Error al subir documento:", err);
       setError(err.message || "Error al subir documento");
     } finally {
       setIsUploadingDoc(false);
+    }
+  };
+
+  const handleAddCuenta = async () => {
+    if (!nuevaCuenta.cbu) {
+      setError("El CBU es obligatorio");
+      return;
+    }
+    setIsSavingCuenta(true);
+    setError("");
+    try {
+      const response = await fetch(API_ENDPOINTS.CUENTAS_BANCARIAS.CREATE(Number(params.id)), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nuevaCuenta)
+      });
+      if (!response.ok) throw new Error("Error al crear cuenta");
+      toast.success("Cuenta agregada exitosamente");
+      setNuevaCuenta({ cbu: '', alias: '', tipo_cuenta: '', banco: '' });
+      setIsAddingCuenta(false);
+      await fetchCuentasBancarias();
+    } catch (err: any) {
+      setError(err.message || "Error al agregar cuenta");
+    } finally {
+      setIsSavingCuenta(false);
+    }
+  };
+
+  const handleDeleteCuenta = async (id: number) => {
+    if (!confirm("¿Eliminar cuenta bancaria?")) return;
+    try {
+      const response = await fetch(API_ENDPOINTS.CUENTAS_BANCARIAS.DELETE(id), { method: "DELETE" });
+      if (!response.ok) throw new Error("Error al eliminar cuenta");
+      toast.success("Cuenta eliminada");
+      await fetchCuentasBancarias();
+    } catch (err: any) {
+      setError(err.message || "Error al eliminar");
     }
   };
 
@@ -260,14 +324,19 @@ export default function SucursalDetailPage() {
     window.open(url, "_blank");
   };
 
-  const handleDeleteDoc = async (docId: number, nombreArchivo: string) => {
-    if (!confirm(`¿Estás seguro de eliminar "${nombreArchivo}"?`)) return;
+  const openDeleteDocDialog = (docId: number, nombreArchivo: string) => {
+    setDocToDelete({ id: docId, nombre: nombreArchivo });
+    setIsDeleteDocDialogOpen(true);
+  };
+
+  const handleDeleteDoc = async () => {
+    if (!docToDelete) return;
 
     setError("");
 
     try {
       const response = await fetch(
-        API_ENDPOINTS.SUCURSALES.DELETE_DOCUMENTO(Number(params.id), docId),
+        API_ENDPOINTS.SUCURSALES.DELETE_DOCUMENTO(Number(params.id), docToDelete.id),
         {
           method: "DELETE",
         },
@@ -285,7 +354,10 @@ export default function SucursalDetailPage() {
       await fetchDocumentos();
     } catch (err: any) {
       console.error("Error al eliminar documento:", err);
-      setError(err.message || "Error al eliminar documento");
+      toast.error(err.message || "Error al eliminar documento");
+    } finally {
+      setIsDeleteDocDialogOpen(false);
+      setDocToDelete(null);
     }
   };
 
@@ -657,7 +729,7 @@ export default function SucursalDetailPage() {
 
       {/* Modal de Información de la Sucursal */}
       <Dialog open={isInfoDialogOpen} onOpenChange={setIsInfoDialogOpen}>
-        <DialogContent className="sm:max-w-2xl bg-white">
+        <DialogContent className="sm:max-w-2xl bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-[#002868]">
               Información de la Sucursal
@@ -766,7 +838,7 @@ export default function SucursalDetailPage() {
               {/* Sección de Documentación (Múltiples Archivos) */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-semibold text-[#002868] mb-4">
-                  <Paperclip className="w-5 h-5 inline mr-1" /> Documentación ({documentos.length})
+                  <Paperclip className="w-5 h-5 inline mr-1" /> Documentación
                 </h3>
 
                 {loadingDocumentos ? (
@@ -774,132 +846,129 @@ export default function SucursalDetailPage() {
                     <div className="w-6 h-6 border-2 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {/* Lista de documentos existentes */}
-                    {documentos.length > 0 && (
-                      <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {documentos.map((doc) => (
-                          <div
-                            key={doc.id}
-                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
-                          >
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className="w-8 h-8 bg-[#002868] rounded-lg flex items-center justify-center flex-shrink-0">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth={2}
-                                  stroke="currentColor"
-                                  className="w-4 h-4 text-white"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                                  />
-                                </svg>
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p
-                                  className="font-medium text-sm text-[#1A1A1A] truncate"
-                                  title={doc.nombre_archivo}
-                                >
-                                  {doc.nombre_archivo}
-                                </p>
-                                <p className="text-xs text-[#666666]">
-                                  {new Date(
-                                    doc.fecha_subida,
-                                  ).toLocaleDateString("es-AR")}{" "}
-                                  • {(doc.tamano_bytes / 1024).toFixed(1)} KB
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex gap-1 flex-shrink-0 ml-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDownloadDoc(doc.id)}
-                                className="border-[#002868] text-[#002868] hover:bg-[#002868] hover:text-white h-8 px-2"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth={2}
-                                  stroke="currentColor"
-                                  className="w-4 h-4"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
-                                  />
-                                </svg>
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleDeleteDoc(doc.id, doc.nombre_archivo)
-                                }
-                                className="border-rose-600 text-rose-600 hover:bg-rose-600 hover:text-white h-8 px-2"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth={2}
-                                  stroke="currentColor"
-                                  className="w-4 h-4"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                  />
-                                </svg>
-                              </Button>
-                            </div>
+                  <div className="space-y-4">
+                    {[
+                      "Constancia de CUIT",
+                      "Constancia de IIBB",
+                      "Certificado MyPyme",
+                      "Constancia de CBU",
+                      "Habilitación del local"
+                    ].map((tipoDoc) => {
+                      const docSubido = documentos.find(d => d.tipo_documento === tipoDoc);
+                      
+                      return (
+                        <div key={tipoDoc} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-semibold text-[#002868] text-sm">{tipoDoc}</h4>
+                            {docSubido ? (
+                              <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">Subido</span>
+                            ) : (
+                              <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full font-medium">Pendiente</span>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Formulario para subir nuevo documento */}
-                    <div className="pt-3 border-t border-gray-100">
-                      <p className="text-sm text-[#666666] mb-3">
-                        {documentos.length === 0
-                          ? "Sube archivos PDF o JPG con la documentación de la sucursal"
-                          : "Agregar más documentos"}
-                      </p>
-                      <div className="flex items-center gap-3">
-                        <Input
-                          id="file-upload"
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg"
-                          onChange={handleFileChange}
-                          className="flex-1 border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
-                        />
-                        <Button
-                          type="button"
-                          onClick={handleUploadDoc}
-                          disabled={isUploadingDoc || !selectedFile}
-                          className="bg-[#002868] hover:bg-[#003d8f] text-white whitespace-nowrap"
-                        >
-                          {isUploadingDoc ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                              <span>Subiendo...</span>
+                          
+                          {docSubido ? (
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="flex items-center gap-2 overflow-hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-green-600 flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <div className="min-w-0">
+                                  <p className="text-sm truncate" title={docSubido.nombre_archivo}>{docSubido.nombre_archivo}</p>
+                                  <p className="text-xs text-gray-500">
+                                    Vence: {docSubido.fecha_vencimiento ? new Date(docSubido.fecha_vencimiento).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : 'N/A'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button type="button" variant="outline" size="sm" onClick={() => handleDownloadDoc(docSubido.id)} className="h-8 px-2 border-[#002868]/30 hover:bg-[#002868] hover:text-white transition-colors"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg></Button>
+                                <Button type="button" variant="outline" size="sm" onClick={() => openDeleteDocDialog(docSubido.id, docSubido.nombre_archivo)} className="h-8 px-2 border-red-200 text-red-600 bg-red-50 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg></Button>
+                              </div>
                             </div>
                           ) : (
-                            "Subir"
+                            <div className="flex flex-col gap-2 mt-2">
+                              <div className="flex gap-2 items-center">
+                                <Label className="text-xs text-gray-500 min-w-[120px]">Fecha Vencimiento:</Label>
+                                <Input type="date" id={`fecha-${tipoDoc.replace(/\s+/g, '-')}`} className="h-8 text-sm" />
+                              </div>
+                              <div className="flex gap-2">
+                                <Input type="file" id={`file-${tipoDoc.replace(/\s+/g, '-')}`} accept=".pdf,.jpg,.jpeg" className="h-8 text-sm flex-1" />
+                                <Button type="button" size="sm" disabled={isUploadingDoc} className="h-8 bg-[#002868]" onClick={() => {
+                                  const fileInput = document.getElementById(`file-${tipoDoc.replace(/\s+/g, '-')}`) as HTMLInputElement;
+                                  const dateInput = document.getElementById(`fecha-${tipoDoc.replace(/\s+/g, '-')}`) as HTMLInputElement;
+                                  if (!fileInput.files?.[0] || !dateInput.value) {
+                                    toast.error("Selecciona archivo y fecha de vencimiento");
+                                    return;
+                                  }
+                                  handleUploadDoc(tipoDoc, dateInput.value, fileInput.files[0]);
+                                }}>Subir</Button>
+                              </div>
+                            </div>
                           )}
-                        </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Sección de Cuentas Bancarias */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-[#002868]">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 inline mr-1 -mt-1"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg>
+                    Datos Bancarios ({cuentasBancarias.length})
+                  </h3>
+                  <Button type="button" size="sm" variant="outline" onClick={() => setIsAddingCuenta(!isAddingCuenta)} className="text-[#002868] border-[#002868]">
+                    {isAddingCuenta ? 'Cancelar' : '+ Agregar Cuenta'}
+                  </Button>
+                </div>
+
+                {isAddingCuenta && (
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 mb-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Banco</Label>
+                        <Input value={nuevaCuenta.banco} onChange={(e) => setNuevaCuenta({...nuevaCuenta, banco: e.target.value})} className="h-8 text-sm" placeholder="Ej: Galicia" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Tipo de Cuenta</Label>
+                        <Input value={nuevaCuenta.tipo_cuenta} onChange={(e) => setNuevaCuenta({...nuevaCuenta, tipo_cuenta: e.target.value})} className="h-8 text-sm" placeholder="CA $ / CC" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">CBU / CVU *</Label>
+                        <Input value={nuevaCuenta.cbu} onChange={(e) => setNuevaCuenta({...nuevaCuenta, cbu: e.target.value})} className="h-8 text-sm" placeholder="22 dígitos" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Alias</Label>
+                        <Input value={nuevaCuenta.alias} onChange={(e) => setNuevaCuenta({...nuevaCuenta, alias: e.target.value})} className="h-8 text-sm" placeholder="JUAN.PEREZ" />
                       </div>
                     </div>
+                    <Button type="button" size="sm" onClick={handleAddCuenta} disabled={!nuevaCuenta.cbu || isSavingCuenta} className="w-full h-8 bg-[#002868] text-white">
+                      Guardar Cuenta
+                    </Button>
+                  </div>
+                )}
+
+                {loadingCuentas ? (
+                  <div className="flex justify-center py-4">
+                    <div className="w-6 h-6 border-2 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {cuentasBancarias.map((cuenta) => (
+                      <div key={cuenta.id} className="p-3 bg-white rounded-lg border border-gray-200 shadow-sm flex justify-between items-center group hover:border-[#002868]">
+                        <div>
+                          <p className="font-semibold text-sm text-[#1A1A1A]">{cuenta.banco} - {cuenta.tipo_cuenta}</p>
+                          <p className="text-xs text-gray-600">CBU: {cuenta.cbu}</p>
+                          <p className="text-xs text-gray-500">Alias: {cuenta.alias || '-'}</p>
+                        </div>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => handleDeleteCuenta(cuenta.id)} className="text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                        </Button>
+                      </div>
+                    ))}
+                    {cuentasBancarias.length === 0 && !isAddingCuenta && (
+                      <p className="text-sm text-gray-500 text-center py-2">No hay cuentas bancarias registradas</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -929,6 +998,36 @@ export default function SucursalDetailPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Confirmación para Eliminar Documento */}
+      <Dialog open={isDeleteDocDialogOpen} onOpenChange={setIsDeleteDocDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#1A1A1A]">
+              Confirmar Eliminación
+            </DialogTitle>
+            <DialogDescription className="text-[#666666]">
+              ¿Estás seguro de que deseas eliminar el archivo <span className="font-semibold text-[#1A1A1A]">"{docToDelete?.nombre}"</span>? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDocDialogOpen(false)}
+              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] transition-colors"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteDoc}
+              className="bg-red-600 hover:bg-red-700 text-white transition-colors"
+            >
+              Eliminar
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
