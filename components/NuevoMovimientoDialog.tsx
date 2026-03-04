@@ -64,7 +64,7 @@ export default function NuevoMovimientoDialog({
     descripcion: "",
     prioridad: "media" as "baja" | "media" | "alta",
     estado: (isPagoPendiente ? "pendiente" : "aprobado") as "pendiente" | "aprobado" | "rechazado" | "completado",
-    tipo: "ingreso",
+    tipo: isPagoPendiente ? "egreso" : "ingreso",
     categoria_id: "",
     subcategoria_id: "",
     comprobante: "",
@@ -163,7 +163,7 @@ export default function NuevoMovimientoDialog({
       descripcion: "",
       prioridad: "media",
       estado: isPagoPendiente ? "pendiente" : "aprobado",
-      tipo: "ingreso",
+      tipo: isPagoPendiente ? "egreso" : "ingreso",
       categoria_id: "",
       subcategoria_id: "",
       comprobante: "",
@@ -317,9 +317,10 @@ export default function NuevoMovimientoDialog({
                   name="tipo"
                   value={formData.tipo}
                   onChange={handleInputChange}
-                  className={selectClasses}
+                  className={`${selectClasses} ${isPagoPendiente ? "opacity-60 cursor-not-allowed bg-gray-50" : ""}`}
+                  disabled={isPagoPendiente}
                 >
-                  <option value="ingreso">Ingreso</option>
+                  {!isPagoPendiente && <option value="ingreso">Ingreso</option>}
                   <option value="egreso">Egreso</option>
                 </select>
               </div>

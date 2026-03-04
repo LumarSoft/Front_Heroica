@@ -134,12 +134,25 @@ export default function ReportesPage() {
   const [selectedIngresoCategory, setSelectedIngresoCategory] = useState<string | null>(null);
   const [selectedEgresoCategory, setSelectedEgresoCategory] = useState<string | null>(null);
 
-  const today = new Date();
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(today.getDate() - 30);
+  // Selector mensual
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
 
-  const [startDate, setStartDate] = useState(thirtyDaysAgo.toISOString().split("T")[0]);
-  const [endDate, setEndDate] = useState(today.toISOString().split("T")[0]);
+  const isClosedMonth = useMemo(() => {
+    const today = new Date();
+    const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+    return selectedMonth < currentMonthStr;
+  }, [selectedMonth]);
+
+  const { startDate, endDate } = useMemo(() => {
+    const [year, month] = selectedMonth.split("-");
+    const start = `${year}-${month}-01`;
+    const lastDay = new Date(Number(year), Number(month), 0).getDate();
+    const end = `${year}-${month}-${lastDay}`;
+    return { startDate: start, endDate: end };
+  }, [selectedMonth]);
 
   useEffect(() => {
     if (isGuardLoading) return;
@@ -246,26 +259,27 @@ export default function ReportesPage() {
 
             <div className="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-gray-100">
               <div className="flex items-center gap-2">
-                <Label htmlFor="start" className="text-sm font-medium whitespace-nowrap">Desde</Label>
+                <Label htmlFor="month" className="text-sm font-medium whitespace-nowrap">Mes a consultar:</Label>
                 <Input
-                  id="start"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  id="month"
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
                   className="w-auto h-9"
                 />
               </div>
-              <span className="text-slate-300">–</span>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="end" className="text-sm font-medium whitespace-nowrap">Hasta</Label>
-                <Input
-                  id="end"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-auto h-9"
-                />
-              </div>
+
+              {isClosedMonth ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
+                  🧊 Mes Cerrado
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Mes en Curso
+                </span>
+              )}
+
               <Button
                 variant="default"
                 className="ml-2 h-9 bg-[#002868] text-white hover:bg-[#003d8f] flex items-center gap-2"
@@ -287,12 +301,21 @@ export default function ReportesPage() {
         ) : reportData ? (
           <div className="space-y-10 print:space-y-4">
             {/* Print header */}
-            <div className="hidden print:block text-center mb-6">
-              <h2 className="text-3xl font-bold text-slate-800">Reporte de Resultados</h2>
-              <p className="text-slate-600">Sucursal: {sucursal?.nombre}</p>
-              <p className="text-slate-500 text-sm">
-                Período: {new Date(startDate).toLocaleDateString()} – {new Date(endDate).toLocaleDateString()}
-              </p>
+            <div className="hidden print:flex flex-col mb-8 border-b-2 border-[#002868] pb-4">
+              <div className="flex justify-between items-end">
+                <div>
+                  <h2 className="text-3xl font-black text-[#002868] tracking-tight">Reporte de Resultados</h2>
+                  <p className="text-slate-600 font-medium text-lg mt-1">Sucursal: {sucursal?.nombre}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-800 capitalize">
+                    {new Date(startDate + "T12:00:00").toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}
+                  </p>
+                  <p className={`text-sm font-bold mt-1 uppercase tracking-widest ${isClosedMonth ? "text-blue-600" : "text-emerald-600"}`}>
+                    {isClosedMonth ? "Período Cerrado" : "Mes en Curso (Parcial)"}
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* ── 1 · Resumen General ──────────────────────────────────────── */}
@@ -400,9 +423,17 @@ export default function ReportesPage() {
       <style dangerouslySetInnerHTML={{
         __html: `
           @media print {
-            body { background: white !important; }
+            @page { margin: 1.5cm; size: A4 portrait; }
+            body { background: white !important; font-size: 11pt; color: #111827; }
             .page-break-before { page-break-before: always; }
-            .shadow-sm, .shadow-md { box-shadow: none !important; }
+            .shadow-sm, .shadow-md { box-shadow: none !important; border-color: #e5e7eb !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            main { padding: 0 !important; max-width: 100% !important; }
+            .print\\:block { display: block !important; }
+            .print\\:flex { display: flex !important; }
+            .print\\:hidden { display: none !important; }
+            .print\\:space-y-4 > * + * { margin-top: 1rem !important; }
+            .grid { gap: 1rem !important; }
           }
         `,
       }} />

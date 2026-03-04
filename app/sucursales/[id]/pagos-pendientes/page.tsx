@@ -76,6 +76,13 @@ export default function PagosPendientesPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [tipoCaja, setTipoCaja] = useState<"efectivo" | "banco">("efectivo");
+  const [bancoId, setBancoId] = useState("");
+  const [medioPagoId, setMedioPagoId] = useState("");
+  const [fechaAprobacion, setFechaAprobacion] = useState(new Date().toISOString().split("T")[0]);
+
+  const [bancos, setBancos] = useState<{ id: number; nombre: string }[]>([]);
+  const [mediosPago, setMediosPago] = useState<{ id: number; nombre: string }[]>([]);
+
   const [motivoRechazo, setMotivoRechazo] = useState("");
   const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] =
     useState(false);
@@ -111,7 +118,7 @@ export default function PagosPendientesPage() {
       setError("");
 
       const response = await fetch(
-        API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(user.id)
+        `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(user.id)}?sucursal_id=${params.id}`
       );
       const data = await response.json();
 
@@ -128,6 +135,23 @@ export default function PagosPendientesPage() {
     }
   };
 
+  const fetchBancosYMediosPago = async () => {
+    try {
+      const resBancos = await fetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL);
+      const resMedios = await fetch(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL);
+      if (resBancos.ok) {
+        const data = await resBancos.json();
+        setBancos(data.data || []);
+      }
+      if (resMedios.ok) {
+        const data = await resMedios.json();
+        setMediosPago(data.data || []);
+      }
+    } catch (err) {
+      console.error("Error al cargar bancos y medios:", err);
+    }
+  };
+
   useEffect(() => {
     if (!isGuardLoading) {
       if (activeTab === "pendientes") {
@@ -135,6 +159,7 @@ export default function PagosPendientesPage() {
       } else {
         fetchHistorial();
       }
+      fetchBancosYMediosPago();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGuardLoading, activeTab]);
@@ -147,6 +172,11 @@ export default function PagosPendientesPage() {
   const handleOpenAprobar = (pago: PagoPendiente) => {
     setSelectedPago(pago);
     setTipoCaja("efectivo");
+    setBancoId("");
+    setMedioPagoId("");
+    // Usamos la fecha del pago (sacando la hora para el input date)
+    const initDate = pago.fecha ? (pago.fecha.includes("T") ? pago.fecha.split("T")[0] : pago.fecha.substring(0, 10)) : new Date().toISOString().split("T")[0];
+    setFechaAprobacion(initDate);
     setIsAprobarDialogOpen(true);
   };
 
@@ -171,6 +201,9 @@ export default function PagosPendientesPage() {
           body: JSON.stringify({
             usuario_revisor_id: user.id,
             tipo_caja: tipoCaja,
+            fecha: fechaAprobacion,
+            banco_id: bancoId ? Number(bancoId) : null,
+            medio_pago_id: medioPagoId ? Number(medioPagoId) : null,
           }),
         }
       );
@@ -281,29 +314,27 @@ export default function PagosPendientesPage() {
           </Button>
         </div>
 
-        {/* Tabs para Empleados */}
-        {isEmployee && (
-          <div className="flex mb-6 bg-white/50 p-1 rounded-xl border border-[#E0E0E0] w-fit">
-            <button
-              onClick={() => setActiveTab("pendientes")}
-              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${activeTab === "pendientes"
-                ? "bg-[#002868] text-white shadow-md"
-                : "text-[#666666] hover:bg-[#F0F0F0]"
-                }`}
-            >
-              Mis Pendientes
-            </button>
-            <button
-              onClick={() => setActiveTab("historial")}
-              className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${activeTab === "historial"
-                ? "bg-[#002868] text-white shadow-md"
-                : "text-[#666666] hover:bg-[#F0F0F0]"
-                }`}
-            >
-              Mi Historial
-            </button>
-          </div>
-        )}
+        {/* Tabs de Vistas */}
+        <div className="flex mb-6 bg-white/50 p-1 rounded-xl border border-[#E0E0E0] w-fit">
+          <button
+            onClick={() => setActiveTab("pendientes")}
+            className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${activeTab === "pendientes"
+              ? "bg-[#002868] text-white shadow-md"
+              : "text-[#666666] hover:bg-[#F0F0F0]"
+              }`}
+          >
+            {isEmployee ? "Mis Pendientes" : "Pendientes"}
+          </button>
+          <button
+            onClick={() => setActiveTab("historial")}
+            className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${activeTab === "historial"
+              ? "bg-[#002868] text-white shadow-md"
+              : "text-[#666666] hover:bg-[#F0F0F0]"
+              }`}
+          >
+            {isEmployee ? "Mi Historial" : "Historial General"}
+          </button>
+        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -383,7 +414,25 @@ export default function PagosPendientesPage() {
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-semibold text-[#1A1A1A]">{pago.concepto}</span>
-                              <span className="text-xs text-[#666666] truncate max-w-[200px]">{pago.descripcion || "-"}</span>
+                              {pago.descripcion && pago.descripcion.includes("[Nota del sistema:") ? (
+                                <div className="flex flex-col gap-1.5 mt-1">
+                                  {pago.descripcion.split("[Nota del sistema:")[0].trim() && (
+                                    <span className="text-xs text-[#666666] max-w-[300px] whitespace-pre-wrap break-words inline-block">
+                                      {pago.descripcion.split("[Nota del sistema:")[0].trim()}
+                                    </span>
+                                  )}
+                                  <div className="bg-amber-50 text-amber-800 text-[11px] px-2.5 py-1.5 rounded-md border border-amber-200 flex items-start gap-1.5 w-fit max-w-sm mt-0.5">
+                                    <svg className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                                    </svg>
+                                    <span className="font-medium whitespace-normal break-words leading-snug">
+                                      {pago.descripcion.split("[Nota del sistema:")[1].split("]")[0].trim()}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-[#666666] max-w-[300px] whitespace-pre-wrap break-words">{pago.descripcion || "-"}</span>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell className={`text-right font-black text-sm ${parseFloat(pago.monto.toString()) >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
@@ -480,6 +529,16 @@ export default function PagosPendientesPage() {
           </DialogHeader>
           <div className="p-6 space-y-5">
             <div className="space-y-2">
+              <Label htmlFor="fechaAprobacion" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Fecha Efectiva</Label>
+              <Input
+                id="fechaAprobacion"
+                type="date"
+                value={fechaAprobacion}
+                onChange={(e) => setFechaAprobacion(e.target.value)}
+                className="w-full h-11 rounded-xl border border-[#E0E0E0] px-4 py-2 text-sm focus:border-[#002868] focus:outline-none focus:ring-4 focus:ring-[#002868]/10 transition-all bg-white"
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="tipoCaja" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Caja Destino</Label>
               <select
                 id="tipoCaja"
@@ -491,6 +550,38 @@ export default function PagosPendientesPage() {
                 <option value="banco">Caja Banco / Transferencia</option>
               </select>
             </div>
+            {tipoCaja === "banco" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bancoId" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Banco</Label>
+                  <select
+                    id="bancoId"
+                    value={bancoId}
+                    onChange={(e) => setBancoId(e.target.value)}
+                    className="w-full h-11 rounded-xl border border-[#E0E0E0] px-4 py-2 text-sm focus:border-[#002868] focus:outline-none focus:ring-4 focus:ring-[#002868]/10 transition-all appearance-none bg-white cursor-pointer"
+                  >
+                    <option value="">Seleccione banco</option>
+                    {bancos.map(b => (
+                      <option key={b.id} value={b.id}>{b.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="medioPagoId" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Medio de Pago</Label>
+                  <select
+                    id="medioPagoId"
+                    value={medioPagoId}
+                    onChange={(e) => setMedioPagoId(e.target.value)}
+                    className="w-full h-11 rounded-xl border border-[#E0E0E0] px-4 py-2 text-sm focus:border-[#002868] focus:outline-none focus:ring-4 focus:ring-[#002868]/10 transition-all appearance-none bg-white cursor-pointer"
+                  >
+                    <option value="">Seleccione medio</option>
+                    {mediosPago.map(m => (
+                      <option key={m.id} value={m.id}>{m.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
             {selectedPago && (
               <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between">
                 <div>

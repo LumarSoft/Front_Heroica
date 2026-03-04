@@ -6,11 +6,12 @@
  * Formatea una fecha ISO a formato dd/mm/aaaa
  */
 export function formatFecha(fechaISO: string): string {
-    const date = new Date(fechaISO);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    if (!fechaISO) return "-";
+    // Si viene completa con hora, nos quedamos con la porción de fecha 'YYYY-MM-DD'
+    const datePart = fechaISO.includes('T') ? fechaISO.split("T")[0] : fechaISO;
+    const [year, month, day] = datePart.split("-");
+    if (!year || !month || !day) return fechaISO; // Fallback si el formato no es el esperado
+    return `${day}/${month}/${year.substring(0, 4)}`;
 }
 
 /**

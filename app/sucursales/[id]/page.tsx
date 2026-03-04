@@ -140,7 +140,7 @@ export default function SucursalDetailPage() {
       const fetchPendingCount = async () => {
         try {
           const response = await fetch(
-            `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_ALL}?estado=pendiente`,
+            API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(Number(params.id))
           );
           if (response.ok) {
             const data = await response.json();
