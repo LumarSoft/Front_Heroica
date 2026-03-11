@@ -377,6 +377,19 @@ export default function SucursalDetailPage() {
     (tipo) => !documentos.find((d) => d.tipo_documento === tipo)
   ).length;
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const expiredDocs = documentos.filter((d) => {
+    if (!d.fecha_vencimiento) return false;
+    const venc = new Date(d.fecha_vencimiento);
+    venc.setHours(0, 0, 0, 0);
+    return venc < today;
+  });
+  const expiredDocsCount = expiredDocs.length;
+
+  const totalAlertCount = missingDocsCount + expiredDocsCount;
+
   if (isGuardLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -469,9 +482,9 @@ export default function SucursalDetailPage() {
                   />
                 </svg>
                 Ver Información
-                {!loadingDocumentos && missingDocsCount > 0 && (
+                {!loadingDocumentos && totalAlertCount > 0 && (
                   <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white ring-2 ring-white shadow-md">
-                    {missingDocsCount}
+                    {totalAlertCount}
                   </span>
                 )}
               </Button>
@@ -788,6 +801,25 @@ export default function SucursalDetailPage() {
               </div>
             )}
 
+            {/* Notificación de documentos vencidos */}
+            {!loadingDocumentos && expiredDocsCount > 0 && (
+              <div className="mb-4 p-3 rounded-lg bg-orange-50 border border-orange-300 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm text-orange-700 font-semibold">
+                    {expiredDocsCount === 1
+                      ? `1 documento vencido: ${expiredDocs[0].tipo_documento}`
+                      : `${expiredDocsCount} documentos vencidos`}
+                  </p>
+                  <p className="text-xs text-orange-600 mt-0.5">
+                    {expiredDocsCount > 1
+                      ? expiredDocs.map((d) => d.tipo_documento).join(", ")
+                      : "Actualizá el documento para mantener la documentación al día."}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {error && (
               <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
                 <p className="text-sm text-red-600 font-medium flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" /> {error}</p>
@@ -902,13 +934,24 @@ export default function SucursalDetailPage() {
                   <div className="space-y-4">
                     {MANDATORY_DOC_TYPES.map((tipoDoc) => {
                       const docSubido = documentos.find(d => d.tipo_documento === tipoDoc);
-                      
+                      const isExpired = docSubido?.fecha_vencimiento
+                        ? (() => { const v = new Date(docSubido.fecha_vencimiento); v.setHours(0,0,0,0); return v < today; })()
+                        : false;
+
                       return (
-                        <div key={tipoDoc} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div key={tipoDoc} className={`p-4 rounded-lg border ${
+                          isExpired
+                            ? "bg-orange-50 border-orange-300"
+                            : "bg-gray-50 border-gray-200"
+                        }`}>
                           <div className="flex justify-between items-center mb-2">
                             <h4 className="font-semibold text-[#002868] text-sm">{tipoDoc}</h4>
                             {docSubido ? (
-                              <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">Subido</span>
+                              isExpired ? (
+                                <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full font-semibold border border-orange-300">⚠ Vencido</span>
+                              ) : (
+                                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">Subido</span>
+                              )
                             ) : (
                               <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full font-medium">Pendiente</span>
                             )}
@@ -917,11 +960,12 @@ export default function SucursalDetailPage() {
                           {docSubido ? (
                             <div className="flex items-center justify-between mt-2">
                               <div className="flex items-center gap-2 overflow-hidden">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-green-600 flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-5 h-5 flex-shrink-0 ${isExpired ? "text-orange-500" : "text-green-600"}`}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 <div className="min-w-0">
                                   <p className="text-sm truncate" title={docSubido.nombre_archivo}>{docSubido.nombre_archivo}</p>
-                                  <p className="text-xs text-gray-500">
+                                  <p className={`text-xs font-medium ${isExpired ? "text-red-600" : "text-gray-500"}`}>
                                     Vence: {docSubido.fecha_vencimiento ? new Date(docSubido.fecha_vencimiento).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : 'N/A'}
+                                    {isExpired && " — VENCIDO"}
                                   </p>
                                 </div>
                               </div>
