@@ -284,6 +284,10 @@ export default function SucursalDetailPage() {
       setError("El CBU es obligatorio");
       return;
     }
+    if (nuevaCuenta.cbu.length !== 22) {
+      setError(`El CBU debe tener exactamente 22 dígitos (actualmente tiene ${nuevaCuenta.cbu.length})`);
+      return;
+    }
     setIsSavingCuenta(true);
     setError("");
     try {
@@ -984,14 +988,27 @@ export default function SucursalDetailPage() {
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">CBU / CVU *</Label>
-                        <Input value={nuevaCuenta.cbu} onChange={(e) => setNuevaCuenta({...nuevaCuenta, cbu: e.target.value})} className="h-8 text-sm" placeholder="22 dígitos" />
+                        <Input
+                          value={nuevaCuenta.cbu}
+                          onChange={(e) => {
+                            const onlyDigits = e.target.value.replace(/\D/g, "").slice(0, 22);
+                            setNuevaCuenta({ ...nuevaCuenta, cbu: onlyDigits });
+                          }}
+                          maxLength={22}
+                          inputMode="numeric"
+                          className={`h-8 text-sm ${nuevaCuenta.cbu.length > 0 && nuevaCuenta.cbu.length !== 22 ? "border-red-400 focus-visible:ring-red-400" : nuevaCuenta.cbu.length === 22 ? "border-green-400 focus-visible:ring-green-400" : ""}`}
+                          placeholder="22 dígitos"
+                        />
+                        <p className={`text-xs text-right ${nuevaCuenta.cbu.length === 22 ? "text-green-600" : nuevaCuenta.cbu.length > 0 ? "text-red-500" : "text-gray-400"}`}>
+                          {nuevaCuenta.cbu.length}/22
+                        </p>
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Alias</Label>
                         <Input value={nuevaCuenta.alias} onChange={(e) => setNuevaCuenta({...nuevaCuenta, alias: e.target.value})} className="h-8 text-sm" placeholder="JUAN.PEREZ" />
                       </div>
                     </div>
-                    <Button type="button" size="sm" onClick={handleAddCuenta} disabled={!nuevaCuenta.cbu || isSavingCuenta} className="w-full h-8 bg-[#002868] text-white">
+                    <Button type="button" size="sm" onClick={handleAddCuenta} disabled={nuevaCuenta.cbu.length !== 22 || isSavingCuenta} className="w-full h-8 bg-[#002868] text-white">
                       Guardar Cuenta
                     </Button>
                   </div>
