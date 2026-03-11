@@ -361,6 +361,18 @@ export default function SucursalDetailPage() {
     }
   };
 
+  const MANDATORY_DOC_TYPES = [
+    "Constancia de CUIT",
+    "Constancia de IIBB",
+    "Certificado MyPyme",
+    "Constancia de CBU",
+    "Habilitación del local",
+  ];
+
+  const missingDocsCount = MANDATORY_DOC_TYPES.filter(
+    (tipo) => !documentos.find((d) => d.tipo_documento === tipo)
+  ).length;
+
   if (isGuardLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -436,7 +448,7 @@ export default function SucursalDetailPage() {
                 onClick={() => setIsInfoDialogOpen(true)}
                 variant="outline"
                 size="sm"
-                className="border-[#002868] text-[#002868] hover:bg-[#002868] hover:text-white cursor-pointer transition-all"
+                className="relative border-[#002868] text-[#002868] hover:bg-[#002868] hover:text-white cursor-pointer transition-all"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -453,6 +465,11 @@ export default function SucursalDetailPage() {
                   />
                 </svg>
                 Ver Información
+                {!loadingDocumentos && missingDocsCount > 0 && (
+                  <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white ring-2 ring-white shadow-md">
+                    {missingDocsCount}
+                  </span>
+                )}
               </Button>
 
               {/* Botón Reportes (Solo Admin) */}
@@ -750,6 +767,23 @@ export default function SucursalDetailPage() {
               </div>
             )}
 
+            {/* Notificación de documentos faltantes */}
+            {!loadingDocumentos && missingDocsCount > 0 && (
+              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm text-red-700 font-semibold">
+                    {missingDocsCount === 1
+                      ? "Falta 1 documento obligatorio por subir"
+                      : `Faltan ${missingDocsCount} documentos obligatorios por subir`}
+                  </p>
+                  <p className="text-xs text-red-600 mt-0.5">
+                    Revisá la sección Documentación y completá los archivos pendientes.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {error && (
               <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
                 <p className="text-sm text-red-600 font-medium flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" /> {error}</p>
@@ -862,13 +896,7 @@ export default function SucursalDetailPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {[
-                      "Constancia de CUIT",
-                      "Constancia de IIBB",
-                      "Certificado MyPyme",
-                      "Constancia de CBU",
-                      "Habilitación del local"
-                    ].map((tipoDoc) => {
+                    {MANDATORY_DOC_TYPES.map((tipoDoc) => {
                       const docSubido = documentos.find(d => d.tipo_documento === tipoDoc);
                       
                       return (
