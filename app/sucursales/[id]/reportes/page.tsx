@@ -52,7 +52,7 @@ function DistributionRow({
 
   return (
     <div
-      className={`group rounded-lg p-3 transition-all duration-150 ${isClickable ? "cursor-pointer hover:bg-slate-100 active:scale-[0.99]" : ""
+      className={`group rounded-lg p-3 transition-all duration-150 print:break-inside-avoid ${isClickable ? "cursor-pointer hover:bg-slate-100 active:scale-[0.99]" : ""
         }`}
       onClick={isClickable ? onClick : undefined}
     >
@@ -358,7 +358,7 @@ export default function ReportesPage() {
             </section>
 
             {/* ── 2 · Ingresos ─────────────────────────────────────────────── */}
-            <section>
+            <section className="page-break-before">
               <SectionHeading number="2" title="Discriminado de Ingresos" className="mt-4" />
               <DrillDownBreadcrumb
                 root="Todas las categorías"
@@ -402,7 +402,7 @@ export default function ReportesPage() {
             </section>
 
             {/* ── 4 · Deudas ──────────────────────────────────────── */}
-            <section className="mt-8">
+            <section className="mt-8 page-break-before">
               <SectionHeading number="4" title="Listado de Deudas" className="mt-4" />
               <DeudaPanel deudas={reportData.detalles?.deudas || []} />
             </section>
@@ -412,9 +412,41 @@ export default function ReportesPage() {
               <h2 className="text-xl font-bold text-slate-800 mb-4 border-b-2 border-slate-200 pb-2">
                 Detalle de Movimientos Principales
               </h2>
-              <p className="text-center italic text-slate-500 mt-10 text-sm">
-                En esta sección podría ir el listado detallado de movimientos (Ingresos y Egresos).
-              </p>
+              {(() => {
+                const allMovs = [...(reportData.detalles?.ingresos || []), ...(reportData.detalles?.egresos || [])].sort((a: any, b: any) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+                if (allMovs.length === 0) return <p className="text-center italic text-slate-500 mt-10 text-sm">No hay movimientos en este período.</p>;
+
+                return (
+                  <table className="w-full text-sm text-left border-collapse mt-4">
+                    <thead>
+                      <tr className="border-b-2 border-slate-300 text-slate-700">
+                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">Fecha</th>
+                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">Concepto</th>
+                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">Categoría / Subcategoría</th>
+                        <th className="py-2 px-2 text-right font-bold uppercase text-xs tracking-wider">Monto</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {allMovs.map((mov: any, i: number) => (
+                        <tr key={mov.id ?? i} className="print:break-inside-avoid">
+                          <td className="py-2 px-2 text-slate-500 whitespace-nowrap">
+                            {new Date(mov.fecha).toLocaleDateString("es-AR", { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                          </td>
+                          <td className="py-2 px-2 font-medium text-slate-800">
+                            {mov.concepto || "Sin concepto"}
+                          </td>
+                          <td className="py-2 px-2 text-slate-500 text-xs">
+                            {mov.categoria_nombre || "General"}{mov.subcategoria_nombre ? ` / ${mov.subcategoria_nombre}` : ''}
+                          </td>
+                          <td className={`py-2 px-2 text-right font-bold tabular-nums whitespace-nowrap ${mov.tipo === 'ingreso' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            {mov.tipo === 'ingreso' ? '+' : '-'}{formatMonto(Math.abs(mov.monto))}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                );
+              })()}
             </div>
           </div>
         ) : null}
@@ -485,7 +517,7 @@ function SummaryCard({
 }) {
   const a = accentMap[accent] ?? accentMap.blue;
   return (
-    <Card className={`border-l-4 ${a.border} shadow-sm hover:shadow-md transition-shadow duration-200`}>
+    <Card className={`border-l-4 ${a.border} shadow-sm hover:shadow-md transition-shadow duration-200 print:break-inside-avoid`}>
       <CardHeader className="pb-1 pt-4 px-5">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
@@ -577,7 +609,7 @@ function BreakdownPanel({
             ? `Subcategorías de "${selectedCategory}"`
             : "Por categoría — clic para desglosar ▸"}
         </p>
-        <div className="space-y-1 overflow-auto max-h-64 pr-1">
+        <div className="space-y-1 overflow-auto max-h-64 print:overflow-visible print:max-h-none pr-1">
           {currentData.map((item: any, i: number) => {
             const color = selectedCategory
               ? COLORS[
@@ -673,7 +705,7 @@ function DeudaPanel({ deudas }: { deudas: any[] }) {
         {deudas.map((deuda: any, i: number) => {
           const antig = getAntiguedad(deuda.fecha);
           return (
-            <div key={deuda.id ?? i} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors">
+            <div key={deuda.id ?? i} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors print:break-inside-avoid">
               {/* Dot indicator */}
               <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${antig.dotClass}`} />
 
