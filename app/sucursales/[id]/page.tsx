@@ -169,7 +169,7 @@ export default function SucursalDetailPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let { name, value } = e.target;
-    
+
     if (name === "cuit") {
       const digits = value.replace(/\D/g, "");
       if (digits.length <= 11) {
@@ -581,8 +581,8 @@ export default function SucursalDetailPage() {
                   </p>
                   <p
                     className={`text-2xl font-bold ${totalesEfectivo.total_real >= 0
-                        ? "text-emerald-600"
-                        : "text-rose-600"
+                      ? "text-emerald-600"
+                      : "text-rose-600"
                       }`}
                   >
                     {formatMonto(totalesEfectivo.total_real)}
@@ -672,8 +672,8 @@ export default function SucursalDetailPage() {
                   </p>
                   <p
                     className={`text-2xl font-bold ${totalesBanco.total_real >= 0
-                        ? "text-emerald-600"
-                        : "text-rose-600"
+                      ? "text-emerald-600"
+                      : "text-rose-600"
                       }`}
                   >
                     {formatMonto(totalesBanco.total_real)}
@@ -852,7 +852,7 @@ export default function SucursalDetailPage() {
                   >
                     Nombre de la Sucursal *
                   </Label>
-                    <Input
+                  <Input
                     id="nombre"
                     name="nombre"
                     value={formData.nombre}
@@ -952,15 +952,14 @@ export default function SucursalDetailPage() {
                     {MANDATORY_DOC_TYPES.map((tipoDoc) => {
                       const docSubido = documentos.find(d => d.tipo_documento === tipoDoc);
                       const isExpired = docSubido?.fecha_vencimiento
-                        ? (() => { const v = new Date(docSubido.fecha_vencimiento); v.setHours(0,0,0,0); return v < today; })()
+                        ? (() => { const v = new Date(docSubido.fecha_vencimiento); v.setHours(0, 0, 0, 0); return v < today; })()
                         : false;
 
                       return (
-                        <div key={tipoDoc} className={`p-4 rounded-lg border ${
-                          isExpired
+                        <div key={tipoDoc} className={`p-4 rounded-lg border ${isExpired
                             ? "bg-orange-50 border-orange-300"
                             : "bg-gray-50 border-gray-200"
-                        }`}>
+                          }`}>
                           <div className="flex justify-between items-center mb-2">
                             <h4 className="font-semibold text-[#002868] text-sm">{tipoDoc}</h4>
                             {docSubido ? (
@@ -973,7 +972,7 @@ export default function SucursalDetailPage() {
                               <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full font-medium">Pendiente</span>
                             )}
                           </div>
-                          
+
                           {docSubido ? (
                             <div className="flex items-center justify-between mt-2">
                               <div className="flex items-center gap-2 overflow-hidden">
@@ -1041,11 +1040,11 @@ export default function SucursalDetailPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <Label className="text-xs">Banco</Label>
-                        <Input value={nuevaCuenta.banco} onChange={(e) => setNuevaCuenta({...nuevaCuenta, banco: e.target.value})} className="h-8 text-sm" placeholder="Ej: Galicia" />
+                        <Input value={nuevaCuenta.banco} onChange={(e) => setNuevaCuenta({ ...nuevaCuenta, banco: e.target.value })} className="h-8 text-sm" placeholder="Ej: Galicia" />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Tipo de Cuenta</Label>
-                        <Input value={nuevaCuenta.tipo_cuenta} onChange={(e) => setNuevaCuenta({...nuevaCuenta, tipo_cuenta: e.target.value})} className="h-8 text-sm" placeholder="CA $ / CC" />
+                        <Input value={nuevaCuenta.tipo_cuenta} onChange={(e) => setNuevaCuenta({ ...nuevaCuenta, tipo_cuenta: e.target.value })} className="h-8 text-sm" placeholder="CA $ / CC" />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">CBU / CVU *</Label>
@@ -1066,7 +1065,7 @@ export default function SucursalDetailPage() {
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Alias</Label>
-                        <Input value={nuevaCuenta.alias} onChange={(e) => setNuevaCuenta({...nuevaCuenta, alias: e.target.value})} className="h-8 text-sm" placeholder="JUAN.PEREZ" />
+                        <Input value={nuevaCuenta.alias} onChange={(e) => setNuevaCuenta({ ...nuevaCuenta, alias: e.target.value })} className="h-8 text-sm" placeholder="JUAN.PEREZ" />
                       </div>
                     </div>
                     <Button type="button" size="sm" onClick={handleAddCuenta} disabled={nuevaCuenta.cbu.length !== 22 || isSavingCuenta} className="w-full h-8 bg-[#002868] text-white">
