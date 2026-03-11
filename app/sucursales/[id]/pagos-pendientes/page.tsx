@@ -81,6 +81,10 @@ export default function PagosPendientesPage() {
   const [motivoRechazo, setMotivoRechazo] = useState("");
   const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] =
     useState(false);
+
+  // Filtros del historial (solo admin)
+  const [filtroEstado, setFiltroEstado] = useState<"todos" | "aprobado" | "rechazado">("todos");
+  const [filtroUsuario, setFiltroUsuario] = useState<string>("");
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null);
 
   // Verificar si la sucursal está activa
@@ -228,7 +232,29 @@ export default function PagosPendientesPage() {
 
   const total = calcularTotal(pagosPendientes);
   const isEmployee = user?.rol === "empleado";
-  const displayData = activeTab === "pendientes" ? pagosPendientes : historial;
+  const isAdmin = user?.rol === "admin";
+
+  // Usuarios revisores únicos del historial (para el filtro)
+  const usuariosRevisores = Array.from(
+    new Set(
+      historial
+        .map((p) => p.usuario_revisor_nombre)
+        .filter((n): n is string => Boolean(n))
+    )
+  ).sort();
+
+  // Historial filtrado
+  const historialFiltrado = historial.filter((p) => {
+    if (filtroEstado !== "todos" && p.estado !== filtroEstado) return false;
+    if (filtroUsuario && p.usuario_revisor_nombre !== filtroUsuario) return false;
+    return true;
+  });
+
+  const hayFiltrosActivos = filtroEstado !== "todos" || filtroUsuario !== "";
+
+  const displayData = activeTab === "pendientes"
+    ? pagosPendientes
+    : (isAdmin ? historialFiltrado : historial);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
@@ -277,9 +303,9 @@ export default function PagosPendientesPage() {
         )}
 
         {/* Tabs de Vistas */}
-        <div className="flex mb-6 bg-white/50 p-1 rounded-xl border border-[#E0E0E0] w-fit">
+        <div className="flex mb-4 bg-white/50 p-1 rounded-xl border border-[#E0E0E0] w-fit">
           <button
-            onClick={() => setActiveTab("pendientes")}
+            onClick={() => { setActiveTab("pendientes"); setFiltroEstado("todos"); setFiltroUsuario(""); }}
             className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${activeTab === "pendientes"
               ? "bg-[#002868] text-white shadow-md"
               : "text-[#666666] hover:bg-[#F0F0F0]"
@@ -297,6 +323,75 @@ export default function PagosPendientesPage() {
             {isEmployee ? "Mi Historial" : "Historial General"}
           </button>
         </div>
+
+        {/* Barra de filtros — solo en historial y solo para admin */}
+        {activeTab === "historial" && isAdmin && (
+          <div className="mb-6 p-4 bg-white rounded-xl border border-[#E0E0E0] shadow-sm flex flex-wrap items-center gap-3">
+            {/* Filtro Estado */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-[#5A6070] uppercase tracking-wider mr-1">Estado:</span>
+              {(["todos", "aprobado", "rechazado"] as const).map((est) => (
+                <button
+                  key={est}
+                  onClick={() => setFiltroEstado(est)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                    filtroEstado === est
+                      ? est === "todos"
+                        ? "bg-[#002868] text-white border-[#002868]"
+                        : est === "aprobado"
+                        ? "bg-emerald-500 text-white border-emerald-500"
+                        : "bg-rose-500 text-white border-rose-500"
+                      : "bg-white text-[#666666] border-[#E0E0E0] hover:border-[#B0B0B0]"
+                  }`}
+                >
+                  {est === "todos" ? "Todos" : est === "aprobado" ? "Aprobados" : "Rechazados"}
+                </button>
+              ))}
+            </div>
+
+            {/* Separador */}
+            <div className="h-5 w-px bg-[#E0E0E0]" />
+
+            {/* Filtro por usuario revisor */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Revisado por:</span>
+              <select
+                value={filtroUsuario}
+                onChange={(e) => setFiltroUsuario(e.target.value)}
+                className="h-8 rounded-lg border border-[#E0E0E0] bg-white px-3 text-sm text-[#1A1A1A] focus:border-[#002868] focus:outline-none focus:ring-2 focus:ring-[#002868]/20 appearance-none cursor-pointer min-w-[160px]"
+              >
+                <option value="">Todos los usuarios</option>
+                {usuariosRevisores.map((nombre) => (
+                  <option key={nombre} value={nombre}>{nombre}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Limpiar filtros */}
+            {hayFiltrosActivos && (
+              <>
+                <div className="h-5 w-px bg-[#E0E0E0]" />
+                <button
+                  onClick={() => { setFiltroEstado("todos"); setFiltroUsuario(""); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#666666] bg-[#F5F5F5] hover:bg-[#ECECEC] border border-[#E0E0E0] transition-all cursor-pointer"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Limpiar filtros
+                </button>
+              </>
+            )}
+
+            {/* Contador de resultados */}
+            <div className="ml-auto">
+              <span className="text-xs text-[#8A8F9C]">
+                {historialFiltrado.length} resultado{historialFiltrado.length !== 1 ? "s" : ""}
+                {hayFiltrosActivos && ` de ${historial.length}`}
+              </span>
+            </div>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
