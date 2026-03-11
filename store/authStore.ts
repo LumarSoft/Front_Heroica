@@ -1,11 +1,13 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { ROLES } from "@/lib/constants";
 
 interface User {
   id: number;
   email: string;
   nombre: string;
   rol: string;
+  rol_id: number;
 }
 
 interface AuthState {
@@ -14,11 +16,12 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
+  isSuperAdmin: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
       isAuthenticated: false,
@@ -28,9 +31,13 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         set({ token: null, user: null, isAuthenticated: false });
       },
+      isSuperAdmin: () => {
+        const { user } = get();
+        return user?.rol_id === ROLES.SUPERADMIN.id;
+      },
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
       storage: createJSONStorage(() => localStorage),
       skipHydration: false,
     }

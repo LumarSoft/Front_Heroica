@@ -20,20 +20,19 @@ import { useEmployeeNotifications } from "@/hooks/use-employee-notifications";
 import { formatMonto } from "@/lib/formatters";
 import type { Sucursal, Documento } from "@/lib/types";
 import { AlertTriangle, Mail, Paperclip } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 
 export default function SucursalDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { user, isGuardLoading } = useAuthGuard();
+  const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin());
   const [pendingCount, setPendingCount] = useState(0);
 
   // Notificaciones para empleados (aprobaciones / rechazos de pagos pendientes)
   const isEmployee = user?.rol === "empleado";
-  const { unseenCount: employeeUnseenCount, clearUnseenCount } = useEmployeeNotifications(
-    user?.id,
-    Number(params.id),
-    isEmployee
-  );
+  const { unseenCount: employeeUnseenCount, clearUnseenCount } =
+    useEmployeeNotifications(user?.id, Number(params.id), isEmployee);
 
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,13 +66,21 @@ export default function SucursalDetailPage() {
   const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [loadingDocumentos, setLoadingDocumentos] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [docToDelete, setDocToDelete] = useState<{ id: number, nombre: string } | null>(null);
+  const [docToDelete, setDocToDelete] = useState<{
+    id: number;
+    nombre: string;
+  } | null>(null);
   const [isDeleteDocDialogOpen, setIsDeleteDocDialogOpen] = useState(false);
 
   // Estados para cuentas bancarias
   const [cuentasBancarias, setCuentasBancarias] = useState<any[]>([]);
   const [loadingCuentas, setLoadingCuentas] = useState(false);
-  const [nuevaCuenta, setNuevaCuenta] = useState({ cbu: '', alias: '', tipo_cuenta: '', banco: '' });
+  const [nuevaCuenta, setNuevaCuenta] = useState({
+    cbu: "",
+    alias: "",
+    tipo_cuenta: "",
+    banco: "",
+  });
   const [isAddingCuenta, setIsAddingCuenta] = useState(false);
   const [isSavingCuenta, setIsSavingCuenta] = useState(false);
 
@@ -84,7 +91,7 @@ export default function SucursalDetailPage() {
     const fetchSucursal = async () => {
       try {
         const response = await fetch(
-          API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)),
+          API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id))
         );
         const data = await response.json();
 
@@ -122,7 +129,7 @@ export default function SucursalDetailPage() {
 
       // Cargar totales de efectivo
       const resEfectivo = await fetch(
-        API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(Number(params.id)),
+        API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(Number(params.id))
       );
       const dataEfectivo = await resEfectivo.json();
       if (resEfectivo.ok) {
@@ -131,7 +138,7 @@ export default function SucursalDetailPage() {
 
       // Cargar totales de banco
       const resBanco = await fetch(
-        API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(Number(params.id)),
+        API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(Number(params.id))
       );
       const dataBanco = await resBanco.json();
       if (resBanco.ok) {
@@ -145,7 +152,7 @@ export default function SucursalDetailPage() {
   };
 
   useEffect(() => {
-    if (user?.rol === "admin") {
+    if (isSuperAdmin) {
       const fetchPendingCount = async () => {
         try {
           const response = await fetch(
@@ -176,7 +183,10 @@ export default function SucursalDetailPage() {
         if (digits.length > 2 && digits.length <= 10) {
           value = `${digits.substring(0, 2)}-${digits.substring(2)}`;
         } else if (digits.length > 10) {
-          value = `${digits.substring(0, 2)}-${digits.substring(2, 10)}-${digits.substring(10, 11)}`;
+          value = `${digits.substring(0, 2)}-${digits.substring(
+            2,
+            10
+          )}-${digits.substring(10, 11)}`;
         } else {
           value = digits;
         }
@@ -200,7 +210,7 @@ export default function SucursalDetailPage() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
-        },
+        }
       );
 
       const data = await response.json();
@@ -224,7 +234,7 @@ export default function SucursalDetailPage() {
     try {
       setLoadingDocumentos(true);
       const response = await fetch(
-        API_ENDPOINTS.SUCURSALES.GET_DOCUMENTOS(Number(params.id)),
+        API_ENDPOINTS.SUCURSALES.GET_DOCUMENTOS(Number(params.id))
       );
       const data = await response.json();
 
@@ -241,7 +251,9 @@ export default function SucursalDetailPage() {
   const fetchCuentasBancarias = async () => {
     try {
       setLoadingCuentas(true);
-      const res = await fetch(API_ENDPOINTS.CUENTAS_BANCARIAS.GET_BY_SUCURSAL(Number(params.id)));
+      const res = await fetch(
+        API_ENDPOINTS.CUENTAS_BANCARIAS.GET_BY_SUCURSAL(Number(params.id))
+      );
       const data = await res.json();
       if (res.ok) setCuentasBancarias(data.data || []);
     } catch (err) {
@@ -251,7 +263,11 @@ export default function SucursalDetailPage() {
     }
   };
 
-  const handleUploadDoc = async (tipoDoc: string, fechaVenc: string, file: File) => {
+  const handleUploadDoc = async (
+    tipoDoc: string,
+    fechaVenc: string,
+    file: File
+  ) => {
     setIsUploadingDoc(true);
     setError("");
 
@@ -266,7 +282,7 @@ export default function SucursalDetailPage() {
         {
           method: "POST",
           body: formData,
-        },
+        }
       );
 
       const data = await response.json();
@@ -279,7 +295,6 @@ export default function SucursalDetailPage() {
 
       // Recargar lista de documentos
       await fetchDocumentos();
-
     } catch (err: any) {
       console.error("Error al subir documento:", err);
       setError(err.message || "Error al subir documento");
@@ -294,20 +309,25 @@ export default function SucursalDetailPage() {
       return;
     }
     if (nuevaCuenta.cbu.length !== 22) {
-      setError(`El CBU debe tener exactamente 22 dígitos (actualmente tiene ${nuevaCuenta.cbu.length})`);
+      setError(
+        `El CBU debe tener exactamente 22 dígitos (actualmente tiene ${nuevaCuenta.cbu.length})`
+      );
       return;
     }
     setIsSavingCuenta(true);
     setError("");
     try {
-      const response = await fetch(API_ENDPOINTS.CUENTAS_BANCARIAS.CREATE(Number(params.id)), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(nuevaCuenta)
-      });
+      const response = await fetch(
+        API_ENDPOINTS.CUENTAS_BANCARIAS.CREATE(Number(params.id)),
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(nuevaCuenta),
+        }
+      );
       if (!response.ok) throw new Error("Error al crear cuenta");
       toast.success("Cuenta agregada exitosamente");
-      setNuevaCuenta({ cbu: '', alias: '', tipo_cuenta: '', banco: '' });
+      setNuevaCuenta({ cbu: "", alias: "", tipo_cuenta: "", banco: "" });
       setIsAddingCuenta(false);
       await fetchCuentasBancarias();
     } catch (err: any) {
@@ -320,7 +340,9 @@ export default function SucursalDetailPage() {
   const handleDeleteCuenta = async (id: number) => {
     if (!confirm("¿Eliminar cuenta bancaria?")) return;
     try {
-      const response = await fetch(API_ENDPOINTS.CUENTAS_BANCARIAS.DELETE(id), { method: "DELETE" });
+      const response = await fetch(API_ENDPOINTS.CUENTAS_BANCARIAS.DELETE(id), {
+        method: "DELETE",
+      });
       if (!response.ok) throw new Error("Error al eliminar cuenta");
       toast.success("Cuenta eliminada");
       await fetchCuentasBancarias();
@@ -332,7 +354,7 @@ export default function SucursalDetailPage() {
   const handleDownloadDoc = (docId: number) => {
     const url = API_ENDPOINTS.SUCURSALES.DOWNLOAD_DOCUMENTO(
       Number(params.id),
-      docId,
+      docId
     );
     window.open(url, "_blank");
   };
@@ -349,10 +371,13 @@ export default function SucursalDetailPage() {
 
     try {
       const response = await fetch(
-        API_ENDPOINTS.SUCURSALES.DELETE_DOCUMENTO(Number(params.id), docToDelete.id),
+        API_ENDPOINTS.SUCURSALES.DELETE_DOCUMENTO(
+          Number(params.id),
+          docToDelete.id
+        ),
         {
           method: "DELETE",
-        },
+        }
       );
 
       const data = await response.json();
@@ -498,10 +523,12 @@ export default function SucursalDetailPage() {
                 )}
               </Button>
 
-              {/* Botón Reportes (Solo Admin) */}
-              {user?.rol === "admin" && (
+              {/* Botón Reportes (Solo Superadmin) */}
+              {isSuperAdmin && (
                 <Button
-                  onClick={() => router.push(`/sucursales/${params.id}/reportes`)}
+                  onClick={() =>
+                    router.push(`/sucursales/${params.id}/reportes`)
+                  }
                   size="sm"
                   className="bg-[#002868] text-white hover:bg-[#003d8f] cursor-pointer transition-all shadow-md"
                 >
@@ -513,7 +540,11 @@ export default function SucursalDetailPage() {
                     stroke="currentColor"
                     className="w-4 h-4 mr-2"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+                    />
                   </svg>
                   Ver Reportes
                 </Button>
@@ -580,10 +611,11 @@ export default function SucursalDetailPage() {
                     Saldo Real
                   </p>
                   <p
-                    className={`text-2xl font-bold ${totalesEfectivo.total_real >= 0
-                      ? "text-emerald-600"
-                      : "text-rose-600"
-                      }`}
+                    className={`text-2xl font-bold ${
+                      totalesEfectivo.total_real >= 0
+                        ? "text-emerald-600"
+                        : "text-rose-600"
+                    }`}
                   >
                     {formatMonto(totalesEfectivo.total_real)}
                   </p>
@@ -591,7 +623,7 @@ export default function SucursalDetailPage() {
                     <p className="text-xs text-slate-400 mt-1">
                       Última act:{" "}
                       {new Date(
-                        totalesEfectivo.ultima_actualizacion,
+                        totalesEfectivo.ultima_actualizacion
                       ).toLocaleString("es-AR", {
                         day: "2-digit",
                         month: "2-digit",
@@ -671,10 +703,11 @@ export default function SucursalDetailPage() {
                     Saldo Real
                   </p>
                   <p
-                    className={`text-2xl font-bold ${totalesBanco.total_real >= 0
-                      ? "text-emerald-600"
-                      : "text-rose-600"
-                      }`}
+                    className={`text-2xl font-bold ${
+                      totalesBanco.total_real >= 0
+                        ? "text-emerald-600"
+                        : "text-rose-600"
+                    }`}
                   >
                     {formatMonto(totalesBanco.total_real)}
                   </p>
@@ -737,8 +770,7 @@ export default function SucursalDetailPage() {
               </div>
               <h3 className="text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors relative inline-block">
                 Pagos Pendientes
-                {/* Badge admin: pagos pendientes de revisión */}
-                {user?.rol === "admin" && pendingCount > 0 && (
+                {isSuperAdmin && pendingCount > 0 && (
                   <span className="absolute -top-3 -right-6 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white ring-2 ring-white shadow-lg animate-bounce">
                     {pendingCount > 9 ? "9+" : pendingCount}
                   </span>
@@ -796,7 +828,8 @@ export default function SucursalDetailPage() {
               <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
                 <p className="text-sm text-amber-800 font-medium">
-                  Sucursal <strong>inactiva</strong> — solo visualización, no se pueden editar datos.
+                  Sucursal <strong>inactiva</strong> — solo visualización, no se
+                  pueden editar datos.
                 </p>
               </div>
             )}
@@ -812,7 +845,8 @@ export default function SucursalDetailPage() {
                       : `Faltan ${missingDocsCount} documentos obligatorios por subir`}
                   </p>
                   <p className="text-xs text-red-600 mt-0.5">
-                    Revisá la sección Documentación y completá los archivos pendientes.
+                    Revisá la sección Documentación y completá los archivos
+                    pendientes.
                   </p>
                 </div>
               </div>
@@ -839,7 +873,9 @@ export default function SucursalDetailPage() {
 
             {error && (
               <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
-                <p className="text-sm text-red-600 font-medium flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" /> {error}</p>
+                <p className="text-sm text-red-600 font-medium flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4" /> {error}
+                </p>
               </div>
             )}
 
@@ -922,7 +958,8 @@ export default function SucursalDetailPage() {
                     htmlFor="email_correspondencia"
                     className="text-[#002868] font-semibold text-sm"
                   >
-                    <Mail className="w-4 h-4 inline mr-1" /> Email de Correspondencia
+                    <Mail className="w-4 h-4 inline mr-1" /> Email de
+                    Correspondencia
                   </Label>
                   <Input
                     id="email_correspondencia"
@@ -950,69 +987,205 @@ export default function SucursalDetailPage() {
                 ) : (
                   <div className="space-y-4">
                     {MANDATORY_DOC_TYPES.map((tipoDoc) => {
-                      const docSubido = documentos.find(d => d.tipo_documento === tipoDoc);
+                      const docSubido = documentos.find(
+                        (d) => d.tipo_documento === tipoDoc
+                      );
                       const isExpired = docSubido?.fecha_vencimiento
-                        ? (() => { const v = new Date(docSubido.fecha_vencimiento); v.setHours(0, 0, 0, 0); return v < today; })()
+                        ? (() => {
+                            const v = new Date(docSubido.fecha_vencimiento);
+                            v.setHours(0, 0, 0, 0);
+                            return v < today;
+                          })()
                         : false;
 
                       return (
-                        <div key={tipoDoc} className={`p-4 rounded-lg border ${isExpired
-                            ? "bg-orange-50 border-orange-300"
-                            : "bg-gray-50 border-gray-200"
-                          }`}>
+                        <div
+                          key={tipoDoc}
+                          className={`p-4 rounded-lg border ${
+                            isExpired
+                              ? "bg-orange-50 border-orange-300"
+                              : "bg-gray-50 border-gray-200"
+                          }`}
+                        >
                           <div className="flex justify-between items-center mb-2">
-                            <h4 className="font-semibold text-[#002868] text-sm">{tipoDoc}</h4>
+                            <h4 className="font-semibold text-[#002868] text-sm">
+                              {tipoDoc}
+                            </h4>
                             {docSubido ? (
                               isExpired ? (
-                                <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full font-semibold border border-orange-300">⚠ Vencido</span>
+                                <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full font-semibold border border-orange-300">
+                                  ⚠ Vencido
+                                </span>
                               ) : (
-                                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">Subido</span>
+                                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">
+                                  Subido
+                                </span>
                               )
                             ) : (
-                              <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full font-medium">Pendiente</span>
+                              <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full font-medium">
+                                Pendiente
+                              </span>
                             )}
                           </div>
 
                           {docSubido ? (
                             <div className="flex items-center justify-between mt-2">
                               <div className="flex items-center gap-2 overflow-hidden">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-5 h-5 flex-shrink-0 ${isExpired ? "text-orange-500" : "text-green-600"}`}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={2}
+                                  stroke="currentColor"
+                                  className={`w-5 h-5 flex-shrink-0 ${
+                                    isExpired
+                                      ? "text-orange-500"
+                                      : "text-green-600"
+                                  }`}
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
                                 <div className="min-w-0">
-                                  <p className="text-sm truncate" title={docSubido.nombre_archivo}>{docSubido.nombre_archivo}</p>
-                                  <p className={`text-xs font-medium ${isExpired ? "text-red-600" : "text-gray-500"}`}>
-                                    Vence: {docSubido.fecha_vencimiento ? new Date(docSubido.fecha_vencimiento).toLocaleDateString('es-AR', { timeZone: 'UTC' }) : 'N/A'}
+                                  <p
+                                    className="text-sm truncate"
+                                    title={docSubido.nombre_archivo}
+                                  >
+                                    {docSubido.nombre_archivo}
+                                  </p>
+                                  <p
+                                    className={`text-xs font-medium ${
+                                      isExpired
+                                        ? "text-red-600"
+                                        : "text-gray-500"
+                                    }`}
+                                  >
+                                    Vence:{" "}
+                                    {docSubido.fecha_vencimiento
+                                      ? new Date(
+                                          docSubido.fecha_vencimiento
+                                        ).toLocaleDateString("es-AR", {
+                                          timeZone: "UTC",
+                                        })
+                                      : "N/A"}
                                     {isExpired && " — VENCIDO"}
                                   </p>
                                 </div>
                               </div>
                               <div className="flex gap-2">
-                                <Button type="button" variant="outline" size="sm" onClick={() => handleDownloadDoc(docSubido.id)} className="h-8 px-2 border-[#002868]/30 hover:bg-[#002868] hover:text-white transition-colors"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg></Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleDownloadDoc(docSubido.id)
+                                  }
+                                  className="h-8 px-2 border-[#002868]/30 hover:bg-[#002868] hover:text-white transition-colors"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={2}
+                                    stroke="currentColor"
+                                    className="w-4 h-4"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+                                    />
+                                  </svg>
+                                </Button>
                                 {sucursal?.activo && (
-                                  <Button type="button" variant="outline" size="sm" onClick={() => openDeleteDocDialog(docSubido.id, docSubido.nombre_archivo)} className="h-8 px-2 border-red-200 text-red-600 bg-red-50 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg></Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      openDeleteDocDialog(
+                                        docSubido.id,
+                                        docSubido.nombre_archivo
+                                      )
+                                    }
+                                    className="h-8 px-2 border-red-200 text-red-600 bg-red-50 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      strokeWidth={2}
+                                      stroke="currentColor"
+                                      className="w-4 h-4"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                                      />
+                                    </svg>
+                                  </Button>
                                 )}
                               </div>
                             </div>
                           ) : sucursal?.activo ? (
                             <div className="flex flex-col gap-2 mt-2">
                               <div className="flex gap-2 items-center">
-                                <Label className="text-xs text-gray-500 min-w-[120px]">Fecha Vencimiento:</Label>
-                                <Input type="date" id={`fecha-${tipoDoc.replace(/\s+/g, '-')}`} className="h-8 text-sm" />
+                                <Label className="text-xs text-gray-500 min-w-[120px]">
+                                  Fecha Vencimiento:
+                                </Label>
+                                <Input
+                                  type="date"
+                                  id={`fecha-${tipoDoc.replace(/\s+/g, "-")}`}
+                                  className="h-8 text-sm"
+                                />
                               </div>
                               <div className="flex gap-2">
-                                <Input type="file" id={`file-${tipoDoc.replace(/\s+/g, '-')}`} accept=".pdf,.jpg,.jpeg" className="h-8 text-sm flex-1" />
-                                <Button type="button" size="sm" disabled={isUploadingDoc} className="h-8 bg-[#002868]" onClick={() => {
-                                  const fileInput = document.getElementById(`file-${tipoDoc.replace(/\s+/g, '-')}`) as HTMLInputElement;
-                                  const dateInput = document.getElementById(`fecha-${tipoDoc.replace(/\s+/g, '-')}`) as HTMLInputElement;
-                                  if (!fileInput.files?.[0] || !dateInput.value) {
-                                    toast.error("Selecciona archivo y fecha de vencimiento");
-                                    return;
-                                  }
-                                  handleUploadDoc(tipoDoc, dateInput.value, fileInput.files[0]);
-                                }}>Subir</Button>
+                                <Input
+                                  type="file"
+                                  id={`file-${tipoDoc.replace(/\s+/g, "-")}`}
+                                  accept=".pdf,.jpg,.jpeg"
+                                  className="h-8 text-sm flex-1"
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={isUploadingDoc}
+                                  className="h-8 bg-[#002868]"
+                                  onClick={() => {
+                                    const fileInput = document.getElementById(
+                                      `file-${tipoDoc.replace(/\s+/g, "-")}`
+                                    ) as HTMLInputElement;
+                                    const dateInput = document.getElementById(
+                                      `fecha-${tipoDoc.replace(/\s+/g, "-")}`
+                                    ) as HTMLInputElement;
+                                    if (
+                                      !fileInput.files?.[0] ||
+                                      !dateInput.value
+                                    ) {
+                                      toast.error(
+                                        "Selecciona archivo y fecha de vencimiento"
+                                      );
+                                      return;
+                                    }
+                                    handleUploadDoc(
+                                      tipoDoc,
+                                      dateInput.value,
+                                      fileInput.files[0]
+                                    );
+                                  }}
+                                >
+                                  Subir
+                                </Button>
                               </div>
                             </div>
                           ) : (
-                            <p className="text-xs text-gray-400 mt-2 italic">No hay documento subido</p>
+                            <p className="text-xs text-gray-400 mt-2 italic">
+                              No hay documento subido
+                            </p>
                           )}
                         </div>
                       );
@@ -1025,12 +1198,31 @@ export default function SucursalDetailPage() {
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold text-[#002868]">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 inline mr-1 -mt-1"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-5 h-5 inline mr-1 -mt-1"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"
+                      />
+                    </svg>
                     Datos Bancarios ({cuentasBancarias.length})
                   </h3>
                   {sucursal?.activo && (
-                    <Button type="button" size="sm" variant="outline" onClick={() => setIsAddingCuenta(!isAddingCuenta)} className="text-[#002868] border-[#002868]">
-                      {isAddingCuenta ? 'Cancelar' : '+ Agregar Cuenta'}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsAddingCuenta(!isAddingCuenta)}
+                      className="text-[#002868] border-[#002868]"
+                    >
+                      {isAddingCuenta ? "Cancelar" : "+ Agregar Cuenta"}
                     </Button>
                   )}
                 </div>
@@ -1040,35 +1232,110 @@ export default function SucursalDetailPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <Label className="text-xs">Banco</Label>
-                        <Input value={nuevaCuenta.banco} onChange={(e) => setNuevaCuenta({ ...nuevaCuenta, banco: e.target.value })} className="h-8 text-sm" placeholder="Ej: Galicia" />
+                        <Input
+                          value={nuevaCuenta.banco}
+                          onChange={(e) =>
+                            setNuevaCuenta({
+                              ...nuevaCuenta,
+                              banco: e.target.value,
+                            })
+                          }
+                          className="h-8 text-sm"
+                          placeholder="Ej: Galicia"
+                        />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Tipo de Cuenta</Label>
-                        <Input value={nuevaCuenta.tipo_cuenta} onChange={(e) => setNuevaCuenta({ ...nuevaCuenta, tipo_cuenta: e.target.value })} className="h-8 text-sm" placeholder="CA $ / CC" />
+                        <Input
+                          value={nuevaCuenta.tipo_cuenta}
+                          onChange={(e) =>
+                            setNuevaCuenta({
+                              ...nuevaCuenta,
+                              tipo_cuenta: e.target.value,
+                            })
+                          }
+                          className="h-8 text-sm"
+                          placeholder="CA $ / CC"
+                        />
+                        <Input
+                          value={nuevaCuenta.tipo_cuenta}
+                          onChange={(e) =>
+                            setNuevaCuenta({
+                              ...nuevaCuenta,
+                              tipo_cuenta: e.target.value,
+                            })
+                          }
+                          className="h-8 text-sm"
+                          placeholder="CA $ / CC"
+                        />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">CBU / CVU *</Label>
                         <Input
                           value={nuevaCuenta.cbu}
+                          onChange={(e) =>
+                            setNuevaCuenta({
+                              ...nuevaCuenta,
+                              cbu: e.target.value,
+                            })
+                          }
+                          className="h-8 text-sm"
+                          placeholder="22 dígitos"
+                        />
+                        <Input
+                          value={nuevaCuenta.cbu}
                           onChange={(e) => {
-                            const onlyDigits = e.target.value.replace(/\D/g, "").slice(0, 22);
+                            const onlyDigits = e.target.value
+                              .replace(/\D/g, "")
+                              .slice(0, 22);
                             setNuevaCuenta({ ...nuevaCuenta, cbu: onlyDigits });
                           }}
                           maxLength={22}
                           inputMode="numeric"
-                          className={`h-8 text-sm ${nuevaCuenta.cbu.length > 0 && nuevaCuenta.cbu.length !== 22 ? "border-red-400 focus-visible:ring-red-400" : nuevaCuenta.cbu.length === 22 ? "border-green-400 focus-visible:ring-green-400" : ""}`}
+                          className={`h-8 text-sm ${
+                            nuevaCuenta.cbu.length > 0 &&
+                            nuevaCuenta.cbu.length !== 22
+                              ? "border-red-400 focus-visible:ring-red-400"
+                              : nuevaCuenta.cbu.length === 22
+                              ? "border-green-400 focus-visible:ring-green-400"
+                              : ""
+                          }`}
                           placeholder="22 dígitos"
                         />
-                        <p className={`text-xs text-right ${nuevaCuenta.cbu.length === 22 ? "text-green-600" : nuevaCuenta.cbu.length > 0 ? "text-red-500" : "text-gray-400"}`}>
+                        <p
+                          className={`text-xs text-right ${
+                            nuevaCuenta.cbu.length === 22
+                              ? "text-green-600"
+                              : nuevaCuenta.cbu.length > 0
+                              ? "text-red-500"
+                              : "text-gray-400"
+                          }`}
+                        >
                           {nuevaCuenta.cbu.length}/22
                         </p>
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Alias</Label>
-                        <Input value={nuevaCuenta.alias} onChange={(e) => setNuevaCuenta({ ...nuevaCuenta, alias: e.target.value })} className="h-8 text-sm" placeholder="JUAN.PEREZ" />
+                        <Input
+                          value={nuevaCuenta.alias}
+                          onChange={(e) =>
+                            setNuevaCuenta({
+                              ...nuevaCuenta,
+                              alias: e.target.value,
+                            })
+                          }
+                          className="h-8 text-sm"
+                          placeholder="JUAN.PEREZ"
+                        />
                       </div>
                     </div>
-                    <Button type="button" size="sm" onClick={handleAddCuenta} disabled={nuevaCuenta.cbu.length !== 22 || isSavingCuenta} className="w-full h-8 bg-[#002868] text-white">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleAddCuenta}
+                      disabled={nuevaCuenta.cbu.length !== 22 || isSavingCuenta}
+                      className="w-full h-8 bg-[#002868] text-white"
+                    >
                       Guardar Cuenta
                     </Button>
                   </div>
@@ -1081,21 +1348,51 @@ export default function SucursalDetailPage() {
                 ) : (
                   <div className="space-y-3">
                     {cuentasBancarias.map((cuenta) => (
-                      <div key={cuenta.id} className="p-3 bg-white rounded-lg border border-gray-200 shadow-sm flex justify-between items-center group hover:border-[#002868]">
+                      <div
+                        key={cuenta.id}
+                        className="p-3 bg-white rounded-lg border border-gray-200 shadow-sm flex justify-between items-center group hover:border-[#002868]"
+                      >
                         <div>
-                          <p className="font-semibold text-sm text-[#1A1A1A]">{cuenta.banco} - {cuenta.tipo_cuenta}</p>
-                          <p className="text-xs text-gray-600">CBU: {cuenta.cbu}</p>
-                          <p className="text-xs text-gray-500">Alias: {cuenta.alias || '-'}</p>
+                          <p className="font-semibold text-sm text-[#1A1A1A]">
+                            {cuenta.banco} - {cuenta.tipo_cuenta}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            CBU: {cuenta.cbu}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Alias: {cuenta.alias || "-"}
+                          </p>
                         </div>
                         {sucursal?.activo && (
-                          <Button type="button" variant="ghost" size="sm" onClick={() => handleDeleteCuenta(cuenta.id)} className="text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteCuenta(cuenta.id)}
+                            className="text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={2}
+                              stroke="currentColor"
+                              className="w-5 h-5"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                              />
+                            </svg>
                           </Button>
                         )}
                       </div>
                     ))}
                     {cuentasBancarias.length === 0 && !isAddingCuenta && (
-                      <p className="text-sm text-gray-500 text-center py-2">No hay cuentas bancarias registradas</p>
+                      <p className="text-sm text-gray-500 text-center py-2">
+                        No hay cuentas bancarias registradas
+                      </p>
                     )}
                   </div>
                 )}
@@ -1131,14 +1428,21 @@ export default function SucursalDetailPage() {
       </Dialog>
 
       {/* Modal de Confirmación para Eliminar Documento */}
-      <Dialog open={isDeleteDocDialogOpen} onOpenChange={setIsDeleteDocDialogOpen}>
+      <Dialog
+        open={isDeleteDocDialogOpen}
+        onOpenChange={setIsDeleteDocDialogOpen}
+      >
         <DialogContent className="sm:max-w-md bg-white">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-[#1A1A1A]">
               Confirmar Eliminación
             </DialogTitle>
             <DialogDescription className="text-[#666666]">
-              ¿Estás seguro de que deseas eliminar el archivo <span className="font-semibold text-[#1A1A1A]">"{docToDelete?.nombre}"</span>? Esta acción no se puede deshacer.
+              ¿Estás seguro de que deseas eliminar el archivo{" "}
+              <span className="font-semibold text-[#1A1A1A]">
+                "{docToDelete?.nombre}"
+              </span>
+              ? Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 mt-4">
