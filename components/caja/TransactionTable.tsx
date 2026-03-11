@@ -149,6 +149,7 @@ interface TransactionTableProps {
     onChangeState: (t: Transaction) => void;
     onDelete: (t: Transaction) => void;
     onToggleDeuda?: (t: Transaction) => void;
+    isReadOnly?: boolean;
 }
 
 export function TransactionTable({
@@ -161,6 +162,7 @@ export function TransactionTable({
     onChangeState,
     onDelete,
     onToggleDeuda,
+    isReadOnly = false,
 }: TransactionTableProps) {
     const total =
         customTotal !== undefined ? customTotal : calcularTotal(transactions);
@@ -278,8 +280,12 @@ export function TransactionTable({
                                                 <Button
                                                     size="sm"
                                                     onClick={() => onViewDetails(transaction)}
-                                                    className="bg-[#002868] hover:bg-[#003d8f] text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all flex items-center justify-center"
-                                                    title="Ver detalles"
+                                                    className={`text-white border-none cursor-pointer shadow-sm transition-all flex items-center justify-center ${
+                                                        isReadOnly
+                                                            ? "bg-gray-400 hover:bg-gray-500"
+                                                            : "bg-[#002868] hover:bg-[#003d8f] hover:shadow-md"
+                                                    }`}
+                                                    title={isReadOnly ? "Ver detalles (solo lectura)" : "Ver detalles"}
                                                 >
                                                     <svg
                                                         xmlns="http://www.w3.org/2000/svg"
@@ -304,9 +310,10 @@ export function TransactionTable({
                                                 {/* Cambiar estado */}
                                                 <Button
                                                     size="sm"
-                                                    onClick={() => onChangeState(transaction)}
-                                                    className="bg-[#002868] hover:bg-[#003d8f] text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all flex items-center justify-center"
-                                                    title="Cambiar estado"
+                                                    onClick={() => !isReadOnly && onChangeState(transaction)}
+                                                    disabled={isReadOnly}
+                                                    className="bg-[#002868] hover:bg-[#003d8f] text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                                                    title={isReadOnly ? "Sucursal inactiva" : "Cambiar estado"}
                                                 >
                                                     <svg
                                                         xmlns="http://www.w3.org/2000/svg"
@@ -327,13 +334,14 @@ export function TransactionTable({
                                                 {onToggleDeuda && (
                                                     <Button
                                                         size="sm"
-                                                        onClick={() => onToggleDeuda(transaction)}
-                                                        className={`border-none cursor-pointer shadow-sm hover:shadow-md transition-all flex items-center justify-center ${
+                                                        onClick={() => !isReadOnly && onToggleDeuda(transaction)}
+                                                        disabled={isReadOnly}
+                                                        className={`border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none ${
                                                             transaction.es_deuda === 1
                                                                 ? "bg-orange-500 hover:bg-orange-600 text-white"
                                                                 : "bg-orange-100 hover:bg-orange-200 text-orange-700"
                                                         }`}
-                                                        title={transaction.es_deuda === 1 ? "Quitar deuda" : "Marcar como deuda"}
+                                                        title={isReadOnly ? "Sucursal inactiva" : (transaction.es_deuda === 1 ? "Quitar deuda" : "Marcar como deuda")}
                                                     >
                                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -343,9 +351,10 @@ export function TransactionTable({
                                                 {/* Eliminar */}
                                                 <Button
                                                     size="sm"
-                                                    onClick={() => onDelete(transaction)}
-                                                    className="bg-rose-500 hover:bg-rose-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all flex items-center justify-center"
-                                                    title="Eliminar movimiento"
+                                                    onClick={() => !isReadOnly && onDelete(transaction)}
+                                                    disabled={isReadOnly}
+                                                    className="bg-rose-500 hover:bg-rose-600 text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                                                    title={isReadOnly ? "Sucursal inactiva" : "Eliminar movimiento"}
                                                 >
                                                     <svg
                                                         xmlns="http://www.w3.org/2000/svg"

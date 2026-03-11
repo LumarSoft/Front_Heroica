@@ -45,6 +45,7 @@ interface DetailsDialogProps {
     bancos: SelectOption[];
     mediosPago: SelectOption[];
     showBancoFields?: boolean;
+    isReadOnly?: boolean;
 }
 
 export function DetailsDialog({
@@ -59,6 +60,7 @@ export function DetailsDialog({
     bancos,
     mediosPago,
     showBancoFields = false,
+    isReadOnly = false,
 }: DetailsDialogProps) {
     const selectClasses =
         "w-full h-10 rounded-lg border border-[#E0E0E0] bg-white px-3 py-2 text-sm text-[#1A1A1A] transition-colors hover:border-[#B0B0B0] focus:border-[#002868] focus:outline-none focus:ring-2 focus:ring-[#002868]/20 appearance-none cursor-pointer";
@@ -73,10 +75,10 @@ export function DetailsDialog({
                 <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
                     <DialogHeader className="p-0 border-0">
                         <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
-                            Editar movimiento
+                            {isReadOnly ? "Ver movimiento" : "Editar movimiento"}
                         </DialogTitle>
                         <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
-                            Modifica los datos del movimiento de caja
+                            {isReadOnly ? "Sucursal inactiva — solo visualización" : "Modifica los datos del movimiento de caja"}
                         </DialogDescription>
                     </DialogHeader>
                 </div>
@@ -322,22 +324,24 @@ export function DetailsDialog({
                             disabled={isSaving}
                             className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] hover:border-[#C0C0C0] transition-all cursor-pointer"
                         >
-                            Cancelar
+                            {isReadOnly ? "Cerrar" : "Cancelar"}
                         </Button>
-                        <Button
-                            onClick={onSave}
-                            disabled={isSaving}
-                            className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm hover:shadow-md transition-all cursor-pointer"
-                        >
-                            {isSaving ? (
-                                <span className="flex items-center gap-2">
-                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    Guardando…
-                                </span>
-                            ) : (
-                                "Guardar cambios"
-                            )}
-                        </Button>
+                        {!isReadOnly && (
+                            <Button
+                                onClick={onSave}
+                                disabled={isSaving}
+                                className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm hover:shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isSaving ? (
+                                    <span className="flex items-center gap-2">
+                                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Guardando…
+                                    </span>
+                                ) : (
+                                    "Guardar cambios"
+                                )}
+                            </Button>
+                        )}
                     </DialogFooter>
                 </div>
             </DialogContent>

@@ -86,6 +86,18 @@ export default function PagosPendientesPage() {
   const [motivoRechazo, setMotivoRechazo] = useState("");
   const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] =
     useState(false);
+  const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null);
+
+  // Verificar si la sucursal está activa
+  useEffect(() => {
+    if (!params.id) return;
+    fetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)))
+      .then((r) => r.json())
+      .then((d) => setSucursalActiva(Boolean(d.data?.activo)))
+      .catch(() => setSucursalActiva(true));
+  }, [params.id]);
+
+  const isReadOnly = sucursalActiva === false;
 
   // --- Fetchers ---
   const fetchPagosPendientes = async () => {
@@ -304,8 +316,9 @@ export default function PagosPendientesPage() {
           </div>
 
           <Button
-            onClick={() => setIsNuevoMovimientoDialogOpen(true)}
-            className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 self-end md:self-auto"
+            onClick={!isReadOnly ? () => setIsNuevoMovimientoDialogOpen(true) : undefined}
+            disabled={isReadOnly}
+            className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 self-end md:self-auto disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -313,6 +326,16 @@ export default function PagosPendientesPage() {
             Nuevo Movimiento
           </Button>
         </div>
+
+        {/* Banner solo lectura */}
+        {isReadOnly && (
+          <div className="mb-6 p-4 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+            <p className="text-sm text-amber-800 font-medium">
+              Esta sucursal está <strong>inactiva</strong>. Podés ver los datos pero no crear ni autorizar movimientos.
+            </p>
+          </div>
+        )}
 
         {/* Tabs de Vistas */}
         <div className="flex mb-6 bg-white/50 p-1 rounded-xl border border-[#E0E0E0] w-fit">
@@ -477,9 +500,10 @@ export default function PagosPendientesPage() {
                                   <>
                                     <Button
                                       size="sm"
-                                      onClick={() => handleOpenAprobar(pago)}
-                                      className="bg-emerald-500 hover:bg-emerald-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg"
-                                      title="Aprobar pago"
+                                      onClick={() => !isReadOnly && handleOpenAprobar(pago)}
+                                      disabled={isReadOnly}
+                                      className="bg-emerald-500 hover:bg-emerald-600 text-white border-none shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                                      title={isReadOnly ? "Sucursal inactiva" : "Aprobar pago"}
                                     >
                                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -487,9 +511,10 @@ export default function PagosPendientesPage() {
                                     </Button>
                                     <Button
                                       size="sm"
-                                      onClick={() => handleOpenRechazar(pago)}
-                                      className="bg-rose-500 hover:bg-rose-600 text-white border-none cursor-pointer shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg"
-                                      title="Rechazar pago"
+                                      onClick={() => !isReadOnly && handleOpenRechazar(pago)}
+                                      disabled={isReadOnly}
+                                      className="bg-rose-500 hover:bg-rose-600 text-white border-none shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                                      title={isReadOnly ? "Sucursal inactiva" : "Rechazar pago"}
                                     >
                                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

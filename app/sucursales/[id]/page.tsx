@@ -740,6 +740,16 @@ export default function SucursalDetailPage() {
           </DialogHeader>
 
           <div className="mt-4">
+            {/* Banner de sucursal inactiva */}
+            {sucursal && !sucursal.activo && (
+              <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <p className="text-sm text-amber-800 font-medium">
+                  Sucursal <strong>inactiva</strong> — solo visualización, no se pueden editar datos.
+                </p>
+              </div>
+            )}
+
             {error && (
               <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
                 <p className="text-sm text-red-600 font-medium flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" /> {error}</p>
@@ -755,12 +765,13 @@ export default function SucursalDetailPage() {
                   >
                     Nombre de la Sucursal *
                   </Label>
-                  <Input
+                    <Input
                     id="nombre"
                     name="nombre"
                     value={formData.nombre}
                     onChange={handleInputChange}
                     required
+                    readOnly={!sucursal?.activo}
                     className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
@@ -778,6 +789,7 @@ export default function SucursalDetailPage() {
                     value={formData.razon_social}
                     onChange={handleInputChange}
                     required
+                    readOnly={!sucursal?.activo}
                     className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
@@ -795,6 +807,7 @@ export default function SucursalDetailPage() {
                     value={formData.cuit}
                     onChange={handleInputChange}
                     required
+                    readOnly={!sucursal?.activo}
                     className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
@@ -812,6 +825,7 @@ export default function SucursalDetailPage() {
                     value={formData.direccion}
                     onChange={handleInputChange}
                     required
+                    readOnly={!sucursal?.activo}
                     className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
@@ -830,6 +844,7 @@ export default function SucursalDetailPage() {
                     value={formData.email_correspondencia}
                     onChange={handleInputChange}
                     placeholder="correo@ejemplo.com"
+                    readOnly={!sucursal?.activo}
                     className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
@@ -880,10 +895,12 @@ export default function SucursalDetailPage() {
                               </div>
                               <div className="flex gap-2">
                                 <Button type="button" variant="outline" size="sm" onClick={() => handleDownloadDoc(docSubido.id)} className="h-8 px-2 border-[#002868]/30 hover:bg-[#002868] hover:text-white transition-colors"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg></Button>
-                                <Button type="button" variant="outline" size="sm" onClick={() => openDeleteDocDialog(docSubido.id, docSubido.nombre_archivo)} className="h-8 px-2 border-red-200 text-red-600 bg-red-50 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg></Button>
+                                {sucursal?.activo && (
+                                  <Button type="button" variant="outline" size="sm" onClick={() => openDeleteDocDialog(docSubido.id, docSubido.nombre_archivo)} className="h-8 px-2 border-red-200 text-red-600 bg-red-50 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg></Button>
+                                )}
                               </div>
                             </div>
-                          ) : (
+                          ) : sucursal?.activo ? (
                             <div className="flex flex-col gap-2 mt-2">
                               <div className="flex gap-2 items-center">
                                 <Label className="text-xs text-gray-500 min-w-[120px]">Fecha Vencimiento:</Label>
@@ -902,6 +919,8 @@ export default function SucursalDetailPage() {
                                 }}>Subir</Button>
                               </div>
                             </div>
+                          ) : (
+                            <p className="text-xs text-gray-400 mt-2 italic">No hay documento subido</p>
                           )}
                         </div>
                       );
@@ -917,9 +936,11 @@ export default function SucursalDetailPage() {
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 inline mr-1 -mt-1"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg>
                     Datos Bancarios ({cuentasBancarias.length})
                   </h3>
-                  <Button type="button" size="sm" variant="outline" onClick={() => setIsAddingCuenta(!isAddingCuenta)} className="text-[#002868] border-[#002868]">
-                    {isAddingCuenta ? 'Cancelar' : '+ Agregar Cuenta'}
-                  </Button>
+                  {sucursal?.activo && (
+                    <Button type="button" size="sm" variant="outline" onClick={() => setIsAddingCuenta(!isAddingCuenta)} className="text-[#002868] border-[#002868]">
+                      {isAddingCuenta ? 'Cancelar' : '+ Agregar Cuenta'}
+                    </Button>
+                  )}
                 </div>
 
                 {isAddingCuenta && (
@@ -961,9 +982,11 @@ export default function SucursalDetailPage() {
                           <p className="text-xs text-gray-600">CBU: {cuenta.cbu}</p>
                           <p className="text-xs text-gray-500">Alias: {cuenta.alias || '-'}</p>
                         </div>
-                        <Button type="button" variant="ghost" size="sm" onClick={() => handleDeleteCuenta(cuenta.id)} className="text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
-                        </Button>
+                        {sucursal?.activo && (
+                          <Button type="button" variant="ghost" size="sm" onClick={() => handleDeleteCuenta(cuenta.id)} className="text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                          </Button>
+                        )}
                       </div>
                     ))}
                     {cuentasBancarias.length === 0 && !isAddingCuenta && (
@@ -976,8 +999,8 @@ export default function SucursalDetailPage() {
               <div className="flex gap-3 pt-4">
                 <Button
                   type="submit"
-                  disabled={isSaving}
-                  className="flex-1 bg-[#002868] hover:bg-[#003d8f] text-white cursor-pointer"
+                  disabled={isSaving || !sucursal?.activo}
+                  className="flex-1 bg-[#002868] hover:bg-[#003d8f] text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? (
                     <div className="flex items-center space-x-2">

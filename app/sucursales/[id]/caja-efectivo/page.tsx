@@ -22,6 +22,7 @@ import {
   DeleteDialog,
   DeudaDialog,
 } from "@/components/caja/TransactionDialogs";
+import { API_ENDPOINTS } from "@/lib/config";
 
 const columns = getEfectivoColumns();
 
@@ -31,6 +32,18 @@ export default function CajaEfectivoPage() {
   const { user, isGuardLoading, handleLogout } = useAuthGuard();
   const caja = useCajaData("efectivo");
   const [activeTab, setActiveTab] = useState("real");
+  const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null);
+
+  // Verificar si la sucursal está activa
+  useEffect(() => {
+    if (!params.id) return;
+    fetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)))
+      .then((r) => r.json())
+      .then((d) => setSucursalActiva(Boolean(d.data?.activo)))
+      .catch(() => setSucursalActiva(true));
+  }, [params.id]);
+
+  const isReadOnly = sucursalActiva === false;
 
   // Inicializar datos al montar (solo si auth está lista)
   useEffect(() => {
@@ -89,11 +102,22 @@ export default function CajaEfectivoPage() {
             )}
 
 
+            {/* Banner solo lectura */}
+            {isReadOnly && (
+              <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <p className="text-sm text-amber-800 font-medium">
+                  Esta sucursal está <strong>inactiva</strong>. Podés ver los datos pero no crear ni modificar movimientos.
+                </p>
+              </div>
+            )}
+
             {/* Cabecera */}
             <PageHeader
               title="Caja Efectivo"
               subtitle="Gestión de saldos y movimientos en efectivo"
               onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
+              isReadOnly={isReadOnly}
             />
 
             {caja.isLoading ? (
@@ -125,6 +149,7 @@ export default function CajaEfectivoPage() {
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
                       onDelete={caja.handleOpenDelete}
+                      isReadOnly={isReadOnly}
                     />
                   </TabsContent>
                   <TabsContent value="necesario" className="mt-0 outline-none flex-grow">
@@ -138,6 +163,7 @@ export default function CajaEfectivoPage() {
                       onChangeState={caja.handleOpenStateChange}
                       onDelete={caja.handleOpenDelete}
                       onToggleDeuda={caja.handleOpenDeuda}
+                      isReadOnly={isReadOnly}
                     />
                   </TabsContent>
                 </CajaTabs>
@@ -160,6 +186,7 @@ export default function CajaEfectivoPage() {
         bancos={caja.bancos}
         mediosPago={caja.mediosPago}
         showBancoFields={false}
+        isReadOnly={isReadOnly}
       />
 
       <StateDialog

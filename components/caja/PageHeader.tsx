@@ -6,6 +6,7 @@ interface PageHeaderProps {
     title: string;
     subtitle: string;
     onNewMovimiento: () => void;
+    isReadOnly?: boolean;
 }
 
 /**
@@ -15,6 +16,7 @@ export function PageHeader({
     title,
     subtitle,
     onNewMovimiento,
+    isReadOnly = false,
 }: PageHeaderProps) {
     return (
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
@@ -23,8 +25,9 @@ export function PageHeader({
                 <p className="text-sm text-[#666666]">{subtitle}</p>
             </div>
             <Button
-                onClick={onNewMovimiento}
-                className="cursor-pointer bg-[#002868] flex-shrink-0 hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+                onClick={!isReadOnly ? onNewMovimiento : undefined}
+                disabled={isReadOnly}
+                className="cursor-pointer bg-[#002868] flex-shrink-0 hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"

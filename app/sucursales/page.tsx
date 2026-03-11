@@ -241,7 +241,11 @@ export default function SucursalesPage() {
             {sucursales.map((sucursal) => (
               <Card
                 key={sucursal.id}
-                className="group border-[#E0E0E0] hover:border-[#002868] bg-white shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer relative overflow-hidden"
+                className={`group border-[#E0E0E0] bg-white shadow-md transition-all duration-300 relative overflow-hidden cursor-pointer ${
+                  sucursal.activo
+                    ? "hover:border-[#002868] hover:shadow-xl"
+                    : "opacity-60 grayscale"
+                }`}
                 onClick={() => handleSucursalClick(sucursal.id)}
               >
                 <CardHeader className="pb-4">
