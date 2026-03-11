@@ -78,7 +78,10 @@ export default function PagosPendientesPage() {
   const [tipoCaja, setTipoCaja] = useState<"efectivo" | "banco">("efectivo");
   const [bancoId, setBancoId] = useState("");
   const [medioPagoId, setMedioPagoId] = useState("");
-  const [fechaAprobacion, setFechaAprobacion] = useState(new Date().toISOString().split("T")[0]);
+  const [fechaAprobacion, setFechaAprobacion] = useState(() => {
+    const hoy = new Date();
+    return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
+  });
 
   const [bancos, setBancos] = useState<{ id: number; nombre: string }[]>([]);
   const [mediosPago, setMediosPago] = useState<{ id: number; nombre: string }[]>([]);
@@ -187,7 +190,9 @@ export default function PagosPendientesPage() {
     setBancoId("");
     setMedioPagoId("");
     // Usamos la fecha del pago (sacando la hora para el input date)
-    const initDate = pago.fecha ? (pago.fecha.includes("T") ? pago.fecha.split("T")[0] : pago.fecha.substring(0, 10)) : new Date().toISOString().split("T")[0];
+    const fallbackHoy = new Date();
+    const fallbackDate = `${fallbackHoy.getFullYear()}-${String(fallbackHoy.getMonth() + 1).padStart(2, "0")}-${String(fallbackHoy.getDate()).padStart(2, "0")}`;
+    const initDate = pago.fecha ? (pago.fecha.includes("T") ? pago.fecha.split("T")[0] : pago.fecha.substring(0, 10)) : fallbackDate;
     setFechaAprobacion(initDate);
     setIsAprobarDialogOpen(true);
   };

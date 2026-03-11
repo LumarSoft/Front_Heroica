@@ -59,7 +59,7 @@ export default function NuevoMovimientoDialog({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    fecha: new Date().toISOString().split("T")[0], // Fecha actual por defecto
+    fecha: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })(),
     concepto: "",
     monto: "",
     descripcion: "",
@@ -162,7 +162,7 @@ export default function NuevoMovimientoDialog({
   // Resetear formulario
   const resetForm = () => {
     setFormData({
-      fecha: new Date().toISOString().split("T")[0],
+      fecha: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })(),
       concepto: "",
       monto: "",
       descripcion: "",
