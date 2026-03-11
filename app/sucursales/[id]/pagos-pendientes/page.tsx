@@ -72,19 +72,11 @@ export default function PagosPendientesPage() {
 
   const [isAprobarDialogOpen, setIsAprobarDialogOpen] = useState(false);
   const [isRechazarDialogOpen, setIsRechazarDialogOpen] = useState(false);
+  const [isAprobacionMovimientoOpen, setIsAprobacionMovimientoOpen] = useState(false);
   const [selectedPago, setSelectedPago] = useState<PagoPendiente | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const [tipoCaja, setTipoCaja] = useState<"efectivo" | "banco">("efectivo");
-  const [bancoId, setBancoId] = useState("");
-  const [medioPagoId, setMedioPagoId] = useState("");
-  const [fechaAprobacion, setFechaAprobacion] = useState(() => {
-    const hoy = new Date();
-    return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
-  });
-
-  const [bancos, setBancos] = useState<{ id: number; nombre: string }[]>([]);
-  const [mediosPago, setMediosPago] = useState<{ id: number; nombre: string }[]>([]);
 
   const [motivoRechazo, setMotivoRechazo] = useState("");
   const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] =
@@ -150,23 +142,6 @@ export default function PagosPendientesPage() {
     }
   };
 
-  const fetchBancosYMediosPago = async () => {
-    try {
-      const resBancos = await fetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL);
-      const resMedios = await fetch(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL);
-      if (resBancos.ok) {
-        const data = await resBancos.json();
-        setBancos(data.data || []);
-      }
-      if (resMedios.ok) {
-        const data = await resMedios.json();
-        setMediosPago(data.data || []);
-      }
-    } catch (err) {
-      console.error("Error al cargar bancos y medios:", err);
-    }
-  };
-
   useEffect(() => {
     if (!isGuardLoading) {
       if (activeTab === "pendientes") {
@@ -174,7 +149,6 @@ export default function PagosPendientesPage() {
       } else {
         fetchHistorial();
       }
-      fetchBancosYMediosPago();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGuardLoading, activeTab]);
@@ -187,14 +161,13 @@ export default function PagosPendientesPage() {
   const handleOpenAprobar = (pago: PagoPendiente) => {
     setSelectedPago(pago);
     setTipoCaja("efectivo");
-    setBancoId("");
-    setMedioPagoId("");
-    // Usamos la fecha del pago (sacando la hora para el input date)
-    const fallbackHoy = new Date();
-    const fallbackDate = `${fallbackHoy.getFullYear()}-${String(fallbackHoy.getMonth() + 1).padStart(2, "0")}-${String(fallbackHoy.getDate()).padStart(2, "0")}`;
-    const initDate = pago.fecha ? (pago.fecha.includes("T") ? pago.fecha.split("T")[0] : pago.fecha.substring(0, 10)) : fallbackDate;
-    setFechaAprobacion(initDate);
     setIsAprobarDialogOpen(true);
+  };
+
+  const handleSelectCajaYContinuar = (caja: "efectivo" | "banco") => {
+    setTipoCaja(caja);
+    setIsAprobarDialogOpen(false);
+    setIsAprobacionMovimientoOpen(true);
   };
 
   const handleOpenRechazar = (pago: PagoPendiente) => {
@@ -203,45 +176,6 @@ export default function PagosPendientesPage() {
     setIsRechazarDialogOpen(true);
   };
 
-  const handleAprobar = async () => {
-    if (!selectedPago || !user) return;
-
-    try {
-      setIsSaving(true);
-      setError("");
-
-      const response = await fetch(
-        API_ENDPOINTS.PAGOS_PENDIENTES.APROBAR(selectedPago.id),
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            usuario_revisor_id: user.id,
-            tipo_caja: tipoCaja,
-            fecha: fechaAprobacion,
-            banco_id: bancoId ? Number(bancoId) : null,
-            medio_pago_id: medioPagoId ? Number(medioPagoId) : null,
-          }),
-        }
-      );
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Error al aprobar pago");
-      }
-
-      showSuccess(
-        "Pago aprobado exitosamente. Revisa la caja correspondiente."
-      );
-      setIsAprobarDialogOpen(false);
-      fetchPagosPendientes();
-    } catch (err: any) {
-      console.error("Error al aprobar pago:", err);
-      setError(err.message || "Error al aprobar pago");
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   const handleRechazar = async () => {
     if (!selectedPago || !user || !motivoRechazo.trim()) {
@@ -541,9 +475,9 @@ export default function PagosPendientesPage() {
         )}
       </main>
 
-      {/* Dialog Aprobar */}
+      {/* Dialog Paso 1: Seleccionar caja destino */}
       <Dialog open={isAprobarDialogOpen} onOpenChange={setIsAprobarDialogOpen}>
-        <DialogContent className="sm:max-w-[400px] bg-white border-[#E0E0E0] shadow-2xl rounded-2xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-[440px] bg-white border-[#E0E0E0] shadow-2xl rounded-2xl p-0 overflow-hidden">
           <DialogHeader className="p-6 border-b border-[#F0F0F0] bg-[#F8F9FA]/50">
             <DialogTitle className="text-xl font-bold text-[#002868] flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
@@ -551,94 +485,61 @@ export default function PagosPendientesPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              Aprobar Movimiento
+              ¿Dónde registrar el pago?
             </DialogTitle>
             <DialogDescription className="text-[#666666] mt-2">
-              Indica en qué caja se registrará este movimiento.
+              Seleccioná la caja en la que se registrará el egreso.
+              {selectedPago && (
+                <span className="block mt-1 font-semibold text-[#1A1A1A]">
+                  {selectedPago.concepto} · {formatMonto(Math.abs(parseFloat(selectedPago.monto.toString())))}
+                </span>
+              )}
             </DialogDescription>
           </DialogHeader>
-          <div className="p-6 space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="fechaAprobacion" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Fecha Efectiva</Label>
-              <Input
-                id="fechaAprobacion"
-                type="date"
-                value={fechaAprobacion}
-                onChange={(e) => setFechaAprobacion(e.target.value)}
-                className="w-full h-11 rounded-xl border border-[#E0E0E0] px-4 py-2 text-sm focus:border-[#002868] focus:outline-none focus:ring-4 focus:ring-[#002868]/10 transition-all bg-white"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tipoCaja" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Caja Destino</Label>
-              <select
-                id="tipoCaja"
-                value={tipoCaja}
-                onChange={(e) => setTipoCaja(e.target.value as "efectivo" | "banco")}
-                className="w-full h-11 rounded-xl border border-[#E0E0E0] px-4 py-2 text-sm focus:border-[#002868] focus:outline-none focus:ring-4 focus:ring-[#002868]/10 transition-all appearance-none bg-white cursor-pointer"
-              >
-                <option value="efectivo">Caja Efectivo (Sucursal)</option>
-                <option value="banco">Caja Banco / Transferencia</option>
-              </select>
-            </div>
-            {tipoCaja === "banco" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="bancoId" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Banco</Label>
-                  <select
-                    id="bancoId"
-                    value={bancoId}
-                    onChange={(e) => setBancoId(e.target.value)}
-                    className="w-full h-11 rounded-xl border border-[#E0E0E0] px-4 py-2 text-sm focus:border-[#002868] focus:outline-none focus:ring-4 focus:ring-[#002868]/10 transition-all appearance-none bg-white cursor-pointer"
-                  >
-                    <option value="">Seleccione banco</option>
-                    {bancos.map(b => (
-                      <option key={b.id} value={b.id}>{b.nombre}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="medioPagoId" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Medio de Pago</Label>
-                  <select
-                    id="medioPagoId"
-                    value={medioPagoId}
-                    onChange={(e) => setMedioPagoId(e.target.value)}
-                    className="w-full h-11 rounded-xl border border-[#E0E0E0] px-4 py-2 text-sm focus:border-[#002868] focus:outline-none focus:ring-4 focus:ring-[#002868]/10 transition-all appearance-none bg-white cursor-pointer"
-                  >
-                    <option value="">Seleccione medio</option>
-                    {mediosPago.map(m => (
-                      <option key={m.id} value={m.id}>{m.nombre}</option>
-                    ))}
-                  </select>
-                </div>
+
+          <div className="p-6 grid grid-cols-2 gap-4">
+            {/* Opción Efectivo */}
+            <button
+              onClick={() => handleSelectCajaYContinuar("efectivo")}
+              className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:bg-[#002868]/5 transition-all cursor-pointer group"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-[#002868]/10 flex items-center justify-center group-hover:bg-[#002868]/20 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7 text-[#002868]">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                </svg>
               </div>
-            )}
-            {selectedPago && (
-              <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mb-1">Monto a Autorizar</p>
-                  <p className="text-xl font-black text-emerald-700">
-                    {formatMonto(parseFloat(selectedPago.monto.toString()))}
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
-                  <span className="text-emerald-500 font-bold">$</span>
-                </div>
+              <div className="text-center">
+                <p className="font-bold text-[#002868] text-sm">Caja Efectivo</p>
+                <p className="text-xs text-[#666666] mt-0.5">Dinero en sucursal</p>
               </div>
-            )}
+            </button>
+
+            {/* Opción Banco */}
+            <button
+              onClick={() => handleSelectCajaYContinuar("banco")}
+              className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:bg-[#002868]/5 transition-all cursor-pointer group"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-[#002868]/10 flex items-center justify-center group-hover:bg-[#002868]/20 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7 text-[#002868]">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+                </svg>
+              </div>
+              <div className="text-center">
+                <p className="font-bold text-[#002868] text-sm">Caja Banco</p>
+                <p className="text-xs text-[#666666] mt-0.5">Transferencia / débito</p>
+              </div>
+            </button>
           </div>
-          <DialogFooter className="p-6 bg-[#F8F9FA]/50 border-t border-[#F0F0F0] sm:justify-end gap-3">
-            <Button variant="outline" onClick={() => setIsAprobarDialogOpen(false)} className="h-11 px-6 rounded-xl border-[#E0E0E0] text-[#5A6070] font-semibold hover:bg-white hover:text-[#1A1A1A] transition-all cursor-pointer" disabled={isSaving}>
+
+          <div className="px-6 pb-6">
+            <Button
+              variant="outline"
+              onClick={() => setIsAprobarDialogOpen(false)}
+              className="w-full h-10 rounded-xl border-[#E0E0E0] text-[#5A6070] font-semibold hover:bg-[#F0F0F0] transition-all cursor-pointer"
+            >
               Cancelar
             </Button>
-            <Button onClick={handleAprobar} disabled={isSaving} className="h-11 px-8 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer">
-              {isSaving ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Procesando...
-                </span>
-              ) : "Autorizar Pago"}
-            </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -687,6 +588,7 @@ export default function PagosPendientesPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Dialog: Crear solicitud de pago pendiente (empleado) */}
       <NuevoMovimientoDialog
         isOpen={isNuevoMovimientoDialogOpen}
         onClose={() => setIsNuevoMovimientoDialogOpen(false)}
@@ -698,6 +600,38 @@ export default function PagosPendientesPage() {
           else fetchHistorial();
         }}
       />
+
+      {/* Dialog Paso 2: Formulario de movimiento para aprobar pago pendiente */}
+      {selectedPago && (
+        <NuevoMovimientoDialog
+          isOpen={isAprobacionMovimientoOpen}
+          onClose={() => {
+            setIsAprobacionMovimientoOpen(false);
+            setSelectedPago(null);
+          }}
+          sucursalId={Number(params.id)}
+          cajaTipo={tipoCaja}
+          pagoIdToApprove={selectedPago.id}
+          usuarioRevisorId={user?.id}
+          initialValues={{
+            concepto: selectedPago.concepto,
+            monto: Math.abs(parseFloat(selectedPago.monto.toString())).toString(),
+            descripcion: selectedPago.descripcion ?? "",
+            fecha: selectedPago.fecha
+              ? (selectedPago.fecha.includes("T")
+                  ? selectedPago.fecha.split("T")[0]
+                  : selectedPago.fecha.substring(0, 10))
+              : undefined,
+            prioridad: selectedPago.prioridad as "baja" | "media" | "alta" | undefined,
+          }}
+          onSuccess={() => {
+            showSuccess("Pago aprobado y movimiento registrado correctamente");
+            setIsAprobacionMovimientoOpen(false);
+            setSelectedPago(null);
+            fetchPagosPendientes();
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -16,6 +16,16 @@ import {
 import { API_ENDPOINTS } from "@/lib/config";
 import { AlertTriangle } from "lucide-react";
 
+interface InitialValues {
+  concepto?: string;
+  monto?: string;
+  descripcion?: string;
+  fecha?: string;
+  prioridad?: "baja" | "media" | "alta";
+  categoria_id?: string;
+  subcategoria_id?: string;
+}
+
 interface NuevoMovimientoDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,6 +33,10 @@ interface NuevoMovimientoDialogProps {
   onSuccess: () => void;
   cajaTipo?: "efectivo" | "banco";
   isPagoPendiente?: boolean;
+  /** Cuando se provee, el dialog opera en modo "aprobar pago pendiente" */
+  pagoIdToApprove?: number;
+  usuarioRevisorId?: number;
+  initialValues?: InitialValues;
 }
 
 interface Categoria {
@@ -54,7 +68,11 @@ export default function NuevoMovimientoDialog({
   onSuccess,
   cajaTipo = "efectivo",
   isPagoPendiente = false,
+  pagoIdToApprove,
+  usuarioRevisorId,
+  initialValues,
 }: NuevoMovimientoDialogProps) {
+  const isApprovalMode = pagoIdToApprove !== undefined;
   const { user } = useAuthStore();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -66,6 +84,7 @@ export default function NuevoMovimientoDialog({
     prioridad: "media" as "baja" | "media" | "alta",
     estado: (isPagoPendiente ? "pendiente" : "aprobado") as "pendiente" | "aprobado" | "rechazado" | "completado",
     tipo: isPagoPendiente ? "egreso" : "ingreso",
+    tipo_movimiento: cajaTipo as "efectivo" | "banco",
     categoria_id: "",
     subcategoria_id: "",
     comprobante: "",
@@ -78,16 +97,33 @@ export default function NuevoMovimientoDialog({
   const [bancos, setBancos] = useState<Banco[]>([]);
   const [mediosPago, setMediosPago] = useState<MedioPago[]>([]);
 
-  // Cargar datos al abrir el dialog
-
+  // Cargar datos y pre-poblar cuando se abre el dialog
   useEffect(() => {
-    if (isOpen) {
-      fetchCategorias();
-      if (cajaTipo === "banco") {
-        fetchBancos();
-        fetchMediosPago();
-      }
+    if (!isOpen) return;
+
+    fetchCategorias();
+    if (cajaTipo === "banco") {
+      fetchBancos();
+      fetchMediosPago();
     }
+
+    if (isApprovalMode && initialValues) {
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      setFormData((prev) => ({
+        ...prev,
+        fecha: initialValues.fecha ?? todayStr,
+        concepto: initialValues.concepto ?? "",
+        monto: initialValues.monto ?? "",
+        descripcion: initialValues.descripcion ?? "",
+        prioridad: initialValues.prioridad ?? "media",
+        categoria_id: initialValues.categoria_id ?? "",
+        subcategoria_id: initialValues.subcategoria_id ?? "",
+        tipo: "egreso",
+        estado: "aprobado",
+      }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, cajaTipo]);
 
   const fetchCategorias = async () => {
@@ -126,6 +162,15 @@ export default function NuevoMovimientoDialog({
     }
   };
 
+  // Cargar bancos/mediosPago cuando el usuario elige "banco" en tipo_movimiento
+  useEffect(() => {
+    if (formData.tipo_movimiento === "banco" && bancos.length === 0) {
+      fetchBancos();
+      fetchMediosPago();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.tipo_movimiento]);
+
   // Cargar subcategorías cuando cambia la categoría
   useEffect(() => {
     if (formData.categoria_id) {
@@ -154,6 +199,8 @@ export default function NuevoMovimientoDialog({
     const { name, value } = e.target;
     if (name === "tipo") {
       setFormData((prev) => ({ ...prev, [name]: value, categoria_id: "", subcategoria_id: "" }));
+    } else if (name === "tipo_movimiento") {
+      setFormData((prev) => ({ ...prev, tipo_movimiento: value as "efectivo" | "banco", banco_id: "", medio_pago_id: "", comprobante: "" }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -169,6 +216,7 @@ export default function NuevoMovimientoDialog({
       prioridad: "media",
       estado: isPagoPendiente ? "pendiente" : "aprobado",
       tipo: isPagoPendiente ? "egreso" : "ingreso",
+      tipo_movimiento: cajaTipo,
       categoria_id: "",
       subcategoria_id: "",
       comprobante: "",
@@ -186,12 +234,10 @@ export default function NuevoMovimientoDialog({
 
   // Guardar nuevo movimiento
   const handleSave = async () => {
-    // Validaciones
     if (!formData.concepto.trim()) {
       setError("El concepto es obligatorio");
       return;
     }
-
     if (!formData.monto || parseFloat(formData.monto) === 0) {
       setError("El monto debe ser diferente de cero");
       return;
@@ -201,6 +247,63 @@ export default function NuevoMovimientoDialog({
       setIsSaving(true);
       setError("");
 
+      // ── Modo aprobación: crea el movimiento en la caja correspondiente
+      //    y luego marca el pago pendiente como aprobado ──
+      if (isApprovalMode) {
+        const cajaEndpoint = cajaTipo === "banco"
+          ? API_ENDPOINTS.CAJA_BANCO.CREATE
+          : API_ENDPOINTS.MOVIMIENTOS.CREATE_EFECTIVO;
+
+        const movBody = {
+          sucursal_id: sucursalId,
+          user_id: usuarioRevisorId ?? user?.id,
+          fecha: formData.fecha,
+          concepto: formData.concepto,
+          monto: parseFloat(formData.monto),
+          descripcion: formData.descripcion,
+          prioridad: formData.prioridad,
+          estado: "aprobado",
+          tipo: "egreso",
+          categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
+          subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
+          comprobante: formData.comprobante || null,
+          banco_id: formData.banco_id ? Number(formData.banco_id) : null,
+          medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
+        };
+
+        const movRes = await fetch(cajaEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(movBody),
+        });
+        const movData = await movRes.json();
+        if (!movRes.ok) throw new Error(movData.message || "Error al crear movimiento");
+
+        // Marcar pago pendiente como aprobado
+        const aprobarRes = await fetch(
+          API_ENDPOINTS.PAGOS_PENDIENTES.APROBAR(pagoIdToApprove!),
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              usuario_revisor_id: usuarioRevisorId ?? user?.id,
+              tipo_caja: cajaTipo,
+              fecha: formData.fecha,
+              banco_id: formData.banco_id ? Number(formData.banco_id) : null,
+              medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
+            }),
+          }
+        );
+        const aprobarData = await aprobarRes.json();
+        if (!aprobarRes.ok) throw new Error(aprobarData.message || "Error al aprobar pago");
+
+        resetForm();
+        onSuccess();
+        onClose();
+        return;
+      }
+
+      // ── Modo normal: crear pago pendiente o movimiento directo ──
       const endpoint = isPagoPendiente
         ? API_ENDPOINTS.PAGOS_PENDIENTES.CREATE
         : (cajaTipo === "banco" ? API_ENDPOINTS.CAJA_BANCO.CREATE : API_ENDPOINTS.MOVIMIENTOS.CREATE_EFECTIVO);
@@ -212,9 +315,9 @@ export default function NuevoMovimientoDialog({
         concepto: formData.concepto,
         descripcion: formData.descripcion,
         monto: parseFloat(formData.monto),
-        tipo_movimiento: cajaTipo, // 'banco' o 'efectivo'
+        tipo_movimiento: formData.tipo_movimiento,
         prioridad: formData.prioridad,
-        tipo: formData.tipo, // 'ingreso' o 'egreso'
+        tipo: formData.tipo,
         categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
         subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
         banco_id: formData.banco_id ? Number(formData.banco_id) : null,
@@ -243,12 +346,8 @@ export default function NuevoMovimientoDialog({
       });
 
       const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Error al crear movimiento");
 
-      if (!response.ok) {
-        throw new Error(data.message || "Error al crear movimiento");
-      }
-
-      // Éxito
       resetForm();
       onSuccess();
       onClose();
@@ -273,12 +372,24 @@ export default function NuevoMovimientoDialog({
         <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
           <DialogHeader className="p-0 border-0">
             <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
-              Nuevo movimiento
+              {isApprovalMode ? "Aprobar pago pendiente" : "Nuevo movimiento"}
             </DialogTitle>
             <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
-              Registra un nuevo movimiento de {cajaTipo === "banco" ? "banco" : "efectivo"}
+              {isApprovalMode
+                ? `Registra el egreso en caja ${cajaTipo === "banco" ? "banco" : "efectivo"} para confirmar el pago`
+                : `Registra un nuevo movimiento de ${cajaTipo === "banco" ? "banco" : "efectivo"}`}
             </DialogDescription>
           </DialogHeader>
+          {isApprovalMode && (
+            <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-100 rounded-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-emerald-600 flex-shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-xs text-emerald-700 font-medium">
+                Caja destino: <span className="font-bold">{cajaTipo === "banco" ? "Caja Banco" : "Caja Efectivo"}</span> · Tipo fijo: <span className="font-bold">Egreso</span>
+              </p>
+            </div>
+          )}
         </div>
 
         {/* ─── Body ─── */}
@@ -322,10 +433,10 @@ export default function NuevoMovimientoDialog({
                   name="tipo"
                   value={formData.tipo}
                   onChange={handleInputChange}
-                  className={`${selectClasses} ${isPagoPendiente ? "opacity-60 cursor-not-allowed bg-gray-50" : ""}`}
-                  disabled={isPagoPendiente}
+                  className={`${selectClasses} ${isPagoPendiente || isApprovalMode ? "opacity-60 cursor-not-allowed bg-gray-50" : ""}`}
+                  disabled={isPagoPendiente || isApprovalMode}
                 >
-                  {!isPagoPendiente && <option value="ingreso">Ingreso</option>}
+                  {!isPagoPendiente && !isApprovalMode && <option value="ingreso">Ingreso</option>}
                   <option value="egreso">Egreso</option>
                 </select>
               </div>
@@ -409,7 +520,7 @@ export default function NuevoMovimientoDialog({
               </div>
             </div>
 
-            {cajaTipo === "banco" && (
+            {(cajaTipo === "banco" || formData.tipo_movimiento === "banco") && (
               <>
                 <div className="space-y-1.5">
                   <Label htmlFor="comprobante" className={labelClasses}>
@@ -559,15 +670,15 @@ export default function NuevoMovimientoDialog({
             <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm hover:shadow-md transition-all cursor-pointer"
+              className={`h-10 px-6 rounded-lg text-white font-semibold shadow-sm hover:shadow-md transition-all cursor-pointer ${isApprovalMode ? "bg-emerald-600 hover:bg-emerald-700" : "bg-[#002868] hover:bg-[#003d8f]"}`}
             >
               {isSaving ? (
                 <span className="flex items-center gap-2">
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Creando…
+                  {isApprovalMode ? "Aprobando…" : "Creando…"}
                 </span>
               ) : (
-                "Crear movimiento"
+                isApprovalMode ? "Confirmar y aprobar" : "Crear movimiento"
               )}
             </Button>
           </DialogFooter>
