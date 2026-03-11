@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { API_ENDPOINTS } from "@/lib/config";
 import { AlertTriangle } from "lucide-react";
+import { trackCreatedPago } from "@/hooks/use-employee-notifications";
 
 interface InitialValues {
   concepto?: string;
@@ -234,12 +235,27 @@ export default function NuevoMovimientoDialog({
 
   // Guardar nuevo movimiento
   const handleSave = async () => {
+    // ── Validaciones comunes ──
     if (!formData.concepto.trim()) {
-      setError("El concepto es obligatorio");
+      setError("El concepto es obligatorio.");
       return;
     }
     if (!formData.monto || parseFloat(formData.monto) === 0) {
-      setError("El monto debe ser diferente de cero");
+      setError("El monto debe ser diferente de cero.");
+      return;
+    }
+    if (!formData.categoria_id) {
+      setError("Debes seleccionar una categoría.");
+      return;
+    }
+    // Validaciones específicas para caja banco
+    const efectivaBanco = isApprovalMode ? cajaTipo === "banco" : formData.tipo_movimiento === "banco";
+    if (efectivaBanco && !formData.banco_id) {
+      setError("Debes seleccionar un banco.");
+      return;
+    }
+    if (efectivaBanco && !formData.medio_pago_id) {
+      setError("Debes seleccionar un medio de pago.");
       return;
     }
 
@@ -247,39 +263,8 @@ export default function NuevoMovimientoDialog({
       setIsSaving(true);
       setError("");
 
-      // ── Modo aprobación: crea el movimiento en la caja correspondiente
-      //    y luego marca el pago pendiente como aprobado ──
+      // ── Modo aprobación: llama SOLO a APROBAR (que crea el movimiento internamente) ──
       if (isApprovalMode) {
-        const cajaEndpoint = cajaTipo === "banco"
-          ? API_ENDPOINTS.CAJA_BANCO.CREATE
-          : API_ENDPOINTS.MOVIMIENTOS.CREATE_EFECTIVO;
-
-        const movBody = {
-          sucursal_id: sucursalId,
-          user_id: usuarioRevisorId ?? user?.id,
-          fecha: formData.fecha,
-          concepto: formData.concepto,
-          monto: parseFloat(formData.monto),
-          descripcion: formData.descripcion,
-          prioridad: formData.prioridad,
-          estado: "aprobado",
-          tipo: "egreso",
-          categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
-          subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
-          comprobante: formData.comprobante || null,
-          banco_id: formData.banco_id ? Number(formData.banco_id) : null,
-          medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
-        };
-
-        const movRes = await fetch(cajaEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(movBody),
-        });
-        const movData = await movRes.json();
-        if (!movRes.ok) throw new Error(movData.message || "Error al crear movimiento");
-
-        // Marcar pago pendiente como aprobado
         const aprobarRes = await fetch(
           API_ENDPOINTS.PAGOS_PENDIENTES.APROBAR(pagoIdToApprove!),
           {
@@ -289,6 +274,13 @@ export default function NuevoMovimientoDialog({
               usuario_revisor_id: usuarioRevisorId ?? user?.id,
               tipo_caja: cajaTipo,
               fecha: formData.fecha,
+              concepto: formData.concepto,
+              descripcion: formData.descripcion,
+              monto: parseFloat(formData.monto),
+              prioridad: formData.prioridad,
+              categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
+              subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
+              comprobante: formData.comprobante || null,
               banco_id: formData.banco_id ? Number(formData.banco_id) : null,
               medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
             }),
@@ -348,6 +340,16 @@ export default function NuevoMovimientoDialog({
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Error al crear movimiento");
 
+      // Guardar el pago creado en localStorage para detectar cambios de fecha al aprobar
+      if (isPagoPendiente && user?.id && data.data?.id) {
+        trackCreatedPago(user.id, {
+          id: data.data.id,
+          fecha_original: formData.fecha,
+          concepto: formData.concepto,
+          sucursal_id: sucursalId,
+        });
+      }
+
       resetForm();
       onSuccess();
       onClose();
@@ -394,14 +396,6 @@ export default function NuevoMovimientoDialog({
 
         {/* ─── Body ─── */}
         <div className="px-8 py-6 space-y-6 max-h-[65vh] overflow-y-auto">
-
-          {/* Error */}
-          {error && (
-            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-rose-500" />
-              <p className="text-sm text-rose-600 font-medium">{error}</p>
-            </div>
-          )}
 
           {/* ── Sección: Información General ── */}
           <section className="space-y-4">
@@ -657,7 +651,14 @@ export default function NuevoMovimientoDialog({
         </div>
 
         {/* ─── Footer ─── */}
-        <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
+        <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC] space-y-3">
+          {/* Error visible siempre en el footer */}
+          {error && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200">
+              <AlertTriangle className="w-4 h-4 text-rose-500 flex-shrink-0" />
+              <p className="text-sm text-rose-600 font-medium">{error}</p>
+            </div>
+          )}
           <DialogFooter className="sm:justify-end gap-3">
             <Button
               variant="outline"

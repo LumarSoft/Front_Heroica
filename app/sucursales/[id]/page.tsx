@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { useEmployeeNotifications } from "@/hooks/use-employee-notifications";
 import { formatMonto } from "@/lib/formatters";
 import type { Sucursal, Documento } from "@/lib/types";
 import { AlertTriangle, Mail, Paperclip } from "lucide-react";
@@ -25,6 +26,14 @@ export default function SucursalDetailPage() {
   const params = useParams();
   const { user, isGuardLoading } = useAuthGuard();
   const [pendingCount, setPendingCount] = useState(0);
+
+  // Notificaciones para empleados (aprobaciones / rechazos de pagos pendientes)
+  const isEmployee = user?.rol === "empleado";
+  const { unseenCount: employeeUnseenCount, clearUnseenCount } = useEmployeeNotifications(
+    user?.id,
+    Number(params.id),
+    isEmployee
+  );
 
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -700,9 +709,10 @@ export default function SucursalDetailPage() {
 
           {/* Pagos Pendientes de Autorización */}
           <Card
-            onClick={() =>
-              router.push(`/sucursales/${params.id}/pagos-pendientes`)
-            }
+            onClick={() => {
+              clearUnseenCount();
+              router.push(`/sucursales/${params.id}/pagos-pendientes`);
+            }}
             className="border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
           >
             {/* Decoración de fondo */}
@@ -727,9 +737,16 @@ export default function SucursalDetailPage() {
               </div>
               <h3 className="text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors relative inline-block">
                 Pagos Pendientes
+                {/* Badge admin: pagos pendientes de revisión */}
                 {user?.rol === "admin" && pendingCount > 0 && (
                   <span className="absolute -top-3 -right-6 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white ring-2 ring-white shadow-lg animate-bounce">
                     {pendingCount > 9 ? "9+" : pendingCount}
+                  </span>
+                )}
+                {/* Badge empleado: nuevas aprobaciones/rechazos */}
+                {isEmployee && employeeUnseenCount > 0 && (
+                  <span className="absolute -top-3 -right-6 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white ring-2 ring-white shadow-lg animate-bounce">
+                    {employeeUnseenCount > 9 ? "9+" : employeeUnseenCount}
                   </span>
                 )}
               </h3>
