@@ -13,7 +13,7 @@ import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } 
 import { apiFetch } from "@/lib/api";
 import { formatMonto } from "@/lib/formatters";
 import type { Sucursal } from "@/lib/types";
-import { Printer, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Printer, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, ArrowLeft } from "lucide-react";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#d0ed57', '#a4de6c'];
 
@@ -302,7 +302,8 @@ export default function ReportesPage() {
                 size="sm"
                 className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer"
               >
-                ← Volver
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Volver
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-[#002868]">Reportes</h1>

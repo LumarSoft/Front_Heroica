@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
-import { AlertTriangle } from "lucide-react";
+import { PageLoadingSpinner, LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import {
   Card,
   CardContent,
@@ -71,7 +72,7 @@ export default function SucursalesPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let { name, value } = e.target;
-    
+
     if (name === "cuit") {
       const digits = value.replace(/\D/g, "");
       if (digits.length <= 11) {
@@ -183,13 +184,7 @@ export default function SucursalesPage() {
     router.push(`/sucursales/${id}`);
   };
 
-  if (isGuardLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  if (isGuardLoading) return <PageLoadingSpinner />;
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
@@ -211,26 +206,21 @@ export default function SucursalesPage() {
           </p>
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 animate-in fade-in slide-in-from-top-2">
-            <p className="text-sm text-red-600 font-medium flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" /> {error}</p>
-          </div>
-        )}
+        <ErrorBanner error={error} />
 
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
-            <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
+            <LoadingSpinner />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sucursales.map((sucursal) => (
               <Card
                 key={sucursal.id}
-                className={`group border-[#E0E0E0] bg-white shadow-md transition-all duration-300 relative overflow-hidden cursor-pointer ${
-                  sucursal.activo
+                className={`group border-[#E0E0E0] bg-white shadow-md transition-all duration-300 relative overflow-hidden cursor-pointer ${sucursal.activo
                     ? "hover:border-[#002868] hover:shadow-xl"
                     : "opacity-60 grayscale"
-                }`}
+                  }`}
                 onClick={() => handleSucursalClick(sucursal.id)}
               >
                 <CardHeader className="pb-4">
@@ -315,9 +305,9 @@ export default function SucursalesPage() {
                       ></span>
                       {sucursal.activo ? "Activa" : "Inactiva"}
                     </span>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={(e) => handleToggleActivo(e, sucursal)}
                       className={sucursal.activo ? "text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300" : "text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 hover:border-green-300"}
                     >

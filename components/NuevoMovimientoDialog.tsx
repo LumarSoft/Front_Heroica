@@ -17,6 +17,8 @@ import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
 import { AlertTriangle } from "lucide-react";
 import { trackCreatedPago } from "@/hooks/use-employee-notifications";
+import type { Categoria, Subcategoria, SelectOption } from "@/lib/types";
+import { selectClasses, labelClasses, inputClasses } from "@/lib/dialog-styles";
 
 interface InitialValues {
   concepto?: string;
@@ -41,27 +43,6 @@ interface NuevoMovimientoDialogProps {
   initialValues?: InitialValues;
 }
 
-interface Categoria {
-  id: number;
-  nombre: string;
-  tipo?: string;
-}
-
-interface Subcategoria {
-  id: number;
-  categoria_id: number;
-  nombre: string;
-}
-
-interface Banco {
-  id: number;
-  nombre: string;
-}
-
-interface MedioPago {
-  id: number;
-  nombre: string;
-}
 
 export default function NuevoMovimientoDialog({
   isOpen,
@@ -96,8 +77,8 @@ export default function NuevoMovimientoDialog({
 
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
-  const [bancos, setBancos] = useState<Banco[]>([]);
-  const [mediosPago, setMediosPago] = useState<MedioPago[]>([]);
+  const [bancos, setBancos] = useState<SelectOption[]>([]);
+  const [mediosPago, setMediosPago] = useState<SelectOption[]>([]);
 
   // Cargar datos y pre-poblar cuando se abre el dialog
   useEffect(() => {
@@ -353,12 +334,6 @@ export default function NuevoMovimientoDialog({
       setIsSaving(false);
     }
   };
-
-  const selectClasses =
-    "w-full h-10 rounded-lg border border-[#E0E0E0] bg-white px-3 py-2 text-sm text-[#1A1A1A] transition-colors hover:border-[#B0B0B0] focus:border-[#002868] focus:outline-none focus:ring-2 focus:ring-[#002868]/20 appearance-none cursor-pointer";
-  const labelClasses = "text-xs font-semibold text-[#5A6070] uppercase tracking-wider";
-  const inputClasses =
-    "h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A] transition-colors placeholder:text-[#B0B0B0] hover:border-[#B0B0B0] focus:border-[#002868] focus:ring-2 focus:ring-[#002868]/20";
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>

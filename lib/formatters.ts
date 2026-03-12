@@ -39,38 +39,33 @@ export function calcularTotal(
     }, 0);
 }
 
+/** Mapa de colores para badges de estado */
+export const ESTADO_COLOR_MAP: Record<string, string> = {
+    completado: "bg-emerald-100 text-emerald-800",
+    aprobado: "bg-blue-100 text-blue-800",
+    rechazado: "bg-rose-100 text-rose-800",
+    pendiente: "bg-amber-100 text-amber-800",
+};
+
+/** Mapa de colores para badges de prioridad */
+export const PRIORIDAD_COLOR_MAP: Record<string, string> = {
+    alta: "bg-rose-100 text-rose-800",
+    media: "bg-amber-100 text-amber-800",
+    baja: "bg-gray-100 text-gray-800",
+};
+
 /**
  * Devuelve clases CSS para el badge de estado
  */
 export function getEstadoColor(estado: string): string {
-    switch (estado) {
-        case "completado":
-            return "bg-emerald-100 text-emerald-800";
-        case "aprobado":
-            return "bg-blue-100 text-blue-800";
-        case "rechazado":
-            return "bg-rose-100 text-rose-800";
-        case "pendiente":
-            return "bg-amber-100 text-amber-800";
-        default:
-            return "bg-gray-100 text-gray-800";
-    }
+    return ESTADO_COLOR_MAP[estado] ?? "bg-gray-100 text-gray-800";
 }
 
 /**
  * Devuelve clases CSS para el badge de prioridad
  */
 export function getPrioridadColor(prioridad: string): string {
-    switch (prioridad) {
-        case "alta":
-            return "bg-rose-100 text-rose-800";
-        case "media":
-            return "bg-amber-100 text-amber-800";
-        case "baja":
-            return "bg-gray-100 text-gray-800";
-        default:
-            return "bg-gray-100 text-gray-800";
-    }
+    return PRIORIDAD_COLOR_MAP[prioridad] ?? "bg-gray-100 text-gray-800";
 }
 
 /**

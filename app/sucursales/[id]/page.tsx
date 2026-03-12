@@ -20,7 +20,9 @@ import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useEmployeeNotifications } from "@/hooks/use-employee-notifications";
 import { formatMonto } from "@/lib/formatters";
 import type { Sucursal, Documento, CuentaBancaria } from "@/lib/types";
-import { AlertTriangle, Mail, Paperclip } from "lucide-react";
+import { Mail, Paperclip, ArrowLeft, Download, Trash2, AlertTriangle } from "lucide-react";
+import { PageLoadingSpinner } from "@/components/ui/loading-spinner";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import { useAuthStore } from "@/store/authStore";
 
 export default function SucursalDetailPage() {
@@ -415,21 +417,7 @@ export default function SucursalDetailPage() {
 
   const totalAlertCount = missingDocsCount + expiredDocsCount;
 
-  if (isGuardLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  if (isGuardLoading || isLoading) return <PageLoadingSpinner />;
 
   if (!sucursal) {
     return (
@@ -461,20 +449,7 @@ export default function SucursalDetailPage() {
                 size="sm"
                 className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="w-4 h-4 mr-1"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-                  />
-                </svg>
+                <ArrowLeft className="w-4 h-4 mr-1" />
                 Volver
               </Button>
 
@@ -862,13 +837,7 @@ export default function SucursalDetailPage() {
               </div>
             )}
 
-            {error && (
-              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
-                <p className="text-sm text-red-600 font-medium flex items-center gap-1.5">
-                  <AlertTriangle className="w-4 h-4" /> {error}
-                </p>
-              </div>
-            )}
+            <ErrorBanner error={error} />
 
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1076,20 +1045,7 @@ export default function SucursalDetailPage() {
                                   }
                                   className="h-8 px-2 border-[#002868]/30 hover:bg-[#002868] hover:text-white transition-colors"
                                 >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                    className="w-4 h-4"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
-                                    />
-                                  </svg>
+                                  <Download className="w-4 h-4" />
                                 </Button>
                                 {sucursal?.activo && (
                                   <Button
@@ -1104,20 +1060,7 @@ export default function SucursalDetailPage() {
                                     }
                                     className="h-8 px-2 border-red-200 text-red-600 bg-red-50 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"
                                   >
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      strokeWidth={2}
-                                      stroke="currentColor"
-                                      className="w-4 h-4"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                      />
-                                    </svg>
+                                    <Trash2 className="w-4 h-4" />
                                   </Button>
                                 )}
                               </div>
@@ -1362,20 +1305,7 @@ export default function SucursalDetailPage() {
                             onClick={() => handleDeleteCuenta(cuenta.id)}
                             className="text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={2}
-                              stroke="currentColor"
-                              className="w-5 h-5"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                              />
-                            </svg>
+                            <Trash2 className="w-5 h-5" />
                           </Button>
                         )}
                       </div>

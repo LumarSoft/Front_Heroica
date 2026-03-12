@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
 import { AlertTriangle } from "lucide-react";
+import { PageLoadingSpinner, LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ErrorBanner } from "@/components/ui/error-banner";
 import {
   Card,
   CardContent,
@@ -35,23 +37,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
-import { formatFecha, formatMonto, calcularTotal } from "@/lib/formatters";
+import { formatFecha, formatMonto, calcularTotal, ESTADO_COLOR_MAP, PRIORIDAD_COLOR_MAP } from "@/lib/formatters";
 import { StatusBadge } from "@/components/caja/StatusBadge";
 import type { PagoPendiente } from "@/lib/types";
 
-// Color maps para los badges
-const ESTADO_COLORS: Record<string, string> = {
-  pendiente: "bg-amber-100 text-amber-800",
-  aprobado: "bg-blue-100 text-blue-800",
-  rechazado: "bg-rose-100 text-rose-800",
-  completado: "bg-emerald-100 text-emerald-800",
-};
-
-const PRIORIDAD_COLORS: Record<string, string> = {
-  alta: "bg-rose-100 text-rose-800",
-  media: "bg-amber-100 text-amber-800",
-  baja: "bg-gray-100 text-gray-800",
-};
 
 export default function PagosPendientesPage() {
   const params = useParams();
@@ -210,13 +199,7 @@ export default function PagosPendientesPage() {
   };
 
   // --- Guard de carga ---
-  if (isGuardLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (isGuardLoading) return <PageLoadingSpinner />;
 
   const total = calcularTotal(pagosPendientes);
   const isEmployee = user?.rol === "empleado";
@@ -255,11 +238,7 @@ export default function PagosPendientesPage() {
       />
 
       <main className="container mx-auto px-6 py-8">
-        {error && (
-          <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200">
-            <p className="text-sm text-red-600 font-medium flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" /> {error}</p>
-          </div>
-        )}
+        <ErrorBanner error={error} />
 
         {/* Header y Botón Nuevo */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
@@ -383,7 +362,7 @@ export default function PagosPendientesPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
+            <LoadingSpinner />
           </div>
         ) : (
           <Card className="border-[#E0E0E0] bg-white shadow-lg overflow-hidden">
@@ -490,10 +469,10 @@ export default function PagosPendientesPage() {
                             />
                           </TableCell>
                           <TableCell className="text-center">
-                            <StatusBadge value={pago.prioridad} colorMap={PRIORIDAD_COLORS} />
+                            <StatusBadge value={pago.prioridad} colorMap={PRIORIDAD_COLOR_MAP} />
                           </TableCell>
                           <TableCell className="text-center">
-                            <StatusBadge value={pago.estado} colorMap={ESTADO_COLORS} />
+                            <StatusBadge value={pago.estado} colorMap={ESTADO_COLOR_MAP} />
                           </TableCell>
                           {activeTab === "historial" && (
                             <TableCell>
