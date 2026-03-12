@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ import {
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useEmployeeNotifications } from "@/hooks/use-employee-notifications";
 import { formatMonto } from "@/lib/formatters";
-import type { Sucursal, Documento } from "@/lib/types";
+import type { Sucursal, Documento, CuentaBancaria } from "@/lib/types";
 import { AlertTriangle, Mail, Paperclip } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
@@ -73,7 +74,8 @@ export default function SucursalDetailPage() {
   const [isDeleteDocDialogOpen, setIsDeleteDocDialogOpen] = useState(false);
 
   // Estados para cuentas bancarias
-  const [cuentasBancarias, setCuentasBancarias] = useState<any[]>([]);
+  const [cuentaToDeleteId, setCuentaToDeleteId] = useState<number | null>(null);
+  const [cuentasBancarias, setCuentasBancarias] = useState<CuentaBancaria[]>([]);
   const [loadingCuentas, setLoadingCuentas] = useState(false);
   const [nuevaCuenta, setNuevaCuenta] = useState({
     cbu: "",
@@ -90,7 +92,7 @@ export default function SucursalDetailPage() {
     // Cargar datos de la sucursal
     const fetchSucursal = async () => {
       try {
-        const response = await fetch(
+        const response = await apiFetch(
           API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id))
         );
         const data = await response.json();
@@ -107,9 +109,9 @@ export default function SucursalDetailPage() {
           direccion: data.data.direccion,
           email_correspondencia: data.data.email_correspondencia || "",
         });
-      } catch (err: any) {
-        console.error("Error al cargar sucursal:", err);
-        setError(err.message || "Error al cargar sucursal");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Error al cargar sucursal";
+        setError(message);
       } finally {
         setIsLoading(false);
       }
@@ -127,25 +129,18 @@ export default function SucursalDetailPage() {
     try {
       setLoadingTotales(true);
 
-      // Cargar totales de efectivo
-      const resEfectivo = await fetch(
+      const resEfectivo = await apiFetch(
         API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(Number(params.id))
       );
       const dataEfectivo = await resEfectivo.json();
-      if (resEfectivo.ok) {
-        setTotalesEfectivo(dataEfectivo.data);
-      }
+      if (resEfectivo.ok) setTotalesEfectivo(dataEfectivo.data);
 
-      // Cargar totales de banco
-      const resBanco = await fetch(
+      const resBanco = await apiFetch(
         API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(Number(params.id))
       );
       const dataBanco = await resBanco.json();
-      if (resBanco.ok) {
-        setTotalesBanco(dataBanco.data);
-      }
-    } catch (err) {
-      console.error("Error al cargar totales:", err);
+      if (resBanco.ok) setTotalesBanco(dataBanco.data);
+    } catch {
     } finally {
       setLoadingTotales(false);
     }
@@ -155,15 +150,15 @@ export default function SucursalDetailPage() {
     if (isSuperAdmin) {
       const fetchPendingCount = async () => {
         try {
-          const response = await fetch(
+          const response = await apiFetch(
             API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(Number(params.id))
           );
           if (response.ok) {
             const data = await response.json();
             setPendingCount(data.data.length);
           }
-        } catch (error) {
-          console.error("Error fetching pending payments:", error);
+        } catch {
+          // Polling failure is non-critical; silently ignore
         }
       };
 
@@ -204,11 +199,10 @@ export default function SucursalDetailPage() {
     setError("");
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         API_ENDPOINTS.SUCURSALES.UPDATE(Number(params.id)),
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         }
       );
@@ -221,9 +215,9 @@ export default function SucursalDetailPage() {
 
       setSucursal(data.data);
       toast.success("Sucursal actualizada exitosamente");
-    } catch (err: any) {
-      console.error("Error al actualizar sucursal:", err);
-      setError(err.message || "Error al actualizar sucursal");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al actualizar sucursal";
+      setError(message);
     } finally {
       setIsSaving(false);
     }
@@ -233,16 +227,12 @@ export default function SucursalDetailPage() {
   const fetchDocumentos = async () => {
     try {
       setLoadingDocumentos(true);
-      const response = await fetch(
+      const response = await apiFetch(
         API_ENDPOINTS.SUCURSALES.GET_DOCUMENTOS(Number(params.id))
       );
       const data = await response.json();
-
-      if (response.ok) {
-        setDocumentos(data.data || []);
-      }
-    } catch (err) {
-      console.error("Error al cargar documentos:", err);
+      if (response.ok) setDocumentos(data.data || []);
+    } catch {
     } finally {
       setLoadingDocumentos(false);
     }
@@ -251,13 +241,12 @@ export default function SucursalDetailPage() {
   const fetchCuentasBancarias = async () => {
     try {
       setLoadingCuentas(true);
-      const res = await fetch(
+      const res = await apiFetch(
         API_ENDPOINTS.CUENTAS_BANCARIAS.GET_BY_SUCURSAL(Number(params.id))
       );
       const data = await res.json();
       if (res.ok) setCuentasBancarias(data.data || []);
-    } catch (err) {
-      console.error("Error al cargar cuentas bancarias:", err);
+    } catch {
     } finally {
       setLoadingCuentas(false);
     }
@@ -277,7 +266,7 @@ export default function SucursalDetailPage() {
       formData.append("tipo_documento", tipoDoc);
       formData.append("fecha_vencimiento", fechaVenc);
 
-      const response = await fetch(
+      const response = await apiFetch(
         API_ENDPOINTS.SUCURSALES.UPLOAD_DOCUMENTO(Number(params.id)),
         {
           method: "POST",
@@ -292,12 +281,10 @@ export default function SucursalDetailPage() {
       }
 
       toast.success("Documento subido exitosamente");
-
-      // Recargar lista de documentos
       await fetchDocumentos();
-    } catch (err: any) {
-      console.error("Error al subir documento:", err);
-      setError(err.message || "Error al subir documento");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al subir documento";
+      setError(message);
     } finally {
       setIsUploadingDoc(false);
     }
@@ -317,11 +304,10 @@ export default function SucursalDetailPage() {
     setIsSavingCuenta(true);
     setError("");
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         API_ENDPOINTS.CUENTAS_BANCARIAS.CREATE(Number(params.id)),
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(nuevaCuenta),
         }
       );
@@ -330,24 +316,33 @@ export default function SucursalDetailPage() {
       setNuevaCuenta({ cbu: "", alias: "", tipo_cuenta: "", banco: "" });
       setIsAddingCuenta(false);
       await fetchCuentasBancarias();
-    } catch (err: any) {
-      setError(err.message || "Error al agregar cuenta");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al agregar cuenta";
+      setError(message);
     } finally {
       setIsSavingCuenta(false);
     }
   };
 
-  const handleDeleteCuenta = async (id: number) => {
-    if (!confirm("¿Eliminar cuenta bancaria?")) return;
+  const handleDeleteCuenta = (id: number) => {
+    setCuentaToDeleteId(id);
+  };
+
+  const handleConfirmDeleteCuenta = async () => {
+    if (!cuentaToDeleteId) return;
     try {
-      const response = await fetch(API_ENDPOINTS.CUENTAS_BANCARIAS.DELETE(id), {
-        method: "DELETE",
-      });
+      const response = await apiFetch(
+        API_ENDPOINTS.CUENTAS_BANCARIAS.DELETE(cuentaToDeleteId),
+        { method: "DELETE" }
+      );
       if (!response.ok) throw new Error("Error al eliminar cuenta");
       toast.success("Cuenta eliminada");
       await fetchCuentasBancarias();
-    } catch (err: any) {
-      setError(err.message || "Error al eliminar");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al eliminar";
+      setError(message);
+    } finally {
+      setCuentaToDeleteId(null);
     }
   };
 
@@ -370,14 +365,12 @@ export default function SucursalDetailPage() {
     setError("");
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         API_ENDPOINTS.SUCURSALES.DELETE_DOCUMENTO(
           Number(params.id),
           docToDelete.id
         ),
-        {
-          method: "DELETE",
-        }
+        { method: "DELETE" }
       );
 
       const data = await response.json();
@@ -387,12 +380,10 @@ export default function SucursalDetailPage() {
       }
 
       toast.success("Documento eliminado exitosamente");
-
-      // Recargar lista de documentos
       await fetchDocumentos();
-    } catch (err: any) {
-      console.error("Error al eliminar documento:", err);
-      toast.error(err.message || "Error al eliminar documento");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al eliminar documento";
+      toast.error(message);
     } finally {
       setIsDeleteDocDialogOpen(false);
       setDocToDelete(null);
@@ -1423,6 +1414,36 @@ export default function SucursalDetailPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Confirmación para Eliminar Cuenta Bancaria */}
+      <Dialog open={!!cuentaToDeleteId} onOpenChange={(open) => { if (!open) setCuentaToDeleteId(null); }}>
+        <DialogContent className="sm:max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#1A1A1A]">
+              Eliminar Cuenta Bancaria
+            </DialogTitle>
+            <DialogDescription className="text-[#666666]">
+              ¿Estás seguro de eliminar esta cuenta bancaria? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setCuentaToDeleteId(null)}
+              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] transition-colors"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDeleteCuenta}
+              className="bg-red-600 hover:bg-red-700 text-white transition-colors"
+            >
+              Eliminar
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

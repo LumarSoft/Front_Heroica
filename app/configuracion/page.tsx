@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import { API_ENDPOINTS } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 import {
   Settings,
   FolderOpen,
@@ -110,7 +111,14 @@ export default function ConfiguracionPage() {
     descripcion: "",
   });
 
-  const [error, setError] = useState("");
+    const [error, setError] = useState("");
+
+    // ── Delete confirmation ──
+    const [deleteTarget, setDeleteTarget] = useState<{
+        type: "categoria" | "subcategoria" | "banco" | "medioPago";
+        id: number;
+        nombre: string;
+    } | null>(null);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -127,61 +135,59 @@ export default function ConfiguracionPage() {
     fetchAllData();
   }, [isAuthenticated, isHydrated, router, isSuperAdmin]);
 
-  const fetchAllData = async () => {
-    setIsLoading(true);
-    try {
-      await Promise.all([
-        fetchCategorias(),
-        fetchSubcategorias(),
-        fetchBancos(),
-        fetchMediosPago(),
-      ]);
-    } catch (err) {
-      console.error("Error al cargar datos:", err);
-      setError("Error al cargar configuración");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const fetchAllData = async () => {
+        setIsLoading(true);
+        try {
+            await Promise.all([
+                fetchCategorias(),
+                fetchSubcategorias(),
+                fetchBancos(),
+                fetchMediosPago(),
+            ]);
+        } catch {
+            setError("Error al cargar configuración");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-  const fetchCategorias = async () => {
-    const res = await fetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL);
-    const data = await res.json();
-    if (data.success) setCategorias(data.data);
-  };
+    const fetchCategorias = async () => {
+        const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL);
+        const data = await res.json();
+        if (data.success) setCategorias(data.data);
+    };
 
-  const fetchSubcategorias = async () => {
-    const res = await fetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_ALL);
-    const data = await res.json();
-    if (data.success) setSubcategorias(data.data);
-  };
+    const fetchSubcategorias = async () => {
+        const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_ALL);
+        const data = await res.json();
+        if (data.success) setSubcategorias(data.data);
+    };
 
-  const fetchBancos = async () => {
-    const res = await fetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL);
-    const data = await res.json();
-    if (data.success) setBancos(data.data);
-  };
+    const fetchBancos = async () => {
+        const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL);
+        const data = await res.json();
+        if (data.success) setBancos(data.data);
+    };
 
-  const fetchMediosPago = async () => {
-    const res = await fetch(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL);
-    const data = await res.json();
-    if (data.success) setMediosPago(data.data);
-  };
+    const fetchMediosPago = async () => {
+        const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL);
+        const data = await res.json();
+        if (data.success) setMediosPago(data.data);
+    };
 
   // ========== CATEGORÍAS ==========
-  const handleSaveCategoria = async () => {
-    setIsSaving(true);
-    setError("");
-    try {
-      const url = categoriaForm.id
-        ? API_ENDPOINTS.CONFIGURACION.CATEGORIAS.UPDATE(categoriaForm.id)
-        : API_ENDPOINTS.CONFIGURACION.CATEGORIAS.CREATE;
+    const handleSaveCategoria = async () => {
+        setIsSaving(true);
+        setError("");
+        try {
+            const url = categoriaForm.id
+                ? API_ENDPOINTS.CONFIGURACION.CATEGORIAS.UPDATE(categoriaForm.id)
+                : API_ENDPOINTS.CONFIGURACION.CATEGORIAS.CREATE;
 
-      const res = await fetch(url, {
-        method: categoriaForm.id ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(categoriaForm),
-      });
+            const res = await apiFetch(url, {
+                method: categoriaForm.id ? "PUT" : "POST",
+                body: JSON.stringify(categoriaForm),
+            });
 
       const data = await res.json();
       if (data.success) {
@@ -197,31 +203,15 @@ export default function ConfiguracionPage() {
       } else {
         setError(data.message);
       }
-    } catch (err) {
+    } catch {
       setError("Error al guardar categoría");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteCategoria = async (id: number) => {
-    if (!confirm("¿Estás seguro de eliminar esta categoría?")) return;
-
-    try {
-      const res = await fetch(
-        API_ENDPOINTS.CONFIGURACION.CATEGORIAS.DELETE(id),
-        {
-          method: "DELETE",
-        }
-      );
-      const data = await res.json();
-      if (data.success) {
-        toast.success(data.message);
-        await fetchCategorias();
-      }
-    } catch (err) {
-      setError("Error al eliminar categoría");
-    }
+  const handleDeleteCategoria = (id: number, nombre: string) => {
+    setDeleteTarget({ type: "categoria", id, nombre });
   };
 
   // ========== SUBCATEGORÍAS ==========
@@ -233,9 +223,8 @@ export default function ConfiguracionPage() {
         ? API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.UPDATE(subcategoriaForm.id)
         : API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.CREATE;
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method: subcategoriaForm.id ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(subcategoriaForm),
       });
 
@@ -243,41 +232,20 @@ export default function ConfiguracionPage() {
       if (data.success) {
         toast.success(data.message);
         setIsSubcategoriaDialogOpen(false);
-        setSubcategoriaForm({
-          id: 0,
-          categoria_id: 0,
-          nombre: "",
-          descripcion: "",
-        });
+        setSubcategoriaForm({ id: 0, categoria_id: 0, nombre: "", descripcion: "" });
         await fetchSubcategorias();
       } else {
         setError(data.message);
       }
-    } catch (err) {
+    } catch {
       setError("Error al guardar subcategoría");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteSubcategoria = async (id: number) => {
-    if (!confirm("¿Estás seguro de eliminar esta subcategoría?")) return;
-
-    try {
-      const res = await fetch(
-        API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.DELETE(id),
-        {
-          method: "DELETE",
-        }
-      );
-      const data = await res.json();
-      if (data.success) {
-        toast.success(data.message);
-        await fetchSubcategorias();
-      }
-    } catch (err) {
-      setError("Error al eliminar subcategoría");
-    }
+  const handleDeleteSubcategoria = (id: number, nombre: string) => {
+    setDeleteTarget({ type: "subcategoria", id, nombre });
   };
 
   // ========== BANCOS ==========
@@ -289,9 +257,8 @@ export default function ConfiguracionPage() {
         ? API_ENDPOINTS.CONFIGURACION.BANCOS.UPDATE(bancoForm.id)
         : API_ENDPOINTS.CONFIGURACION.BANCOS.CREATE;
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method: bancoForm.id ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bancoForm),
       });
 
@@ -304,28 +271,15 @@ export default function ConfiguracionPage() {
       } else {
         setError(data.message);
       }
-    } catch (err) {
+    } catch {
       setError("Error al guardar banco");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteBanco = async (id: number) => {
-    if (!confirm("¿Estás seguro de eliminar este banco?")) return;
-
-    try {
-      const res = await fetch(API_ENDPOINTS.CONFIGURACION.BANCOS.DELETE(id), {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(data.message);
-        await fetchBancos();
-      }
-    } catch (err) {
-      setError("Error al eliminar banco");
-    }
+  const handleDeleteBanco = (id: number, nombre: string) => {
+    setDeleteTarget({ type: "banco", id, nombre });
   };
 
   // ========== MEDIOS DE PAGO ==========
@@ -337,9 +291,8 @@ export default function ConfiguracionPage() {
         ? API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.UPDATE(medioPagoForm.id)
         : API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.CREATE;
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method: medioPagoForm.id ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(medioPagoForm),
       });
 
@@ -352,30 +305,45 @@ export default function ConfiguracionPage() {
       } else {
         setError(data.message);
       }
-    } catch (err) {
+    } catch {
       setError("Error al guardar medio de pago");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteMedioPago = async (id: number) => {
-    if (!confirm("¿Estás seguro de eliminar este medio de pago?")) return;
+  const handleDeleteMedioPago = (id: number, nombre: string) => {
+    setDeleteTarget({ type: "medioPago", id, nombre });
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    const { type, id } = deleteTarget;
     try {
-      const res = await fetch(
-        API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.DELETE(id),
-        {
-          method: "DELETE",
-        }
-      );
+      const urlMap = {
+        categoria: API_ENDPOINTS.CONFIGURACION.CATEGORIAS.DELETE(id),
+        subcategoria: API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.DELETE(id),
+        banco: API_ENDPOINTS.CONFIGURACION.BANCOS.DELETE(id),
+        medioPago: API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.DELETE(id),
+      };
+      const refetchMap = {
+        categoria: fetchCategorias,
+        subcategoria: fetchSubcategorias,
+        banco: fetchBancos,
+        medioPago: fetchMediosPago,
+      };
+      const res = await apiFetch(urlMap[type], { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         toast.success(data.message);
-        await fetchMediosPago();
+        await refetchMap[type]();
+      } else {
+        setError(data.message);
       }
-    } catch (err) {
-      setError("Error al eliminar medio de pago");
+    } catch {
+      setError("Error al eliminar");
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -544,14 +512,14 @@ export default function ConfiguracionPage() {
                         >
                           Editar
                         </Button>
-                        <Button
-                          onClick={() => handleDeleteCategoria(cat.id)}
-                          variant="outline"
-                          size="sm"
-                          className="text-rose-600 hover:bg-rose-50"
-                        >
-                          Eliminar
-                        </Button>
+                                                <Button
+                                                    onClick={() => handleDeleteCategoria(cat.id, cat.nombre)}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-rose-600 hover:bg-rose-50"
+                                                >
+                                                    Eliminar
+                                                </Button>
                       </div>
                     </div>
                   ))}
@@ -616,14 +584,14 @@ export default function ConfiguracionPage() {
                         >
                           Editar
                         </Button>
-                        <Button
-                          onClick={() => handleDeleteSubcategoria(sub.id)}
-                          variant="outline"
-                          size="sm"
-                          className="text-rose-600 hover:bg-rose-50"
-                        >
-                          Eliminar
-                        </Button>
+                                                <Button
+                                                    onClick={() => handleDeleteSubcategoria(sub.id, sub.nombre)}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-rose-600 hover:bg-rose-50"
+                                                >
+                                                    Eliminar
+                                                </Button>
                       </div>
                     </div>
                   ))}
@@ -675,14 +643,14 @@ export default function ConfiguracionPage() {
                         >
                           Editar
                         </Button>
-                        <Button
-                          onClick={() => handleDeleteBanco(banco.id)}
-                          variant="outline"
-                          size="sm"
-                          className="text-rose-600 hover:bg-rose-50"
-                        >
-                          Eliminar
-                        </Button>
+                                                <Button
+                                                    onClick={() => handleDeleteBanco(banco.id, banco.nombre)}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-rose-600 hover:bg-rose-50"
+                                                >
+                                                    Eliminar
+                                                </Button>
                       </div>
                     </div>
                   ))}
@@ -734,14 +702,14 @@ export default function ConfiguracionPage() {
                         >
                           Editar
                         </Button>
-                        <Button
-                          onClick={() => handleDeleteMedioPago(medio.id)}
-                          variant="outline"
-                          size="sm"
-                          className="text-rose-600 hover:bg-rose-50"
-                        >
-                          Eliminar
-                        </Button>
+                                                <Button
+                                                    onClick={() => handleDeleteMedioPago(medio.id, medio.nombre)}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-rose-600 hover:bg-rose-50"
+                                                >
+                                                    Eliminar
+                                                </Button>
                       </div>
                     </div>
                   ))}
@@ -1116,6 +1084,35 @@ export default function ConfiguracionPage() {
               </Button>
             </DialogFooter>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* DIALOG CONFIRMACIÓN DE ELIMINACIÓN */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-rose-600">
+              Confirmar Eliminación
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-[#666666] text-sm py-2">
+            ¿Estás seguro de eliminar{" "}
+            <span className="font-semibold text-[#1A1A1A]">
+              &quot;{deleteTarget?.nombre}&quot;
+            </span>
+            ? Esta acción no se puede deshacer.
+          </p>
+          <DialogFooter className="gap-3">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmDelete}
+              className="bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              Eliminar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

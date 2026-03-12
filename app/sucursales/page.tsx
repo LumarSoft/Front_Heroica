@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_ENDPOINTS } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 import { AlertTriangle } from "lucide-react";
 import {
   Card,
@@ -49,7 +50,7 @@ export default function SucursalesPage() {
     // Cargar sucursales desde la API
     const fetchSucursales = async () => {
       try {
-        const response = await fetch(API_ENDPOINTS.SUCURSALES.GET_ALL);
+        const response = await apiFetch(API_ENDPOINTS.SUCURSALES.GET_ALL);
         const data = await response.json();
 
         if (!response.ok) {
@@ -57,9 +58,9 @@ export default function SucursalesPage() {
         }
 
         setSucursales(data.data);
-      } catch (err: any) {
-        console.error("Error al cargar sucursales:", err);
-        setError(err.message || "Error al cargar sucursales");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Error al cargar sucursales";
+        setError(message);
       } finally {
         setIsLoading(false);
       }
@@ -92,20 +93,18 @@ export default function SucursalesPage() {
   const handleToggleActivo = async (e: React.MouseEvent, sucursal: Sucursal) => {
     e.stopPropagation();
     try {
-      const response = await fetch(API_ENDPOINTS.SUCURSALES.UPDATE(sucursal.id), {
+      const response = await apiFetch(API_ENDPOINTS.SUCURSALES.UPDATE(sucursal.id), {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...sucursal, activo: !sucursal.activo }),
       });
       if (!response.ok) throw new Error("Error al actualizar estado");
-      
+
       setSucursales((prev) =>
         prev.map((s) =>
           s.id === sucursal.id ? { ...s, activo: !s.activo } : s
         )
       );
-    } catch (err) {
-      console.error(err);
+    } catch {
       setError("Error al cambiar estado de sucursal");
     }
   };
@@ -116,9 +115,8 @@ export default function SucursalesPage() {
     setError("");
 
     try {
-      const response = await fetch(API_ENDPOINTS.SUCURSALES.CREATE, {
+      const response = await apiFetch(API_ENDPOINTS.SUCURSALES.CREATE, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
@@ -128,20 +126,12 @@ export default function SucursalesPage() {
         throw new Error(data.message || "Error al crear sucursal");
       }
 
-      // Agregar la nueva sucursal a la lista
       setSucursales((prev) => [...prev, { ...data.data, activo: true }]);
-
-      // Cerrar modal y limpiar formulario
       setIsModalOpen(false);
-      setFormData({
-        nombre: "",
-        razon_social: "",
-        cuit: "",
-        direccion: "",
-      });
-    } catch (err: any) {
-      console.error("Error al crear sucursal:", err);
-      setError(err.message || "Error al crear sucursal");
+      setFormData({ nombre: "", razon_social: "", cuit: "", direccion: "" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al crear sucursal";
+      setError(message);
     } finally {
       setIsCreating(false);
     }
@@ -167,11 +157,9 @@ export default function SucursalesPage() {
     setError("");
 
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         API_ENDPOINTS.SUCURSALES.DELETE(sucursalToDelete.id),
-        {
-          method: "DELETE",
-        },
+        { method: "DELETE" }
       );
 
       const data = await response.json();
@@ -180,15 +168,12 @@ export default function SucursalesPage() {
         throw new Error(data.message || "Error al eliminar sucursal");
       }
 
-      // Remover la sucursal de la lista
       setSucursales((prev) => prev.filter((s) => s.id !== sucursalToDelete.id));
-
-      // Cerrar modal
       setDeleteModalOpen(false);
       setSucursalToDelete(null);
-    } catch (err: any) {
-      console.error("Error al eliminar sucursal:", err);
-      setError(err.message || "Error al eliminar sucursal");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al eliminar sucursal";
+      setError(message);
     } finally {
       setIsDeleting(false);
     }

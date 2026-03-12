@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 import type {
     Transaction,
     BancoParcial,
@@ -120,19 +121,15 @@ export function useCajaData(tipo: "efectivo" | "banco") {
     // Fetchers
     // =============================================
 
-    const showSuccess = useCallback((msg: string) => {
-        toast.success(msg);
-    }, []);
-
     const fetchTotales = useCallback(async () => {
         try {
-            const response = await fetch(endpoints.getTotales(sucursalId));
+            const response = await apiFetch(endpoints.getTotales(sucursalId));
             const data = await response.json();
             if (response.ok) {
                 setParciales(data.data?.parciales || []);
             }
-        } catch (err) {
-            console.error("Error al cargar totales:", err);
+        } catch {
+            // Non-critical background refresh
         }
     }, [endpoints, sucursalId]);
 
@@ -141,7 +138,7 @@ export function useCajaData(tipo: "efectivo" | "banco") {
             setIsLoading(true);
             setError("");
 
-            const response = await fetch(endpoints.getMovimientos(sucursalId));
+            const response = await apiFetch(endpoints.getMovimientos(sucursalId));
             const data = await response.json();
 
             if (!response.ok) {
@@ -174,9 +171,9 @@ export function useCajaData(tipo: "efectivo" | "banco") {
             // Saldo necesario incluye TODOS los aprobados/pendientes (incluyendo deuda),
             // pero la deuda se identifica con es_deuda=1 para excluirla del total en UI
             setSaldoNecesario(movimientosAprobados);
-        } catch (err: any) {
-            console.error("Error al cargar movimientos:", err);
-            setError(err.message || "Error al cargar movimientos");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Error al cargar movimientos";
+            setError(message);
         } finally {
             setIsLoading(false);
         }
@@ -187,49 +184,43 @@ export function useCajaData(tipo: "efectivo" | "banco") {
 
     const fetchCategorias = useCallback(async () => {
         try {
-            const response = await fetch(
-                API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL
-            );
+            const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL);
             const data = await response.json();
             if (response.ok) setCategorias(data.data || []);
-        } catch (err) {
-            console.error("Error al cargar categorías:", err);
+        } catch {
+            // Catalogue fetch failure is non-critical
         }
     }, []);
 
     const fetchSubcategorias = useCallback(async (categoriaId: number) => {
         try {
-            const response = await fetch(
+            const response = await apiFetch(
                 API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId)
             );
             const data = await response.json();
             if (response.ok) setSubcategorias(data.data || []);
-        } catch (err) {
-            console.error("Error al cargar subcategorías:", err);
+        } catch {
+            // Non-critical
         }
     }, []);
 
     const fetchBancos = useCallback(async () => {
         try {
-            const response = await fetch(
-                API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL
-            );
+            const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL);
             const data = await response.json();
             if (response.ok) setBancos(data.data || []);
-        } catch (err) {
-            console.error("Error al cargar bancos:", err);
+        } catch {
+            // Non-critical
         }
     }, []);
 
     const fetchMediosPago = useCallback(async () => {
         try {
-            const response = await fetch(
-                API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL
-            );
+            const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL);
             const data = await response.json();
             if (response.ok) setMediosPago(data.data || []);
-        } catch (err) {
-            console.error("Error al cargar medios de pago:", err);
+        } catch {
+            // Non-critical
         }
     }, []);
 
@@ -301,11 +292,10 @@ export function useCajaData(tipo: "efectivo" | "banco") {
             setIsSaving(true);
             setError("");
 
-            const response = await fetch(
+            const response = await apiFetch(
                 endpoints.update(selectedTransaction.id),
                 {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         fecha: formData.fecha,
                         concepto: formData.concepto,
@@ -333,12 +323,12 @@ export function useCajaData(tipo: "efectivo" | "banco") {
                 throw new Error(data.message || "Error al actualizar movimiento");
             }
 
-            showSuccess("Movimiento actualizado exitosamente");
+            toast.success("Movimiento actualizado exitosamente");
             setIsDetailsDialogOpen(false);
             await fetchMovimientos();
-        } catch (err: any) {
-            console.error("Error al actualizar movimiento:", err);
-            setError(err.message || "Error al actualizar movimiento");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Error al actualizar movimiento";
+            setError(message);
         } finally {
             setIsSaving(false);
         }
@@ -351,11 +341,10 @@ export function useCajaData(tipo: "efectivo" | "banco") {
             setIsSaving(true);
             setError("");
 
-            const response = await fetch(
+            const response = await apiFetch(
                 endpoints.updateEstado(selectedTransaction.id),
                 {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ estado: nuevoEstado }),
                 }
             );
@@ -365,12 +354,12 @@ export function useCajaData(tipo: "efectivo" | "banco") {
                 throw new Error(data.message || "Error al cambiar estado");
             }
 
-            showSuccess("Estado actualizado exitosamente");
+            toast.success("Estado actualizado exitosamente");
             setIsStateDialogOpen(false);
             await fetchMovimientos();
-        } catch (err: any) {
-            console.error("Error al cambiar estado:", err);
-            setError(err.message || "Error al cambiar estado");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Error al cambiar estado";
+            setError(message);
         } finally {
             setIsSaving(false);
         }
@@ -383,7 +372,7 @@ export function useCajaData(tipo: "efectivo" | "banco") {
             setIsSaving(true);
             setError("");
 
-            const response = await fetch(
+            const response = await apiFetch(
                 endpoints.deleteMovimiento(selectedTransaction.id),
                 { method: "DELETE" }
             );
@@ -393,12 +382,12 @@ export function useCajaData(tipo: "efectivo" | "banco") {
                 throw new Error(data.message || "Error al eliminar movimiento");
             }
 
-            showSuccess("Movimiento eliminado exitosamente");
+            toast.success("Movimiento eliminado exitosamente");
             setIsDeleteDialogOpen(false);
             await fetchMovimientos();
-        } catch (err: any) {
-            console.error("Error al eliminar movimiento:", err);
-            setError(err.message || "Error al eliminar movimiento");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Error al eliminar movimiento";
+            setError(message);
         } finally {
             setIsSaving(false);
         }
@@ -416,11 +405,10 @@ export function useCajaData(tipo: "efectivo" | "banco") {
                 body.fecha_original_vencimiento = fechaOriginalVencimiento;
             }
 
-            const response = await fetch(
+            const response = await apiFetch(
                 endpoints.toggleDeuda(selectedTransaction.id),
                 {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body),
                 }
             );
@@ -430,12 +418,12 @@ export function useCajaData(tipo: "efectivo" | "banco") {
                 throw new Error(data.message || "Error al actualizar deuda");
             }
 
-            showSuccess(esDeuda ? "Deuda activada exitosamente" : "Deuda desactivada exitosamente");
+            toast.success(esDeuda ? "Deuda activada exitosamente" : "Deuda desactivada exitosamente");
             setIsDeudaDialogOpen(false);
             await fetchMovimientos();
-        } catch (err: any) {
-            console.error("Error al actualizar deuda:", err);
-            setError(err.message || "Error al actualizar deuda");
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Error al actualizar deuda";
+            setError(message);
         } finally {
             setIsSaving(false);
         }

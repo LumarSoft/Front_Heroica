@@ -9,15 +9,66 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
+import { apiFetch } from "@/lib/api";
 import { formatMonto } from "@/lib/formatters";
 import type { Sucursal } from "@/lib/types";
 import { Printer, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#d0ed57', '#a4de6c'];
 
+// ─── Report data types ────────────────────────────────────────────────────────
+interface ReportBreakdownItem {
+  name: string;
+  value: number;
+  subcategorias?: ReportBreakdownItem[];
+}
+
+interface ReportResumen {
+  ingresos: number;
+  egresos: number;
+  resultado: number;
+  resultado_banco?: number;
+  deudas?: number;
+}
+
+interface ReportDeuda {
+  id?: number;
+  fecha: string;
+  concepto?: string;
+  monto: number;
+  categoria_nombre?: string;
+  subcategoria_nombre?: string;
+}
+
+interface ReportMovimiento {
+  id?: number;
+  fecha: string;
+  concepto?: string;
+  monto: number;
+  tipo: "ingreso" | "egreso";
+  categoria_nombre?: string;
+  subcategoria_nombre?: string;
+}
+
+interface ReportData {
+  resumen: ReportResumen;
+  ingresosBreakdown: ReportBreakdownItem[];
+  egresosBreakdown: ReportBreakdownItem[];
+  detalles?: {
+    ingresos: ReportMovimiento[];
+    egresos: ReportMovimiento[];
+    deudas: ReportDeuda[];
+  };
+}
+
+interface PieTooltipProps {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number }>;
+}
+
 // ─── Custom Tooltip for Pie Charts ───────────────────────────────────────────
-const CustomPieTooltip = ({ active, payload }: any) => {
+const CustomPieTooltip = ({ active, payload }: PieTooltipProps) => {
   if (active && payload && payload.length) {
     const item = payload[0];
     return (
@@ -40,7 +91,7 @@ function DistributionRow({
   isBack = false,
   onClick,
 }: {
-  item: any;
+  item: ReportBreakdownItem;
   index: number;
   total: number;
   color: string;
@@ -125,10 +176,10 @@ function DrillDownBreadcrumb({
 export default function ReportesPage() {
   const router = useRouter();
   const params = useParams();
-  const { user, isGuardLoading } = useAuthGuard();
+  const { isGuardLoading } = useAuthGuard();
 
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
-  const [reportData, setReportData] = useState<any>(null);
+  const [reportData, setReportData] = useState<ReportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedIngresoCategory, setSelectedIngresoCategory] = useState<string | null>(null);
@@ -163,12 +214,13 @@ export default function ReportesPage() {
 
   const fetchSucursal = async () => {
     try {
-      const response = await fetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)));
+      const response = await apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)));
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
       setSucursal(data.data);
-    } catch (err: any) {
-      toast.error(err.message || "Error al cargar sucursal");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al cargar sucursal";
+      toast.error(message);
     }
   };
 
@@ -178,12 +230,13 @@ export default function ReportesPage() {
     setSelectedEgresoCategory(null);
     try {
       const url = API_ENDPOINTS.REPORTES.GET_BY_SUCURSAL(params.id as string, startDate, endDate);
-      const response = await fetch(url);
+      const response = await apiFetch(url);
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
       setReportData(data.data);
-    } catch (err: any) {
-      toast.error(err.message || "Error al cargar reportes");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al cargar reportes";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -193,8 +246,8 @@ export default function ReportesPage() {
   const currentIngresosData = useMemo(() => {
     if (!reportData?.ingresosBreakdown) return [];
     if (selectedIngresoCategory) {
-      const cat = reportData.ingresosBreakdown.find((c: any) => c.name === selectedIngresoCategory);
-      return cat ? cat.subcategorias : [];
+      const cat = reportData.ingresosBreakdown.find((c) => c.name === selectedIngresoCategory);
+      return cat?.subcategorias ?? [];
     }
     return reportData.ingresosBreakdown;
   }, [reportData, selectedIngresoCategory]);
@@ -202,8 +255,8 @@ export default function ReportesPage() {
   const currentIngresosTotal = useMemo(() => {
     if (!reportData?.ingresosBreakdown) return 0;
     if (selectedIngresoCategory) {
-      const cat = reportData.ingresosBreakdown.find((c: any) => c.name === selectedIngresoCategory);
-      return cat ? cat.value : 0;
+      const cat = reportData.ingresosBreakdown.find((c) => c.name === selectedIngresoCategory);
+      return cat?.value ?? 0;
     }
     return reportData.resumen.ingresos;
   }, [reportData, selectedIngresoCategory]);
@@ -211,8 +264,8 @@ export default function ReportesPage() {
   const currentEgresosData = useMemo(() => {
     if (!reportData?.egresosBreakdown) return [];
     if (selectedEgresoCategory) {
-      const cat = reportData.egresosBreakdown.find((c: any) => c.name === selectedEgresoCategory);
-      return cat ? cat.subcategorias : [];
+      const cat = reportData.egresosBreakdown.find((c) => c.name === selectedEgresoCategory);
+      return cat?.subcategorias ?? [];
     }
     return reportData.egresosBreakdown;
   }, [reportData, selectedEgresoCategory]);
@@ -220,8 +273,8 @@ export default function ReportesPage() {
   const currentEgresosTotal = useMemo(() => {
     if (!reportData?.egresosBreakdown) return 0;
     if (selectedEgresoCategory) {
-      const cat = reportData.egresosBreakdown.find((c: any) => c.name === selectedEgresoCategory);
-      return cat ? cat.value : 0;
+      const cat = reportData.egresosBreakdown.find((c) => c.name === selectedEgresoCategory);
+      return cat?.value ?? 0;
     }
     return reportData.resumen.egresos;
   }, [reportData, selectedEgresoCategory]);
@@ -413,7 +466,7 @@ export default function ReportesPage() {
                 Detalle de Movimientos Principales
               </h2>
               {(() => {
-                const allMovs = [...(reportData.detalles?.ingresos || []), ...(reportData.detalles?.egresos || [])].sort((a: any, b: any) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+                const allMovs = [...(reportData.detalles?.ingresos ?? []), ...(reportData.detalles?.egresos ?? [])].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
                 if (allMovs.length === 0) return <p className="text-center italic text-slate-500 mt-10 text-sm">No hay movimientos en este período.</p>;
 
                 return (
@@ -427,7 +480,7 @@ export default function ReportesPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {allMovs.map((mov: any, i: number) => (
+                      {allMovs.map((mov, i) => (
                         <tr key={mov.id ?? i} className="print:break-inside-avoid">
                           <td className="py-2 px-2 text-slate-500 whitespace-nowrap">
                             {new Date(mov.fecha).toLocaleDateString("es-AR", { day: '2-digit', month: '2-digit', year: 'numeric' })}
@@ -547,8 +600,8 @@ function BreakdownPanel({
   valueColorClass,
   onBack,
 }: {
-  breakdownData: any[];
-  currentData: any[];
+  breakdownData: ReportBreakdownItem[];
+  currentData: ReportBreakdownItem[];
   currentTotal: number;
   selectedCategory: string | null;
   onSliceClick: (name: string) => void;
@@ -573,11 +626,11 @@ function BreakdownPanel({
                 paddingAngle={2}
                 dataKey="value"
               >
-                {breakdownData.map((entry: any, index: number) => {
+                {breakdownData.map((entry, index) => {
                   const color = COLORS[(index + colorOffset) % COLORS.length];
                   const isSelected = selectedCategory === entry.name;
                   const isDimmed = selectedCategory && !isSelected;
-                  const hasSubs = entry.subcategorias?.length > 0;
+                  const hasSubs = (entry.subcategorias?.length ?? 0) > 0;
                   return (
                     <Cell
                       key={`cell-${index}`}
@@ -610,14 +663,14 @@ function BreakdownPanel({
             : "Por categoría — clic para desglosar ▸"}
         </p>
         <div className="space-y-1 overflow-auto max-h-64 print:overflow-visible print:max-h-none pr-1">
-          {currentData.map((item: any, i: number) => {
+          {currentData.map((item, i) => {
             const color = selectedCategory
               ? COLORS[
-              (breakdownData.findIndex((c: any) => c.name === selectedCategory) + colorOffset) %
+              (breakdownData.findIndex((c) => c.name === selectedCategory) + colorOffset) %
               COLORS.length
               ]
               : COLORS[(i + colorOffset) % COLORS.length];
-            const isClickable = !selectedCategory && item.subcategorias?.length > 0;
+            const isClickable = !selectedCategory && (item.subcategorias?.length ?? 0) > 0;
             return (
               <DistributionRow
                 key={i}
@@ -665,8 +718,8 @@ function getAntiguedad(fechaStr: string): { label: string; colorClass: string; d
   return { label: `Hace ${dias}d`, colorClass: "text-rose-600 bg-rose-50 border-rose-200", dotClass: "bg-rose-400" };
 }
 
-function DeudaPanel({ deudas }: { deudas: any[] }) {
-  const total = deudas.reduce((acc: number, d: any) => acc + Math.abs(d.monto), 0);
+function DeudaPanel({ deudas }: { deudas: ReportDeuda[] }) {
+  const total = deudas.reduce((acc, d) => acc + Math.abs(d.monto), 0);
 
   if (deudas.length === 0) {
     return (
@@ -702,7 +755,7 @@ function DeudaPanel({ deudas }: { deudas: any[] }) {
 
       {/* Deuda cards */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 divide-y divide-slate-100 overflow-hidden">
-        {deudas.map((deuda: any, i: number) => {
+        {deudas.map((deuda, i) => {
           const antig = getAntiguedad(deuda.fecha);
           return (
             <div key={deuda.id ?? i} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors print:break-inside-avoid">

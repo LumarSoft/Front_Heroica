@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 import { AlertTriangle } from "lucide-react";
 import {
   Card,
@@ -34,14 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
-import {
-  formatFecha,
-  formatMonto,
-  calcularTotal,
-  getEstadoColor,
-  getPrioridadColor,
-  capitalize,
-} from "@/lib/formatters";
+import { formatFecha, formatMonto, calcularTotal } from "@/lib/formatters";
 import { StatusBadge } from "@/components/caja/StatusBadge";
 import type { PagoPendiente } from "@/lib/types";
 
@@ -90,7 +84,7 @@ export default function PagosPendientesPage() {
   // Verificar si la sucursal está activa
   useEffect(() => {
     if (!params.id) return;
-    fetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)))
+    apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)))
       .then((r) => r.json())
       .then((d) => setSucursalActiva(Boolean(d.data?.activo)))
       .catch(() => setSucursalActiva(true));
@@ -104,7 +98,7 @@ export default function PagosPendientesPage() {
       setIsLoading(true);
       setError("");
 
-      const response = await fetch(
+      const response = await apiFetch(
         API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(Number(params.id))
       );
       const data = await response.json();
@@ -114,9 +108,9 @@ export default function PagosPendientesPage() {
       }
 
       setPagosPendientes(data.data || []);
-    } catch (err: any) {
-      console.error("Error al cargar pagos pendientes:", err);
-      setError(err.message || "Error al cargar pagos pendientes");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al cargar pagos pendientes";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +122,7 @@ export default function PagosPendientesPage() {
       setIsLoading(true);
       setError("");
 
-      const response = await fetch(
+      const response = await apiFetch(
         `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(user.id)}?sucursal_id=${params.id}`
       );
       const data = await response.json();
@@ -138,9 +132,9 @@ export default function PagosPendientesPage() {
       }
 
       setHistorial(data.data || []);
-    } catch (err: any) {
-      console.error("Error al cargar historial:", err);
-      setError(err.message || "Error al cargar historial");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al cargar historial";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -156,11 +150,6 @@ export default function PagosPendientesPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGuardLoading, activeTab]);
-
-  // --- Acciones ---
-  const showSuccess = (msg: string) => {
-    toast.success(msg);
-  };
 
   const handleOpenAprobar = (pago: PagoPendiente) => {
     setSelectedPago(pago);
@@ -192,11 +181,10 @@ export default function PagosPendientesPage() {
       setIsSaving(true);
       setError("");
 
-      const response = await fetch(
+      const response = await apiFetch(
         API_ENDPOINTS.PAGOS_PENDIENTES.RECHAZAR(selectedPago.id),
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             usuario_revisor_id: user.id,
             motivo_rechazo: motivoRechazo,
@@ -209,12 +197,12 @@ export default function PagosPendientesPage() {
         throw new Error(data.message || "Error al rechazar pago");
       }
 
-      showSuccess("Pago rechazado exitosamente");
+      toast.success("Pago rechazado exitosamente");
       setIsRechazarDialogOpen(false);
       fetchPagosPendientes();
-    } catch (err: any) {
-      console.error("Error al rechazar pago:", err);
-      setError(err.message || "Error al rechazar pago");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al rechazar pago";
+      setError(message);
       setTimeout(() => setError(""), 3000);
     } finally {
       setIsSaving(false);
@@ -690,7 +678,7 @@ export default function PagosPendientesPage() {
         sucursalId={Number(params.id)}
         isPagoPendiente={true}
         onSuccess={() => {
-          showSuccess("Solicitud de movimiento creada correctamente");
+          toast.success("Solicitud de movimiento creada correctamente");
           if (activeTab === "pendientes") fetchPagosPendientes();
           else fetchHistorial();
         }}
@@ -720,7 +708,7 @@ export default function PagosPendientesPage() {
             prioridad: selectedPago.prioridad as "baja" | "media" | "alta" | undefined,
           }}
           onSuccess={() => {
-            showSuccess("Pago aprobado y movimiento registrado correctamente");
+            toast.success("Pago aprobado y movimiento registrado correctamente");
             setIsAprobacionMovimientoOpen(false);
             setSelectedPago(null);
             fetchPagosPendientes();

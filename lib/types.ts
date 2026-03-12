@@ -2,6 +2,8 @@
 // Tipos compartidos del módulo Sucursales
 // =============================================
 
+export type TransactionEstado = "pendiente" | "aprobado" | "rechazado" | "completado";
+
 export interface Transaction {
     id: number;
     sucursal_id: number;
@@ -10,9 +12,9 @@ export interface Transaction {
     monto: number | string;
     descripcion?: string;
     prioridad: "baja" | "media" | "alta";
-    tipo: "ingreso" | "egreso" | string;
+    tipo: "ingreso" | "egreso";
     tipo_movimiento: string;
-    estado: string;
+    estado: TransactionEstado;
     categoria_id?: number | string;
     subcategoria_id?: number | string;
     comprobante?: string;
@@ -20,8 +22,8 @@ export interface Transaction {
     medio_pago_id?: number | string;
     banco_nombre?: string;
     medio_pago_nombre?: string;
-    es_deuda?: number; // 0 = sin deuda, 1 = en deuda
-    fecha_original_vencimiento?: string; // ISO date string, guardada al activar deuda
+    es_deuda?: 0 | 1;
+    fecha_original_vencimiento?: string;
 }
 
 export interface BancoParcial {

@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { API_ENDPOINTS } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 import { AlertTriangle } from "lucide-react";
 import { trackCreatedPago } from "@/hooks/use-employee-notifications";
 
@@ -129,37 +130,31 @@ export default function NuevoMovimientoDialog({
 
   const fetchCategorias = async () => {
     try {
-      const response = await fetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL);
+      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL);
       const data = await response.json();
-      if (response.ok) {
-        setCategorias(data.data || []);
-      }
-    } catch (err) {
-      console.error("Error al cargar categorías:", err);
+      if (response.ok) setCategorias(data.data || []);
+    } catch {
+      // Non-critical
     }
   };
 
   const fetchBancos = async () => {
     try {
-      const response = await fetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL);
+      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL);
       const data = await response.json();
-      if (response.ok) {
-        setBancos(data.data || []);
-      }
-    } catch (err) {
-      console.error("Error al cargar bancos:", err);
+      if (response.ok) setBancos(data.data || []);
+    } catch {
+      // Non-critical
     }
   };
 
   const fetchMediosPago = async () => {
     try {
-      const response = await fetch(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL);
+      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL);
       const data = await response.json();
-      if (response.ok) {
-        setMediosPago(data.data || []);
-      }
-    } catch (err) {
-      console.error("Error al cargar medios de pago:", err);
+      if (response.ok) setMediosPago(data.data || []);
+    } catch {
+      // Non-critical
     }
   };
 
@@ -183,13 +178,13 @@ export default function NuevoMovimientoDialog({
 
   const fetchSubcategorias = async (categoriaId: number) => {
     try {
-      const response = await fetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId));
+      const response = await apiFetch(
+        API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId)
+      );
       const data = await response.json();
-      if (response.ok) {
-        setSubcategorias(data.data || []);
-      }
-    } catch (err) {
-      console.error("Error al cargar subcategorías:", err);
+      if (response.ok) setSubcategorias(data.data || []);
+    } catch {
+      // Non-critical
     }
   };
 
@@ -265,11 +260,10 @@ export default function NuevoMovimientoDialog({
 
       // ── Modo aprobación: llama SOLO a APROBAR (que crea el movimiento internamente) ──
       if (isApprovalMode) {
-        const aprobarRes = await fetch(
+        const aprobarRes = await apiFetch(
           API_ENDPOINTS.PAGOS_PENDIENTES.APROBAR(pagoIdToApprove!),
           {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               usuario_revisor_id: usuarioRevisorId ?? user?.id,
               tipo_caja: cajaTipo,
@@ -331,9 +325,8 @@ export default function NuevoMovimientoDialog({
         medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
       };
 
-      const response = await fetch(endpoint, {
+      const response = await apiFetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
@@ -353,9 +346,9 @@ export default function NuevoMovimientoDialog({
       resetForm();
       onSuccess();
       onClose();
-    } catch (err: any) {
-      console.error("Error al crear movimiento:", err);
-      setError(err.message || "Error al crear movimiento");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al crear movimiento";
+      setError(message);
     } finally {
       setIsSaving(false);
     }
