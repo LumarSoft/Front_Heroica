@@ -1,177 +1,22 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { apiFetch } from "@/lib/api";
 import { formatMonto } from "@/lib/formatters";
 import type { Sucursal } from "@/lib/types";
-import { Printer, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, ArrowLeft } from "lucide-react";
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#d0ed57', '#a4de6c'];
-
-// ─── Report data types ────────────────────────────────────────────────────────
-interface ReportBreakdownItem {
-  name: string;
-  value: number;
-  subcategorias?: ReportBreakdownItem[];
-}
-
-interface ReportResumen {
-  ingresos: number;
-  egresos: number;
-  resultado: number;
-  resultado_banco?: number;
-  deudas?: number;
-}
-
-interface ReportDeuda {
-  id?: number;
-  fecha: string;
-  concepto?: string;
-  monto: number;
-  categoria_nombre?: string;
-  subcategoria_nombre?: string;
-}
-
-interface ReportMovimiento {
-  id?: number;
-  fecha: string;
-  concepto?: string;
-  monto: number;
-  tipo: "ingreso" | "egreso";
-  categoria_nombre?: string;
-  subcategoria_nombre?: string;
-}
-
-interface ReportData {
-  resumen: ReportResumen;
-  ingresosBreakdown: ReportBreakdownItem[];
-  egresosBreakdown: ReportBreakdownItem[];
-  detalles?: {
-    ingresos: ReportMovimiento[];
-    egresos: ReportMovimiento[];
-    deudas: ReportDeuda[];
-  };
-}
-
-interface PieTooltipProps {
-  active?: boolean;
-  payload?: Array<{ name: string; value: number }>;
-}
-
-// ─── Custom Tooltip for Pie Charts ───────────────────────────────────────────
-const CustomPieTooltip = ({ active, payload }: PieTooltipProps) => {
-  if (active && payload && payload.length) {
-    const item = payload[0];
-    return (
-      <div className="bg-white border border-slate-200 rounded-lg shadow-lg px-3 py-2 text-sm">
-        <p className="font-semibold text-slate-800">{item.name}</p>
-        <p className="text-slate-600">{formatMonto(item.value)}</p>
-      </div>
-    );
-  }
-  return null;
-};
-
-// ─── Progress Row Component ───────────────────────────────────────────────────
-function DistributionRow({
-  item,
-  index,
-  total,
-  color,
-  isClickable,
-  isBack = false,
-  onClick,
-}: {
-  item: ReportBreakdownItem;
-  index: number;
-  total: number;
-  color: string;
-  isClickable: boolean;
-  isBack?: boolean;
-  onClick?: () => void;
-}) {
-  const pct = total > 0 ? (item.value / total) * 100 : 0;
-
-  return (
-    <div
-      className={`group rounded-lg p-3 transition-all duration-150 print:break-inside-avoid ${isClickable ? "cursor-pointer hover:bg-slate-100 active:scale-[0.99]" : ""
-        }`}
-      onClick={isClickable ? onClick : undefined}
-    >
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="flex items-center gap-2 min-w-0">
-          <span
-            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-            style={{ backgroundColor: color }}
-          />
-          <span
-            className={`text-sm font-medium text-slate-700 truncate ${isClickable ? "group-hover:text-slate-900" : ""
-              }`}
-          >
-            {item.name}
-            {isClickable && !isBack && (
-              <span className="ml-1 text-xs text-slate-400 group-hover:text-slate-500">▸</span>
-            )}
-            {isClickable && isBack && (
-              <span className="ml-1 text-xs text-slate-400 group-hover:text-slate-500">↩</span>
-            )}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-          <span className="text-xs font-mono text-slate-500 w-10 text-right">
-            {pct.toFixed(1)}%
-          </span>
-          <span className="text-sm font-bold text-slate-800 w-28 text-right tabular-nums">
-            {formatMonto(item.value)}
-          </span>
-        </div>
-      </div>
-      {/* Progress bar */}
-      <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: color }}
-        />
-      </div>
-    </div>
-  );
-}
-
-// ─── Breadcrumb for drill-down ────────────────────────────────────────────────
-function DrillDownBreadcrumb({
-  root,
-  selected,
-  onBack,
-  colorClass,
-}: {
-  root: string;
-  selected: string | null;
-  onBack: () => void;
-  colorClass: string;
-}) {
-  if (!selected) return null;
-  return (
-    <nav className="flex items-center gap-1.5 text-sm mb-1">
-      <button
-        onClick={onBack}
-        className={`font-medium underline underline-offset-2 decoration-dotted transition-colors ${colorClass}`}
-      >
-        {root}
-      </button>
-      <span className="text-slate-400">›</span>
-      <span className="font-semibold text-slate-800">{selected}</span>
-    </nav>
-  );
-}
+import { Printer, TrendingUp, TrendingDown, AlertTriangle, ArrowLeft } from "lucide-react";
+import { SectionHeading } from "@/components/reportes/SectionHeading";
+import { SummaryCard } from "@/components/reportes/SummaryCard";
+import { BreakdownPanel } from "@/components/reportes/BreakdownPanel";
+import { DeudaPanel } from "@/components/reportes/DeudaPanel";
+import type { ReportData } from "@/components/reportes/types";
 
 export default function ReportesPage() {
   const router = useRouter();
@@ -185,34 +30,33 @@ export default function ReportesPage() {
   const [selectedIngresoCategory, setSelectedIngresoCategory] = useState<string | null>(null);
   const [selectedEgresoCategory, setSelectedEgresoCategory] = useState<string | null>(null);
 
-  // Selector mensual
+  // Selector mensual con debounce para evitar fetches por cada tecla
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
+  const [debouncedMonth, setDebouncedMonth] = useState(selectedMonth);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedMonth(selectedMonth), 500);
+    return () => clearTimeout(timer);
+  }, [selectedMonth]);
 
   const isClosedMonth = useMemo(() => {
     const today = new Date();
     const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
-    return selectedMonth < currentMonthStr;
-  }, [selectedMonth]);
+    return debouncedMonth < currentMonthStr;
+  }, [debouncedMonth]);
 
   const { startDate, endDate } = useMemo(() => {
-    const [year, month] = selectedMonth.split("-");
+    const [year, month] = debouncedMonth.split("-");
     const start = `${year}-${month}-01`;
     const lastDay = new Date(Number(year), Number(month), 0).getDate();
     const end = `${year}-${month}-${lastDay}`;
     return { startDate: start, endDate: end };
-  }, [selectedMonth]);
+  }, [debouncedMonth]);
 
-  useEffect(() => {
-    if (isGuardLoading) return;
-    fetchSucursal();
-    fetchReportData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isGuardLoading, params.id, startDate, endDate]);
-
-  const fetchSucursal = async () => {
+  const fetchSucursal = useCallback(async () => {
     try {
       const response = await apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)));
       const data = await response.json();
@@ -222,9 +66,9 @@ export default function ReportesPage() {
       const message = err instanceof Error ? err.message : "Error al cargar sucursal";
       toast.error(message);
     }
-  };
+  }, [params.id]);
 
-  const fetchReportData = async () => {
+  const fetchReportData = useCallback(async () => {
     setIsLoading(true);
     setSelectedIngresoCategory(null);
     setSelectedEgresoCategory(null);
@@ -240,7 +84,13 @@ export default function ReportesPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params.id, startDate, endDate]);
+
+  useEffect(() => {
+    if (isGuardLoading) return;
+    fetchSucursal();
+    fetchReportData();
+  }, [isGuardLoading, fetchSucursal, fetchReportData]);
 
   // ── Computed data ────────────────────────────────────────────────────────────
   const currentIngresosData = useMemo(() => {
@@ -414,12 +264,6 @@ export default function ReportesPage() {
             {/* ── 2 · Ingresos ─────────────────────────────────────────────── */}
             <section className="page-break-before">
               <SectionHeading number="2" title="Discriminado de Ingresos" className="mt-4" />
-              <DrillDownBreadcrumb
-                root="Todas las categorías"
-                selected={selectedIngresoCategory}
-                onBack={() => setSelectedIngresoCategory(null)}
-                colorClass="text-emerald-600 hover:text-emerald-700"
-              />
               <BreakdownPanel
                 breakdownData={reportData.ingresosBreakdown}
                 currentData={currentIngresosData}
@@ -430,18 +274,14 @@ export default function ReportesPage() {
                 colorOffset={0}
                 emptyMessage="No hay ingresos registrados en el período"
                 valueColorClass="text-emerald-700"
+                drillDownRoot="Todas las categorías"
+                drillDownColorClass="text-emerald-600 hover:text-emerald-700"
               />
             </section>
 
             {/* ── 3 · Egresos ──────────────────────────────────────────────── */}
             <section className="page-break-before">
               <SectionHeading number="3" title="Discriminado de Egresos" className="mt-4" />
-              <DrillDownBreadcrumb
-                root="Todas las categorías"
-                selected={selectedEgresoCategory}
-                onBack={() => setSelectedEgresoCategory(null)}
-                colorClass="text-rose-500 hover:text-rose-600"
-              />
               <BreakdownPanel
                 breakdownData={reportData.egresosBreakdown}
                 currentData={currentEgresosData}
@@ -452,6 +292,8 @@ export default function ReportesPage() {
                 colorOffset={4}
                 emptyMessage="No hay egresos registrados"
                 valueColorClass="text-rose-600"
+                drillDownRoot="Todas las categorías"
+                drillDownColorClass="text-rose-500 hover:text-rose-600"
               />
             </section>
 
@@ -506,302 +348,7 @@ export default function ReportesPage() {
         ) : null}
       </main>
 
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @media print {
-            @page { margin: 1.5cm; size: A4 portrait; }
-            body { background: white !important; font-size: 11pt; color: #111827; }
-            .page-break-before { page-break-before: always; }
-            .shadow-sm, .shadow-md { box-shadow: none !important; border-color: #e5e7eb !important; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            main { padding: 0 !important; max-width: 100% !important; }
-            .print\\:block { display: block !important; }
-            .print\\:flex { display: flex !important; }
-            .print\\:hidden { display: none !important; }
-            .print\\:space-y-4 > * + * { margin-top: 1rem !important; }
-            .grid { gap: 1rem !important; }
-          }
-        `,
-      }} />
     </div>
   );
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function SectionHeading({
-  number,
-  title,
-  className = "",
-}: {
-  number: string;
-  title: string;
-  className?: string;
-}) {
-  return (
-    <h2 className={`text-lg font-bold text-slate-800 mb-4 flex items-center gap-2.5 ${className}`}>
-      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#002868] text-white text-xs font-bold">
-        {number}
-      </span>
-      {title}
-    </h2>
-  );
-}
-
-const accentMap: Record<string, { border: string; text: string; bg: string }> = {
-  emerald: { border: "border-l-emerald-500", text: "text-emerald-600", bg: "bg-emerald-50" },
-  rose: { border: "border-l-rose-500", text: "text-rose-600", bg: "bg-rose-50" },
-  blue: { border: "border-l-blue-500", text: "text-blue-600", bg: "bg-blue-50" },
-  red: { border: "border-l-red-600", text: "text-red-700", bg: "bg-red-50" },
-  orange: { border: "border-l-orange-500", text: "text-orange-600", bg: "bg-orange-50" },
-};
-
-function SummaryCard({
-  label,
-  value,
-  accent,
-  icon,
-  sub,
-}: {
-  label: string;
-  value: string;
-  accent: string;
-  icon?: React.ReactNode;
-  sub?: string;
-}) {
-  const a = accentMap[accent] ?? accentMap.blue;
-  return (
-    <Card className={`border-l-4 ${a.border} shadow-sm hover:shadow-md transition-shadow duration-200 print:break-inside-avoid`}>
-      <CardHeader className="pb-1 pt-4 px-5">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
-            {label}
-          </CardTitle>
-          {icon && (
-            <span className={`${a.text} opacity-40`}>{icon}</span>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="px-5 pb-4">
-        <p className={`text-3xl font-extrabold ${a.text} tabular-nums`}>{value}</p>
-        {sub && <p className="text-xs font-semibold mt-1 text-slate-400">{sub}</p>}
-      </CardContent>
-    </Card>
-  );
-}
-
-function BreakdownPanel({
-  breakdownData,
-  currentData,
-  currentTotal,
-  selectedCategory,
-  onSliceClick,
-  colorOffset,
-  emptyMessage,
-  valueColorClass,
-  onBack,
-}: {
-  breakdownData: ReportBreakdownItem[];
-  currentData: ReportBreakdownItem[];
-  currentTotal: number;
-  selectedCategory: string | null;
-  onSliceClick: (name: string) => void;
-  onBack: () => void;
-  colorOffset: number;
-  emptyMessage: string;
-  valueColorClass: string;
-}) {
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-      {/* Pie */}
-      <div className="h-72 flex items-center justify-center">
-        {breakdownData?.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={breakdownData}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                paddingAngle={2}
-                dataKey="value"
-              >
-                {breakdownData.map((entry, index) => {
-                  const color = COLORS[(index + colorOffset) % COLORS.length];
-                  const isSelected = selectedCategory === entry.name;
-                  const isDimmed = selectedCategory && !isSelected;
-                  const hasSubs = (entry.subcategorias?.length ?? 0) > 0;
-                  return (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={isDimmed ? "#E5E7EB" : color}
-                      stroke={isSelected ? "#1e293b" : "transparent"}
-                      strokeWidth={isSelected ? 2 : 0}
-                      style={{
-                        cursor: hasSubs ? "pointer" : "default",
-                        transition: "opacity 0.2s",
-                        opacity: isDimmed ? 0.5 : 1,
-                      }}
-                      onClick={() => hasSubs && onSliceClick(entry.name)}
-                    />
-                  );
-                })}
-              </Pie>
-              <RechartsTooltip content={<CustomPieTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-        ) : (
-          <p className="text-slate-400 text-sm">{emptyMessage}</p>
-        )}
-      </div>
-
-      {/* List */}
-      <div className="flex flex-col">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
-          {selectedCategory
-            ? `Subcategorías de "${selectedCategory}"`
-            : "Por categoría — clic para desglosar ▸"}
-        </p>
-        <div className="space-y-1 overflow-auto max-h-64 print:overflow-visible print:max-h-none pr-1">
-          {currentData.map((item, i) => {
-            const color = selectedCategory
-              ? COLORS[
-              (breakdownData.findIndex((c) => c.name === selectedCategory) + colorOffset) %
-              COLORS.length
-              ]
-              : COLORS[(i + colorOffset) % COLORS.length];
-            const isClickable = !selectedCategory && (item.subcategorias?.length ?? 0) > 0;
-            return (
-              <DistributionRow
-                key={i}
-                item={item}
-                index={i}
-                total={currentTotal}
-                color={color}
-                isClickable={isClickable}
-                onClick={() => onSliceClick(item.name)}
-              />
-            );
-          })}
-        </div>
-        {/* Total row + back button */}
-        <div className="mt-3 pt-3 border-t border-slate-200 flex justify-between items-center px-3">
-          {selectedCategory ? (
-            <button
-              onClick={onBack}
-              className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors group"
-            >
-              <span className="group-hover:-translate-x-0.5 transition-transform">←</span>
-              Volver a categorías
-            </button>
-          ) : (
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total</span>
-          )}
-          <span className={`text-base font-extrabold tabular-nums ${valueColorClass}`}>
-            {formatMonto(currentTotal)}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── DeudaPanel ───────────────────────────────────────────────────────────────
-function getAntiguedad(fechaStr: string): { label: string; colorClass: string; dotClass: string } {
-  const fecha = new Date(fechaStr);
-  const hoy = new Date();
-  const dias = Math.floor((hoy.getTime() - fecha.getTime()) / (1000 * 60 * 60 * 24));
-
-  if (dias <= 7) return { label: "Esta semana", colorClass: "text-emerald-600 bg-emerald-50 border-emerald-200", dotClass: "bg-emerald-400" };
-  if (dias <= 30) return { label: `Hace ${dias}d`, colorClass: "text-amber-600 bg-amber-50 border-amber-200", dotClass: "bg-amber-400" };
-  if (dias <= 90) return { label: `Hace ${dias}d`, colorClass: "text-orange-600 bg-orange-50 border-orange-200", dotClass: "bg-orange-400" };
-  return { label: `Hace ${dias}d`, colorClass: "text-rose-600 bg-rose-50 border-rose-200", dotClass: "bg-rose-400" };
-}
-
-function DeudaPanel({ deudas }: { deudas: ReportDeuda[] }) {
-  const total = deudas.reduce((acc, d) => acc + Math.abs(d.monto), 0);
-
-  if (deudas.length === 0) {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-12 flex flex-col items-center justify-center gap-3">
-        <CheckCircle2 className="w-12 h-12 text-emerald-500" />
-        <p className="text-slate-500 font-medium">Sin deudas registradas</p>
-        <p className="text-slate-400 text-sm">No hay deudas pendientes en este período.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* Summary bar */}
-      <div className="bg-orange-50 border border-orange-200 rounded-xl px-5 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <AlertTriangle className="w-7 h-7 text-orange-500" />
-          <div>
-            <p className="text-xs font-semibold text-orange-700 uppercase tracking-wider">Total adeudado</p>
-            <p className="text-2xl font-extrabold text-orange-600 tabular-nums">{formatMonto(total)}</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-orange-500 font-medium">{deudas.length} deuda{deudas.length !== 1 ? "s" : ""} pendiente{deudas.length !== 1 ? "s" : ""}</p>
-          <div className="flex items-center gap-2 mt-1.5 justify-end flex-wrap">
-            <span className="flex items-center gap-1 text-xs text-emerald-600"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />≤7 días</span>
-            <span className="flex items-center gap-1 text-xs text-amber-600"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />≤30 días</span>
-            <span className="flex items-center gap-1 text-xs text-orange-600"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block" />≤90 días</span>
-            <span className="flex items-center gap-1 text-xs text-rose-600"><span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />90 días</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Deuda cards */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 divide-y divide-slate-100 overflow-hidden">
-        {deudas.map((deuda, i) => {
-          const antig = getAntiguedad(deuda.fecha);
-          return (
-            <div key={deuda.id ?? i} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors print:break-inside-avoid">
-              {/* Dot indicator */}
-              <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${antig.dotClass}`} />
-
-              {/* Main info */}
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-800 truncate">
-                  {deuda.concepto || "Sin concepto"}
-                </p>
-                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  <span className="text-xs text-slate-400">
-                    {new Date(deuda.fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" })}
-                  </span>
-                  {deuda.categoria_nombre && (
-                    <>
-                      <span className="text-slate-300">·</span>
-                      <span className="text-xs text-slate-500 font-medium">{deuda.categoria_nombre}</span>
-                    </>
-                  )}
-                  {deuda.subcategoria_nombre && (
-                    <>
-                      <span className="text-slate-300">/</span>
-                      <span className="text-xs text-slate-400">{deuda.subcategoria_nombre}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Antiguedad badge */}
-              <span className={`text-xs font-semibold px-2 py-1 rounded-full border flex-shrink-0 ${antig.colorClass}`}>
-                {antig.label}
-              </span>
-
-              {/* Amount */}
-              <div className="text-right flex-shrink-0 w-28">
-                <span className="font-bold text-orange-600 tabular-nums text-sm">
-                  {formatMonto(Math.abs(deuda.monto))}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}

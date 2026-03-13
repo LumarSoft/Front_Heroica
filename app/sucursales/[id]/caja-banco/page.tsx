@@ -35,7 +35,7 @@ import {
   DeleteDialog,
   DeudaDialog,
 } from "@/components/caja/TransactionDialogs";
-import { DateRangeFilter } from "@/components/caja/DateRangeFilter";
+import { EndDateFilter } from "@/components/caja/EndDateFilter";
 import { API_ENDPOINTS } from "@/lib/config";
 import { AlertTriangle } from "lucide-react";
 
@@ -61,15 +61,18 @@ export default function CajaBancoPage() {
 
   const isReadOnly = sucursalActiva === false;
 
-  // Inicializar datos al montar (solo si auth está lista)
+  const { initialize } = caja;
   useEffect(() => {
     if (!isGuardLoading && user?.rol !== "empleado") {
-      caja.initialize();
+      initialize();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isGuardLoading]);
+  }, [isGuardLoading, user?.rol, initialize]);
 
   if (isGuardLoading) return <PageLoadingSpinner />;
+
+  const bancoNeto =
+    Number(selectedBanco?.total_real ?? 0) +
+    Number(selectedBanco?.total_necesario ?? 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
@@ -138,14 +141,14 @@ export default function CajaBancoPage() {
                 )}
 
                 {/* Tabs + Tablas */}
-                <DateRangeFilter
+                <EndDateFilter
                   fechaHasta={caja.fechaHasta}
                   onHastaChange={caja.setFechaHasta}
                   onLimpiar={caja.limpiarFiltros}
                   hayFiltro={caja.hayFiltroActivo}
                 />
                 <CajaTabs
-                  saldoReal={caja.saldoRealFiltrado}
+                  saldoReal={caja.saldoReal}
                   saldoNecesario={caja.saldoNecesarioSinDeudaFiltrado}
                   value={activeTab}
                   onValueChange={setActiveTab}
@@ -154,7 +157,7 @@ export default function CajaBancoPage() {
                     <TransactionTable
                       title="Saldo Real"
                       description="Movimientos de banco confirmados para el periodo actual."
-                      transactions={caja.saldoRealFiltrado}
+                      transactions={caja.saldoReal}
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
@@ -167,7 +170,7 @@ export default function CajaBancoPage() {
                       title="Saldo Necesario"
                       description="Pagos y compromisos bancarios programados."
                       transactions={caja.saldoNecesarioFiltrado}
-                      customTotal={calcularTotal(caja.saldoRealFiltrado) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeudaFiltrado))}
+                      customTotal={calcularTotal(caja.saldoReal) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeudaFiltrado))}
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
@@ -229,6 +232,9 @@ export default function CajaBancoPage() {
         sucursalId={caja.sucursalId}
         onSuccess={caja.fetchMovimientos}
         cajaTipo="banco"
+        categoriasExternas={caja.categorias}
+        bancosExternos={caja.bancos}
+        mediosPagoExternos={caja.mediosPago}
       />
 
       {/* Dialog de detalle de banco */}
@@ -258,17 +264,12 @@ export default function CajaBancoPage() {
               </span>
             </div>
             {/* Saldo proyectado = real + necesario (ya negativos los egresos) */}
-            {(() => {
-              const neto = Number(selectedBanco?.total_real ?? 0) + Number(selectedBanco?.total_necesario ?? 0);
-              return (
-                <div className={`flex items-center justify-between p-4 rounded-xl border-2 ${neto >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200"}`}>
-                  <span className="text-sm font-bold text-[#333] uppercase tracking-wide">Saldo Necesario</span>
-                  <span className={`text-lg font-bold ${neto >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                    {formatMonto(neto)}
-                  </span>
-                </div>
-              );
-            })()}
+            <div className={`flex items-center justify-between p-4 rounded-xl border-2 ${bancoNeto >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200"}`}>
+              <span className="text-sm font-bold text-[#333] uppercase tracking-wide">Saldo Necesario</span>
+              <span className={`text-lg font-bold ${bancoNeto >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                {formatMonto(bancoNeto)}
+              </span>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

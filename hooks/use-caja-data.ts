@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
@@ -46,6 +46,14 @@ const INITIAL_FORM: TransactionFormData = {
 };
 
 // =============================================
+// Normaliza un movimiento recibido de la API, coerciendo monto a number
+// =============================================
+
+function normalizeTransaction(m: Transaction): Transaction {
+    return { ...m, monto: Number(m.monto) };
+}
+
+// =============================================
 // Selección de endpoints según tipo de caja
 // =============================================
 
@@ -81,8 +89,8 @@ function getEndpoints(tipo: "efectivo" | "banco") {
  */
 export function useCajaData(tipo: "efectivo" | "banco") {
     const params = useParams();
-    const sucursalId = Number(params.id);
-    const endpoints = getEndpoints(tipo);
+    const sucursalId = useMemo(() => Number(params.id), [params.id]);
+    const endpoints = useMemo(() => getEndpoints(tipo), [tipo]);
 
     // --- Estado principal ---
     const [isLoading, setIsLoading] = useState(true);
@@ -145,25 +153,25 @@ export function useCajaData(tipo: "efectivo" | "banco") {
                 throw new Error(data.message || "Error al cargar movimientos");
             }
 
-            const allMovimientos = [
+            const allMovimientos: Transaction[] = [
                 ...(data.data.saldo_real || []),
                 ...(data.data.saldo_necesario || []),
-            ];
+            ].map(normalizeTransaction);
 
             const movimientosCompletados = allMovimientos
-                .filter((m: Transaction) => m.estado === "completado")
+                .filter((m) => m.estado === "completado")
                 .sort(
-                    (a: Transaction, b: Transaction) =>
+                    (a, b) =>
                         new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
                 );
 
             const movimientosAprobados = allMovimientos
                 .filter(
-                    (m: Transaction) =>
+                    (m) =>
                         m.estado === "aprobado" || m.estado === "pendiente"
                 )
                 .sort(
-                    (a: Transaction, b: Transaction) =>
+                    (a, b) =>
                         new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
                 );
 
@@ -445,52 +453,50 @@ export function useCajaData(tipo: "efectivo" | "banco") {
     // =============================================
 
     const initialize = useCallback(() => {
-        fetchMovimientos();
-        fetchTotales();
+        fetchMovimientos(); // fetchMovimientos ya llama fetchTotales al finalizar
         fetchCategorias();
         fetchBancos();
         fetchMediosPago();
-    }, [fetchMovimientos, fetchTotales, fetchCategorias, fetchBancos, fetchMediosPago]);
+    }, [fetchMovimientos, fetchCategorias, fetchBancos, fetchMediosPago]);
 
     // =============================================
     // Filtro por fechas (client-side)
     // =============================================
 
-    const filtrarPorFecha = (list: Transaction[]) => {
-        if (!fechaHasta) return list;
-        return list.filter((m) => {
-            const fechaMov = m.fecha ? m.fecha.split("T")[0] : "";
-            if (fechaHasta && fechaMov > fechaHasta) return false;
-            return true;
-        });
-    };
+    const { saldoNecesarioFiltrado, saldoNecesarioSinDeudaFiltrado } = useMemo(() => {
+        const filtered = !fechaHasta
+            ? saldoNecesario
+            : saldoNecesario.filter((m) => {
+                  const fechaMov = m.fecha ? m.fecha.split("T")[0] : "";
+                  return fechaMov <= fechaHasta;
+              });
+        return {
+            saldoNecesarioFiltrado: filtered,
+            saldoNecesarioSinDeudaFiltrado: filtered.filter((m) => !m.es_deuda),
+        };
+    }, [saldoNecesario, fechaHasta]);
 
-    const saldoRealFiltrado = saldoReal; // El saldo real es siempre al día, sin filtro de fecha
-    const saldoNecesarioFiltrado = filtrarPorFecha(saldoNecesario);
-    const saldoNecesarioSinDeudaFiltrado = saldoNecesarioFiltrado.filter((m) => !m.es_deuda);
-
-    // Parciales filtrados: agrupar saldoRealFiltrado + saldoNecesarioSinDeudaFiltrado por banco_id
-    const parcialesFiltrados: BancoParcial[] = (() => {
-        const map = new Map<string | number, BancoParcial>();
-        const addToBanco = (m: Transaction, tipo: "real" | "necesario") => {
+    // Parciales filtrados: agrupar saldoReal + saldoNecesarioSinDeudaFiltrado por banco_id
+    const parcialesFiltrados = useMemo<BancoParcial[]>(() => {
+        const map = new Map<number | string, BancoParcial>();
+        const addToBanco = (m: Transaction, tipoEntry: "real" | "necesario") => {
             const key = m.banco_id ?? "otros";
             if (!map.has(key)) {
                 map.set(key, {
-                    banco_id: (m.banco_id as number) ?? 0,
+                    banco_id: m.banco_id ?? 0,
                     banco_nombre: m.banco_nombre ?? "OTROS",
                     total_real: 0,
                     total_necesario: 0,
                 });
             }
             const entry = map.get(key)!;
-            const monto = Number(m.monto) || 0;
-            if (tipo === "real") entry.total_real = (Number(entry.total_real) || 0) + monto;
-            else entry.total_necesario = (Number(entry.total_necesario) || 0) + monto;
+            if (tipoEntry === "real") entry.total_real += m.monto;
+            else entry.total_necesario += m.monto;
         };
-        saldoRealFiltrado.forEach((m) => addToBanco(m, "real"));
+        saldoReal.forEach((m) => addToBanco(m, "real"));
         saldoNecesarioSinDeudaFiltrado.forEach((m) => addToBanco(m, "necesario"));
         return Array.from(map.values());
-    })();
+    }, [saldoReal, saldoNecesarioSinDeudaFiltrado]);
 
     const limpiarFiltros = () => {
         setFechaHasta("");
@@ -513,7 +519,6 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         mediosPago,
 
         // Datos filtrados por fecha
-        saldoRealFiltrado,
         saldoNecesarioFiltrado,
         saldoNecesarioSinDeudaFiltrado,
         parcialesFiltrados,
@@ -522,7 +527,7 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         fechaHasta,
         setFechaHasta,
         limpiarFiltros,
-        hayFiltroActivo: !!(fechaHasta),
+        hayFiltroActivo: fechaHasta !== "",
 
         // Estado de dialogs
         isDetailsDialogOpen,

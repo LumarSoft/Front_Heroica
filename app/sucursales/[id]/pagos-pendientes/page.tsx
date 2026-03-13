@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
@@ -20,6 +20,14 @@ import Navbar from "@/components/Navbar";
 import NuevoMovimientoDialog from "@/components/NuevoMovimientoDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -82,7 +90,7 @@ export default function PagosPendientesPage() {
   const isReadOnly = sucursalActiva === false;
 
   // --- Fetchers ---
-  const fetchPagosPendientes = async () => {
+  const fetchPagosPendientes = useCallback(async () => {
     try {
       setIsLoading(true);
       setError("");
@@ -103,9 +111,9 @@ export default function PagosPendientesPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params.id]);
 
-  const fetchHistorial = async () => {
+  const fetchHistorial = useCallback(async () => {
     if (!user) return;
     try {
       setIsLoading(true);
@@ -127,7 +135,7 @@ export default function PagosPendientesPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params.id, user]);
 
   useEffect(() => {
     if (!isGuardLoading) {
@@ -137,8 +145,7 @@ export default function PagosPendientesPage() {
         fetchHistorial();
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isGuardLoading, activeTab]);
+  }, [isGuardLoading, activeTab, fetchPagosPendientes, fetchHistorial]);
 
   const handleOpenAprobar = (pago: PagoPendiente) => {
     setSelectedPago(pago);
@@ -322,16 +329,17 @@ export default function PagosPendientesPage() {
             {/* Filtro por usuario revisor */}
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Revisado por:</span>
-              <select
-                value={filtroUsuario}
-                onChange={(e) => setFiltroUsuario(e.target.value)}
-                className="h-8 rounded-lg border border-[#E0E0E0] bg-white px-3 text-sm text-[#1A1A1A] focus:border-[#002868] focus:outline-none focus:ring-2 focus:ring-[#002868]/20 appearance-none cursor-pointer min-w-[160px]"
-              >
-                <option value="">Todos los usuarios</option>
-                {usuariosRevisores.map((nombre) => (
-                  <option key={nombre} value={nombre}>{nombre}</option>
-                ))}
-              </select>
+              <Select value={filtroUsuario || "_all_"} onValueChange={(v) => setFiltroUsuario(v === "_all_" ? "" : v)}>
+                <SelectTrigger className="h-8 rounded-lg border-[#E0E0E0] text-sm text-[#1A1A1A] min-w-[160px] focus:ring-[#002868]/20">
+                  <SelectValue placeholder="Todos los usuarios" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all_">Todos los usuarios</SelectItem>
+                  {usuariosRevisores.map((nombre) => (
+                    <SelectItem key={nombre} value={nombre}>{nombre}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Limpiar filtros */}
@@ -624,13 +632,13 @@ export default function PagosPendientesPage() {
           <div className="p-6 space-y-5">
             <div className="space-y-2">
               <Label htmlFor="motivoRechazo" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Justificación del rechazo</Label>
-              <textarea
+              <Textarea
                 id="motivoRechazo"
                 value={motivoRechazo}
                 onChange={(e) => setMotivoRechazo(e.target.value)}
                 placeholder="Ej: Monto incorrecto o falta comprobante..."
                 rows={3}
-                className="w-full rounded-xl border border-[#E0E0E0] px-4 py-3 text-sm focus:border-rose-500 focus:outline-none focus:ring-4 focus:ring-rose-500/10 transition-all resize-none"
+                className="rounded-xl border-[#E0E0E0] text-sm focus:border-rose-500 focus:ring-rose-500/10 resize-none"
               />
               <p className="text-[10px] text-[#8A8F9C]">Este mensaje será visible para el empleado en su historial.</p>
             </div>

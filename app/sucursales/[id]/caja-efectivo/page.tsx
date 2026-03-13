@@ -17,7 +17,7 @@ import {
   TransactionTable,
   getEfectivoColumns,
 } from "@/components/caja/TransactionTable";
-import { DateRangeFilter } from "@/components/caja/DateRangeFilter";
+import { EndDateFilter } from "@/components/caja/EndDateFilter";
 import {
   DetailsDialog,
   StateDialog,
@@ -47,13 +47,12 @@ export default function CajaEfectivoPage() {
 
   const isReadOnly = sucursalActiva === false;
 
-  // Inicializar datos al montar (solo si auth está lista)
+  const { initialize } = caja;
   useEffect(() => {
     if (!isGuardLoading && user?.rol !== "empleado") {
-      caja.initialize();
+      initialize();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isGuardLoading]);
+  }, [isGuardLoading, user?.rol, initialize]);
 
   if (isGuardLoading) return <PageLoadingSpinner />;
 
@@ -99,7 +98,7 @@ export default function CajaEfectivoPage() {
             ) : (
               <>
                 {/* Filtro por fechas */}
-                <DateRangeFilter
+                <EndDateFilter
                   fechaHasta={caja.fechaHasta}
                   onHastaChange={caja.setFechaHasta}
                   onLimpiar={caja.limpiarFiltros}
@@ -107,7 +106,7 @@ export default function CajaEfectivoPage() {
                 />
 
                 <CajaTabs
-                  saldoReal={caja.saldoRealFiltrado}
+                  saldoReal={caja.saldoReal}
                   saldoNecesario={caja.saldoNecesarioSinDeudaFiltrado}
                   value={activeTab}
                   onValueChange={setActiveTab}
@@ -116,7 +115,7 @@ export default function CajaEfectivoPage() {
                     <TransactionTable
                       title="Saldo Real"
                       description="Movimientos de efectivo confirmados para el periodo actual."
-                      transactions={caja.saldoRealFiltrado}
+                      transactions={caja.saldoReal}
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
@@ -129,7 +128,7 @@ export default function CajaEfectivoPage() {
                       title="Saldo Necesario"
                       description="Pagos y compromisos en efectivo programados."
                       transactions={caja.saldoNecesarioFiltrado}
-                      customTotal={calcularTotal(caja.saldoRealFiltrado) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeudaFiltrado))}
+                      customTotal={calcularTotal(caja.saldoReal) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeudaFiltrado))}
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
@@ -191,6 +190,9 @@ export default function CajaEfectivoPage() {
         sucursalId={caja.sucursalId}
         onSuccess={caja.fetchMovimientos}
         cajaTipo="efectivo"
+        categoriasExternas={caja.categorias}
+        bancosExternos={caja.bancos}
+        mediosPagoExternos={caja.mediosPago}
       />
     </div>
   );

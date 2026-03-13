@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
@@ -28,14 +28,17 @@ import { useAuthStore } from "@/store/authStore";
 export default function SucursalDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const sucursalId = Number(params.id);
   const { user, isGuardLoading } = useAuthGuard();
   const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin());
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const dateInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [pendingCount, setPendingCount] = useState(0);
 
   // Notificaciones para empleados (aprobaciones / rechazos de pagos pendientes)
   const isEmployee = user?.rol === "empleado";
   const { unseenCount: employeeUnseenCount, clearUnseenCount } =
-    useEmployeeNotifications(user?.id, Number(params.id), isEmployee);
+    useEmployeeNotifications(user?.id, sucursalId, isEmployee);
 
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,6 +91,57 @@ export default function SucursalDetailPage() {
   const [isAddingCuenta, setIsAddingCuenta] = useState(false);
   const [isSavingCuenta, setIsSavingCuenta] = useState(false);
 
+  // Funciones para manejo de documentos (múltiples)
+  const fetchDocumentos = useCallback(async () => {
+    try {
+      setLoadingDocumentos(true);
+      const response = await apiFetch(
+        API_ENDPOINTS.SUCURSALES.GET_DOCUMENTOS(sucursalId)
+      );
+      const data = await response.json();
+      if (response.ok) setDocumentos(data.data || []);
+    } catch {
+    } finally {
+      setLoadingDocumentos(false);
+    }
+  }, [sucursalId]);
+
+  const fetchCuentasBancarias = useCallback(async () => {
+    try {
+      setLoadingCuentas(true);
+      const res = await apiFetch(
+        API_ENDPOINTS.CUENTAS_BANCARIAS.GET_BY_SUCURSAL(sucursalId)
+      );
+      const data = await res.json();
+      if (res.ok) setCuentasBancarias(data.data || []);
+    } catch {
+    } finally {
+      setLoadingCuentas(false);
+    }
+  }, [sucursalId]);
+
+  // Función para cargar totales de las cajas
+  const fetchTotales = useCallback(async () => {
+    try {
+      setLoadingTotales(true);
+
+      const resEfectivo = await apiFetch(
+        API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(sucursalId)
+      );
+      const dataEfectivo = await resEfectivo.json();
+      if (resEfectivo.ok) setTotalesEfectivo(dataEfectivo.data);
+
+      const resBanco = await apiFetch(
+        API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(sucursalId)
+      );
+      const dataBanco = await resBanco.json();
+      if (resBanco.ok) setTotalesBanco(dataBanco.data);
+    } catch {
+    } finally {
+      setLoadingTotales(false);
+    }
+  }, [sucursalId]);
+
   useEffect(() => {
     if (isGuardLoading) return;
 
@@ -95,7 +149,7 @@ export default function SucursalDetailPage() {
     const fetchSucursal = async () => {
       try {
         const response = await apiFetch(
-          API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id))
+          API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId)
         );
         const data = await response.json();
 
@@ -123,37 +177,14 @@ export default function SucursalDetailPage() {
     fetchDocumentos();
     fetchTotales();
     fetchCuentasBancarias();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isGuardLoading, params.id]);
-
-  // Función para cargar totales de las cajas
-  const fetchTotales = async () => {
-    try {
-      setLoadingTotales(true);
-
-      const resEfectivo = await apiFetch(
-        API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(Number(params.id))
-      );
-      const dataEfectivo = await resEfectivo.json();
-      if (resEfectivo.ok) setTotalesEfectivo(dataEfectivo.data);
-
-      const resBanco = await apiFetch(
-        API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(Number(params.id))
-      );
-      const dataBanco = await resBanco.json();
-      if (resBanco.ok) setTotalesBanco(dataBanco.data);
-    } catch {
-    } finally {
-      setLoadingTotales(false);
-    }
-  };
+  }, [isGuardLoading, sucursalId, fetchDocumentos, fetchTotales, fetchCuentasBancarias]);
 
   useEffect(() => {
     if (isSuperAdmin) {
       const fetchPendingCount = async () => {
         try {
           const response = await apiFetch(
-            API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(Number(params.id))
+            API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(sucursalId)
           );
           if (response.ok) {
             const data = await response.json();
@@ -202,7 +233,7 @@ export default function SucursalDetailPage() {
 
     try {
       const response = await apiFetch(
-        API_ENDPOINTS.SUCURSALES.UPDATE(Number(params.id)),
+        API_ENDPOINTS.SUCURSALES.UPDATE(sucursalId),
         {
           method: "PUT",
           body: JSON.stringify(formData),
@@ -225,34 +256,6 @@ export default function SucursalDetailPage() {
     }
   };
 
-  // Funciones para manejo de documentos (múltiples)
-  const fetchDocumentos = async () => {
-    try {
-      setLoadingDocumentos(true);
-      const response = await apiFetch(
-        API_ENDPOINTS.SUCURSALES.GET_DOCUMENTOS(Number(params.id))
-      );
-      const data = await response.json();
-      if (response.ok) setDocumentos(data.data || []);
-    } catch {
-    } finally {
-      setLoadingDocumentos(false);
-    }
-  };
-
-  const fetchCuentasBancarias = async () => {
-    try {
-      setLoadingCuentas(true);
-      const res = await apiFetch(
-        API_ENDPOINTS.CUENTAS_BANCARIAS.GET_BY_SUCURSAL(Number(params.id))
-      );
-      const data = await res.json();
-      if (res.ok) setCuentasBancarias(data.data || []);
-    } catch {
-    } finally {
-      setLoadingCuentas(false);
-    }
-  };
 
   const handleUploadDoc = async (
     tipoDoc: string,
@@ -269,7 +272,7 @@ export default function SucursalDetailPage() {
       formData.append("fecha_vencimiento", fechaVenc);
 
       const response = await apiFetch(
-        API_ENDPOINTS.SUCURSALES.UPLOAD_DOCUMENTO(Number(params.id)),
+        API_ENDPOINTS.SUCURSALES.UPLOAD_DOCUMENTO(sucursalId),
         {
           method: "POST",
           body: formData,
@@ -307,7 +310,7 @@ export default function SucursalDetailPage() {
     setError("");
     try {
       const response = await apiFetch(
-        API_ENDPOINTS.CUENTAS_BANCARIAS.CREATE(Number(params.id)),
+        API_ENDPOINTS.CUENTAS_BANCARIAS.CREATE(sucursalId),
         {
           method: "POST",
           body: JSON.stringify(nuevaCuenta),
@@ -350,7 +353,7 @@ export default function SucursalDetailPage() {
 
   const handleDownloadDoc = (docId: number) => {
     const url = API_ENDPOINTS.SUCURSALES.DOWNLOAD_DOCUMENTO(
-      Number(params.id),
+      sucursalId,
       docId
     );
     window.open(url, "_blank");
@@ -369,7 +372,7 @@ export default function SucursalDetailPage() {
     try {
       const response = await apiFetch(
         API_ENDPOINTS.SUCURSALES.DELETE_DOCUMENTO(
-          Number(params.id),
+          sucursalId,
           docToDelete.id
         ),
         { method: "DELETE" }
@@ -1073,14 +1076,14 @@ export default function SucursalDetailPage() {
                                 </Label>
                                 <Input
                                   type="date"
-                                  id={`fecha-${tipoDoc.replace(/\s+/g, "-")}`}
+                                  ref={(el) => { dateInputRefs.current[tipoDoc] = el; }}
                                   className="h-8 text-sm"
                                 />
                               </div>
                               <div className="flex gap-2">
                                 <Input
                                   type="file"
-                                  id={`file-${tipoDoc.replace(/\s+/g, "-")}`}
+                                  ref={(el) => { fileInputRefs.current[tipoDoc] = el; }}
                                   accept=".pdf,.jpg,.jpeg"
                                   className="h-8 text-sm flex-1"
                                 />
@@ -1090,15 +1093,11 @@ export default function SucursalDetailPage() {
                                   disabled={isUploadingDoc}
                                   className="h-8 bg-[#002868]"
                                   onClick={() => {
-                                    const fileInput = document.getElementById(
-                                      `file-${tipoDoc.replace(/\s+/g, "-")}`
-                                    ) as HTMLInputElement;
-                                    const dateInput = document.getElementById(
-                                      `fecha-${tipoDoc.replace(/\s+/g, "-")}`
-                                    ) as HTMLInputElement;
+                                    const fileInput = fileInputRefs.current[tipoDoc];
+                                    const dateInput = dateInputRefs.current[tipoDoc];
                                     if (
-                                      !fileInput.files?.[0] ||
-                                      !dateInput.value
+                                      !fileInput?.files?.[0] ||
+                                      !dateInput?.value
                                     ) {
                                       toast.error(
                                         "Selecciona archivo y fecha de vencimiento"

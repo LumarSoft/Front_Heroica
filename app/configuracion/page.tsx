@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -27,6 +27,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  categoriaSchema,
+  subcategoriaSchema,
+  bancoSchema,
+  medioPagoSchema,
+} from "@/lib/schemas";
 import {
   Select,
   SelectContent,
@@ -178,6 +184,11 @@ export default function ConfiguracionPage() {
 
   // ========== CATEGORÍAS ==========
     const handleSaveCategoria = async () => {
+        const validation = categoriaSchema.safeParse(categoriaForm);
+        if (!validation.success) {
+            setError(validation.error.issues[0]?.message ?? "Error de validación");
+            return;
+        }
         setIsSaving(true);
         setError("");
         try {
@@ -217,6 +228,11 @@ export default function ConfiguracionPage() {
 
   // ========== SUBCATEGORÍAS ==========
   const handleSaveSubcategoria = async () => {
+    const validation = subcategoriaSchema.safeParse(subcategoriaForm);
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message ?? "Error de validación");
+      return;
+    }
     setIsSaving(true);
     setError("");
     try {
@@ -251,6 +267,11 @@ export default function ConfiguracionPage() {
 
   // ========== BANCOS ==========
   const handleSaveBanco = async () => {
+    const validation = bancoSchema.safeParse(bancoForm);
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message ?? "Error de validación");
+      return;
+    }
     setIsSaving(true);
     setError("");
     try {
@@ -285,6 +306,11 @@ export default function ConfiguracionPage() {
 
   // ========== MEDIOS DE PAGO ==========
   const handleSaveMedioPago = async () => {
+    const validation = medioPagoSchema.safeParse(medioPagoForm);
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message ?? "Error de validación");
+      return;
+    }
     setIsSaving(true);
     setError("");
     try {

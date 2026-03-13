@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { AlertTriangle } from "lucide-react";
 import { trackCreatedPago } from "@/hooks/use-employee-notifications";
 import type { Categoria, Subcategoria, SelectOption } from "@/lib/types";
 import { selectClasses, labelClasses, inputClasses } from "@/lib/dialog-styles";
+import { movimientoBaseSchema, movimientoBancoSchema } from "@/lib/schemas";
 
 interface InitialValues {
   concepto?: string;
@@ -41,6 +42,10 @@ interface NuevoMovimientoDialogProps {
   pagoIdToApprove?: number;
   usuarioRevisorId?: number;
   initialValues?: InitialValues;
+  /** Catálogos opcionales — si se proveen, el dialog no los re-fetchea */
+  categoriasExternas?: Categoria[];
+  bancosExternos?: SelectOption[];
+  mediosPagoExternos?: SelectOption[];
 }
 
 
@@ -54,6 +59,9 @@ export default function NuevoMovimientoDialog({
   pagoIdToApprove,
   usuarioRevisorId,
   initialValues,
+  categoriasExternas,
+  bancosExternos,
+  mediosPagoExternos,
 }: NuevoMovimientoDialogProps) {
   const isApprovalMode = pagoIdToApprove !== undefined;
   const { user } = useAuthStore();
@@ -75,10 +83,57 @@ export default function NuevoMovimientoDialog({
     medio_pago_id: "",
   });
 
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [categoriasInternas, setCategoriasInternas] = useState<Categoria[]>([]);
   const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
-  const [bancos, setBancos] = useState<SelectOption[]>([]);
-  const [mediosPago, setMediosPago] = useState<SelectOption[]>([]);
+  const [bancosInternos, setBancosInternos] = useState<SelectOption[]>([]);
+  const [mediosPagoInternos, setMediosPagoInternos] = useState<SelectOption[]>([]);
+
+  // Usa los catálogos externos si se proveen, si no usa los internos (fetched)
+  const categorias = categoriasExternas?.length ? categoriasExternas : categoriasInternas;
+  const bancos = bancosExternos?.length ? bancosExternos : bancosInternos;
+  const mediosPago = mediosPagoExternos?.length ? mediosPagoExternos : mediosPagoInternos;
+
+  const fetchCategorias = useCallback(async () => {
+    if (categoriasExternas?.length) return;
+    try {
+      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL);
+      const data = await response.json();
+      if (response.ok) setCategoriasInternas(data.data || []);
+    } catch {
+      // Non-critical
+    }
+  }, [categoriasExternas]);
+
+  const fetchBancos = useCallback(async () => {
+    if (bancosExternos?.length) return;
+    try {
+      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL);
+      const data = await response.json();
+      if (response.ok) setBancosInternos(data.data || []);
+    } catch {
+      // Non-critical
+    }
+  }, [bancosExternos]);
+
+  const fetchMediosPago = useCallback(async () => {
+    if (mediosPagoExternos?.length) return;
+    try {
+      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL);
+      const data = await response.json();
+      if (response.ok) setMediosPagoInternos(data.data || []);
+    } catch {
+      // Non-critical
+    }
+  }, [mediosPagoExternos]);
+
+  // Usamos ref para capturar initialValues e isApprovalMode sin hacerlos deps del effect.
+  // El effect solo debe correr cuando el dialog se ABRE (isOpen cambia a true).
+  const initialValuesRef = useRef(initialValues);
+  const isApprovalModeRef = useRef(isApprovalMode);
+  useEffect(() => {
+    initialValuesRef.current = initialValues;
+    isApprovalModeRef.current = isApprovalMode;
+  });
 
   // Cargar datos y pre-poblar cuando se abre el dialog
   useEffect(() => {
@@ -90,54 +145,24 @@ export default function NuevoMovimientoDialog({
       fetchMediosPago();
     }
 
-    if (isApprovalMode && initialValues) {
+    if (isApprovalModeRef.current && initialValuesRef.current) {
+      const iv = initialValuesRef.current;
       const today = new Date();
       const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
       setFormData((prev) => ({
         ...prev,
-        fecha: initialValues.fecha ?? todayStr,
-        concepto: initialValues.concepto ?? "",
-        monto: initialValues.monto ?? "",
-        descripcion: initialValues.descripcion ?? "",
-        prioridad: initialValues.prioridad ?? "media",
-        categoria_id: initialValues.categoria_id ?? "",
-        subcategoria_id: initialValues.subcategoria_id ?? "",
+        fecha: iv.fecha ?? todayStr,
+        concepto: iv.concepto ?? "",
+        monto: iv.monto ?? "",
+        descripcion: iv.descripcion ?? "",
+        prioridad: iv.prioridad ?? "media",
+        categoria_id: iv.categoria_id ?? "",
+        subcategoria_id: iv.subcategoria_id ?? "",
         tipo: "egreso",
         estado: "aprobado",
       }));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, cajaTipo]);
-
-  const fetchCategorias = async () => {
-    try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL);
-      const data = await response.json();
-      if (response.ok) setCategorias(data.data || []);
-    } catch {
-      // Non-critical
-    }
-  };
-
-  const fetchBancos = async () => {
-    try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL);
-      const data = await response.json();
-      if (response.ok) setBancos(data.data || []);
-    } catch {
-      // Non-critical
-    }
-  };
-
-  const fetchMediosPago = async () => {
-    try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL);
-      const data = await response.json();
-      if (response.ok) setMediosPago(data.data || []);
-    } catch {
-      // Non-critical
-    }
-  };
+  }, [isOpen, cajaTipo, fetchCategorias, fetchBancos, fetchMediosPago]);
 
   // Cargar bancos/mediosPago cuando el usuario elige "banco" en tipo_movimiento
   useEffect(() => {
@@ -145,8 +170,7 @@ export default function NuevoMovimientoDialog({
       fetchBancos();
       fetchMediosPago();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.tipo_movimiento]);
+  }, [formData.tipo_movimiento, bancos.length, fetchBancos, fetchMediosPago]);
 
   // Cargar subcategorías cuando cambia la categoría
   useEffect(() => {
@@ -211,27 +235,24 @@ export default function NuevoMovimientoDialog({
 
   // Guardar nuevo movimiento
   const handleSave = async () => {
-    // ── Validaciones comunes ──
-    if (!formData.concepto.trim()) {
-      setError("El concepto es obligatorio.");
-      return;
-    }
-    if (!formData.monto || parseFloat(formData.monto) === 0) {
-      setError("El monto debe ser diferente de cero.");
-      return;
-    }
-    if (!formData.categoria_id) {
-      setError("Debes seleccionar una categoría.");
-      return;
-    }
-    // Validaciones específicas para caja banco
-    const efectivaBanco = isApprovalMode ? cajaTipo === "banco" : formData.tipo_movimiento === "banco";
-    if (efectivaBanco && !formData.banco_id) {
-      setError("Debes seleccionar un banco.");
-      return;
-    }
-    if (efectivaBanco && !formData.medio_pago_id) {
-      setError("Debes seleccionar un medio de pago.");
+    const isBanco = isApprovalMode ? cajaTipo === "banco" : formData.tipo_movimiento === "banco";
+    const schema = isBanco ? movimientoBancoSchema : movimientoBaseSchema;
+
+    const validation = schema.safeParse({
+      fecha: formData.fecha,
+      concepto: formData.concepto,
+      monto: formData.monto,
+      categoria_id: formData.categoria_id,
+      descripcion: formData.descripcion,
+      prioridad: formData.prioridad,
+      ...(isBanco && {
+        banco_id: formData.banco_id,
+        medio_pago_id: formData.medio_pago_id,
+      }),
+    });
+
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message ?? "Error de validación");
       return;
     }
 

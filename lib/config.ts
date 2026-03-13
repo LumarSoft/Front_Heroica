@@ -24,7 +24,6 @@ export const API_ENDPOINTS = {
     GET_TOTALES: (sucursalId: number) => `${API_URL}/api/movimientos/${sucursalId}/totales`,
     CREATE_EFECTIVO: `${API_URL}/api/movimientos/efectivo`,
     UPDATE: (id: number) => `${API_URL}/api/movimientos/${id}`,
-    MOVER_A_REAL: (id: number) => `${API_URL}/api/movimientos/efectivo/${id}/mover-a-real`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/movimientos/${id}/estado`,
     TOGGLE_DEUDA: (id: number) => `${API_URL}/api/movimientos/${id}/deuda`,
     DELETE: (id: number) => `${API_URL}/api/movimientos/${id}`,
@@ -35,7 +34,6 @@ export const API_ENDPOINTS = {
     CREATE: `${API_URL}/api/pagos-pendientes`,
     APROBAR: (id: number) => `${API_URL}/api/pagos-pendientes/${id}/aprobar`,
     RECHAZAR: (id: number) => `${API_URL}/api/pagos-pendientes/${id}/rechazar`,
-    DELETE: (id: number) => `${API_URL}/api/pagos-pendientes/${id}`,
     GET_HISTORIAL: (userId: number) => `${API_URL}/api/pagos-pendientes/historial/${userId}`,
   },
   CAJA_BANCO: {
@@ -43,7 +41,6 @@ export const API_ENDPOINTS = {
     GET_TOTALES: (sucursalId: number) => `${API_URL}/api/caja-banco/${sucursalId}/totales`,
     CREATE: `${API_URL}/api/caja-banco`,
     UPDATE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
-    MOVER_A_REAL: (id: number) => `${API_URL}/api/caja-banco/${id}/mover-a-real`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/caja-banco/${id}/estado`,
     TOGGLE_DEUDA: (id: number) => `${API_URL}/api/caja-banco/${id}/deuda`,
     DELETE: (id: number) => `${API_URL}/api/caja-banco/${id}`,

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import type { Sucursal } from "@/lib/types";
+import { sucursalSchema } from "@/lib/schemas";
 
 export default function SucursalesPage() {
   const router = useRouter();
@@ -112,6 +113,13 @@ export default function SucursalesPage() {
 
   const handleCreateSucursal = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const validation = sucursalSchema.safeParse(formData);
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message ?? "Error de validación");
+      return;
+    }
+
     setIsCreating(true);
     setError("");
 

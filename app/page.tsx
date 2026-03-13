@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { API_ENDPOINTS } from "@/lib/config";
 import { useAuthStore } from "@/store/authStore";
+import { loginSchema } from "@/lib/schemas";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
@@ -37,6 +39,13 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const validation = loginSchema.safeParse({ email, password });
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message ?? "Datos inválidos");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
@@ -82,10 +91,13 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col justify-center items-center w-full px-16">
           <div className="max-w-lg text-center">
             {/* Logo SVG */}
-            <img
+            <Image
               src="/HEROICA.svg"
               alt="Heroica"
+              width={200}
+              height={80}
               className="h-20 mb-6 mx-auto"
+              priority
             />
 
             {/* Separador */}
@@ -123,7 +135,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md relative z-10">
           {/* Logo móvil */}
           <div className="lg:hidden text-center mb-8">
-            <img src="/HEROICA.svg" alt="Heroica" className="h-12 mx-auto mb-2" />
+            <Image src="/HEROICA.svg" alt="Heroica" width={120} height={48} className="h-12 mx-auto mb-2" />
             <p className="text-[#666666]">Sistema de Contabilidad</p>
           </div>
 

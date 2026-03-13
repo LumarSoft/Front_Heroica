@@ -518,14 +518,14 @@ export function DeudaDialog({
                                 </p>
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">
+                                <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">
                                     Fecha original de vencimiento
-                                </label>
-                                <input
+                                </Label>
+                                <Input
                                     type="date"
                                     value={localFecha}
                                     onChange={(e) => setLocalFecha(e.target.value)}
-                                    className="w-full h-10 rounded-lg border border-[#E0E0E0] bg-white px-3 py-2 text-sm text-[#1A1A1A] transition-colors hover:border-[#B0B0B0] focus:border-[#002868] focus:outline-none focus:ring-2 focus:ring-[#002868]/20"
+                                    className="h-10 rounded-lg border-[#E0E0E0] bg-white text-sm text-[#1A1A1A] hover:border-[#B0B0B0] focus:border-[#002868] focus:ring-[#002868]/20"
                                 />
                             </div>
                         </div>
