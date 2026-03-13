@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 
@@ -10,10 +9,6 @@ interface ErrorPageProps {
 }
 
 export default function GlobalError({ error, reset }: ErrorPageProps) {
-  useEffect(() => {
-    console.error("[GlobalError]", error);
-  }, [error]);
-
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6">
       <div className="max-w-md w-full text-center space-y-6">

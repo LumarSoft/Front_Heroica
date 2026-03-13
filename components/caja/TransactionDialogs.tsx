@@ -439,7 +439,7 @@ export function StateDialog({
 interface DeudaDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    transaction: { es_deuda?: number; fecha?: string; fecha_original_vencimiento?: string } | null;
+    transaction: { es_deuda?: boolean; fecha?: string; fecha_original_vencimiento?: string } | null;
     onSave: (esDeuda: boolean, fechaOriginalVencimiento?: string) => void;
     isSaving: boolean;
 }
@@ -462,7 +462,7 @@ export function DeudaDialog({
         }
     }, [open, transaction]);
 
-    const esDeudaActiva = transaction?.es_deuda === 1;
+    const esDeudaActiva = transaction?.es_deuda === true;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

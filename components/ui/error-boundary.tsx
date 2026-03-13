@@ -31,8 +31,8 @@ export class ErrorBoundary extends React.Component<
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error("[ErrorBoundary]", error, info.componentStack);
+  componentDidCatch(_error: Error, _info: React.ErrorInfo) {
+    // Error capturado y mostrado en fallback UI. Para debugging en prod, integrar Sentry u otro servicio.
   }
 
   private handleReset = () => {

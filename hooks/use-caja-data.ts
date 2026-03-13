@@ -49,8 +49,12 @@ const INITIAL_FORM: TransactionFormData = {
 // Normaliza un movimiento recibido de la API, coerciendo monto a number
 // =============================================
 
-function normalizeTransaction(m: Transaction): Transaction {
-    return { ...m, monto: Number(m.monto) };
+function normalizeTransaction(m: Omit<Transaction, "monto" | "es_deuda"> & { monto?: number | string; es_deuda?: number }): Transaction {
+    return {
+        ...m,
+        monto: Number(m.monto),
+        es_deuda: m.es_deuda === 1,
+    };
 }
 
 // =============================================

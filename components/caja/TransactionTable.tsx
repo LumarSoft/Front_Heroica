@@ -112,7 +112,7 @@ const DEUDA_COLUMN: ColumnDef = {
     label: "Deuda",
     align: "center",
     render: (t) =>
-        t.es_deuda === 1 ? (
+        t.es_deuda ? (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 border border-orange-300 text-orange-700 text-xs font-bold">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -338,11 +338,11 @@ export function TransactionTable({
                                                         onClick={() => !isReadOnly && onToggleDeuda(transaction)}
                                                         disabled={isReadOnly}
                                                         className={`border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none ${
-                                                            transaction.es_deuda === 1
+                                                            transaction.es_deuda
                                                                 ? "bg-orange-500 hover:bg-orange-600 text-white"
                                                                 : "bg-orange-100 hover:bg-orange-200 text-orange-700"
                                                         }`}
-                                                        title={isReadOnly ? "Sucursal inactiva" : (transaction.es_deuda === 1 ? "Quitar deuda" : "Marcar como deuda")}
+                                                        title={isReadOnly ? "Sucursal inactiva" : (transaction.es_deuda ? "Quitar deuda" : "Marcar como deuda")}
                                                     >
                                                         <Clock className="w-4 h-4" />
                                                     </Button>

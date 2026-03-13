@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -78,14 +78,7 @@ export default function LoginPage() {
       {/* Lado izquierdo - Branding CON FONDO BLANCO */}
       <div className="hidden lg:flex lg:w-1/2 bg-white relative overflow-hidden">
         {/* Patrón decorativo */}
-        <div
-          className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle, #002868 1px, transparent 1px)",
-            backgroundSize: "30px 30px",
-          }}
-        ></div>
+        <div className="absolute inset-0 opacity-5 login-pattern-primary" />
 
         {/* Contenido del branding */}
         <div className="relative z-10 flex flex-col justify-center items-center w-full px-16">
@@ -124,14 +117,7 @@ export default function LoginPage() {
       {/* Lado derecho - Formulario de login - AZUL en Desktop, BLANCO en Mobile */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white lg:bg-gradient-to-br lg:from-[#002868] lg:to-[#003d8f] relative overflow-hidden">
         {/* Patrón decorativo - Solo visible en Desktop */}
-        <div
-          className="hidden lg:block absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle, #FFFFFF 1px, transparent 1px)",
-            backgroundSize: "30px 30px",
-          }}
-        ></div>
+        <div className="hidden lg:block absolute inset-0 opacity-10 login-pattern-light" />
         <div className="w-full max-w-md relative z-10">
           {/* Logo móvil */}
           <div className="lg:hidden text-center mb-8">

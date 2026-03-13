@@ -38,6 +38,13 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "auth-storage",
+      /**
+       * Almacenamiento del token en localStorage.
+       * Riesgo XSS: si un atacante inyecta script, podría leer el token.
+       * Mitigaciones: (1) Sanitizar toda entrada de usuario; (2) CSP restrictivo;
+       * (3) Evitar dangerouslySetInnerHTML; (4) Evaluar migrar a cookies httpOnly
+       * gestionadas por el servidor para mayor seguridad.
+       */
       storage: createJSONStorage(() => localStorage),
     }
   )

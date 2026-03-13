@@ -73,7 +73,10 @@ export default function ReportesPage() {
     setSelectedIngresoCategory(null);
     setSelectedEgresoCategory(null);
     try {
-      const url = API_ENDPOINTS.REPORTES.GET_BY_SUCURSAL(params.id as string, startDate, endDate);
+      const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
+      const safeId = rawId != null ? encodeURIComponent(String(rawId)) : "";
+      if (!safeId) return;
+      const url = API_ENDPOINTS.REPORTES.GET_BY_SUCURSAL(safeId, startDate, endDate);
       const response = await apiFetch(url);
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);

@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 import { formatFecha } from "@/lib/formatters";
+import type { PagoPendiente } from "@/lib/types";
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
 export interface TrackedPago {
@@ -95,13 +97,13 @@ export function useEmployeeNotifications(
     if (!userId || !isEmployee) return;
 
     try {
-      const res = await fetch(
-        `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(userId)}?sucursal_id=${sucursalId}`
+      const res = await apiFetch(
+        `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(userId)}?sucursal_id=${encodeURIComponent(String(sucursalId))}`
       );
       if (!res.ok) return;
 
       const data = await res.json();
-      const historial: any[] = data.data ?? [];
+      const historial: PagoPendiente[] = (data.data ?? []) as PagoPendiente[];
 
       // ── Primera ejecución: marcar todo como ya visto sin mostrar toasts ──
       if (!isInitialized(userId, sucursalId)) {
@@ -162,8 +164,8 @@ export function useEmployeeNotifications(
         localStorage.setItem(storageKey(userId, "seen"), JSON.stringify(merged));
         setUnseenCount((prev) => prev + newCount);
       }
-    } catch (err) {
-      console.error("[useEmployeeNotifications] Error:", err);
+    } catch (_err: unknown) {
+      // Error no crítico: el polling reintentará en el próximo ciclo.
     }
   }, [userId, sucursalId, isEmployee]);
 

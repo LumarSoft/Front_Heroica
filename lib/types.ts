@@ -22,7 +22,7 @@ export interface Transaction {
     medio_pago_id?: number;
     banco_nombre?: string;
     medio_pago_nombre?: string;
-    es_deuda?: 0 | 1;
+    es_deuda?: boolean;
     fecha_original_vencimiento?: string;
 }
 

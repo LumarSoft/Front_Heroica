@@ -37,6 +37,7 @@ import {
 } from "@/components/caja/TransactionDialogs";
 import { EndDateFilter } from "@/components/caja/EndDateFilter";
 import { API_ENDPOINTS } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 import { AlertTriangle } from "lucide-react";
 
 const columns = getBancoColumns();
@@ -53,7 +54,7 @@ export default function CajaBancoPage() {
   // Verificar si la sucursal está activa
   useEffect(() => {
     if (!params.id) return;
-    fetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)))
+    apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)))
       .then((r) => r.json())
       .then((d) => setSucursalActiva(Boolean(d.data?.activo)))
       .catch(() => setSucursalActiva(true));

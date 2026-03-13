@@ -25,6 +25,7 @@ import {
   DeudaDialog,
 } from "@/components/caja/TransactionDialogs";
 import { API_ENDPOINTS } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 import { AlertTriangle } from "lucide-react";
 
 const columns = getEfectivoColumns();
@@ -39,7 +40,7 @@ export default function CajaEfectivoPage() {
   // Verificar si la sucursal está activa
   useEffect(() => {
     if (!params.id) return;
-    fetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)))
+    apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)))
       .then((r) => r.json())
       .then((d) => setSucursalActiva(Boolean(d.data?.activo)))
       .catch(() => setSucursalActiva(true));

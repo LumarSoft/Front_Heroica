@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react";
@@ -12,10 +11,6 @@ interface ErrorPageProps {
 
 export default function SucursalError({ error, reset }: ErrorPageProps) {
   const router = useRouter();
-
-  useEffect(() => {
-    console.error("[SucursalError]", error);
-  }, [error]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6">
