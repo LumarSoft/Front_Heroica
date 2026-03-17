@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { formatFecha, formatMonto, calcularTotal } from "@/lib/formatters";
 import type { Transaction } from "@/lib/types";
-import { Clock, Trash2 } from "lucide-react";
+import { Clock, Trash2, ArrowRightLeft } from "lucide-react";
 
 // =============================================
 // Definición de columnas
@@ -150,6 +150,7 @@ interface TransactionTableProps {
     onChangeState: (t: Transaction) => void;
     onDelete: (t: Transaction) => void;
     onToggleDeuda?: (t: Transaction) => void;
+    onMove?: (t: Transaction) => void;
     isReadOnly?: boolean;
 }
 
@@ -163,6 +164,7 @@ export function TransactionTable({
     onChangeState,
     onDelete,
     onToggleDeuda,
+    onMove,
     isReadOnly = false,
 }: TransactionTableProps) {
     const total =
@@ -345,6 +347,18 @@ export function TransactionTable({
                                                         title={isReadOnly ? "Sucursal inactiva" : (transaction.es_deuda ? "Quitar deuda" : "Marcar como deuda")}
                                                     >
                                                         <Clock className="w-4 h-4" />
+                                                    </Button>
+                                                )}
+                                                {/* Mover */}
+                                                {onMove && (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => !isReadOnly && onMove(transaction)}
+                                                        disabled={isReadOnly}
+                                                        className="bg-indigo-500 hover:bg-indigo-600 text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                                                        title={isReadOnly ? "Sucursal inactiva" : "Mover transacción"}
+                                                    >
+                                                        <ArrowRightLeft className="w-4 h-4" />
                                                     </Button>
                                                 )}
                                                 {/* Eliminar */}

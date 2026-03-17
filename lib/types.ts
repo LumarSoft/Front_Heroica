@@ -24,6 +24,11 @@ export interface Transaction {
     medio_pago_nombre?: string;
     es_deuda?: boolean;
     fecha_original_vencimiento?: string;
+    numero_cheque?: string;
+    banco?: string;
+    cuenta?: string;
+    cbu?: string;
+    tipo_operacion?: string;
 }
 
 export interface BancoParcial {

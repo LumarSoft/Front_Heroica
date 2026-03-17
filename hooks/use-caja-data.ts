@@ -107,6 +107,8 @@ export function useCajaData(tipo: "efectivo" | "banco") {
 
     // --- Filtro por fechas ---
     const [fechaHasta, setFechaHasta] = useState("");
+    // --- Filtro por banco (solo relevante en caja banco) ---
+    const [bancosFiltro, setBancosFiltro] = useState<string[]>([]);
 
     // --- Catálogos ---
     const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -119,8 +121,8 @@ export function useCajaData(tipo: "efectivo" | "banco") {
     const [isStateDialogOpen, setIsStateDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeudaDialogOpen, setIsDeudaDialogOpen] = useState(false);
-    const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] =
-        useState(false);
+    const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] = useState(false);
+    const [isMoverMovimientoDialogOpen, setIsMoverMovimientoDialogOpen] = useState(false);
     const [selectedTransaction, setSelectedTransaction] =
         useState<Transaction | null>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -291,6 +293,11 @@ export function useCajaData(tipo: "efectivo" | "banco") {
     const handleOpenDeuda = (transaction: Transaction) => {
         setSelectedTransaction(transaction);
         setIsDeudaDialogOpen(true);
+    };
+
+    const handleOpenMover = (transaction: Transaction) => {
+        setSelectedTransaction(transaction);
+        setIsMoverMovimientoDialogOpen(true);
     };
 
     // =============================================
@@ -467,18 +474,37 @@ export function useCajaData(tipo: "efectivo" | "banco") {
     // Filtro por fechas (client-side)
     // =============================================
 
+    const bancosFiltroSet = useMemo(() => {
+        const ids = bancosFiltro.map((id) => id.trim()).filter(Boolean);
+        return new Set(ids);
+    }, [bancosFiltro]);
+
+    const saldoRealFiltrado = useMemo(() => {
+        if (bancosFiltroSet.size === 0) return saldoReal;
+        return saldoReal.filter((m) => {
+            const id = m.banco_id?.toString();
+            return id ? bancosFiltroSet.has(id) : false;
+        });
+    }, [saldoReal, bancosFiltroSet]);
+
     const { saldoNecesarioFiltrado, saldoNecesarioSinDeudaFiltrado } = useMemo(() => {
-        const filtered = !fechaHasta
+        const filteredByDate = !fechaHasta
             ? saldoNecesario
             : saldoNecesario.filter((m) => {
                   const fechaMov = m.fecha ? m.fecha.split("T")[0] : "";
                   return fechaMov <= fechaHasta;
               });
+        const filtered = bancosFiltroSet.size === 0
+            ? filteredByDate
+            : filteredByDate.filter((m) => {
+                  const id = m.banco_id?.toString();
+                  return id ? bancosFiltroSet.has(id) : false;
+              });
         return {
             saldoNecesarioFiltrado: filtered,
             saldoNecesarioSinDeudaFiltrado: filtered.filter((m) => !m.es_deuda),
         };
-    }, [saldoNecesario, fechaHasta]);
+    }, [saldoNecesario, fechaHasta, bancosFiltroSet]);
 
     // Parciales filtrados: agrupar saldoReal + saldoNecesarioSinDeudaFiltrado por banco_id
     const parcialesFiltrados = useMemo<BancoParcial[]>(() => {
@@ -497,13 +523,14 @@ export function useCajaData(tipo: "efectivo" | "banco") {
             if (tipoEntry === "real") entry.total_real += m.monto;
             else entry.total_necesario += m.monto;
         };
-        saldoReal.forEach((m) => addToBanco(m, "real"));
+        saldoRealFiltrado.forEach((m) => addToBanco(m, "real"));
         saldoNecesarioSinDeudaFiltrado.forEach((m) => addToBanco(m, "necesario"));
         return Array.from(map.values());
-    }, [saldoReal, saldoNecesarioSinDeudaFiltrado]);
+    }, [saldoRealFiltrado, saldoNecesarioSinDeudaFiltrado]);
 
     const limpiarFiltros = () => {
         setFechaHasta("");
+        setBancosFiltro([]);
     };
 
     return {
@@ -514,6 +541,7 @@ export function useCajaData(tipo: "efectivo" | "banco") {
 
         // Datos (todos los movimientos, sin filtro)
         saldoReal,
+        saldoRealFiltrado,
         saldoNecesario,
         saldoNecesarioSinDeuda: saldoNecesario.filter((m) => !m.es_deuda),
         parciales,
@@ -527,11 +555,13 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         saldoNecesarioSinDeudaFiltrado,
         parcialesFiltrados,
 
-        // Filtro de fechas
+        // Filtros
         fechaHasta,
         setFechaHasta,
+        bancosFiltro,
+        setBancosFiltro,
         limpiarFiltros,
-        hayFiltroActivo: fechaHasta !== "",
+        hayFiltroActivo: fechaHasta !== "" || bancosFiltro.length > 0,
 
         // Estado de dialogs
         isDetailsDialogOpen,
@@ -544,6 +574,8 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         setIsDeudaDialogOpen,
         isNuevoMovimientoDialogOpen,
         setIsNuevoMovimientoDialogOpen,
+        isMoverMovimientoDialogOpen,
+        setIsMoverMovimientoDialogOpen,
         selectedTransaction,
         isSaving,
 
@@ -558,6 +590,7 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         handleOpenStateChange,
         handleOpenDelete,
         handleOpenDeuda,
+        handleOpenMover,
         handleSaveDetails,
         handleSaveStateChange,
         handleDelete,
