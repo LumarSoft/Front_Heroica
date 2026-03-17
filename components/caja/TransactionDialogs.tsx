@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,11 +14,20 @@ import {
 } from "@/components/ui/dialog";
 import type { Transaction, Categoria, Subcategoria, SelectOption } from "@/lib/types";
 import { selectClasses, labelClasses, inputClasses } from "@/lib/dialog-styles";
-import { Lightbulb, CheckCircle2 } from "lucide-react";
+import { Lightbulb, CheckCircle2, Upload, X, FileText, Download } from "lucide-react";
+import { API_ENDPOINTS } from "@/lib/config";
+import { apiFetch } from "@/lib/api";
 
 // =============================================
 // Dialog de Detalles (edición de movimiento)
 // =============================================
+
+interface Documento {
+    id: number;
+    nombre_archivo: string;
+    tamano_bytes: number;
+    fecha_subida: string;
+}
 
 interface DetailsDialogProps {
     open: boolean;
@@ -47,6 +56,8 @@ interface DetailsDialogProps {
     mediosPago: SelectOption[];
     showBancoFields?: boolean;
     isReadOnly?: boolean;
+    movimientoId?: number;
+    cajaTipo?: "efectivo" | "banco";
 }
 
 export function DetailsDialog({
@@ -62,12 +73,121 @@ export function DetailsDialog({
     mediosPago,
     showBancoFields = false,
     isReadOnly = false,
+    movimientoId,
+    cajaTipo = "efectivo",
 }: DetailsDialogProps) {
+    const [documentos, setDocumentos] = useState<Documento[]>([]);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [isLoadingDocs, setIsLoadingDocs] = useState(false);
+    const [isUploadingDocs, setIsUploadingDocs] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Cargar documentos cuando se abre el diálogo
+    useEffect(() => {
+        if (open && movimientoId) {
+            fetchDocumentos();
+        }
+    }, [open, movimientoId]);
+
+    const fetchDocumentos = async () => {
+        if (!movimientoId) return;
+        
+        try {
+            setIsLoadingDocs(true);
+            const endpoint = cajaTipo === "banco"
+                ? API_ENDPOINTS.CAJA_BANCO.GET_DOCUMENTOS(movimientoId)
+                : API_ENDPOINTS.MOVIMIENTOS.GET_DOCUMENTOS(movimientoId);
+            
+            const response = await apiFetch(endpoint);
+            const data = await response.json();
+            
+            if (response.ok) {
+                setDocumentos(data.data || []);
+            }
+        } catch (error) {
+            console.error("Error al cargar documentos:", error);
+        } finally {
+            setIsLoadingDocs(false);
+        }
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        const validFiles = files.filter(file => {
+            const isValidType = file.type === 'application/pdf' || file.type === 'image/jpeg' || file.type === 'image/jpg';
+            const isValidSize = file.size <= 10 * 1024 * 1024;
+            return isValidType && isValidSize;
+        });
+
+        setSelectedFiles(prev => [...prev, ...validFiles]);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const handleRemoveFile = (index: number) => {
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleUploadFiles = async () => {
+        if (!movimientoId || selectedFiles.length === 0) return;
+
+        try {
+            setIsUploadingDocs(true);
+            const endpoint = cajaTipo === "banco"
+                ? API_ENDPOINTS.CAJA_BANCO.UPLOAD_DOCUMENTO(movimientoId)
+                : API_ENDPOINTS.MOVIMIENTOS.UPLOAD_DOCUMENTO(movimientoId);
+
+            for (const file of selectedFiles) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                await apiFetch(endpoint, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {},
+                });
+            }
+
+            setSelectedFiles([]);
+            await fetchDocumentos();
+        } catch (error) {
+            console.error("Error al subir documentos:", error);
+        } finally {
+            setIsUploadingDocs(false);
+        }
+    };
+
+    const handleDeleteDocumento = async (docId: number) => {
+        if (!movimientoId) return;
+
+        try {
+            const endpoint = cajaTipo === "banco"
+                ? API_ENDPOINTS.CAJA_BANCO.DELETE_DOCUMENTO(movimientoId, docId)
+                : API_ENDPOINTS.MOVIMIENTOS.DELETE_DOCUMENTO(movimientoId, docId);
+
+            await apiFetch(endpoint, { method: 'DELETE' });
+            await fetchDocumentos();
+        } catch (error) {
+            console.error("Error al eliminar documento:", error);
+        }
+    };
+
+    const handleDownloadDocumento = (docId: number) => {
+        if (!movimientoId) return;
+
+        const endpoint = cajaTipo === "banco"
+            ? API_ENDPOINTS.CAJA_BANCO.DOWNLOAD_DOCUMENTO(movimientoId, docId)
+            : API_ENDPOINTS.MOVIMIENTOS.DOWNLOAD_DOCUMENTO(movimientoId, docId);
+
+        window.open(endpoint, '_blank');
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[560px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
+            <DialogContent className="sm:max-w-[560px] max-h-[90vh] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden flex flex-col">
                 {/* ─── Header ─── */}
-                <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
+                <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0] flex-shrink-0">
                     <DialogHeader className="p-0 border-0">
                         <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
                             {isReadOnly ? "Ver movimiento" : "Editar movimiento"}
@@ -79,7 +199,7 @@ export function DetailsDialog({
                 </div>
 
                 {/* ─── Body ─── */}
-                <div className="px-8 py-6 space-y-6 max-h-[65vh] overflow-y-auto">
+                <div className="px-8 py-6 space-y-6 overflow-y-auto flex-1">
 
                     {/* ── Sección: Información General ── */}
                     <section className="space-y-4">
@@ -310,8 +430,144 @@ export function DetailsDialog({
                     </section>
                 </div>
 
+                {/* ─── Sección de Comprobantes ─── */}
+                {!isReadOnly && movimientoId && (
+                    <div className="px-8 py-4 border-t border-dashed border-[#E8E8E8] flex-shrink-0">
+                        <div className="space-y-3">
+                            <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
+                                <span className="w-1 h-4 bg-[#002868] rounded-full" />
+                                Comprobantes adjuntos
+                            </h4>
+
+                            {isLoadingDocs ? (
+                                <p className="text-xs text-[#8A8F9C]">Cargando documentos...</p>
+                            ) : (
+                                <>
+                                    {documentos.length > 0 && (
+                                        <div className="space-y-2">
+                                            {documentos.map((doc) => (
+                                                <div
+                                                    key={doc.id}
+                                                    className="flex items-center justify-between p-2 rounded-lg bg-[#F8F9FA] border border-[#E0E0E0]"
+                                                >
+                                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                        <FileText className="w-4 h-4 text-[#002868] flex-shrink-0" />
+                                                        <span className="text-sm text-[#1A1A1A] truncate">
+                                                            {doc.nombre_archivo}
+                                                        </span>
+                                                        <span className="text-xs text-[#8A8F9C] flex-shrink-0">
+                                                            ({(doc.tamano_bytes / 1024).toFixed(0)} KB)
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                const endpoint = cajaTipo === "banco"
+                                                                    ? API_ENDPOINTS.CAJA_BANCO.DOWNLOAD_DOCUMENTO(movimientoId, doc.id)
+                                                                    : API_ENDPOINTS.MOVIMIENTOS.DOWNLOAD_DOCUMENTO(movimientoId, doc.id);
+                                                                window.open(endpoint, '_blank');
+                                                            }}
+                                                            className="h-6 w-6 p-0 hover:bg-green-50 hover:text-green-600 cursor-pointer"
+                                                            title="Ver documento"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            </svg>
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDownloadDocumento(doc.id)}
+                                                            className="h-6 w-6 p-0 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
+                                                            title="Descargar documento"
+                                                        >
+                                                            <Download className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDeleteDocumento(doc.id)}
+                                                            className="h-6 w-6 p-0 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
+                                                            title="Eliminar documento"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="application/pdf,image/jpeg,image/jpg"
+                                        multiple
+                                        onChange={handleFileSelect}
+                                        className="hidden"
+                                    />
+
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="w-full h-10 border-dashed border-2 border-[#E0E0E0] text-[#5A6070] hover:border-[#002868] hover:text-[#002868] hover:bg-[#F0F8FF] transition-all cursor-pointer"
+                                    >
+                                        <Upload className="w-4 h-4 mr-2" />
+                                        Seleccionar archivos
+                                    </Button>
+
+                                    {selectedFiles.length > 0 && (
+                                        <div className="space-y-2">
+                                            {selectedFiles.map((file, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="flex items-center justify-between p-2 rounded-lg bg-amber-50 border border-amber-200"
+                                                >
+                                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                        <FileText className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                                                        <span className="text-sm text-[#1A1A1A] truncate">
+                                                            {file.name}
+                                                        </span>
+                                                        <span className="text-xs text-[#8A8F9C] flex-shrink-0">
+                                                            ({(file.size / 1024).toFixed(0)} KB)
+                                                        </span>
+                                                    </div>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleRemoveFile(index)}
+                                                        className="h-6 w-6 p-0 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                            <Button
+                                                type="button"
+                                                onClick={handleUploadFiles}
+                                                disabled={isUploadingDocs}
+                                                className="w-full h-9 bg-[#002868] hover:bg-[#003d8f] text-white text-sm cursor-pointer"
+                                            >
+                                                {isUploadingDocs ? "Subiendo..." : "Subir archivos seleccionados"}
+                                            </Button>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* ─── Footer ─── */}
-                <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
+                <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC] flex-shrink-0">
                     <DialogFooter className="sm:justify-end gap-3">
                         <Button
                             variant="outline"

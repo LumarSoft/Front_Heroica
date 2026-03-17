@@ -27,6 +27,11 @@ export const API_ENDPOINTS = {
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/movimientos/${id}/estado`,
     TOGGLE_DEUDA: (id: number) => `${API_URL}/api/movimientos/${id}/deuda`,
     DELETE: (id: number) => `${API_URL}/api/movimientos/${id}`,
+    // Documentos
+    GET_DOCUMENTOS: (id: number) => `${API_URL}/api/movimientos/${id}/documentos`,
+    UPLOAD_DOCUMENTO: (id: number) => `${API_URL}/api/movimientos/${id}/documentos`,
+    DOWNLOAD_DOCUMENTO: (movimientoId: number, docId: number) => `${API_URL}/api/movimientos/${movimientoId}/documentos/${docId}/download`,
+    DELETE_DOCUMENTO: (movimientoId: number, docId: number) => `${API_URL}/api/movimientos/${movimientoId}/documentos/${docId}`,
   },
   PAGOS_PENDIENTES: {
     GET_ALL: `${API_URL}/api/pagos-pendientes/all`,
@@ -44,6 +49,11 @@ export const API_ENDPOINTS = {
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/caja-banco/${id}/estado`,
     TOGGLE_DEUDA: (id: number) => `${API_URL}/api/caja-banco/${id}/deuda`,
     DELETE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
+    // Documentos
+    GET_DOCUMENTOS: (id: number) => `${API_URL}/api/caja-banco/${id}/documentos`,
+    UPLOAD_DOCUMENTO: (id: number) => `${API_URL}/api/caja-banco/${id}/documentos`,
+    DOWNLOAD_DOCUMENTO: (movimientoId: number, docId: number) => `${API_URL}/api/caja-banco/${movimientoId}/documentos/${docId}/download`,
+    DELETE_DOCUMENTO: (movimientoId: number, docId: number) => `${API_URL}/api/caja-banco/${movimientoId}/documentos/${docId}`,
   },
   CONFIGURACION: {
     // Categorías

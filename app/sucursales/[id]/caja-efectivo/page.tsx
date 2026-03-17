@@ -167,6 +167,8 @@ export default function CajaEfectivoPage() {
         mediosPago={caja.mediosPago}
         showBancoFields={false}
         isReadOnly={isReadOnly}
+        movimientoId={caja.selectedTransaction?.id}
+        cajaTipo="efectivo"
       />
 
       <StateDialog

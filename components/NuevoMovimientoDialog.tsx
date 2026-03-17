@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuthStore } from "@/store/authStore";
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Upload, X, FileText, Download } from "lucide-react";
 import { trackCreatedPago } from "@/hooks/use-employee-notifications";
 import type { Categoria, Subcategoria, SelectOption } from "@/lib/types";
 import { selectClasses, labelClasses, inputClasses } from "@/lib/dialog-styles";
@@ -67,6 +67,8 @@ export default function NuevoMovimientoDialog({
   const { user } = useAuthStore();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     fecha: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })(),
     concepto: "",
@@ -224,6 +226,7 @@ export default function NuevoMovimientoDialog({
       banco_id: "",
       medio_pago_id: "",
     });
+    setSelectedFiles([]);
     setError("");
   };
 
@@ -231,6 +234,54 @@ export default function NuevoMovimientoDialog({
   const handleClose = () => {
     resetForm();
     onClose();
+  };
+
+  // Manejar selección de archivos
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(file => {
+      const isValidType = file.type === 'application/pdf' || file.type === 'image/jpeg' || file.type === 'image/jpg';
+      const isValidSize = file.size <= 10 * 1024 * 1024;
+      return isValidType && isValidSize;
+    });
+
+    if (validFiles.length !== files.length) {
+      setError("Algunos archivos no son válidos. Solo se permiten PDF y JPG menores a 10MB");
+      setTimeout(() => setError(""), 3000);
+    }
+
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Subir documentos después de crear el movimiento
+  const uploadDocuments = async (movimientoId: number) => {
+    if (selectedFiles.length === 0) return;
+
+    const endpoint = cajaTipo === "banco" 
+      ? API_ENDPOINTS.CAJA_BANCO.UPLOAD_DOCUMENTO(movimientoId)
+      : API_ENDPOINTS.MOVIMIENTOS.UPLOAD_DOCUMENTO(movimientoId);
+
+    for (const file of selectedFiles) {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        await apiFetch(endpoint, {
+          method: 'POST',
+          body: formData,
+          headers: {},
+        });
+      } catch (error) {
+        console.error('Error al subir documento:', error);
+      }
+    }
   };
 
   // Guardar nuevo movimiento
@@ -285,6 +336,11 @@ export default function NuevoMovimientoDialog({
         const aprobarData = await aprobarRes.json();
         if (!aprobarRes.ok) throw new Error(aprobarData.message || "Error al aprobar pago");
 
+        // Subir documentos si hay alguno
+        if (aprobarData.data?.movimiento_id) {
+          await uploadDocuments(aprobarData.data.movimiento_id);
+        }
+
         resetForm();
         onSuccess();
         onClose();
@@ -335,6 +391,11 @@ export default function NuevoMovimientoDialog({
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Error al crear movimiento");
 
+      // Subir documentos si el movimiento se creó exitosamente y no es pago pendiente
+      if (!isPagoPendiente && data.data?.id) {
+        await uploadDocuments(data.data.id);
+      }
+
       // Guardar el pago creado en localStorage para detectar cambios de fecha al aprobar
       if (isPagoPendiente && user?.id && data.data?.id) {
         trackCreatedPago(user.id, {
@@ -358,9 +419,9 @@ export default function NuevoMovimientoDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[560px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden flex flex-col">
         {/* ─── Header ─── */}
-        <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
+        <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0] flex-shrink-0">
           <DialogHeader className="p-0 border-0">
             <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
               {isApprovalMode ? "Aprobar pago pendiente" : "Nuevo movimiento"}
@@ -384,7 +445,7 @@ export default function NuevoMovimientoDialog({
         </div>
 
         {/* ─── Body ─── */}
-        <div className="px-8 py-6 space-y-6 max-h-[65vh] overflow-y-auto">
+        <div className="px-8 py-6 space-y-6 overflow-y-auto flex-1">
 
           {/* ── Sección: Información General ── */}
           <section className="space-y-4">
@@ -639,8 +700,70 @@ export default function NuevoMovimientoDialog({
           </section>
         </div>
 
+        {/* ─── Sección de Comprobantes ─── */}
+        <div className="px-8 py-4 border-t border-dashed border-[#E8E8E8] flex-shrink-0">
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
+              <span className="w-1 h-4 bg-[#002868] rounded-full" />
+              Adjuntar comprobantes
+            </h4>
+            <p className="text-xs text-[#8A8F9C]">
+              Podés adjuntar facturas u órdenes de pago en formato PDF o JPG (máx. 10MB cada uno)
+            </p>
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/pdf,image/jpeg,image/jpg"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full h-10 border-dashed border-2 border-[#E0E0E0] text-[#5A6070] hover:border-[#002868] hover:text-[#002868] hover:bg-[#F0F8FF] transition-all cursor-pointer"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Seleccionar archivos
+            </Button>
+
+            {selectedFiles.length > 0 && (
+              <div className="space-y-2 mt-3">
+                {selectedFiles.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-2 rounded-lg bg-[#F8F9FA] border border-[#E0E0E0]"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <FileText className="w-4 h-4 text-[#002868] flex-shrink-0" />
+                      <span className="text-sm text-[#1A1A1A] truncate">
+                        {file.name}
+                      </span>
+                      <span className="text-xs text-[#8A8F9C] flex-shrink-0">
+                        ({(file.size / 1024).toFixed(0)} KB)
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveFile(index)}
+                      className="h-6 w-6 p-0 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* ─── Footer ─── */}
-        <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC] space-y-3">
+        <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC] space-y-3 flex-shrink-0">
           {/* Error visible siempre en el footer */}
           {error && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200">

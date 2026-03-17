@@ -212,6 +212,8 @@ export default function CajaBancoPage() {
         mediosPago={caja.mediosPago}
         showBancoFields={true}
         isReadOnly={isReadOnly}
+        movimientoId={caja.selectedTransaction?.id}
+        cajaTipo="banco"
       />
 
       <StateDialog
