@@ -24,6 +24,7 @@ import {
   DeleteDialog,
   DeudaDialog,
 } from "@/components/caja/TransactionDialogs";
+import { MoverMovimientoDialog } from "@/components/caja/MoverMovimientoDialog";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
 import { AlertTriangle } from "lucide-react";
@@ -121,6 +122,7 @@ export default function CajaEfectivoPage() {
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
                       onDelete={caja.handleOpenDelete}
+                      onMove={caja.handleOpenMover}
                       isReadOnly={isReadOnly}
                     />
                   </TabsContent>
@@ -135,6 +137,7 @@ export default function CajaEfectivoPage() {
                       onChangeState={caja.handleOpenStateChange}
                       onDelete={caja.handleOpenDelete}
                       onToggleDeuda={caja.handleOpenDeuda}
+                      onMove={caja.handleOpenMover}
                       isReadOnly={isReadOnly}
                     />
                   </TabsContent>
@@ -192,6 +195,16 @@ export default function CajaEfectivoPage() {
         onSuccess={caja.fetchMovimientos}
         cajaTipo="efectivo"
         categoriasExternas={caja.categorias}
+        bancosExternos={caja.bancos}
+        mediosPagoExternos={caja.mediosPago}
+      />
+
+      <MoverMovimientoDialog
+        open={caja.isMoverMovimientoDialogOpen}
+        onOpenChange={caja.setIsMoverMovimientoDialogOpen}
+        transaction={caja.selectedTransaction}
+        currentSucursalId={caja.sucursalId}
+        onSuccess={caja.fetchMovimientos}
         bancosExternos={caja.bancos}
         mediosPagoExternos={caja.mediosPago}
       />

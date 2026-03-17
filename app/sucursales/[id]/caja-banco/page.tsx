@@ -35,6 +35,7 @@ import {
   DeleteDialog,
   DeudaDialog,
 } from "@/components/caja/TransactionDialogs";
+import { MoverMovimientoDialog } from "@/components/caja/MoverMovimientoDialog";
 import { EndDateFilter } from "@/components/caja/EndDateFilter";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
@@ -166,6 +167,7 @@ export default function CajaBancoPage() {
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
                       onDelete={caja.handleOpenDelete}
+                      onMove={caja.handleOpenMover}
                       isReadOnly={isReadOnly}
                     />
                   </TabsContent>
@@ -180,6 +182,7 @@ export default function CajaBancoPage() {
                       onChangeState={caja.handleOpenStateChange}
                       onDelete={caja.handleOpenDelete}
                       onToggleDeuda={caja.handleOpenDeuda}
+                      onMove={caja.handleOpenMover}
                       isReadOnly={isReadOnly}
                     />
                   </TabsContent>
@@ -237,6 +240,16 @@ export default function CajaBancoPage() {
         onSuccess={caja.fetchMovimientos}
         cajaTipo="banco"
         categoriasExternas={caja.categorias}
+        bancosExternos={caja.bancos}
+        mediosPagoExternos={caja.mediosPago}
+      />
+
+      <MoverMovimientoDialog
+        open={caja.isMoverMovimientoDialogOpen}
+        onOpenChange={caja.setIsMoverMovimientoDialogOpen}
+        transaction={caja.selectedTransaction}
+        currentSucursalId={caja.sucursalId}
+        onSuccess={caja.fetchMovimientos}
         bancosExternos={caja.bancos}
         mediosPagoExternos={caja.mediosPago}
       />

@@ -121,8 +121,8 @@ export function useCajaData(tipo: "efectivo" | "banco") {
     const [isStateDialogOpen, setIsStateDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeudaDialogOpen, setIsDeudaDialogOpen] = useState(false);
-    const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] =
-        useState(false);
+    const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] = useState(false);
+    const [isMoverMovimientoDialogOpen, setIsMoverMovimientoDialogOpen] = useState(false);
     const [selectedTransaction, setSelectedTransaction] =
         useState<Transaction | null>(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -293,6 +293,11 @@ export function useCajaData(tipo: "efectivo" | "banco") {
     const handleOpenDeuda = (transaction: Transaction) => {
         setSelectedTransaction(transaction);
         setIsDeudaDialogOpen(true);
+    };
+
+    const handleOpenMover = (transaction: Transaction) => {
+        setSelectedTransaction(transaction);
+        setIsMoverMovimientoDialogOpen(true);
     };
 
     // =============================================
@@ -569,6 +574,8 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         setIsDeudaDialogOpen,
         isNuevoMovimientoDialogOpen,
         setIsNuevoMovimientoDialogOpen,
+        isMoverMovimientoDialogOpen,
+        setIsMoverMovimientoDialogOpen,
         selectedTransaction,
         isSaving,
 
@@ -583,6 +590,7 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         handleOpenStateChange,
         handleOpenDelete,
         handleOpenDeuda,
+        handleOpenMover,
         handleSaveDetails,
         handleSaveStateChange,
         handleDelete,
