@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
@@ -34,6 +34,13 @@ export default function SucursalDetailPage() {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const dateInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [pendingCount, setPendingCount] = useState(0);
+  const searchParams = useSearchParams();
+  const [moneda, setMoneda] = useState<"ARS" | "USD">((searchParams.get("moneda") as "ARS" | "USD") || "ARS");
+
+  const handleMonedaChange = (newMoneda: "ARS" | "USD") => {
+    setMoneda(newMoneda);
+    router.replace(`/sucursales/${params.id}?moneda=${newMoneda}`);
+  };
 
   // Notificaciones para empleados (aprobaciones / rechazos de pagos pendientes)
   const isEmployee = user?.rol === "empleado";
@@ -126,13 +133,13 @@ export default function SucursalDetailPage() {
       setLoadingTotales(true);
 
       const resEfectivo = await apiFetch(
-        API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(sucursalId)
+        API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(sucursalId, moneda)
       );
       const dataEfectivo = await resEfectivo.json();
       if (resEfectivo.ok) setTotalesEfectivo(dataEfectivo.data);
 
       const resBanco = await apiFetch(
-        API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(sucursalId)
+        API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(sucursalId, moneda)
       );
       const dataBanco = await resBanco.json();
       if (resBanco.ok) setTotalesBanco(dataBanco.data);
@@ -140,7 +147,7 @@ export default function SucursalDetailPage() {
     } finally {
       setLoadingTotales(false);
     }
-  }, [sucursalId]);
+  }, [sucursalId, moneda]);
 
   useEffect(() => {
     if (isGuardLoading) return;
@@ -496,7 +503,7 @@ export default function SucursalDetailPage() {
               {isSuperAdmin && (
                 <Button
                   onClick={() =>
-                    router.push(`/sucursales/${params.id}/reportes`)
+                    router.push(`/sucursales/${params.id}/reportes?moneda=${moneda}`)
                   }
                   size="sm"
                   className="bg-[#002868] text-white hover:bg-[#003d8f] cursor-pointer transition-all shadow-md"
@@ -530,11 +537,37 @@ export default function SucursalDetailPage() {
           <h2 className="text-4xl md:text-5xl font-bold text-[#002868] mb-3">
             {isSuperAdmin ? "Gestión de Cajas" : "Gestión de Pagos"}
           </h2>
-          <p className="text-lg text-[#666666]">
+          <p className="text-lg text-[#666666] mb-6">
             {isSuperAdmin
               ? "Selecciona la caja que deseas gestionar"
               : "Gestiona tus solicitudes de pago"}
           </p>
+
+          {/* Selector de Moneda */}
+          {isSuperAdmin && (
+            <div className="flex justify-center gap-2">
+              <button
+                onClick={() => handleMonedaChange("ARS")}
+                className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                  moneda === "ARS"
+                    ? "bg-[#002868] text-white shadow-md"
+                    : "bg-white text-[#666666] border border-[#E0E0E0] hover:border-[#002868] hover:text-[#002868]"
+                }`}
+              >
+                ARS
+              </button>
+              <button
+                onClick={() => handleMonedaChange("USD")}
+                className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                  moneda === "USD"
+                    ? "bg-[#002868] text-white shadow-md"
+                    : "bg-white text-[#666666] border border-[#E0E0E0] hover:border-[#002868] hover:text-[#002868]"
+                }`}
+              >
+                USD
+              </button>
+            </div>
+          )}
         </div>
 
         {isSuperAdmin ? (
@@ -543,7 +576,7 @@ export default function SucursalDetailPage() {
             {/* Caja en Efectivo */}
             <Card
               onClick={() =>
-                router.push(`/sucursales/${params.id}/caja-efectivo`)
+                router.push(`/sucursales/${params.id}/caja-efectivo?moneda=${moneda}`)
               }
               className="border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
             >
@@ -589,7 +622,7 @@ export default function SucursalDetailPage() {
                           : "text-rose-600"
                       }`}
                     >
-                      {formatMonto(totalesEfectivo.total_real)}
+                      {formatMonto(totalesEfectivo.total_real, moneda)}
                     </p>
                     {totalesEfectivo.ultima_actualizacion && (
                       <p className="text-xs text-slate-400 mt-1">
@@ -636,7 +669,7 @@ export default function SucursalDetailPage() {
 
             {/* Caja en Banco */}
             <Card
-              onClick={() => router.push(`/sucursales/${params.id}/caja-banco`)}
+              onClick={() => router.push(`/sucursales/${params.id}/caja-banco?moneda=${moneda}`)}
               className="border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
             >
               {/* Decoración de fondo */}
@@ -681,7 +714,7 @@ export default function SucursalDetailPage() {
                           : "text-rose-600"
                       }`}
                     >
-                      {formatMonto(totalesBanco.total_real)}
+                      {formatMonto(totalesBanco.total_real, moneda)}
                     </p>
                   </div>
                 )}

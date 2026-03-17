@@ -15,13 +15,13 @@ export function formatFecha(fechaISO: string): string {
 }
 
 /**
- * Formatea un monto numérico a formato de moneda ARS
+ * Formatea un monto numérico a formato de moneda (ARS o USD)
  */
-export function formatMonto(monto: number | string): string {
+export function formatMonto(monto: number | string, moneda: "ARS" | "USD" = "ARS"): string {
     const montoNum = typeof monto === "string" ? parseFloat(monto) : monto;
     const formatted = new Intl.NumberFormat("es-AR", {
         style: "currency",
-        currency: "ARS",
+        currency: moneda,
     }).format(Math.abs(montoNum));
 
     return montoNum < 0 ? `-${formatted}` : formatted;

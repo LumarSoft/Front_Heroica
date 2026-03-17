@@ -294,7 +294,7 @@ export function DetailsDialog({
                                         placeholder="0,00"
                                         value={formData.monto}
                                         onChange={onInputChange}
-                                        className={`${inputClasses} pl-7`}
+                                        className={`${inputClasses} pl-8`}
                                     />
                                 </div>
                             </div>

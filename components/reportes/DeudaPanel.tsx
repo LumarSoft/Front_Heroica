@@ -23,9 +23,10 @@ function getAntiguedad(fechaStr: string): { label: string; colorClass: string; d
 
 interface DeudaPanelProps {
     deudas: ReportDeuda[];
+    moneda?: "ARS" | "USD";
 }
 
-export function DeudaPanel({ deudas }: DeudaPanelProps) {
+export function DeudaPanel({ deudas, moneda = "ARS" }: DeudaPanelProps) {
     const total = deudas.reduce((acc, d) => acc + Math.abs(d.monto), 0);
 
     if (deudas.length === 0) {
@@ -46,7 +47,7 @@ export function DeudaPanel({ deudas }: DeudaPanelProps) {
                     <AlertTriangle className="w-7 h-7 text-orange-500" />
                     <div>
                         <p className="text-xs font-semibold text-orange-700 uppercase tracking-wider">Total adeudado</p>
-                        <p className="text-2xl font-extrabold text-orange-600 tabular-nums">{formatMonto(total)}</p>
+                        <p className="text-2xl font-extrabold text-orange-600 tabular-nums">{formatMonto(total, moneda)}</p>
                     </div>
                 </div>
                 <div className="text-right">
@@ -96,7 +97,7 @@ export function DeudaPanel({ deudas }: DeudaPanelProps) {
                             </span>
                             <div className="text-right flex-shrink-0 w-28">
                                 <span className="font-bold text-orange-600 tabular-nums text-sm">
-                                    {formatMonto(Math.abs(deuda.monto))}
+                                    {formatMonto(Math.abs(deuda.monto), moneda)}
                                 </span>
                             </div>
                         </div>

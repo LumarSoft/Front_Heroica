@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import NuevoMovimientoDialog from "@/components/NuevoMovimientoDialog";
@@ -34,7 +34,9 @@ const columns = getEfectivoColumns();
 export default function CajaEfectivoPage() {
   const params = useParams();
   const { user, isGuardLoading, handleLogout } = useAuthGuard();
-  const caja = useCajaData("efectivo");
+  const searchParams = useSearchParams();
+  const moneda = (searchParams.get("moneda") as "ARS" | "USD") || "ARS";
+  const caja = useCajaData("efectivo", moneda);
   const [activeTab, setActiveTab] = useState("real");
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null);
   const [sucursalNombre, setSucursalNombre] = useState("");
@@ -69,8 +71,8 @@ export default function CajaEfectivoPage() {
         userRole={user?.rol}
         onLogout={handleLogout}
         showBackButton={true}
-        backUrl={`/sucursales/${params.id}`}
-        sucursalNombre={sucursalNombre}
+        backUrl={`/sucursales/${params.id}?moneda=${moneda}`}
+        sucursalNombre={sucursalNombre ? `${sucursalNombre} — ${moneda}` : ""}
       />
 
       <main className="container mx-auto px-6 py-8 flex flex-col h-full">
@@ -94,8 +96,8 @@ export default function CajaEfectivoPage() {
 
             {/* Cabecera */}
             <PageHeader
-              title="Caja Efectivo"
-              subtitle="Gestión de saldos y movimientos en efectivo"
+              title={`Caja Efectivo — ${moneda}`}
+              subtitle={`Gestión de saldos y movimientos en efectivo (${moneda})`}
               onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
               isReadOnly={isReadOnly}
             />
@@ -201,6 +203,7 @@ export default function CajaEfectivoPage() {
         sucursalId={caja.sucursalId}
         onSuccess={caja.fetchMovimientos}
         cajaTipo="efectivo"
+        moneda={moneda}
         categoriasExternas={caja.categorias}
         bancosExternos={caja.bancos}
         mediosPagoExternos={caja.mediosPago}

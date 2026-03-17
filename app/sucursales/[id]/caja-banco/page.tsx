@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -46,7 +46,9 @@ const columns = getBancoColumns();
 export default function CajaBancoPage() {
   const params = useParams();
   const { user, isGuardLoading, handleLogout } = useAuthGuard();
-  const caja = useCajaData("banco");
+  const searchParams = useSearchParams();
+  const moneda = (searchParams.get("moneda") as "ARS" | "USD") || "ARS";
+  const caja = useCajaData("banco", moneda);
   const [selectedBanco, setSelectedBanco] = useState<BancoParcial | null>(null);
   const [isBancoDialogOpen, setIsBancoDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("real");
@@ -87,8 +89,8 @@ export default function CajaBancoPage() {
         userRole={user?.rol}
         onLogout={handleLogout}
         showBackButton={true}
-        backUrl={`/sucursales/${params.id}`}
-        sucursalNombre={sucursalNombre}
+        backUrl={`/sucursales/${params.id}?moneda=${moneda}`}
+        sucursalNombre={sucursalNombre ? `${sucursalNombre} — ${moneda}` : ""}
       />
 
       <main className="container mx-auto px-6 py-8 flex flex-col h-full">
@@ -112,8 +114,8 @@ export default function CajaBancoPage() {
 
             {/* Cabecera */}
             <PageHeader
-              title="Caja Bancos"
-              subtitle="Gestión de saldos y movimientos bancarios"
+              title={`Caja Bancos — ${moneda}`}
+              subtitle={`Gestión de saldos y movimientos bancarios (${moneda})`}
               onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
               isReadOnly={isReadOnly}
             />
@@ -246,6 +248,7 @@ export default function CajaBancoPage() {
         sucursalId={caja.sucursalId}
         onSuccess={caja.fetchMovimientos}
         cajaTipo="banco"
+        moneda={moneda}
         categoriasExternas={caja.categorias}
         bancosExternos={caja.bancos}
         mediosPagoExternos={caja.mediosPago}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
@@ -21,6 +21,8 @@ import type { ReportData } from "@/components/reportes/types";
 export default function ReportesPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
+  const moneda = (searchParams.get("moneda") as "ARS" | "USD") || "ARS";
   const { isGuardLoading } = useAuthGuard();
 
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
@@ -76,7 +78,7 @@ export default function ReportesPage() {
       const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
       const safeId = rawId != null ? encodeURIComponent(String(rawId)) : "";
       if (!safeId) return;
-      const url = API_ENDPOINTS.REPORTES.GET_BY_SUCURSAL(safeId, startDate, endDate);
+      const url = API_ENDPOINTS.REPORTES.GET_BY_SUCURSAL(safeId, startDate, endDate, moneda);
       const response = await apiFetch(url);
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
@@ -87,7 +89,7 @@ export default function ReportesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [params.id, startDate, endDate]);
+  }, [params.id, startDate, endDate, moneda]);
 
   useEffect(() => {
     if (isGuardLoading) return;
@@ -150,7 +152,7 @@ export default function ReportesPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Button
-                onClick={() => router.push(`/sucursales/${params.id}`)}
+                onClick={() => router.push(`/sucursales/${params.id}?moneda=${moneda}`)}
                 variant="outline"
                 size="sm"
                 className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer"
@@ -159,7 +161,7 @@ export default function ReportesPage() {
                 Volver
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-[#002868]">Reportes</h1>
+                <h1 className="text-2xl font-bold text-[#002868]">Reportes — {moneda}</h1>
                 <p className="text-sm text-slate-500">{sucursal?.nombre}</p>
               </div>
             </div>
@@ -231,19 +233,19 @@ export default function ReportesPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <SummaryCard
                   label="Ingresos Totales"
-                  value={formatMonto(reportData.resumen.ingresos)}
+                  value={formatMonto(reportData.resumen.ingresos, moneda)}
                   accent="emerald"
                   icon={<TrendingUp className="w-5 h-5" />}
                 />
                 <SummaryCard
                   label="Egresos Totales"
-                  value={formatMonto(reportData.resumen.egresos)}
+                  value={formatMonto(reportData.resumen.egresos, moneda)}
                   accent="rose"
                   icon={<TrendingDown className="w-5 h-5" />}
                 />
                 <SummaryCard
                   label="Resultado Neto"
-                  value={formatMonto(reportData.resumen.resultado)}
+                  value={formatMonto(reportData.resumen.resultado, moneda)}
                   accent={reportData.resumen.resultado >= 0 ? "blue" : "red"}
                   icon={reportData.resumen.resultado >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
                   sub={
@@ -256,7 +258,7 @@ export default function ReportesPage() {
                 />
                 <SummaryCard
                   label="Deudas Activas"
-                  value={formatMonto(reportData.resumen.deudas || 0)}
+                  value={formatMonto(reportData.resumen.deudas || 0, moneda)}
                   accent="orange"
                   icon={<AlertTriangle className="w-5 h-5" />}
                   sub="Histórico total"
@@ -279,6 +281,7 @@ export default function ReportesPage() {
                 valueColorClass="text-emerald-700"
                 drillDownRoot="Todas las categorías"
                 drillDownColorClass="text-emerald-600 hover:text-emerald-700"
+                moneda={moneda}
               />
             </section>
 
@@ -297,13 +300,14 @@ export default function ReportesPage() {
                 valueColorClass="text-rose-600"
                 drillDownRoot="Todas las categorías"
                 drillDownColorClass="text-rose-500 hover:text-rose-600"
+                moneda={moneda}
               />
             </section>
 
             {/* ── 4 · Deudas ──────────────────────────────────────── */}
             <section className="mt-8 page-break-before">
               <SectionHeading number="4" title="Listado de Deudas" className="mt-4" />
-              <DeudaPanel deudas={reportData.detalles?.deudas || []} />
+              <DeudaPanel deudas={reportData.detalles?.deudas || []} moneda={moneda} />
             </section>
 
             {/* ── Print: Detalle extendido ──────────────────────────────────── */}
@@ -338,7 +342,7 @@ export default function ReportesPage() {
                             {mov.categoria_nombre || "General"}{mov.subcategoria_nombre ? ` / ${mov.subcategoria_nombre}` : ''}
                           </td>
                           <td className={`py-2 px-2 text-right font-bold tabular-nums whitespace-nowrap ${mov.tipo === 'ingreso' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                            {mov.tipo === 'ingreso' ? '+' : '-'}{formatMonto(Math.abs(mov.monto))}
+                            {mov.tipo === 'ingreso' ? '+' : '-'}{formatMonto(Math.abs(mov.monto), moneda)}
                           </td>
                         </tr>
                       ))}

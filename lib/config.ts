@@ -20,8 +20,8 @@ export const API_ENDPOINTS = {
     DELETE_DOCUMENTO: (sucursalId: number, docId: number) => `${API_URL}/api/sucursales/${sucursalId}/documentos/${docId}`,
   },
   MOVIMIENTOS: {
-    GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/movimientos/${sucursalId}`,
-    GET_TOTALES: (sucursalId: number) => `${API_URL}/api/movimientos/${sucursalId}/totales`,
+    GET_BY_SUCURSAL: (sucursalId: number, moneda: string = "ARS") => `${API_URL}/api/movimientos/${sucursalId}?moneda=${moneda}`,
+    GET_TOTALES: (sucursalId: number, moneda: string = "ARS") => `${API_URL}/api/movimientos/${sucursalId}/totales?moneda=${moneda}`,
     CREATE_EFECTIVO: `${API_URL}/api/movimientos/efectivo`,
     UPDATE: (id: number) => `${API_URL}/api/movimientos/${id}`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/movimientos/${id}/estado`,
@@ -42,8 +42,8 @@ export const API_ENDPOINTS = {
     GET_HISTORIAL: (userId: number) => `${API_URL}/api/pagos-pendientes/historial/${userId}`,
   },
   CAJA_BANCO: {
-    GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/caja-banco/${sucursalId}`,
-    GET_TOTALES: (sucursalId: number) => `${API_URL}/api/caja-banco/${sucursalId}/totales`,
+    GET_BY_SUCURSAL: (sucursalId: number, moneda: string = "ARS") => `${API_URL}/api/caja-banco/${sucursalId}?moneda=${moneda}`,
+    GET_TOTALES: (sucursalId: number, moneda: string = "ARS") => `${API_URL}/api/caja-banco/${sucursalId}/totales?moneda=${moneda}`,
     CREATE: `${API_URL}/api/caja-banco`,
     UPDATE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/caja-banco/${id}/estado`,
@@ -94,8 +94,8 @@ export const API_ENDPOINTS = {
     },
   },
   REPORTES: {
-    GET_BY_SUCURSAL: (sucursalId: number | string, startDate: string, endDate: string) =>
-      `${API_URL}/api/reportes/${sucursalId}?startDate=${startDate}T00:00:00&endDate=${endDate}T23:59:59`,
+    GET_BY_SUCURSAL: (sucursalId: number | string, startDate: string, endDate: string, moneda: string = "ARS") =>
+      `${API_URL}/api/reportes/${sucursalId}?startDate=${startDate}T00:00:00&endDate=${endDate}T23:59:59&moneda=${moneda}`,
   },
   CUENTAS_BANCARIAS: {
     GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/cuentas-bancarias/${sucursalId}`,

@@ -29,6 +29,8 @@ export interface Transaction {
     cuenta?: string;
     cbu?: string;
     tipo_operacion?: string;
+    moneda?: "ARS" | "USD";
+    tipo_cambio?: number;
 }
 
 export interface BancoParcial {

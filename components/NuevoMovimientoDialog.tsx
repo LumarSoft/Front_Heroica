@@ -46,6 +46,7 @@ interface NuevoMovimientoDialogProps {
   categoriasExternas?: Categoria[];
   bancosExternos?: SelectOption[];
   mediosPagoExternos?: SelectOption[];
+  moneda?: "ARS" | "USD";
 }
 
 
@@ -62,6 +63,7 @@ export default function NuevoMovimientoDialog({
   categoriasExternas,
   bancosExternos,
   mediosPagoExternos,
+  moneda = "ARS",
 }: NuevoMovimientoDialogProps) {
   const isApprovalMode = pagoIdToApprove !== undefined;
   const { user } = useAuthStore();
@@ -83,6 +85,7 @@ export default function NuevoMovimientoDialog({
     comprobante: "",
     banco_id: "",
     medio_pago_id: "",
+    tipo_cambio: "",
   });
 
   const [categoriasInternas, setCategoriasInternas] = useState<Categoria[]>([]);
@@ -225,6 +228,7 @@ export default function NuevoMovimientoDialog({
       comprobante: "",
       banco_id: "",
       medio_pago_id: "",
+      tipo_cambio: "",
     });
     setSelectedFiles([]);
     setError("");
@@ -381,6 +385,8 @@ export default function NuevoMovimientoDialog({
         comprobante: formData.comprobante,
         banco_id: formData.banco_id ? Number(formData.banco_id) : null,
         medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
+        moneda: moneda,
+        tipo_cambio: moneda === "USD" && formData.tipo_cambio ? parseFloat(formData.tipo_cambio) : null,
       };
 
       const response = await apiFetch(endpoint, {
@@ -532,7 +538,7 @@ export default function NuevoMovimientoDialog({
                 </Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#8A8F9C] select-none pointer-events-none">
-                    $
+                    {moneda === "USD" ? "US$" : "$"}
                   </span>
                   <Input
                     id="monto"
@@ -542,7 +548,7 @@ export default function NuevoMovimientoDialog({
                     placeholder="0,00"
                     value={formData.monto}
                     onChange={handleInputChange}
-                    className={`${inputClasses} pl-7`}
+                    className={`${inputClasses} ${moneda === "USD" ? "pl-12" : "pl-8"}`}
                   />
                 </div>
               </div>
@@ -563,6 +569,30 @@ export default function NuevoMovimientoDialog({
                 </select>
               </div>
             </div>
+
+            {moneda === "USD" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="tipo_cambio" className={labelClasses}>
+                  Tipo de Cambio *
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#8A8F9C] select-none pointer-events-none">
+                    $
+                  </span>
+                  <Input
+                    id="tipo_cambio"
+                    name="tipo_cambio"
+                    type="number"
+                    step="0.01"
+                    placeholder="Ej: 1050.00"
+                    value={formData.tipo_cambio}
+                    onChange={handleInputChange}
+                    className={`${inputClasses} pl-8`}
+                  />
+                </div>
+                <p className="text-xs text-[#8A8F9C]">Cotización del dólar al momento de la operación</p>
+              </div>
+            )}
 
             {(cajaTipo === "banco" || formData.tipo_movimiento === "banco") && (
               <>

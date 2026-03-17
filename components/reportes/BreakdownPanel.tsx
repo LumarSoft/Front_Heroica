@@ -14,7 +14,7 @@ function CustomPieTooltip({ active, payload }: PieTooltipProps) {
         return (
             <div className="bg-white border border-slate-200 rounded-lg shadow-lg px-3 py-2 text-sm">
                 <p className="font-semibold text-slate-800">{item.name}</p>
-                <p className="text-slate-600">{formatMonto(item.value)}</p>
+                <p className="text-slate-600">{formatMonto(item.value, (payload[0] as any).payload.moneda)}</p>
             </div>
         );
     }
@@ -33,6 +33,7 @@ function DistributionRow({
     isClickable,
     isBack = false,
     onClick,
+    moneda,
 }: {
     item: ReportBreakdownItem;
     index: number;
@@ -41,6 +42,7 @@ function DistributionRow({
     isClickable: boolean;
     isBack?: boolean;
     onClick?: () => void;
+    moneda?: "ARS" | "USD";
 }) {
     const pct = total > 0 ? (item.value / total) * 100 : 0;
 
@@ -64,7 +66,7 @@ function DistributionRow({
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0 ml-3">
                     <span className="text-xs font-mono text-slate-500 w-10 text-right">{pct.toFixed(1)}%</span>
-                    <span className="text-sm font-bold text-slate-800 w-28 text-right tabular-nums">{formatMonto(item.value)}</span>
+                    <span className="text-sm font-bold text-slate-800 w-28 text-right tabular-nums">{formatMonto(item.value, moneda)}</span>
                 </div>
             </div>
             <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
@@ -117,6 +119,7 @@ interface BreakdownPanelProps {
     valueColorClass: string;
     drillDownRoot?: string;
     drillDownColorClass?: string;
+    moneda?: "ARS" | "USD";
 }
 
 export function BreakdownPanel({
@@ -131,7 +134,11 @@ export function BreakdownPanel({
     valueColorClass,
     drillDownRoot = "Todas las categorías",
     drillDownColorClass = "text-slate-600 hover:text-slate-700",
+    moneda = "ARS",
 }: BreakdownPanelProps) {
+    // Agregar moneda a los datos para que el tooltip la pueda leer
+    const chartData = breakdownData.map(d => ({ ...d, moneda }));
+
     return (
         <>
             <DrillDownBreadcrumb
@@ -147,7 +154,7 @@ export function BreakdownPanel({
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
-                                    data={breakdownData}
+                                    data={chartData}
                                     cx="50%"
                                     cy="50%"
                                     outerRadius={100}
@@ -203,6 +210,7 @@ export function BreakdownPanel({
                                     color={color}
                                     isClickable={isClickable}
                                     onClick={() => onSliceClick(item.name)}
+                                    moneda={moneda}
                                 />
                             );
                         })}
@@ -220,7 +228,7 @@ export function BreakdownPanel({
                             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total</span>
                         )}
                         <span className={`text-base font-extrabold tabular-nums ${valueColorClass}`}>
-                            {formatMonto(currentTotal)}
+                            {formatMonto(currentTotal, moneda)}
                         </span>
                     </div>
                 </div>

@@ -64,8 +64,8 @@ function normalizeTransaction(m: Omit<Transaction, "monto" | "es_deuda"> & { mon
 function getEndpoints(tipo: "efectivo" | "banco") {
     if (tipo === "banco") {
         return {
-            getMovimientos: API_ENDPOINTS.CAJA_BANCO.GET_BY_SUCURSAL,
-            getTotales: API_ENDPOINTS.CAJA_BANCO.GET_TOTALES,
+            getMovimientos: (sucursalId: number, moneda: string) => API_ENDPOINTS.CAJA_BANCO.GET_BY_SUCURSAL(sucursalId, moneda),
+            getTotales: (sucursalId: number, moneda: string) => API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(sucursalId, moneda),
             update: API_ENDPOINTS.CAJA_BANCO.UPDATE,
             updateEstado: API_ENDPOINTS.CAJA_BANCO.UPDATE_ESTADO,
             toggleDeuda: API_ENDPOINTS.CAJA_BANCO.TOGGLE_DEUDA,
@@ -73,8 +73,8 @@ function getEndpoints(tipo: "efectivo" | "banco") {
         };
     }
     return {
-        getMovimientos: API_ENDPOINTS.MOVIMIENTOS.GET_BY_SUCURSAL,
-        getTotales: API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES,
+        getMovimientos: (sucursalId: number, moneda: string) => API_ENDPOINTS.MOVIMIENTOS.GET_BY_SUCURSAL(sucursalId, moneda),
+        getTotales: (sucursalId: number, moneda: string) => API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(sucursalId, moneda),
         update: API_ENDPOINTS.MOVIMIENTOS.UPDATE,
         updateEstado: API_ENDPOINTS.MOVIMIENTOS.UPDATE_ESTADO,
         toggleDeuda: API_ENDPOINTS.MOVIMIENTOS.TOGGLE_DEUDA,
@@ -91,7 +91,7 @@ function getEndpoints(tipo: "efectivo" | "banco") {
  * Maneja fetch de movimientos, totales, categorías, bancos, medios de pago,
  * y operaciones CRUD sobre movimientos.
  */
-export function useCajaData(tipo: "efectivo" | "banco") {
+export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = "ARS") {
     const params = useParams();
     const sucursalId = useMemo(() => Number(params.id), [params.id]);
     const endpoints = useMemo(() => getEndpoints(tipo), [tipo]);
@@ -137,7 +137,7 @@ export function useCajaData(tipo: "efectivo" | "banco") {
 
     const fetchTotales = useCallback(async () => {
         try {
-            const response = await apiFetch(endpoints.getTotales(sucursalId));
+            const response = await apiFetch(endpoints.getTotales(sucursalId, moneda));
             const data = await response.json();
             if (response.ok) {
                 setParciales(data.data?.parciales || []);
@@ -145,14 +145,14 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         } catch {
             // Non-critical background refresh
         }
-    }, [endpoints, sucursalId]);
+    }, [endpoints, sucursalId, moneda]);
 
     const fetchMovimientos = useCallback(async () => {
         try {
             setIsLoading(true);
             setError("");
 
-            const response = await apiFetch(endpoints.getMovimientos(sucursalId));
+            const response = await apiFetch(endpoints.getMovimientos(sucursalId, moneda));
             const data = await response.json();
 
             if (!response.ok) {
@@ -193,7 +193,7 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         }
         // Refrescar totales/parciales del API al finalizar
         fetchTotales();
-    }, [endpoints, sucursalId, fetchTotales]);
+    }, [endpoints, sucursalId, moneda, fetchTotales]);
 
 
     const fetchCategorias = useCallback(async () => {
@@ -538,6 +538,7 @@ export function useCajaData(tipo: "efectivo" | "banco") {
         isLoading,
         error,
         sucursalId,
+        moneda,
 
         // Datos (todos los movimientos, sin filtro)
         saldoReal,
