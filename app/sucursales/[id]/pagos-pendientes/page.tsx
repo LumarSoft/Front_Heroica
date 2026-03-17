@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
@@ -22,6 +22,8 @@ import type { PagoPendiente } from "@/lib/types";
 export default function PagosPendientesPage() {
   const params = useParams();
   const { user, isGuardLoading, handleLogout } = useAuthGuard();
+  const searchParams = useSearchParams();
+  const moneda = (searchParams.get("moneda") as "ARS" | "USD") || "ARS";
 
   const [isLoading, setIsLoading] = useState(true);
   const [pagosPendientes, setPagosPendientes] = useState<PagoPendiente[]>([]);
@@ -57,7 +59,7 @@ export default function PagosPendientesPage() {
       setIsLoading(true);
       setError("");
       const response = await apiFetch(
-        API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(Number(params.id))
+        `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(Number(params.id))}?moneda=${moneda}`
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Error al cargar pagos pendientes");
@@ -67,7 +69,7 @@ export default function PagosPendientesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [params.id]);
+  }, [params.id, moneda]);
 
   const fetchHistorial = useCallback(async () => {
     if (!user) return;
@@ -75,7 +77,7 @@ export default function PagosPendientesPage() {
       setIsLoading(true);
       setError("");
       const response = await apiFetch(
-        `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(user.id)}?sucursal_id=${params.id}`
+        `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(user.id)}?sucursal_id=${params.id}&moneda=${moneda}`
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Error al cargar historial");
@@ -85,7 +87,7 @@ export default function PagosPendientesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [params.id, user]);
+  }, [params.id, user, moneda]);
 
   useEffect(() => {
     if (!isGuardLoading) {
@@ -173,7 +175,7 @@ export default function PagosPendientesPage() {
         userRole={user?.rol}
         onLogout={handleLogout}
         showBackButton={true}
-        backUrl={`/sucursales/${params.id}`}
+        backUrl={`/sucursales/${params.id}?moneda=${moneda}`}
       />
 
       <main className="container mx-auto px-6 py-8">

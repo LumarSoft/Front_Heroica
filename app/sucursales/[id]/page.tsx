@@ -749,7 +749,7 @@ export default function SucursalDetailPage() {
             <Card
               onClick={() => {
                 clearUnseenCount();
-                router.push(`/sucursales/${params.id}/pagos-pendientes`);
+                router.push(`/sucursales/${params.id}/pagos-pendientes?moneda=${moneda}`);
               }}
               className="border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
             >
@@ -819,7 +819,7 @@ export default function SucursalDetailPage() {
             <Card
               onClick={() => {
                 clearUnseenCount();
-                router.push(`/sucursales/${params.id}/pagos-pendientes`);
+                router.push(`/sucursales/${params.id}/pagos-pendientes?moneda=${moneda}`);
               }}
               className="border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
             >
