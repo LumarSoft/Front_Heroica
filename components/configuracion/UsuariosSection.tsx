@@ -46,13 +46,16 @@ const DEFAULT_FORM: UsuarioForm = {
   email: "",
   password: "",
   nombre: "",
-  rol_id: ROLES.GERENTE.id,
+  rol_id: ROLES.ADMIN.id,
 };
 
 const ROLES_LIST = [
-  { id: ROLES.GERENTE.id, nombre: ROLES.GERENTE.nombre, label: "Gerente" },
   { id: ROLES.ADMIN.id, nombre: ROLES.ADMIN.nombre, label: "Administrador" },
-  { id: ROLES.SUPERADMIN.id, nombre: ROLES.SUPERADMIN.nombre, label: "Super Administrador" },
+  {
+    id: ROLES.SUPERADMIN.id,
+    nombre: ROLES.SUPERADMIN.nombre,
+    label: "Super Administrador",
+  },
 ];
 
 export function UsuariosSection() {
@@ -128,7 +131,7 @@ export function UsuariosSection() {
         {
           method: "PUT",
           body: JSON.stringify({ rol_id: nuevoRolId }),
-        }
+        },
       );
       const data = await res.json();
       if (data.success) {
@@ -148,7 +151,7 @@ export function UsuariosSection() {
         API_ENDPOINTS.CONFIGURACION.USUARIOS.TOGGLE_ACTIVO(userId),
         {
           method: "PUT",
-        }
+        },
       );
       const data = await res.json();
       if (data.success) {
@@ -172,8 +175,6 @@ export function UsuariosSection() {
         return "bg-purple-100 text-purple-800";
       case ROLES.ADMIN.id:
         return "bg-blue-100 text-blue-800";
-      case ROLES.GERENTE.id:
-        return "bg-green-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -196,14 +197,19 @@ export function UsuariosSection() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Usuarios y Roles</CardTitle>
-          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f]">
+          <Button
+            onClick={handleOpenNew}
+            className="bg-[#002868] hover:bg-[#003d8f]"
+          >
             + Nuevo Usuario
           </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {usuarios.length === 0 ? (
-              <p className="text-center text-[#666666] py-4">No hay usuarios registrados</p>
+              <p className="text-center text-[#666666] py-4">
+                No hay usuarios registrados
+              </p>
             ) : (
               usuarios.map((usuario) => {
                 const isProtected = isMainAdmin(usuario.email);
@@ -211,12 +217,16 @@ export function UsuariosSection() {
                   <div
                     key={usuario.id}
                     className={`flex items-center justify-between p-4 border border-gray-200 rounded-lg ${
-                      usuario.activo ? "hover:bg-gray-50" : "bg-gray-50 opacity-60"
+                      usuario.activo
+                        ? "hover:bg-gray-50"
+                        : "bg-gray-50 opacity-60"
                     }`}
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-[#002868]">{usuario.nombre}</h3>
+                        <h3 className="font-semibold text-[#002868]">
+                          {usuario.nombre}
+                        </h3>
                         {!usuario.activo && (
                           <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700">
                             Inactivo
@@ -228,14 +238,16 @@ export function UsuariosSection() {
                     <div className="flex items-center gap-3">
                       <span
                         className={`text-xs px-3 py-1 rounded-full font-medium ${getRolBadgeColor(
-                          usuario.rol_id
+                          usuario.rol_id,
                         )}`}
                       >
                         {getRolLabel(usuario.rol_id)}
                       </span>
                       {isProtected ? (
                         <div className="w-[180px] text-center">
-                          <span className="text-xs text-[#666666] italic">No editable</span>
+                          <span className="text-xs text-[#666666] italic">
+                            No editable
+                          </span>
                         </div>
                       ) : (
                         <Select
@@ -249,7 +261,10 @@ export function UsuariosSection() {
                           </SelectTrigger>
                           <SelectContent>
                             {ROLES_LIST.map((rol) => (
-                              <SelectItem key={rol.id} value={rol.id.toString()}>
+                              <SelectItem
+                                key={rol.id}
+                                value={rol.id.toString()}
+                              >
                                 {rol.label}
                               </SelectItem>
                             ))}
@@ -378,7 +393,9 @@ export function UsuariosSection() {
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={isSaving || !form.email || !form.password || !form.nombre}
+                disabled={
+                  isSaving || !form.email || !form.password || !form.nombre
+                }
                 className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all"
               >
                 {isSaving ? "Creando..." : "Crear Usuario"}
