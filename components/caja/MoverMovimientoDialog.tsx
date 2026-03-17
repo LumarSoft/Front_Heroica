@@ -53,7 +53,11 @@ export function MoverMovimientoDialog({
         cbu: "",
         tipo_operacion: "",
         nota_descripcion: "",
+        es_credito: false,
     });
+
+    // Checkbox is only valid/visible if destination branch is different from origin branch
+    const isDifferentSucursal = formData.destino_sucursal_id !== "" && formData.destino_sucursal_id !== currentSucursalId.toString();
 
     useEffect(() => {
         if (open) {
@@ -77,12 +81,14 @@ export function MoverMovimientoDialog({
                 cbu: transaction?.cbu || "",
                 tipo_operacion: transaction?.tipo_operacion || "",
                 nota_descripcion: `Movido desde ${transaction?.tipo_movimiento === "efectivo" ? "Efectivo" : "Banco"}`,
+                es_credito: false,
             });
         }
     }, [open, transaction, currentSucursalId]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        const value = e.target.type === "checkbox" ? (e.target as HTMLInputElement).checked : e.target.value;
+        setFormData(prev => ({ ...prev, [e.target.name]: value }));
     };
 
     const handleSave = async () => {
@@ -224,6 +230,26 @@ export function MoverMovimientoDialog({
                             className={inputClasses}
                         />
                     </div>
+
+                    {isDifferentSucursal && (
+                        <div className="pt-2">
+                            <label className="flex items-center gap-3 p-3 rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] cursor-pointer hover:bg-[#F0F2F5] transition-colors">
+                                <input
+                                    type="checkbox"
+                                    name="es_credito"
+                                    checked={formData.es_credito}
+                                    onChange={handleInputChange}
+                                    className="w-5 h-5 rounded border-[#C0C0C0] text-indigo-600 focus:ring-indigo-500"
+                                />
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-semibold text-[#1A1A1A]">Es Crédito</span>
+                                    <span className="text-xs text-[#666666]">
+                                        Genera automáticamente las contrapartes de deuda en ambas sucursales.
+                                    </span>
+                                </div>
+                            </label>
+                        </div>
+                    )}
                 </div>
 
                 <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
