@@ -75,6 +75,13 @@ export const API_ENDPOINTS = {
       UPDATE: (id: number) => `${API_URL}/api/configuracion/medios-pago/${id}`,
       DELETE: (id: number) => `${API_URL}/api/configuracion/medios-pago/${id}`,
     },
+    // Usuarios
+    USUARIOS: {
+      GET_ALL: `${API_URL}/api/configuracion/usuarios`,
+      CREATE: `${API_URL}/api/configuracion/usuarios`,
+      UPDATE_ROL: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/rol`,
+      TOGGLE_ACTIVO: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/toggle-activo`,
+    },
   },
   REPORTES: {
     GET_BY_SUCURSAL: (sucursalId: number | string, startDate: string, endDate: string) =>

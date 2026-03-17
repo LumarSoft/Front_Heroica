@@ -10,6 +10,7 @@ import {
   Building2,
   CreditCard,
   ArrowLeft,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageLoadingSpinner } from "@/components/ui/loading-spinner";
@@ -17,14 +18,16 @@ import { CategoriasSection } from "@/components/configuracion/CategoriasSection"
 import { SubcategoriasSection } from "@/components/configuracion/SubcategoriasSection";
 import { BancosSection } from "@/components/configuracion/BancosSection";
 import { MediosPagoSection } from "@/components/configuracion/MediosPagoSection";
+import { UsuariosSection } from "@/components/configuracion/UsuariosSection";
 
-type ActiveTab = "categorias" | "subcategorias" | "bancos" | "medios";
+type ActiveTab = "categorias" | "subcategorias" | "bancos" | "medios" | "usuarios";
 
 const TABS: { id: ActiveTab; label: string; Icon: React.ElementType }[] = [
   { id: "categorias", label: "Categorías", Icon: Folder },
   { id: "subcategorias", label: "Subcategorías", Icon: FolderOpen },
   { id: "bancos", label: "Bancos", Icon: Building2 },
   { id: "medios", label: "Medios de Pago", Icon: CreditCard },
+  { id: "usuarios", label: "Usuarios y Roles", Icon: Users },
 ];
 
 export default function ConfiguracionPage() {
@@ -66,7 +69,7 @@ export default function ConfiguracionPage() {
                 <Settings className="w-6 h-6" /> Configuración
               </h1>
               <p className="text-sm text-[#666666]">
-                Gestión de categorías, bancos y medios de pago
+                Gestión de categorías, bancos, medios de pago y usuarios
               </p>
             </div>
           </div>
@@ -79,10 +82,11 @@ export default function ConfiguracionPage() {
             <Button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`px-6 py-3 font-semibold transition-all ${activeTab === id
-                  ? "text-[#002868] border-b-2 border-[#002868]"
-                  : "text-[#666666] hover:text-[#002868]"
-                }`}
+              className={`px-6 py-3 font-semibold transition-all ${
+                activeTab === id
+                  ? "border-b-2 border-[#002868]"
+                  : "hover:text-[#002868]"
+              }`}
             >
               <Icon className="w-4 h-4 inline mr-1.5" />
               {label}
@@ -95,6 +99,7 @@ export default function ConfiguracionPage() {
           {activeTab === "subcategorias" && <SubcategoriasSection />}
           {activeTab === "bancos" && <BancosSection />}
           {activeTab === "medios" && <MediosPagoSection />}
+          {activeTab === "usuarios" && <UsuariosSection />}
         </div>
       </div>
     </div>
