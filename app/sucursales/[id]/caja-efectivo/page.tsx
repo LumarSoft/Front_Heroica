@@ -37,13 +37,17 @@ export default function CajaEfectivoPage() {
   const caja = useCajaData("efectivo");
   const [activeTab, setActiveTab] = useState("real");
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null);
+  const [sucursalNombre, setSucursalNombre] = useState("");
 
   // Verificar si la sucursal está activa
   useEffect(() => {
     if (!params.id) return;
     apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)))
       .then((r) => r.json())
-      .then((d) => setSucursalActiva(Boolean(d.data?.activo)))
+      .then((d) => {
+        setSucursalActiva(Boolean(d.data?.activo));
+        setSucursalNombre(d.data?.nombre || "");
+      })
       .catch(() => setSucursalActiva(true));
   }, [params.id]);
 
@@ -66,6 +70,7 @@ export default function CajaEfectivoPage() {
         onLogout={handleLogout}
         showBackButton={true}
         backUrl={`/sucursales/${params.id}`}
+        sucursalNombre={sucursalNombre}
       />
 
       <main className="container mx-auto px-6 py-8 flex flex-col h-full">
