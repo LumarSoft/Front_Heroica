@@ -12,6 +12,7 @@ interface NavbarProps {
   onLogout?: () => void;
   showBackButton?: boolean;
   backUrl?: string;
+  sucursalNombre?: string;
 }
 
 export default function Navbar({
@@ -20,6 +21,7 @@ export default function Navbar({
   onLogout,
   showBackButton = false,
   backUrl = "/sucursales",
+  sucursalNombre,
 }: NavbarProps) {
   const router = useRouter();
   const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin());
@@ -61,9 +63,18 @@ export default function Navbar({
               <div className="h-8 w-px bg-[#E0E0E0] hidden sm:block"></div>
             </div>
 
-            {/* Greeting & Subtitle */}
+            {/* Greeting / Sucursal */}
             <div className="hidden sm:flex flex-col">
-              {userName ? (
+              {sucursalNombre ? (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#5A6070]">
+                    Sucursal
+                  </p>
+                  <p className="text-sm font-semibold text-[#002868]">
+                    {sucursalNombre}
+                  </p>
+                </>
+              ) : userName ? (
                 <>
                   <p className="text-sm font-semibold text-[#002868]">
                     {greeting}, {userName.split(" ")[0]}
@@ -126,13 +137,26 @@ export default function Navbar({
         </div>
 
         {/* Mobile User Info */}
-        {userName && (
+        {(userName || sucursalNombre) && (
           <div className="sm:hidden mt-3 pt-3 border-t border-[#E0E0E0] flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-[#002868]">
-                {greeting}, {userName.split(" ")[0]}
-              </p>
-              <p className="text-xs text-[#666666] capitalize">{userRole}</p>
+              {sucursalNombre ? (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#5A6070]">
+                    Sucursal
+                  </p>
+                  <p className="text-sm font-semibold text-[#002868]">
+                    {sucursalNombre}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-[#002868]">
+                    {greeting}, {userName?.split(" ")[0]}
+                  </p>
+                  <p className="text-xs text-[#666666] capitalize">{userRole}</p>
+                </>
+              )}
             </div>
           </div>
         )}
