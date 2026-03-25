@@ -91,6 +91,7 @@ export const API_ENDPOINTS = {
       CREATE: `${API_URL}/api/configuracion/usuarios`,
       UPDATE_ROL: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/rol`,
       TOGGLE_ACTIVO: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/toggle-activo`,
+      DELETE: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}`,
     },
   },
   REPORTES: {

@@ -63,6 +63,7 @@ export function SubcategoriasSection() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; nombre: string } | null>(null);
+  const [filtroCategoria, setFiltroCategoria] = useState<string>("todas");
 
   useEffect(() => {
     fetchSubcategorias();
@@ -92,7 +93,7 @@ export function SubcategoriasSection() {
       id: sub.id,
       categoria_id: sub.categoria_id,
       nombre: sub.nombre,
-      descripcion: sub.descripcion,
+      descripcion: sub.descripcion || "",
     });
     setError("");
     setIsDialogOpen(true);
@@ -148,18 +149,40 @@ export function SubcategoriasSection() {
     }
   };
 
+  const subcategoriasFiltradas = filtroCategoria === "todas"
+    ? subcategorias
+    : subcategorias.filter((sub) => sub.categoria_id.toString() === filtroCategoria);
+
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Subcategorías</CardTitle>
-          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f]">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <CardTitle>Subcategorías</CardTitle>
+            <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
+              <SelectTrigger className="w-[200px] h-9 text-sm bg-white border-[#E0E0E0]">
+                <SelectValue placeholder="Filtrar por categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas las categorías</SelectItem>
+                {categorias.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id.toString()}>
+                    {cat.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f] w-full sm:w-auto">
             + Nueva Subcategoría
           </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {subcategorias.map((sub) => (
+            {subcategoriasFiltradas.length === 0 ? (
+              <p className="text-center text-[#666666] py-8">No hay subcategorías para mostrar</p>
+            ) : (
+              subcategoriasFiltradas.map((sub) => (
               <div
                 key={sub.id}
                 className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
@@ -185,7 +208,8 @@ export function SubcategoriasSection() {
                   </Button>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

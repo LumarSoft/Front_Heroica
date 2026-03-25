@@ -77,20 +77,20 @@ export default function ConfiguracionPage() {
       </header>
 
       <div className="container mx-auto px-6 py-6 flex flex-col items-center">
-        <div className="flex justify-center w-full max-w-4xl gap-2 mb-6 border-b border-gray-200">
+        <div className="flex justify-center w-full max-w-4xl gap-1 mb-6 border-b border-gray-200">
           {TABS.map(({ id, label, Icon }) => (
-            <Button
+            <button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`px-6 py-3 font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-5 py-3 text-sm font-semibold transition-all border-b-2 -mb-px cursor-pointer ${
                 activeTab === id
-                  ? "border-b-2 border-[#002868]"
-                  : "hover:text-[#002868]"
+                  ? "border-[#002868] text-[#002868]"
+                  : "border-transparent text-[#666666] hover:text-[#002868] hover:border-[#002868]/30"
               }`}
             >
-              <Icon className="w-4 h-4 inline mr-1.5" />
+              <Icon className="w-4 h-4" />
               {label}
-            </Button>
+            </button>
           ))}
         </div>
 
