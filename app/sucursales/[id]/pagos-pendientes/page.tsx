@@ -151,7 +151,7 @@ export default function PagosPendientesPage() {
 
   const total = calcularTotal(pagosPendientes);
   const isEmployee = user?.rol === "empleado";
-  const isAdmin = user?.rol === "admin";
+  const isAdmin = user?.rol === "admin" || user?.rol === "superadmin";
 
   const usuariosRevisores = Array.from(
     new Set(

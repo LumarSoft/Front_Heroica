@@ -74,6 +74,7 @@ function getRolBadge(rolId: number) {
 
 export function UsuariosSection() {
   const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin());
+  const currentUser = useAuthStore((state) => state.user);
 
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -225,12 +226,14 @@ export function UsuariosSection() {
               {usuarios.length} usuario{usuarios.length !== 1 ? "s" : ""} registrado{usuarios.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <Button
-            onClick={() => { setForm(DEFAULT_FORM); setFormError(""); setIsCreateOpen(true); }}
-            className="bg-[#002868] hover:bg-[#003d8f] text-white"
-          >
-            + Nuevo Usuario
-          </Button>
+          {isSuperAdmin && (
+            <Button
+              onClick={() => { setForm(DEFAULT_FORM); setFormError(""); setIsCreateOpen(true); }}
+              className="bg-[#002868] hover:bg-[#003d8f] text-white"
+            >
+              + Nuevo Usuario
+            </Button>
+          )}
         </CardHeader>
 
         <CardContent className="p-0">
@@ -241,6 +244,7 @@ export function UsuariosSection() {
               {usuarios.map((usuario) => {
                 const isProtected = isMainAdmin(usuario.email);
                 const badge = getRolBadge(usuario.rol_id);
+                const isSelf = currentUser?.id === usuario.id;
                 return (
                   <div
                     key={usuario.id}
@@ -284,6 +288,10 @@ export function UsuariosSection() {
                     <div className="flex items-center gap-3 flex-shrink-0">
                       {isProtected ? (
                         <span className="text-xs text-[#999999] italic px-2">No editable</span>
+                      ) : isSelf ? (
+                        <span className="text-xs text-[#999999] italic px-2">Sesión actual</span>
+                      ) : !isSuperAdmin ? (
+                        <span className="text-xs text-[#999999] italic px-2">Solo lectura</span>
                       ) : (
                         <>
                           <Select
