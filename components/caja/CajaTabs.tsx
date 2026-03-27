@@ -29,7 +29,7 @@ export function CajaTabs({
 }: CajaTabsProps) {
     const totalReal = calcularTotal(saldoReal);
     const totalNecesario = calcularTotal(saldoNecesario);
-    const diferenciaTotal = totalReal - Math.abs(totalNecesario);
+    const diferenciaTotal = totalReal + totalNecesario;
 
     const tabsProps = value !== undefined
         ? { value, onValueChange }
