@@ -20,6 +20,7 @@ import { trackCreatedPago } from "@/hooks/use-employee-notifications";
 import type { Categoria, Subcategoria, SelectOption } from "@/lib/types";
 import { selectClasses, labelClasses, inputClasses } from "@/lib/dialog-styles";
 import { movimientoBaseSchema, movimientoBancoSchema } from "@/lib/schemas";
+import { parseInputMonto, formatInputMonto } from "@/lib/formatters";
 
 interface InitialValues {
   concepto?: string;
@@ -203,6 +204,10 @@ export default function NuevoMovimientoDialog({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
+    if (name === "monto" || name === "tipo_cambio") {
+      setFormData((prev) => ({ ...prev, [name]: parseInputMonto(value) }));
+      return;
+    }
     if (name === "tipo") {
       setFormData((prev) => ({ ...prev, [name]: value, categoria_id: "", subcategoria_id: "" }));
     } else if (name === "tipo_movimiento") {
@@ -543,10 +548,10 @@ export default function NuevoMovimientoDialog({
                   <Input
                     id="monto"
                     name="monto"
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="0,00"
-                    value={formData.monto}
+                    value={formatInputMonto(formData.monto)}
                     onChange={handleInputChange}
                     className={`${inputClasses} ${moneda === "USD" ? "pl-12" : "pl-8"}`}
                   />
@@ -582,10 +587,10 @@ export default function NuevoMovimientoDialog({
                   <Input
                     id="tipo_cambio"
                     name="tipo_cambio"
-                    type="number"
-                    step="0.01"
-                    placeholder="Ej: 1050.00"
-                    value={formData.tipo_cambio}
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="Ej: 1.050,00"
+                    value={formatInputMonto(formData.tipo_cambio)}
                     onChange={handleInputChange}
                     className={`${inputClasses} pl-8`}
                   />

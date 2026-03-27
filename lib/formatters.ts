@@ -74,3 +74,55 @@ export function getPrioridadColor(prioridad: string): string {
 export function capitalize(str: string): string {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+/**
+ * Mantiene solo números y evalúa un único punto decimal (desde una coma del usuario)
+ * Útil para limpiar el input en tiempo real y prepararlo para el estado (parseFloat).
+ */
+export function parseInputMonto(value: string): string {
+    if (!value) return "";
+    // Remover puntos (separador de miles local)
+    let clean = value.replace(/\./g, "");
+    // Cambiar coma por punto (para JS)
+    clean = clean.replace(/,/g, ".");
+    // Remover caracteres no válidos (quedan solo números y punto decimal)
+    clean = clean.replace(/[^0-9.]/g, "");
+    
+    // Asegurar que solo haya un punto decimal
+    const parts = clean.split(".");
+    if (parts.length > 2) {
+        clean = parts[0] + "." + parts.slice(1).join("");
+    }
+    
+    // Limitar a máximo 2 decimales
+    const finalParts = clean.split(".");
+    if (finalParts.length === 2 && finalParts[1].length > 2) {
+       clean = finalParts[0] + "." + finalParts[1].substring(0, 2);
+    }
+    
+    // Si empieza por punto, añadir el cero inicial
+    if (clean.startsWith(".")) clean = "0" + clean;
+    
+    return clean;
+}
+
+/**
+ * Convierte un valor numérico/cadena puro (ej: "1000.5") a un formato visible (ej: "1.000,5")
+ * Mantiene la coma final si el usuario recién la escribió.
+ */
+export function formatInputMonto(value: string | number): string {
+    if (value === null || value === undefined || value === "") return "";
+    
+    const strValue = value.toString();
+    const [integerPart, decimalPart] = strValue.split(".");
+    
+    // Aplicar separador de miles a la parte entera
+    const formattedInteger = integerPart ? integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : "0";
+    
+    // Retornar con coma decimal si existe parte decimal o si el string original termina en punto
+    if (decimalPart !== undefined) {
+        return `${formattedInteger},${decimalPart}`;
+    }
+    
+    return formattedInteger;
+}

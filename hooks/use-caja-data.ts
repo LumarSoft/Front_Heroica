@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
+import { parseInputMonto } from "@/lib/formatters";
 import type {
     Transaction,
     BancoParcial,
@@ -452,6 +453,10 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
         const { name, value } = e.target;
+        if (name === "monto" || name === "tipo_cambio") {
+            setFormData((prev) => ({ ...prev, [name]: parseInputMonto(value) }));
+            return;
+        }
         if (name === "tipo") {
             setFormData((prev) => ({ ...prev, [name]: value, categoria_id: "", subcategoria_id: "" }));
         } else {

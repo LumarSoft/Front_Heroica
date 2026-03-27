@@ -17,6 +17,7 @@ import { selectClasses, labelClasses, inputClasses } from "@/lib/dialog-styles";
 import { Lightbulb, CheckCircle2, Upload, X, FileText, Download } from "lucide-react";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
+import { formatInputMonto } from "@/lib/formatters";
 
 // =============================================
 // Dialog de Detalles (edición de movimiento)
@@ -290,9 +291,10 @@ export function DetailsDialog({
                                     <Input
                                         id="monto"
                                         name="monto"
-                                        type="number"
+                                        type="text"
+                                        inputMode="decimal"
                                         placeholder="0,00"
-                                        value={formData.monto}
+                                        value={formatInputMonto(formData.monto)}
                                         onChange={onInputChange}
                                         className={`${inputClasses} pl-8`}
                                     />
