@@ -141,7 +141,7 @@ export default function CajaEfectivoPage() {
                       title="Saldo Necesario"
                       description="Pagos y compromisos en efectivo programados."
                       transactions={caja.saldoNecesarioFiltrado}
-                      customTotal={calcularTotal(caja.saldoReal) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeudaFiltrado))}
+                      customTotal={calcularTotal(caja.saldoReal) + calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)}
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
