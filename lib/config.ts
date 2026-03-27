@@ -22,6 +22,12 @@ export const API_ENDPOINTS = {
   MOVIMIENTOS: {
     GET_BY_SUCURSAL: (sucursalId: number, moneda: string = "ARS") => `${API_URL}/api/movimientos/${sucursalId}?moneda=${moneda}`,
     GET_TOTALES: (sucursalId: number, moneda: string = "ARS") => `${API_URL}/api/movimientos/${sucursalId}/totales?moneda=${moneda}`,
+    GET_DEUDAS: (sucursalId: number, fechaInicio?: string, fechaFin?: string) => {
+      const params = new URLSearchParams({ sucursalId: String(sucursalId) });
+      if (fechaInicio) params.append("fechaInicio", fechaInicio);
+      if (fechaFin) params.append("fechaFin", fechaFin);
+      return `${API_URL}/api/movimientos/deudas?${params.toString()}`;
+    },
     CREATE_EFECTIVO: `${API_URL}/api/movimientos/efectivo`,
     COMPRA_VENTA_DIVISAS: `${API_URL}/api/movimientos/compra-venta-divisas`,
     UPDATE: (id: number) => `${API_URL}/api/movimientos/${id}`,

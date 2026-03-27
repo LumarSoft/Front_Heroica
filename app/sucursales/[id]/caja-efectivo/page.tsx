@@ -103,6 +103,7 @@ export default function CajaEfectivoPage() {
               onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
               onCompraVentaDivisas={() => setIsCompraVentaDialogOpen(true)}
               isReadOnly={isReadOnly}
+              sucursalId={Number(params.id)}
             />
 
             {caja.isLoading ? (

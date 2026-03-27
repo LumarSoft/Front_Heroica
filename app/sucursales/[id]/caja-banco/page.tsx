@@ -118,6 +118,7 @@ export default function CajaBancoPage() {
               subtitle={`Gestión de saldos y movimientos bancarios (${moneda})`}
               onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
               isReadOnly={isReadOnly}
+              sucursalId={Number(params.id)}
             />
 
             {caja.isLoading ? (
