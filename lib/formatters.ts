@@ -39,6 +39,14 @@ export function calcularTotal(
     }, 0);
 }
 
+/**
+ * Trunca un texto a la cantidad de caracteres indicada y agrega "..."
+ */
+export function truncarTexto(texto: string | null | undefined, max = 50): string {
+    if (!texto) return "-";
+    return texto.length > max ? `${texto.slice(0, max)}...` : texto;
+}
+
 /** Mapa de colores para badges de estado */
 export const ESTADO_COLOR_MAP: Record<string, string> = {
     completado: "bg-emerald-100 text-emerald-800",

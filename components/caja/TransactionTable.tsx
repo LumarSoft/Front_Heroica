@@ -16,7 +16,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { formatFecha, formatMonto, calcularTotal } from "@/lib/formatters";
+import { formatFecha, formatMonto, calcularTotal, truncarTexto } from "@/lib/formatters";
 import type { Transaction } from "@/lib/types";
 import { Clock, Trash2, ArrowRightLeft } from "lucide-react";
 
@@ -87,7 +87,7 @@ const EFECTIVO_COLUMNS: ColumnDef[] = [
         label: "Descripción",
         hideBelow: "md",
         render: (t) => (
-            <span className="text-[#666666]">{t.descripcion || "-"}</span>
+            <span className="text-[#666666]" title={t.descripcion || ""}>{truncarTexto(t.descripcion)}</span>
         ),
     },
 ];

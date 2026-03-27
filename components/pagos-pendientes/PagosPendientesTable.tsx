@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/caja/StatusBadge";
-import { formatFecha, formatMonto, ESTADO_COLOR_MAP, PRIORIDAD_COLOR_MAP } from "@/lib/formatters";
+import { formatFecha, formatMonto, ESTADO_COLOR_MAP, PRIORIDAD_COLOR_MAP, truncarTexto } from "@/lib/formatters";
 import type { PagoPendiente } from "@/lib/types";
 
 interface PagosPendientesTableProps {
@@ -135,20 +135,20 @@ export function PagosPendientesTable({
                         {pago.descripcion && pago.descripcion.includes("[Nota del sistema:") ? (
                           <div className="flex flex-col gap-1.5 mt-1">
                             {pago.descripcion.split("[Nota del sistema:")[0].trim() && (
-                              <span className="text-xs text-[#666666] max-w-[300px] whitespace-pre-wrap break-words inline-block">
-                                {pago.descripcion.split("[Nota del sistema:")[0].trim()}
+                              <span className="text-xs text-[#666666] inline-block" title={pago.descripcion.split("[Nota del sistema:")[0].trim()}>
+                                {truncarTexto(pago.descripcion.split("[Nota del sistema:")[0].trim())}
                               </span>
                             )}
                             <div className="bg-amber-50 text-amber-800 text-[11px] px-2.5 py-1.5 rounded-md border border-amber-200 flex items-start gap-1.5 w-fit max-w-sm mt-0.5">
                               <Megaphone className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
                               <span className="font-medium whitespace-normal break-words leading-snug">
-                                {pago.descripcion.split("[Nota del sistema:")[1].split("]")[0].trim()}
+                                {truncarTexto(pago.descripcion.split("[Nota del sistema:")[1].split("]")[0].trim())}
                               </span>
                             </div>
                           </div>
                         ) : (
-                          <span className="text-xs text-[#666666] max-w-[300px] whitespace-pre-wrap break-words">
-                            {pago.descripcion || "-"}
+                          <span className="text-xs text-[#666666]" title={pago.descripcion || ""}>
+                            {truncarTexto(pago.descripcion)}
                           </span>
                         )}
                       </div>
