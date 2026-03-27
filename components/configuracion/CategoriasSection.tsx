@@ -74,7 +74,12 @@ export function CategoriasSection() {
   };
 
   const handleOpenEdit = (cat: Categoria) => {
-    setForm(cat);
+    setForm({
+      id: cat.id,
+      nombre: cat.nombre,
+      descripcion: cat.descripcion || "",
+      tipo: cat.tipo,
+    });
     setError("");
     setIsDialogOpen(true);
   };

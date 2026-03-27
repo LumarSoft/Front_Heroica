@@ -716,6 +716,20 @@ export default function SucursalDetailPage() {
                     >
                       {formatMonto(totalesBanco.total_real, moneda)}
                     </p>
+                    {totalesBanco.ultima_actualizacion && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        Última act:{" "}
+                        {new Date(
+                          totalesBanco.ultima_actualizacion
+                        ).toLocaleString("es-AR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -749,7 +763,7 @@ export default function SucursalDetailPage() {
             <Card
               onClick={() => {
                 clearUnseenCount();
-                router.push(`/sucursales/${params.id}/pagos-pendientes`);
+                router.push(`/sucursales/${params.id}/pagos-pendientes?moneda=${moneda}`);
               }}
               className="border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
             >
@@ -819,7 +833,7 @@ export default function SucursalDetailPage() {
             <Card
               onClick={() => {
                 clearUnseenCount();
-                router.push(`/sucursales/${params.id}/pagos-pendientes`);
+                router.push(`/sucursales/${params.id}/pagos-pendientes?moneda=${moneda}`);
               }}
               className="border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
             >

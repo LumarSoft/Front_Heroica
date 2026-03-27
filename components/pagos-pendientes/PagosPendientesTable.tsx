@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, X, Inbox, Megaphone } from "lucide-react";
+import { Check, X, Inbox, Megaphone, User } from "lucide-react";
 import { ContentLoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Card,
@@ -43,8 +43,8 @@ export function PagosPendientesTable({
   onAprobar,
   onRechazar,
 }: PagosPendientesTableProps) {
-  const showAcciones = activeTab === "pendientes" && userRole !== "empleado";
-  const colSpan = 6 + (activeTab === "historial" ? 1 : 0) + (showAcciones ? 1 : 0);
+  const showAcciones = activeTab === "pendientes" && userRole === "superadmin";
+  const colSpan = 7 + (activeTab === "historial" ? 1 : 0) + (showAcciones ? 1 : 0);
 
   if (isLoading) return <ContentLoadingSpinner />;
 
@@ -95,6 +95,7 @@ export function PagosPendientesTable({
               <TableRow className="bg-[#F8F9FA] hover:bg-[#F8F9FA] border-b-2 border-[#E0E0E0]">
                 <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Fecha</TableHead>
                 <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Concepto</TableHead>
+                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Solicitante</TableHead>
                 <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-right">Monto</TableHead>
                 <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Tipo</TableHead>
                 <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Prioridad</TableHead>
@@ -151,6 +152,20 @@ export function PagosPendientesTable({
                           </span>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {pago.usuario_creador_nombre ? (
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-6 h-6 rounded-full bg-[#002868]/10 flex items-center justify-center flex-shrink-0">
+                            <User className="w-3.5 h-3.5 text-[#002868]" />
+                          </div>
+                          <span className="text-sm font-medium text-[#1A1A1A] truncate max-w-[120px]" title={pago.usuario_creador_nombre}>
+                            {pago.usuario_creador_nombre.split(" ")[0]}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-[#999999]">-</span>
+                      )}
                     </TableCell>
                     <TableCell
                       className={`text-right font-black text-sm ${
