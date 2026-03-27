@@ -23,6 +23,7 @@ export const API_ENDPOINTS = {
     GET_BY_SUCURSAL: (sucursalId: number, moneda: string = "ARS") => `${API_URL}/api/movimientos/${sucursalId}?moneda=${moneda}`,
     GET_TOTALES: (sucursalId: number, moneda: string = "ARS") => `${API_URL}/api/movimientos/${sucursalId}/totales?moneda=${moneda}`,
     CREATE_EFECTIVO: `${API_URL}/api/movimientos/efectivo`,
+    COMPRA_VENTA_DIVISAS: `${API_URL}/api/movimientos/compra-venta-divisas`,
     UPDATE: (id: number) => `${API_URL}/api/movimientos/${id}`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/movimientos/${id}/estado`,
     TOGGLE_DEUDA: (id: number) => `${API_URL}/api/movimientos/${id}/deuda`,

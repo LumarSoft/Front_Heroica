@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+
 import Navbar from "@/components/Navbar";
 import NuevoMovimientoDialog from "@/components/NuevoMovimientoDialog";
+import { CompraVentaDivisasDialog } from "@/components/caja/CompraVentaDivisasDialog";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useCajaData } from "@/hooks/use-caja-data";
 import { calcularTotal } from "@/lib/formatters";
@@ -40,6 +41,7 @@ export default function CajaEfectivoPage() {
   const [activeTab, setActiveTab] = useState("real");
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null);
   const [sucursalNombre, setSucursalNombre] = useState("");
+  const [isCompraVentaDialogOpen, setIsCompraVentaDialogOpen] = useState(false);
 
   // Verificar si la sucursal está activa
   useEffect(() => {
@@ -99,6 +101,7 @@ export default function CajaEfectivoPage() {
               title={`Caja Efectivo — ${moneda}`}
               subtitle={`Gestión de saldos y movimientos en efectivo (${moneda})`}
               onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
+              onCompraVentaDivisas={() => setIsCompraVentaDialogOpen(true)}
               isReadOnly={isReadOnly}
             />
 
@@ -138,7 +141,7 @@ export default function CajaEfectivoPage() {
                       title="Saldo Necesario"
                       description="Pagos y compromisos en efectivo programados."
                       transactions={caja.saldoNecesarioFiltrado}
-                      customTotal={calcularTotal(caja.saldoRealFiltrado) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeudaFiltrado))}
+                      customTotal={calcularTotal(caja.saldoReal) + calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)}
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
@@ -217,6 +220,13 @@ export default function CajaEfectivoPage() {
         onSuccess={caja.fetchMovimientos}
         bancosExternos={caja.bancos}
         mediosPagoExternos={caja.mediosPago}
+      />
+
+      <CompraVentaDivisasDialog
+        isOpen={isCompraVentaDialogOpen}
+        onClose={() => setIsCompraVentaDialogOpen(false)}
+        sucursalId={caja.sucursalId}
+        onSuccess={caja.fetchMovimientos}
       />
     </div>
   );
