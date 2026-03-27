@@ -108,14 +108,14 @@ export default function CajaEfectivoPage() {
               <>
                 {/* Filtro por fechas */}
                 <EndDateFilter
-                  fechaHasta={caja.fechaHasta}
-                  onHastaChange={caja.setFechaHasta}
+                  dateRange={caja.dateRange}
+                  onDateRangeChange={caja.setDateRange}
                   onLimpiar={caja.limpiarFiltros}
                   hayFiltro={caja.hayFiltroActivo}
                 />
 
                 <CajaTabs
-                  saldoReal={caja.saldoReal}
+                  saldoReal={caja.saldoRealFiltrado}
                   saldoNecesario={caja.saldoNecesarioSinDeudaFiltrado}
                   value={activeTab}
                   onValueChange={setActiveTab}
@@ -124,7 +124,7 @@ export default function CajaEfectivoPage() {
                     <TransactionTable
                       title="Saldo Real"
                       description="Movimientos de efectivo confirmados para el periodo actual."
-                      transactions={caja.saldoReal}
+                      transactions={caja.saldoRealFiltrado}
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
@@ -138,7 +138,7 @@ export default function CajaEfectivoPage() {
                       title="Saldo Necesario"
                       description="Pagos y compromisos en efectivo programados."
                       transactions={caja.saldoNecesarioFiltrado}
-                      customTotal={calcularTotal(caja.saldoReal) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeudaFiltrado))}
+                      customTotal={calcularTotal(caja.saldoRealFiltrado) - Math.abs(calcularTotal(caja.saldoNecesarioSinDeudaFiltrado))}
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}

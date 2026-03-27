@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
 import { parseInputMonto } from "@/lib/formatters";
+import { DateRange } from "react-day-picker";
 import type {
     Transaction,
     BancoParcial,
@@ -107,7 +108,7 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
     const [parciales, setParciales] = useState<BancoParcial[]>([]);
 
     // --- Filtro por fechas ---
-    const [fechaHasta, setFechaHasta] = useState("");
+    const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
     // --- Filtro por banco (solo relevante en caja banco) ---
     const [bancosFiltro, setBancosFiltro] = useState<string[]>([]);
 
@@ -485,20 +486,68 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
     }, [bancosFiltro]);
 
     const saldoRealFiltrado = useMemo(() => {
-        if (bancosFiltroSet.size === 0) return saldoReal;
-        return saldoReal.filter((m) => {
+        let filteredByDate = saldoReal;
+        if (dateRange?.from || dateRange?.to) {
+            let fromTime: number | null = null;
+            if (dateRange.from) {
+                const f = new Date(dateRange.from);
+                f.setHours(0, 0, 0, 0);
+                fromTime = f.getTime();
+            }
+            
+            let toTime: number | null = null;
+            if (dateRange.to) {
+                const t = new Date(dateRange.to);
+                t.setHours(23, 59, 59, 999);
+                toTime = t.getTime();
+            }
+
+            filteredByDate = saldoReal.filter((m) => {
+                if (!m.fecha) return true; 
+                const movTime = new Date(m.fecha).getTime();
+                
+                if (fromTime !== null && movTime < fromTime) return false;
+                if (toTime !== null && movTime > toTime) return false;
+                
+                return true;
+            });
+        }
+
+        if (bancosFiltroSet.size === 0) return filteredByDate;
+        return filteredByDate.filter((m) => {
             const id = m.banco_id?.toString();
             return id ? bancosFiltroSet.has(id) : false;
         });
-    }, [saldoReal, bancosFiltroSet]);
+    }, [saldoReal, dateRange, bancosFiltroSet]);
 
     const { saldoNecesarioFiltrado, saldoNecesarioSinDeudaFiltrado } = useMemo(() => {
-        const filteredByDate = !fechaHasta
-            ? saldoNecesario
-            : saldoNecesario.filter((m) => {
-                  const fechaMov = m.fecha ? m.fecha.split("T")[0] : "";
-                  return fechaMov <= fechaHasta;
-              });
+        let filteredByDate = saldoNecesario;
+        if (dateRange?.from || dateRange?.to) {
+            let fromTime: number | null = null;
+            if (dateRange.from) {
+                const f = new Date(dateRange.from);
+                f.setHours(0, 0, 0, 0);
+                fromTime = f.getTime();
+            }
+            
+            let toTime: number | null = null;
+            if (dateRange.to) {
+                const t = new Date(dateRange.to);
+                t.setHours(23, 59, 59, 999);
+                toTime = t.getTime();
+            }
+
+            filteredByDate = saldoNecesario.filter((m) => {
+                if (!m.fecha) return true;
+                const movTime = new Date(m.fecha).getTime();
+                
+                if (fromTime !== null && movTime < fromTime) return false;
+                if (toTime !== null && movTime > toTime) return false;
+                
+                return true;
+            });
+        }
+
         const filtered = bancosFiltroSet.size === 0
             ? filteredByDate
             : filteredByDate.filter((m) => {
@@ -509,7 +558,7 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
             saldoNecesarioFiltrado: filtered,
             saldoNecesarioSinDeudaFiltrado: filtered.filter((m) => !m.es_deuda),
         };
-    }, [saldoNecesario, fechaHasta, bancosFiltroSet]);
+    }, [saldoNecesario, dateRange, bancosFiltroSet]);
 
     // Parciales filtrados: agrupar saldoReal + saldoNecesarioSinDeudaFiltrado por banco_id
     const parcialesFiltrados = useMemo<BancoParcial[]>(() => {
@@ -534,7 +583,7 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
     }, [saldoRealFiltrado, saldoNecesarioSinDeudaFiltrado]);
 
     const limpiarFiltros = () => {
-        setFechaHasta("");
+        setDateRange(undefined);
         setBancosFiltro([]);
     };
 
@@ -562,12 +611,12 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
         parcialesFiltrados,
 
         // Filtros
-        fechaHasta,
-        setFechaHasta,
+        dateRange,
+        setDateRange,
         bancosFiltro,
         setBancosFiltro,
         limpiarFiltros,
-        hayFiltroActivo: fechaHasta !== "" || bancosFiltro.length > 0,
+        hayFiltroActivo: dateRange !== undefined || bancosFiltro.length > 0,
 
         // Estado de dialogs
         isDetailsDialogOpen,

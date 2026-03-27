@@ -151,8 +151,8 @@ export default function CajaBancoPage() {
 
                 {/* Tabs + Tablas */}
                 <EndDateFilter
-                  fechaHasta={caja.fechaHasta}
-                  onHastaChange={caja.setFechaHasta}
+                  dateRange={caja.dateRange}
+                  onDateRangeChange={caja.setDateRange}
                   onLimpiar={caja.limpiarFiltros}
                   hayFiltro={caja.hayFiltroActivo}
                   bancos={caja.bancos}
