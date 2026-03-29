@@ -165,9 +165,8 @@ export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: De
                             <thead>
                                 <tr className="border-b border-[#F0F0F0]">
                                     <th className="text-left py-2 px-3 text-xs font-bold text-[#5A6070] uppercase tracking-wider">Fecha</th>
-                                    <th className="text-left py-2 px-3 text-xs font-bold text-[#5A6070] uppercase tracking-wider">Sucursal</th>
+                                    <th className="text-left py-2 px-3 text-xs font-bold text-[#5A6070] uppercase tracking-wider">Sucursal relacionada</th>
                                     <th className="text-left py-2 px-3 text-xs font-bold text-[#5A6070] uppercase tracking-wider">Concepto</th>
-                                    <th className="text-left py-2 px-3 text-xs font-bold text-[#5A6070] uppercase tracking-wider">Descripción</th>
                                     <th className="text-left py-2 px-3 text-xs font-bold text-[#5A6070] uppercase tracking-wider">Tipo</th>
                                     <th className="text-right py-2 px-3 text-xs font-bold text-[#5A6070] uppercase tracking-wider">Monto</th>
                                 </tr>
@@ -181,14 +180,14 @@ export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: De
                                         <td className="py-2.5 px-3 font-medium text-[#1A1A1A] whitespace-nowrap">
                                             {extraerSucursalRelacionada(deuda.descripcion)}
                                         </td>
-                                        <td className="py-2.5 px-3 text-[#1A1A1A] max-w-[180px] truncate" title={deuda.concepto}>
-                                            {deuda.concepto}
-                                        </td>
-                                        <td className="py-2.5 px-3 text-[#8A8F9C] max-w-[200px] truncate" title={deuda.descripcion}>
-                                            {deuda.descripcion ?? "-"}
+                                        <td className="py-2.5 px-3">
+                                            <span className="block text-[#1A1A1A] font-medium">{deuda.concepto}</span>
+                                            {deuda.descripcion && (
+                                                <span className="block text-xs text-[#8A8F9C] mt-0.5">{deuda.descripcion}</span>
+                                            )}
                                         </td>
                                         <td className="py-2.5 px-3">
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                            <span className={`inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-semibold ${
                                                 deuda.tipo === "ingreso"
                                                     ? "bg-emerald-100 text-emerald-700"
                                                     : "bg-rose-100 text-rose-700"
@@ -208,32 +207,30 @@ export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: De
                     )}
                 </div>
 
-                {/* Totales */}
-                {!isLoading && deudas?.length > 0 && (
-                    <div className="px-8 py-4 border-t border-[#F0F0F0] bg-[#FAFBFC] flex-shrink-0">
-                        <div className="flex flex-wrap items-center justify-end gap-6">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">A cobrar:</span>
-                                <span className="text-sm font-bold text-emerald-600">{formatMonto(totalAFavor)}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">A pagar:</span>
-                                <span className="text-sm font-bold text-rose-600">{formatMonto(totalEnContra)}</span>
-                            </div>
-                            <div className="w-px h-5 bg-[#E0E0E0]" />
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">Balance:</span>
-                                <span className={`text-sm font-bold ${balance >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                                    {formatMonto(balance)}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Footer */}
+                {/* Footer con totales */}
                 <div className="px-8 py-4 border-t border-[#F0F0F0] bg-[#FAFBFC] flex-shrink-0">
-                    <div className="flex justify-end">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        {!isLoading && deudas?.length > 0 ? (
+                            <div className="flex flex-wrap items-center gap-6">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">A cobrar:</span>
+                                    <span className="text-sm font-bold text-emerald-600">{formatMonto(totalAFavor)}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">A pagar:</span>
+                                    <span className="text-sm font-bold text-rose-600">{formatMonto(totalEnContra)}</span>
+                                </div>
+                                <div className="w-px h-5 bg-[#E0E0E0]" />
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">Balance:</span>
+                                    <span className={`text-sm font-bold ${balance >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                                        {formatMonto(balance)}
+                                    </span>
+                                </div>
+                            </div>
+                        ) : (
+                            <div />
+                        )}
                         <Button
                             variant="outline"
                             onClick={() => onOpenChange(false)}
