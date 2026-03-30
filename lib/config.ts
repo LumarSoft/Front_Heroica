@@ -6,6 +6,7 @@ export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: `${API_URL}/api/auth/login`,
     VERIFY: `${API_URL}/api/auth/verify`,
+    CHANGE_PASSWORD: `${API_URL}/api/auth/change-password`,
   },
   SUCURSALES: {
     GET_ALL: `${API_URL}/api/sucursales`,
@@ -99,6 +100,19 @@ export const API_ENDPOINTS = {
       UPDATE_ROL: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/rol`,
       TOGGLE_ACTIVO: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/toggle-activo`,
       DELETE: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}`,
+      GET_SUCURSALES: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
+      UPDATE_SUCURSALES: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
+    },
+    // Roles
+    ROLES: {
+      GET_ALL: `${API_URL}/api/configuracion/roles`,
+      CREATE: `${API_URL}/api/configuracion/roles`,
+      UPDATE: (id: number) => `${API_URL}/api/configuracion/roles/${id}`,
+      DELETE: (id: number) => `${API_URL}/api/configuracion/roles/${id}`,
+    },
+    // Permisos
+    PERMISOS: {
+      GET_ALL: `${API_URL}/api/configuracion/permisos`,
     },
   },
   REPORTES: {

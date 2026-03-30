@@ -8,6 +8,8 @@ interface User {
   nombre: string;
   rol: string;
   rol_id: number;
+  must_change_password?: boolean;
+  permisos?: string[];
 }
 
 interface AuthState {
@@ -17,6 +19,20 @@ interface AuthState {
   login: (token: string, user: User) => void;
   logout: () => void;
   isSuperAdmin: () => boolean;
+  hasPermiso: (clave: string) => boolean;
+  canVerConfiguracion: () => boolean;
+  canGestionarUsuarios: () => boolean;
+  canGestionarRoles: () => boolean;
+  canVerMovimientos: () => boolean;
+  canCrearMovimientos: () => boolean;
+  canAprobarMovimientos: () => boolean;
+  canVerPendientes: () => boolean;
+  canCargarPendientes: () => boolean;
+  canAprobarPendientes: () => boolean;
+  canVerReportes: () => boolean;
+  canVerSucursales: () => boolean;
+  canGestionarSucursales: () => boolean;
+  canAgregarComentarios: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -31,10 +47,35 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         set({ token: null, user: null, isAuthenticated: false });
       },
+
+      // Superadmin siempre tiene acceso total (bypass de permisos)
       isSuperAdmin: () => {
         const { user } = get();
         return user?.rol_id === ROLES.SUPERADMIN.id;
       },
+
+      // Verifica un permiso específico. Superadmin siempre retorna true.
+      hasPermiso: (clave: string) => {
+        const { user } = get();
+        if (!user) return false;
+        if (user.rol_id === ROLES.SUPERADMIN.id) return true;
+        return user.permisos?.includes(clave) ?? false;
+      },
+
+      // Helpers semánticos por permiso
+      canVerConfiguracion: () => get().hasPermiso("ver_configuracion"),
+      canGestionarUsuarios: () => get().hasPermiso("gestionar_usuarios"),
+      canGestionarRoles: () => get().hasPermiso("gestionar_roles"),
+      canVerMovimientos: () => get().hasPermiso("ver_movimientos"),
+      canCrearMovimientos: () => get().hasPermiso("crear_movimientos"),
+      canAprobarMovimientos: () => get().hasPermiso("aprobar_movimientos"),
+      canVerPendientes: () => get().hasPermiso("ver_pendientes"),
+      canCargarPendientes: () => get().hasPermiso("cargar_pendientes"),
+      canAprobarPendientes: () => get().hasPermiso("aprobar_pendientes"),
+      canVerReportes: () => get().hasPermiso("ver_reportes"),
+      canVerSucursales: () => get().hasPermiso("ver_sucursales"),
+      canGestionarSucursales: () => get().hasPermiso("gestionar_sucursales"),
+      canAgregarComentarios: () => get().hasPermiso("agregar_comentarios"),
     }),
     {
       name: "auth-storage",
