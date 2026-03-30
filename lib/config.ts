@@ -110,5 +110,12 @@ export const API_ENDPOINTS = {
     CREATE: (sucursalId: number) => `${API_URL}/api/cuentas-bancarias/${sucursalId}`,
     UPDATE: (id: number) => `${API_URL}/api/cuentas-bancarias/${id}`,
     DELETE: (id: number) => `${API_URL}/api/cuentas-bancarias/${id}`,
-  }
+  },
+  TAREAS: {
+    GET_ALL: `${API_URL}/api/tareas`,
+    CREATE: `${API_URL}/api/tareas`,
+    UPDATE: (id: number) => `${API_URL}/api/tareas/${id}`,
+    UPDATE_ESTADO: (id: number) => `${API_URL}/api/tareas/${id}/estado`,
+    DELETE: (id: number) => `${API_URL}/api/tareas/${id}`,
+  },
 };

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Settings, LogOut } from "lucide-react";
+import { ArrowLeft, Settings, LogOut, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/authStore";
 
@@ -109,6 +109,16 @@ export default function Navbar({
                 </div>
               </div>
             )}
+
+            {/* Tareas Button */}
+            <Button
+              onClick={() => router.push("/tareas")}
+              variant="outline"
+              className="border-[#002868] text-[#002868] hover:bg-[#002868] hover:text-white transition-all cursor-pointer"
+            >
+              <ClipboardList className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Tareas</span>
+            </Button>
 
             {/* Configuration Button (Superadmin Only) */}
             {isSuperAdmin && (
