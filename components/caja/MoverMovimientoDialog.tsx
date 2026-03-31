@@ -218,6 +218,22 @@ export function MoverMovimientoDialog({
                                     </select>
                                 </div>
                             </div>
+                            {(() => {
+                                const selectedMedio = mediosPagoExternos.find(m => m.id.toString() === formData.medio_pago_id);
+                                const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre);
+                                return isCheque ? (
+                                    <div className="space-y-1.5">
+                                        <Label className={labelClasses}>N° de Cheque</Label>
+                                        <Input
+                                            name="numero_cheque"
+                                            value={formData.numero_cheque}
+                                            onChange={handleInputChange}
+                                            placeholder="Ej: 00012345"
+                                            className={inputClasses}
+                                        />
+                                    </div>
+                                ) : null;
+                            })()}
                         </div>
                     )}
 

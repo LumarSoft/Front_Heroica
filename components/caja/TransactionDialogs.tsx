@@ -45,6 +45,7 @@ interface DetailsDialogProps {
         comprobante: string;
         banco_id: string;
         medio_pago_id: string;
+        numero_cheque: string;
     };
     onInputChange: (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -316,46 +317,67 @@ export function DetailsDialog({
                         </div>
 
                         {showBancoFields && (
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="banco_id" className={labelClasses}>
-                                        Banco
-                                    </Label>
-                                    <select
-                                        id="banco_id"
-                                        name="banco_id"
-                                        value={formData.banco_id}
-                                        onChange={onInputChange}
-                                        className={selectClasses}
-                                    >
-                                        <option value="">Seleccione un banco</option>
-                                        {bancos.map((b) => (
-                                            <option key={b.id} value={b.id}>
-                                                {b.nombre}
-                                            </option>
-                                        ))}
-                                    </select>
+                            <>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="banco_id" className={labelClasses}>
+                                            Banco
+                                        </Label>
+                                        <select
+                                            id="banco_id"
+                                            name="banco_id"
+                                            value={formData.banco_id}
+                                            onChange={onInputChange}
+                                            className={selectClasses}
+                                        >
+                                            <option value="">Seleccione un banco</option>
+                                            {bancos.map((b) => (
+                                                <option key={b.id} value={b.id}>
+                                                    {b.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="medio_pago_id" className={labelClasses}>
+                                            Medio de Pago
+                                        </Label>
+                                        <select
+                                            id="medio_pago_id"
+                                            name="medio_pago_id"
+                                            value={formData.medio_pago_id}
+                                            onChange={onInputChange}
+                                            className={selectClasses}
+                                        >
+                                            <option value="">Seleccione medio de pago</option>
+                                            {mediosPago.map((m) => (
+                                                <option key={m.id} value={m.id}>
+                                                    {m.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="medio_pago_id" className={labelClasses}>
-                                        Medio de Pago
-                                    </Label>
-                                    <select
-                                        id="medio_pago_id"
-                                        name="medio_pago_id"
-                                        value={formData.medio_pago_id}
-                                        onChange={onInputChange}
-                                        className={selectClasses}
-                                    >
-                                        <option value="">Seleccione medio de pago</option>
-                                        {mediosPago.map((m) => (
-                                            <option key={m.id} value={m.id}>
-                                                {m.nombre}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
+                                {(() => {
+                                    const selectedMedio = mediosPago.find(m => m.id.toString() === formData.medio_pago_id);
+                                    const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre);
+                                    return isCheque ? (
+                                        <div className="space-y-1.5">
+                                            <Label htmlFor="numero_cheque" className={labelClasses}>
+                                                N° de Cheque
+                                            </Label>
+                                            <Input
+                                                id="numero_cheque"
+                                                name="numero_cheque"
+                                                placeholder="Ej: 00012345"
+                                                value={formData.numero_cheque}
+                                                onChange={onInputChange}
+                                                className={inputClasses}
+                                            />
+                                        </div>
+                                    ) : null;
+                                })()}
+                            </>
                         )}
 
                         <div className="space-y-1.5">

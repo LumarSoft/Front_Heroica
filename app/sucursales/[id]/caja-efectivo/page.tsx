@@ -116,6 +116,8 @@ export default function CajaEfectivoPage() {
                   onDateRangeChange={caja.setDateRange}
                   onLimpiar={caja.limpiarFiltros}
                   hayFiltro={caja.hayFiltroActivo}
+                  searchText={caja.searchText}
+                  onSearchTextChange={caja.setSearchText}
                 />
 
                 <CajaTabs

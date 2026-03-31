@@ -159,6 +159,8 @@ export default function CajaBancoPage() {
                   bancos={caja.bancos}
                   bancosSeleccionados={caja.bancosFiltro}
                   onBancosChange={caja.setBancosFiltro}
+                  searchText={caja.searchText}
+                  onSearchTextChange={caja.setSearchText}
                 />
                 <CajaTabs
                   saldoReal={caja.saldoRealFiltrado}

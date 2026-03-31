@@ -86,6 +86,7 @@ export default function NuevoMovimientoDialog({
     comprobante: "",
     banco_id: "",
     medio_pago_id: "",
+    numero_cheque: "",
     tipo_cambio: "",
   });
 
@@ -233,6 +234,7 @@ export default function NuevoMovimientoDialog({
       comprobante: "",
       banco_id: "",
       medio_pago_id: "",
+      numero_cheque: "",
       tipo_cambio: "",
     });
     setSelectedFiles([]);
@@ -375,6 +377,7 @@ export default function NuevoMovimientoDialog({
         subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
         banco_id: formData.banco_id ? Number(formData.banco_id) : null,
         medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
+        numero_cheque: formData.numero_cheque || null,
       } : {
         sucursal_id: sucursalId,
         user_id: user?.id,
@@ -390,6 +393,7 @@ export default function NuevoMovimientoDialog({
         comprobante: formData.comprobante,
         banco_id: formData.banco_id ? Number(formData.banco_id) : null,
         medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
+        numero_cheque: formData.numero_cheque || null,
         moneda: moneda,
         tipo_cambio: moneda === "USD" && formData.tipo_cambio ? parseFloat(formData.tipo_cambio) : null,
       };
@@ -655,6 +659,25 @@ export default function NuevoMovimientoDialog({
                     </select>
                   </div>
                 </div>
+                {(() => {
+                  const selectedMedio = mediosPago.find(m => m.id.toString() === formData.medio_pago_id);
+                  const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre);
+                  return isCheque ? (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="numero_cheque" className={labelClasses}>
+                        N° de Cheque
+                      </Label>
+                      <Input
+                        id="numero_cheque"
+                        name="numero_cheque"
+                        placeholder="Ej: 00012345"
+                        value={formData.numero_cheque}
+                        onChange={handleInputChange}
+                        className={inputClasses}
+                      />
+                    </div>
+                  ) : null;
+                })()}
               </>
             )}
           </section>
