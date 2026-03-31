@@ -168,20 +168,14 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
 
             const movimientosCompletados = allMovimientos
                 .filter((m) => m.estado === "completado")
-                .sort(
-                    (a, b) =>
-                        new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
-                );
+                .sort((a, b) => b.id - a.id);
 
             const movimientosAprobados = allMovimientos
                 .filter(
                     (m) =>
                         m.estado === "aprobado" || m.estado === "pendiente"
                 )
-                .sort(
-                    (a, b) =>
-                        new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
-                );
+                .sort((a, b) => b.id - a.id);
 
             setSaldoReal(movimientosCompletados);
             // Saldo necesario incluye TODOS los aprobados/pendientes (incluyendo deuda),
