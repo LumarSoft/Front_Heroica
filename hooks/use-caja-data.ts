@@ -50,12 +50,35 @@ const INITIAL_FORM: TransactionFormData = {
 };
 
 // =============================================
+// Helper: Obtiene la parte YYYY-MM-DD de una fecha (string o Date)
+// =============================================
+function getISODateOnly(dateInput: string | Date | undefined): string | null {
+    if (!dateInput) return null;
+    const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+
+    // Si es un string YYYY-MM-DD puro de MySQL, new Date(string) lo toma como UTC.
+    // Para evitar desfases, si es un string de 10 caracteres, usamos los componentes UTC.
+    // Si viene de un Date picker (Date object), usamos los componentes locales.
+    if (typeof dateInput === "string" && dateInput.length <= 10) {
+        return date.toISOString().split("T")[0];
+    }
+
+    // Para objetos Date locales (del picker)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+// =============================================
 // Normaliza un movimiento recibido de la API, coerciendo monto a number
 // =============================================
 
 function normalizeTransaction(m: Omit<Transaction, "monto" | "es_deuda"> & { monto?: number | string; es_deuda?: number }): Transaction {
     return {
         ...m,
+        // Normalizamos la fecha a YYYY-MM-DD para evitar problemas de horas/minutos
+        fecha: getISODateOnly(m.fecha) || m.fecha,
         monto: Number(m.monto),
         es_deuda: m.es_deuda === 1,
     };
@@ -498,27 +521,17 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
 
     const saldoRealFiltrado = useMemo(() => {
         let filteredByDate = saldoReal;
-        if (dateRange?.from || dateRange?.to) {
-            let fromTime: number | null = null;
-            if (dateRange.from) {
-                const f = new Date(dateRange.from);
-                f.setHours(0, 0, 0, 0);
-                fromTime = f.getTime();
-            }
+        const fromStr = getISODateOnly(dateRange?.from);
+        const toStr = getISODateOnly(dateRange?.to);
 
-            let toTime: number | null = null;
-            if (dateRange.to) {
-                const t = new Date(dateRange.to);
-                t.setHours(23, 59, 59, 999);
-                toTime = t.getTime();
-            }
-
+        if (fromStr || toStr) {
             filteredByDate = saldoReal.filter((m) => {
                 if (!m.fecha) return true;
-                const movTime = new Date(m.fecha).getTime();
+                const movStr = getISODateOnly(m.fecha);
+                if (!movStr) return true;
 
-                if (fromTime !== null && movTime < fromTime) return false;
-                if (toTime !== null && movTime > toTime) return false;
+                if (fromStr && movStr < fromStr) return false;
+                if (toStr && movStr > toStr) return false;
 
                 return true;
             });
@@ -538,27 +551,17 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
 
     const { saldoNecesarioFiltrado, saldoNecesarioSinDeudaFiltrado } = useMemo(() => {
         let filteredByDate = saldoNecesario;
-        if (dateRange?.from || dateRange?.to) {
-            let fromTime: number | null = null;
-            if (dateRange.from) {
-                const f = new Date(dateRange.from);
-                f.setHours(0, 0, 0, 0);
-                fromTime = f.getTime();
-            }
+        const fromStr = getISODateOnly(dateRange?.from);
+        const toStr = getISODateOnly(dateRange?.to);
 
-            let toTime: number | null = null;
-            if (dateRange.to) {
-                const t = new Date(dateRange.to);
-                t.setHours(23, 59, 59, 999);
-                toTime = t.getTime();
-            }
-
+        if (fromStr || toStr) {
             filteredByDate = saldoNecesario.filter((m) => {
                 if (!m.fecha) return true;
-                const movTime = new Date(m.fecha).getTime();
+                const movStr = getISODateOnly(m.fecha);
+                if (!movStr) return true;
 
-                if (fromTime !== null && movTime < fromTime) return false;
-                if (toTime !== null && movTime > toTime) return false;
+                if (fromStr && movStr < fromStr) return false;
+                if (toStr && movStr > toStr) return false;
 
                 return true;
             });
