@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -165,6 +166,8 @@ interface TransactionTableProps {
     onDelete: (t: Transaction) => void;
     onToggleDeuda?: (t: Transaction) => void;
     onMove?: (t: Transaction) => void;
+    onBulkDelete?: (ids: number[]) => void;
+    onBulkMove?: (ids: number[]) => void;
     isReadOnly?: boolean;
 }
 
@@ -179,11 +182,48 @@ export function TransactionTable({
     onDelete,
     onToggleDeuda,
     onMove,
+    onBulkDelete,
+    onBulkMove,
     isReadOnly = false,
 }: TransactionTableProps) {
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+    const toggleAll = () => {
+        if (selectedIds.size === transactions.length && transactions.length > 0) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(transactions.map((t) => t.id)));
+        }
+    };
+
+    const toggleOne = (id: number) => {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    };
+
+    const allSelected = transactions.length > 0 && selectedIds.size === transactions.length;
+    const someSelected = selectedIds.size > 0 && selectedIds.size < transactions.length;
+
+    const handleBulkDelete = () => {
+        if (onBulkDelete) {
+            onBulkDelete([...selectedIds]);
+            setSelectedIds(new Set());
+        }
+    };
+
+    const handleBulkMove = () => {
+        if (onBulkMove) {
+            onBulkMove([...selectedIds]);
+        }
+    };
+
     const total =
         customTotal !== undefined ? customTotal : calcularTotal(transactions);
-    const totalColSpan = columns.length + 1; // +1 for actions column
+    const showBulkActions = (onBulkDelete || onBulkMove) && !isReadOnly;
+    const totalColSpan = columns.length + 2; // +1 checkbox col, +1 actions col
 
     return (
         <Card className="border-[#E0E0E0] bg-white shadow-lg">
@@ -212,10 +252,58 @@ export function TransactionTable({
                 </div>
             </CardHeader>
             <CardContent>
+                {/* Barra de acciones masivas */}
+                {showBulkActions && selectedIds.size > 0 && (
+                    <div className="flex items-center gap-3 p-3 mb-3 rounded-lg bg-indigo-50 border border-indigo-200">
+                        <span className="text-sm font-semibold text-indigo-700">
+                            {selectedIds.size} seleccionado{selectedIds.size !== 1 ? "s" : ""}
+                        </span>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSelectedIds(new Set())}
+                            className="h-7 px-3 text-xs border-indigo-300 text-indigo-600 hover:bg-indigo-100"
+                        >
+                            Deseleccionar
+                        </Button>
+                        {onBulkMove && (
+                            <Button
+                                size="sm"
+                                onClick={handleBulkMove}
+                                className="h-7 px-3 text-xs bg-indigo-500 hover:bg-indigo-600 text-white"
+                            >
+                                <ArrowRightLeft className="w-3 h-3 mr-1" />
+                                Mover seleccionados
+                            </Button>
+                        )}
+                        {onBulkDelete && (
+                            <Button
+                                size="sm"
+                                onClick={handleBulkDelete}
+                                className="h-7 px-3 text-xs bg-rose-500 hover:bg-rose-600 text-white"
+                            >
+                                <Trash2 className="w-3 h-3 mr-1" />
+                                Eliminar {selectedIds.size}
+                            </Button>
+                        )}
+                    </div>
+                )}
                 <div className="rounded-md border border-[#E0E0E0]">
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-[#F8F9FA] hover:bg-[#F8F9FA] border-b-2 border-[#E0E0E0]">
+                                {showBulkActions && (
+                                    <TableHead className="w-10 text-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={allSelected}
+                                            ref={(el) => { if (el) el.indeterminate = someSelected; }}
+                                            onChange={toggleAll}
+                                            className="w-4 h-4 rounded border-gray-300 text-indigo-600 cursor-pointer"
+                                            title="Seleccionar todos"
+                                        />
+                                    </TableHead>
+                                )}
                                 {columns.map((col) => (
                                     <TableHead
                                         key={col.key}
@@ -271,8 +359,18 @@ export function TransactionTable({
                                 transactions.map((transaction) => (
                                     <TableRow
                                         key={transaction.id}
-                                        className="hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50"
+                                        className={`hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50 ${selectedIds.has(transaction.id) ? "bg-indigo-50/60" : ""}`}
                                     >
+                                        {showBulkActions && (
+                                            <TableCell className="text-center w-10">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.has(transaction.id)}
+                                                    onChange={() => toggleOne(transaction.id)}
+                                                    className="w-4 h-4 rounded border-gray-300 text-indigo-600 cursor-pointer"
+                                                />
+                                            </TableCell>
+                                        )}
                                         {columns.map((col) => (
                                             <TableCell
                                                 key={col.key}

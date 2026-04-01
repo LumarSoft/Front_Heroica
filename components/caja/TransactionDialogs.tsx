@@ -870,6 +870,7 @@ interface DeleteDialogProps {
     onOpenChange: (open: boolean) => void;
     onConfirm: () => void;
     isSaving: boolean;
+    count?: number; // cuando se pasa (> 1) muestra texto de eliminación masiva
 }
 
 export function DeleteDialog({
@@ -877,7 +878,9 @@ export function DeleteDialog({
     onOpenChange,
     onConfirm,
     isSaving,
+    count,
 }: DeleteDialogProps) {
+    const isBulk = count !== undefined && count > 1;
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[400px] bg-white border-rose-200 shadow-2xl">
@@ -902,8 +905,12 @@ export function DeleteDialog({
                         Confirmar Eliminación
                     </DialogTitle>
                     <DialogDescription className="text-[#666666] mt-2">
-                        ¿Estás seguro de que deseas eliminar este movimiento? Esta acción no
-                        se puede deshacer.
+                        {isBulk
+                            ? <>¿Estás seguro de que deseas eliminar{" "}
+                                <span className="font-semibold text-rose-600">{count} movimientos</span>?
+                                Esta acción no se puede deshacer.</>
+                            : <>¿Estás seguro de que deseas eliminar este movimiento? Esta acción no se puede deshacer.</>
+                        }
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
@@ -920,7 +927,7 @@ export function DeleteDialog({
                         disabled={isSaving}
                         className="bg-rose-500 text-white hover:bg-rose-600 cursor-pointer"
                     >
-                        {isSaving ? "Eliminando..." : "Eliminar"}
+                        {isSaving ? "Eliminando..." : isBulk ? `Eliminar ${count}` : "Eliminar"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

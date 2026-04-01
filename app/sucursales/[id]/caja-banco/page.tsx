@@ -36,10 +36,12 @@ import {
   DeudaDialog,
 } from "@/components/caja/TransactionDialogs";
 import { MoverMovimientoDialog } from "@/components/caja/MoverMovimientoDialog";
+import { BulkMoverDialog } from "@/components/caja/BulkMoverDialog";
 import { EndDateFilter } from "@/components/caja/EndDateFilter";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
 import { AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 
 const columns = getBancoColumns();
 
@@ -54,6 +56,42 @@ export default function CajaBancoPage() {
   const [activeTab, setActiveTab] = useState("real");
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null);
   const [sucursalNombre, setSucursalNombre] = useState("");
+  const [isBulkMoverDialogOpen, setIsBulkMoverDialogOpen] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [bulkSelectedIds, setBulkSelectedIds] = useState<number[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  const handleBulkDelete = (ids: number[]) => {
+    setBulkSelectedIds(ids);
+    setIsBulkDeleteDialogOpen(true);
+  };
+
+  const handleBulkDeleteConfirm = async () => {
+    setIsBulkDeleting(true);
+    try {
+      const res = await apiFetch(API_ENDPOINTS.CAJA_BANCO.BULK_DELETE, {
+        method: "DELETE",
+        body: JSON.stringify({ ids: bulkSelectedIds }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message);
+        caja.fetchMovimientos();
+        setIsBulkDeleteDialogOpen(false);
+      } else {
+        toast.error(data.message || "Error al eliminar.");
+      }
+    } catch {
+      toast.error("Error de red al eliminar.");
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
+  const handleBulkMove = (ids: number[]) => {
+    setBulkSelectedIds(ids);
+    setIsBulkMoverDialogOpen(true);
+  };
 
   // Verificar si la sucursal está activa
   useEffect(() => {
@@ -178,6 +216,8 @@ export default function CajaBancoPage() {
                       onChangeState={caja.handleOpenStateChange}
                       onDelete={caja.handleOpenDelete}
                       onMove={caja.handleOpenMover}
+                      onBulkDelete={!isReadOnly ? handleBulkDelete : undefined}
+                      onBulkMove={!isReadOnly ? handleBulkMove : undefined}
                       isReadOnly={isReadOnly}
                     />
                   </TabsContent>
@@ -193,6 +233,8 @@ export default function CajaBancoPage() {
                       onDelete={caja.handleOpenDelete}
                       onToggleDeuda={caja.handleOpenDeuda}
                       onMove={caja.handleOpenMover}
+                      onBulkDelete={!isReadOnly ? handleBulkDelete : undefined}
+                      onBulkMove={!isReadOnly ? handleBulkMove : undefined}
                       isReadOnly={isReadOnly}
                     />
                   </TabsContent>
@@ -237,6 +279,14 @@ export default function CajaBancoPage() {
         isSaving={caja.isSaving}
       />
 
+      <DeleteDialog
+        open={isBulkDeleteDialogOpen}
+        onOpenChange={setIsBulkDeleteDialogOpen}
+        onConfirm={handleBulkDeleteConfirm}
+        isSaving={isBulkDeleting}
+        count={bulkSelectedIds.length}
+      />
+
       <DeudaDialog
         open={caja.isDeudaDialogOpen}
         onOpenChange={caja.setIsDeudaDialogOpen}
@@ -262,6 +312,17 @@ export default function CajaBancoPage() {
         onOpenChange={caja.setIsMoverMovimientoDialogOpen}
         transaction={caja.selectedTransaction}
         currentSucursalId={caja.sucursalId}
+        onSuccess={caja.fetchMovimientos}
+        bancosExternos={caja.bancos}
+        mediosPagoExternos={caja.mediosPago}
+      />
+
+      <BulkMoverDialog
+        open={isBulkMoverDialogOpen}
+        onOpenChange={setIsBulkMoverDialogOpen}
+        selectedIds={bulkSelectedIds}
+        currentSucursalId={caja.sucursalId}
+        cajaTipo="banco"
         onSuccess={caja.fetchMovimientos}
         bancosExternos={caja.bancos}
         mediosPagoExternos={caja.mediosPago}
