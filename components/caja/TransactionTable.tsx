@@ -46,7 +46,21 @@ const BASE_COLUMNS: ColumnDef[] = [
     {
         key: "concepto",
         label: "Concepto",
-        render: (t) => <span className="text-[#1A1A1A]">{t.concepto}</span>,
+        render: (t) => (
+            <div className="flex flex-col gap-1">
+                <span className="text-[#1A1A1A]">{t.concepto}</span>
+                {t.numero_cheque && (
+                    <div className="flex items-center">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold tracking-tight uppercase">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            CHQ: {t.numero_cheque}
+                        </span>
+                    </div>
+                )}
+            </div>
+        ),
     },
 ];
 
