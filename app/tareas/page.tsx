@@ -12,7 +12,6 @@ import {
   ChevronRight,
   ChevronLeft,
   CheckCheck,
-  XCircle,
   Clock,
   Loader2,
   LayoutList,
@@ -21,6 +20,7 @@ import {
   CalendarDays,
   User,
   RefreshCw,
+  FlaskConical,
 } from "lucide-react";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
@@ -52,10 +52,11 @@ import { cn } from "@/lib/utils";
 
 type Tipo = "bug" | "mejora" | "implementacion" | "otro";
 type Prioridad = "alta" | "media" | "baja";
-type Estado = "pendiente" | "en_progreso" | "completado" | "cancelado";
+type Estado = "pendiente" | "en_progreso" | "en_pruebas" | "completado";
 
 interface Tarea {
   id: number;
+  codigo: string;
   titulo: string;
   descripcion: string | null;
   tipo: Tipo;
@@ -140,35 +141,37 @@ const ESTADO_CONFIG: Record<
     icon: <Loader2 className="w-4 h-4 text-blue-500" />,
     count_bg: "bg-blue-100 text-blue-700",
   },
+  en_pruebas: {
+    label: "En Pruebas",
+    header: "bg-purple-50 border-purple-200",
+    icon: <FlaskConical className="w-4 h-4 text-purple-500" />,
+    count_bg: "bg-purple-100 text-purple-700",
+  },
   completado: {
     label: "Completado",
     header: "bg-green-50 border-green-200",
     icon: <CheckCheck className="w-4 h-4 text-green-600" />,
     count_bg: "bg-green-100 text-green-700",
   },
-  cancelado: {
-    label: "Cancelado",
-    header: "bg-red-50 border-red-200",
-    icon: <XCircle className="w-4 h-4 text-red-500" />,
-    count_bg: "bg-red-100 text-red-700",
-  },
 };
 
 const COLUMNAS: Estado[] = [
   "pendiente",
   "en_progreso",
+  "en_pruebas",
   "completado",
-  "cancelado",
 ];
 
 const ESTADO_SIGUIENTE: Partial<Record<Estado, Estado>> = {
   pendiente: "en_progreso",
-  en_progreso: "completado",
+  en_progreso: "en_pruebas",
+  en_pruebas: "completado",
 };
 
 const ESTADO_ANTERIOR: Partial<Record<Estado, Estado>> = {
   en_progreso: "pendiente",
-  completado: "en_progreso",
+  en_pruebas: "en_progreso",
+  completado: "en_pruebas",
 };
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
@@ -190,7 +193,6 @@ interface TaskCardProps {
   onDelete: (t: Tarea) => void;
   onMoveForward: (t: Tarea) => void;
   onMoveBack: (t: Tarea) => void;
-  onCancel: (t: Tarea) => void;
   moving: boolean;
   searchQuery: string;
 }
@@ -227,7 +229,6 @@ function TaskCard({
   onDelete,
   onMoveForward,
   onMoveBack,
-  onCancel,
   moving,
   searchQuery,
 }: TaskCardProps) {
@@ -235,7 +236,6 @@ function TaskCard({
   const prio = PRIORIDAD_CONFIG[tarea.prioridad];
   const canGoForward = !!ESTADO_SIGUIENTE[tarea.estado];
   const canGoBack = !!ESTADO_ANTERIOR[tarea.estado];
-  const isCanceled = tarea.estado === "cancelado";
   const isDone = tarea.estado === "completado";
 
   return (
@@ -244,11 +244,14 @@ function TaskCard({
       className={cn(
         "bg-white rounded-lg border border-[#E0E0E0] shadow-sm border-l-4 p-4 flex flex-col gap-3 transition-all hover:shadow-md cursor-pointer group",
         prio.border,
-        (isCanceled || isDone) && "opacity-70",
+        isDone && "opacity-70",
       )}
     >
       {/* Badges row */}
       <div className="flex items-center gap-2 flex-wrap">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-[#002868] text-white border border-[#002868]">
+          {tarea.codigo}
+        </span>
         <span
           className={cn(
             "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border",
@@ -326,21 +329,7 @@ function TaskCard({
           </button>
         )}
 
-        {!isCanceled && !isDone && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onCancel(tarea);
-            }}
-            disabled={moving}
-            title="Cancelar tarea"
-            className="flex items-center gap-1 px-2 py-1 rounded text-xs text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-40 transition-colors cursor-pointer ml-auto"
-          >
-            <XCircle className="w-3 h-3" />
-          </button>
-        )}
-
-        {!isCanceled && (
+        {!isDone && (
           <>
             <button
               onClick={(e) => {
@@ -627,7 +616,6 @@ interface DetailDialogProps {
   onEdit: (t: Tarea) => void;
   onMoveForward: (t: Tarea) => void;
   onMoveBack: (t: Tarea) => void;
-  onCancel: (t: Tarea) => void;
   moving: boolean;
 }
 
@@ -637,7 +625,6 @@ function DetailDialog({
   onEdit,
   onMoveForward,
   onMoveBack,
-  onCancel,
   moving,
 }: DetailDialogProps) {
   if (!tarea) return null;
@@ -647,7 +634,6 @@ function DetailDialog({
   const estado = ESTADO_CONFIG[tarea.estado];
   const canGoForward = !!ESTADO_SIGUIENTE[tarea.estado];
   const canGoBack = !!ESTADO_ANTERIOR[tarea.estado];
-  const isCanceled = tarea.estado === "cancelado";
   const isDone = tarea.estado === "completado";
 
   return (
@@ -667,6 +653,9 @@ function DetailDialog({
           <DialogHeader className="mb-4">
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap mb-3">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-[#002868] text-white border border-[#002868]">
+                {tarea.codigo}
+              </span>
               <span
                 className={cn(
                   "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border",
@@ -803,37 +792,21 @@ function DetailDialog({
                 <ChevronRight className="w-3.5 h-3.5" />
               </Button>
             )}
-            {!isCanceled && !isDone && (
+            {!isDone && (
               <Button
                 variant="outline"
                 size="sm"
-                disabled={moving}
                 onClick={() => {
-                  onCancel(tarea);
                   onClose();
+                  onEdit(tarea);
                 }}
-                className="border-red-200 text-red-600 hover:bg-red-50 cursor-pointer"
+                className="border-[#002868]/20 text-[#002868] hover:bg-[#002868]/5 cursor-pointer"
               >
-                <XCircle className="w-3.5 h-3.5" />
-                Cancelar
+                <Pencil className="w-3.5 h-3.5" />
+                Editar
               </Button>
             )}
           </div>
-
-          {!isCanceled && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                onClose();
-                onEdit(tarea);
-              }}
-              className="border-[#002868]/20 text-[#002868] hover:bg-[#002868]/5 cursor-pointer"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-              Editar
-            </Button>
-          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -990,8 +963,8 @@ export default function TareasPage() {
     const map: Record<Estado, Tarea[]> = {
       pendiente: [],
       en_progreso: [],
+      en_pruebas: [],
       completado: [],
-      cancelado: [],
     };
     for (const t of filtered) {
       map[t.estado].push(t);
@@ -1005,8 +978,9 @@ export default function TareasPage() {
     const total = tareas.length;
     const pendientes = tareas.filter((t) => t.estado === "pendiente").length;
     const enProgreso = tareas.filter((t) => t.estado === "en_progreso").length;
+    const enPruebas = tareas.filter((t) => t.estado === "en_pruebas").length;
     const completados = tareas.filter((t) => t.estado === "completado").length;
-    return { total, pendientes, enProgreso, completados };
+    return { total, pendientes, enProgreso, enPruebas, completados };
   }, [tareas]);
 
   // ─── Guard ───────────────────────────────────────────────────────────────────
@@ -1047,7 +1021,7 @@ export default function TareasPage() {
         </div>
 
         {/* ── Stats Bar ──────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
           {[
             {
               label: "Total",
@@ -1066,6 +1040,12 @@ export default function TareasPage() {
               value: stats.enProgreso,
               color: "text-blue-600",
               bg: "bg-blue-50",
+            },
+            {
+              label: "En Pruebas",
+              value: stats.enPruebas,
+              color: "text-purple-600",
+              bg: "bg-purple-50",
             },
             {
               label: "Completadas",
@@ -1231,9 +1211,6 @@ export default function TareasPage() {
                               ESTADO_ANTERIOR[tarea.estado]!,
                             )
                           }
-                          onCancel={(tarea) =>
-                            handleMoveEstado(tarea, "cancelado")
-                          }
                         />
                       ))
                     )}
@@ -1287,7 +1264,6 @@ export default function TareasPage() {
         }}
         onMoveForward={(t) => handleMoveEstado(t, ESTADO_SIGUIENTE[t.estado]!)}
         onMoveBack={(t) => handleMoveEstado(t, ESTADO_ANTERIOR[t.estado]!)}
-        onCancel={(t) => handleMoveEstado(t, "cancelado")}
         moving={movingId === detailTarget?.id}
       />
     </div>
