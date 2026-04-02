@@ -67,9 +67,15 @@ function getInitials(nombre: string) {
 
 function getRolBadge(rolId: number) {
   if (rolId === ROLES.SUPERADMIN.id) {
-    return { label: "Super Admin", classes: "bg-purple-50 text-purple-700 border border-purple-200" };
+    return {
+      label: "Super Admin",
+      classes: "bg-purple-50 text-purple-700 border border-purple-200",
+    };
   }
-  return { label: "Administrador", classes: "bg-blue-50 text-blue-700 border border-blue-200" };
+  return {
+    label: "Administrador",
+    classes: "bg-blue-50 text-blue-700 border border-blue-200",
+  };
 }
 
 export function UsuariosSection() {
@@ -143,7 +149,7 @@ export function UsuariosSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.USUARIOS.UPDATE_ROL(userId),
-        { method: "PUT", body: JSON.stringify({ rol_id: nuevoRolId }) }
+        { method: "PUT", body: JSON.stringify({ rol_id: nuevoRolId }) },
       );
       const data = await res.json();
       if (data.success) {
@@ -161,7 +167,7 @@ export function UsuariosSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.USUARIOS.TOGGLE_ACTIVO(userId),
-        { method: "PUT" }
+        { method: "PUT" },
       );
       const data = await res.json();
       if (data.success) {
@@ -186,7 +192,7 @@ export function UsuariosSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.USUARIOS.DELETE(usuarioToDelete.id),
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       const data = await res.json();
       if (data.success) {
@@ -223,12 +229,17 @@ export function UsuariosSection() {
           <div>
             <CardTitle className="text-[#002868]">Usuarios y Roles</CardTitle>
             <p className="text-sm text-[#666666] mt-0.5">
-              {usuarios.length} usuario{usuarios.length !== 1 ? "s" : ""} registrado{usuarios.length !== 1 ? "s" : ""}
+              {usuarios.length} usuario{usuarios.length !== 1 ? "s" : ""}{" "}
+              registrado{usuarios.length !== 1 ? "s" : ""}
             </p>
           </div>
           {isSuperAdmin && (
             <Button
-              onClick={() => { setForm(DEFAULT_FORM); setFormError(""); setIsCreateOpen(true); }}
+              onClick={() => {
+                setForm(DEFAULT_FORM);
+                setFormError("");
+                setIsCreateOpen(true);
+              }}
               className="bg-[#002868] hover:bg-[#003d8f] text-white"
             >
               + Nuevo Usuario
@@ -238,7 +249,9 @@ export function UsuariosSection() {
 
         <CardContent className="p-0">
           {usuarios.length === 0 ? (
-            <p className="text-center text-[#666666] py-10">No hay usuarios registrados</p>
+            <p className="text-center text-[#666666] py-10">
+              No hay usuarios registrados
+            </p>
           ) : (
             <div className="divide-y divide-[#F0F0F0]">
               {usuarios.map((usuario) => {
@@ -248,15 +261,17 @@ export function UsuariosSection() {
                 return (
                   <div
                     key={usuario.id}
-                    className={`flex items-center gap-4 px-6 py-4 transition-colors ${usuario.activo ? "hover:bg-gray-50/80" : "bg-gray-50/50"
-                      }`}
+                    className={`flex items-center gap-4 px-6 py-4 transition-colors ${
+                      usuario.activo ? "hover:bg-gray-50/80" : "bg-gray-50/50"
+                    }`}
                   >
                     {/* Avatar con iniciales */}
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 select-none ${usuario.activo
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 select-none ${
+                        usuario.activo
                           ? "bg-[#002868]/10 text-[#002868]"
                           : "bg-gray-200 text-gray-400"
-                        }`}
+                      }`}
                     >
                       {getInitials(usuario.nombre)}
                     </div>
@@ -267,7 +282,9 @@ export function UsuariosSection() {
                         <span className="font-semibold text-[#1A1A1A] truncate">
                           {usuario.nombre}
                         </span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badge.classes}`}>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${badge.classes}`}
+                        >
                           {badge.label}
                         </span>
                         {!usuario.activo && (
@@ -281,29 +298,42 @@ export function UsuariosSection() {
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-[#666666] truncate mt-0.5">{usuario.email}</p>
+                      <p className="text-sm text-[#666666] truncate mt-0.5">
+                        {usuario.email}
+                      </p>
                     </div>
 
                     {/* Acciones */}
                     <div className="flex items-center gap-3 flex-shrink-0">
                       {isProtected ? (
-                        <span className="text-xs text-[#999999] italic px-2">No editable</span>
+                        <span className="text-xs text-[#999999] italic px-2">
+                          No editable
+                        </span>
                       ) : isSelf ? (
-                        <span className="text-xs text-[#999999] italic px-2">Sesión actual</span>
+                        <span className="text-xs text-[#999999] italic px-2">
+                          Sesión actual
+                        </span>
                       ) : !isSuperAdmin ? (
-                        <span className="text-xs text-[#999999] italic px-2">Solo lectura</span>
+                        <span className="text-xs text-[#999999] italic px-2">
+                          Solo lectura
+                        </span>
                       ) : (
                         <>
                           <Select
                             value={usuario.rol_id.toString()}
-                            onValueChange={(value) => handleChangeRol(usuario.id, parseInt(value))}
+                            onValueChange={(value) =>
+                              handleChangeRol(usuario.id, parseInt(value))
+                            }
                           >
                             <SelectTrigger className="w-[170px] h-9 text-sm border-[#E0E0E0] bg-white text-[#1A1A1A]">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                               {ROLES_LIST.map((rol) => (
-                                <SelectItem key={rol.id} value={rol.id.toString()}>
+                                <SelectItem
+                                  key={rol.id}
+                                  value={rol.id.toString()}
+                                >
                                   {rol.label}
                                 </SelectItem>
                               ))}
@@ -314,7 +344,9 @@ export function UsuariosSection() {
                             <Switch
                               id={`activo-${usuario.id}`}
                               checked={usuario.activo}
-                              onCheckedChange={() => handleToggleActivo(usuario.id)}
+                              onCheckedChange={() =>
+                                handleToggleActivo(usuario.id)
+                              }
                               className="data-[state=checked]:bg-[#002868]"
                             />
                             <Label
@@ -401,7 +433,9 @@ export function UsuariosSection() {
               </Label>
               <Select
                 value={form.rol_id.toString()}
-                onValueChange={(value) => setForm({ ...form, rol_id: parseInt(value) })}
+                onValueChange={(value) =>
+                  setForm({ ...form, rol_id: parseInt(value) })
+                }
               >
                 <SelectTrigger className="h-10 border-[#E0E0E0] text-[#1A1A1A]">
                   <SelectValue />
@@ -430,7 +464,9 @@ export function UsuariosSection() {
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={isSaving || !form.email || !form.password || !form.nombre}
+                disabled={
+                  isSaving || !form.email || !form.password || !form.nombre
+                }
                 className="bg-[#002868] hover:bg-[#003d8f] text-white"
               >
                 {isSaving ? "Creando..." : "Crear Usuario"}
@@ -459,8 +495,12 @@ export function UsuariosSection() {
                   {getInitials(usuarioToDelete.nombre)}
                 </div>
                 <div>
-                  <p className="font-semibold text-[#1A1A1A]">{usuarioToDelete.nombre}</p>
-                  <p className="text-sm text-[#666666]">{usuarioToDelete.email}</p>
+                  <p className="font-semibold text-[#1A1A1A]">
+                    {usuarioToDelete.nombre}
+                  </p>
+                  <p className="text-sm text-[#666666]">
+                    {usuarioToDelete.email}
+                  </p>
                 </div>
               </div>
             </div>

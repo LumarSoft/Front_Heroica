@@ -30,7 +30,9 @@ export function AccessDenied({ resource, backUrl }: AccessDeniedProps) {
           />
         </svg>
       </div>
-      <h2 className="text-2xl font-bold text-[#002868] mb-2">Acceso Denegado</h2>
+      <h2 className="text-2xl font-bold text-[#002868] mb-2">
+        Acceso Denegado
+      </h2>
       <p className="text-[#666666] text-center max-w-md">
         No tienes permisos para gestionar {resource}. Si crees que esto es un
         error, contacta con el administrador.

@@ -66,7 +66,10 @@ export default function LoginPage() {
       login(data.data.token, data.data.user);
       router.push("/sucursales");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Error al conectar con el servidor";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Error al conectar con el servidor";
       setError(message);
     } finally {
       setIsLoading(false);
@@ -105,7 +108,9 @@ export default function LoginPage() {
               {/* La frase */}
               <p className="text-3xl font-light leading-tight max-w-sm mx-auto text-[#002868] border-l-2 border-[#002868]/20 pl-6 italic">
                 "Claridad en las cuentas, <br />
-                <span className="opacity-60">integridad en los resultados."</span>
+                <span className="opacity-60">
+                  integridad en los resultados."
+                </span>
               </p>
             </div>
           </div>
@@ -121,7 +126,13 @@ export default function LoginPage() {
         <div className="w-full max-w-md relative z-10">
           {/* Logo móvil */}
           <div className="lg:hidden text-center mb-8">
-            <Image src="/HEROICA.svg" alt="Heroica" width={120} height={48} className="h-12 mx-auto mb-2" />
+            <Image
+              src="/HEROICA.svg"
+              alt="Heroica"
+              width={120}
+              height={48}
+              className="h-12 mx-auto mb-2"
+            />
             <p className="text-[#666666]">Sistema de Contabilidad</p>
           </div>
 
@@ -153,7 +164,9 @@ export default function LoginPage() {
                           clipRule="evenodd"
                         />
                       </svg>
-                      <p className="text-sm text-red-700 font-medium">{error}</p>
+                      <p className="text-sm text-red-700 font-medium">
+                        {error}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -199,7 +212,11 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666666] hover:text-[#002868] transition-colors cursor-pointer"
-                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      aria-label={
+                        showPassword
+                          ? "Ocultar contraseña"
+                          : "Mostrar contraseña"
+                      }
                     >
                       {showPassword ? (
                         <EyeOff className="w-5 h-5" />
@@ -256,7 +273,8 @@ export default function LoginPage() {
               Contactar Administrador
             </DialogTitle>
             <DialogDescription className="text-[#666666]">
-              Ponte en contacto con el equipo de soporte para solicitar acceso al sistema
+              Ponte en contacto con el equipo de soporte para solicitar acceso
+              al sistema
             </DialogDescription>
           </DialogHeader>
 

@@ -41,7 +41,10 @@ export function MediosPagoSection() {
   const [form, setForm] = useState<MedioPagoForm>(DEFAULT_FORM);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; nombre: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: number;
+    nombre: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchMediosPago();
@@ -101,7 +104,7 @@ export function MediosPagoSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.DELETE(deleteTarget.id),
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       const data = await res.json();
       if (data.success) {
@@ -120,7 +123,10 @@ export function MediosPagoSection() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Medios de Pago</CardTitle>
-          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f]">
+          <Button
+            onClick={handleOpenNew}
+            className="bg-[#002868] hover:bg-[#003d8f]"
+          >
             + Nuevo Medio de Pago
           </Button>
         </CardHeader>
@@ -132,17 +138,27 @@ export function MediosPagoSection() {
                 className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
               >
                 <div>
-                  <h3 className="font-semibold text-[#002868]">{medio.nombre}</h3>
+                  <h3 className="font-semibold text-[#002868]">
+                    {medio.nombre}
+                  </h3>
                   {medio.descripcion && (
-                    <p className="text-sm text-[#666666]">{medio.descripcion}</p>
+                    <p className="text-sm text-[#666666]">
+                      {medio.descripcion}
+                    </p>
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={() => handleOpenEdit(medio)} variant="outline" size="sm">
+                  <Button
+                    onClick={() => handleOpenEdit(medio)}
+                    variant="outline"
+                    size="sm"
+                  >
                     Editar
                   </Button>
                   <Button
-                    onClick={() => setDeleteTarget({ id: medio.id, nombre: medio.nombre })}
+                    onClick={() =>
+                      setDeleteTarget({ id: medio.id, nombre: medio.nombre })
+                    }
                     variant="outline"
                     size="sm"
                     className="text-rose-600 hover:bg-rose-50"
@@ -196,7 +212,9 @@ export function MediosPagoSection() {
               <Textarea
                 id="medio-desc"
                 value={form.descripcion || ""}
-                onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, descripcion: e.target.value })
+                }
                 placeholder="Descripción opcional"
                 className="min-h-[80px] rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
               />

@@ -46,6 +46,6 @@ export const useAuthStore = create<AuthState>()(
        * gestionadas por el servidor para mayor seguridad.
        */
       storage: createJSONStorage(() => localStorage),
-    }
-  )
+    },
+  ),
 );

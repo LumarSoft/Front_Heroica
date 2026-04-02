@@ -40,7 +40,10 @@ export function BancosSection() {
   const [form, setForm] = useState<BancoForm>(DEFAULT_FORM);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; nombre: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: number;
+    nombre: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchBancos();
@@ -100,7 +103,7 @@ export function BancosSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.BANCOS.DELETE(deleteTarget.id),
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       const data = await res.json();
       if (data.success) {
@@ -119,7 +122,10 @@ export function BancosSection() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Bancos</CardTitle>
-          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f]">
+          <Button
+            onClick={handleOpenNew}
+            className="bg-[#002868] hover:bg-[#003d8f]"
+          >
             + Nuevo Banco
           </Button>
         </CardHeader>
@@ -131,17 +137,27 @@ export function BancosSection() {
                 className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
               >
                 <div>
-                  <h3 className="font-semibold text-[#002868]">{banco.nombre}</h3>
+                  <h3 className="font-semibold text-[#002868]">
+                    {banco.nombre}
+                  </h3>
                   {banco.codigo && (
-                    <p className="text-sm text-[#666666]">Código: {banco.codigo}</p>
+                    <p className="text-sm text-[#666666]">
+                      Código: {banco.codigo}
+                    </p>
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={() => handleOpenEdit(banco)} variant="outline" size="sm">
+                  <Button
+                    onClick={() => handleOpenEdit(banco)}
+                    variant="outline"
+                    size="sm"
+                  >
                     Editar
                   </Button>
                   <Button
-                    onClick={() => setDeleteTarget({ id: banco.id, nombre: banco.nombre })}
+                    onClick={() =>
+                      setDeleteTarget({ id: banco.id, nombre: banco.nombre })
+                    }
                     variant="outline"
                     size="sm"
                     className="text-rose-600 hover:bg-rose-50"

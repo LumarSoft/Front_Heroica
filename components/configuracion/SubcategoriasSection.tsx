@@ -62,7 +62,10 @@ export function SubcategoriasSection() {
   const [form, setForm] = useState<SubcategoriaForm>(DEFAULT_FORM);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; nombre: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: number;
+    nombre: string;
+  } | null>(null);
   const [filtroCategoria, setFiltroCategoria] = useState<string>("todas");
 
   useEffect(() => {
@@ -77,7 +80,9 @@ export function SubcategoriasSection() {
   };
 
   const fetchSubcategorias = async () => {
-    const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_ALL);
+    const res = await apiFetch(
+      API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_ALL,
+    );
     const data = await res.json();
     if (data.success) setSubcategorias(data.data);
   };
@@ -135,7 +140,7 @@ export function SubcategoriasSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.DELETE(deleteTarget.id),
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       const data = await res.json();
       if (data.success) {
@@ -149,9 +154,12 @@ export function SubcategoriasSection() {
     }
   };
 
-  const subcategoriasFiltradas = filtroCategoria === "todas"
-    ? subcategorias
-    : subcategorias.filter((sub) => sub.categoria_id.toString() === filtroCategoria);
+  const subcategoriasFiltradas =
+    filtroCategoria === "todas"
+      ? subcategorias
+      : subcategorias.filter(
+          (sub) => sub.categoria_id.toString() === filtroCategoria,
+        );
 
   return (
     <>
@@ -173,41 +181,58 @@ export function SubcategoriasSection() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f] w-full sm:w-auto">
+          <Button
+            onClick={handleOpenNew}
+            className="bg-[#002868] hover:bg-[#003d8f] w-full sm:w-auto"
+          >
             + Nueva Subcategoría
           </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {subcategoriasFiltradas.length === 0 ? (
-              <p className="text-center text-[#666666] py-8">No hay subcategorías para mostrar</p>
+              <p className="text-center text-[#666666] py-8">
+                No hay subcategorías para mostrar
+              </p>
             ) : (
               subcategoriasFiltradas.map((sub) => (
-              <div
-                key={sub.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
-              >
-                <div>
-                  <h3 className="font-semibold text-[#002868]">{sub.nombre}</h3>
-                  <p className="text-xs text-[#666666]">Categoría: {sub.categoria_nombre}</p>
-                  {sub.descripcion && (
-                    <p className="text-sm text-[#666666] mt-1">{sub.descripcion}</p>
-                  )}
+                <div
+                  key={sub.id}
+                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                >
+                  <div>
+                    <h3 className="font-semibold text-[#002868]">
+                      {sub.nombre}
+                    </h3>
+                    <p className="text-xs text-[#666666]">
+                      Categoría: {sub.categoria_nombre}
+                    </p>
+                    {sub.descripcion && (
+                      <p className="text-sm text-[#666666] mt-1">
+                        {sub.descripcion}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleOpenEdit(sub)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        setDeleteTarget({ id: sub.id, nombre: sub.nombre })
+                      }
+                      variant="outline"
+                      size="sm"
+                      className="text-rose-600 hover:bg-rose-50"
+                    >
+                      Eliminar
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button onClick={() => handleOpenEdit(sub)} variant="outline" size="sm">
-                    Editar
-                  </Button>
-                  <Button
-                    onClick={() => setDeleteTarget({ id: sub.id, nombre: sub.nombre })}
-                    variant="outline"
-                    size="sm"
-                    className="text-rose-600 hover:bg-rose-50"
-                  >
-                    Eliminar
-                  </Button>
-                </div>
-              </div>
               ))
             )}
           </div>
@@ -279,7 +304,9 @@ export function SubcategoriasSection() {
               <Textarea
                 id="subcat-desc"
                 value={form.descripcion || ""}
-                onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, descripcion: e.target.value })
+                }
                 placeholder="Descripción opcional"
                 className="min-h-[80px] rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
               />

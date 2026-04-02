@@ -19,7 +19,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/caja/StatusBadge";
-import { formatFecha, formatMonto, ESTADO_COLOR_MAP, PRIORIDAD_COLOR_MAP, truncarTexto } from "@/lib/formatters";
+import {
+  formatFecha,
+  formatMonto,
+  ESTADO_COLOR_MAP,
+  PRIORIDAD_COLOR_MAP,
+  truncarTexto,
+} from "@/lib/formatters";
 import type { PagoPendiente } from "@/lib/types";
 
 interface PagosPendientesTableProps {
@@ -44,7 +50,8 @@ export function PagosPendientesTable({
   onRechazar,
 }: PagosPendientesTableProps) {
   const showAcciones = activeTab === "pendientes" && userRole === "superadmin";
-  const colSpan = 7 + (activeTab === "historial" ? 1 : 0) + (showAcciones ? 1 : 0);
+  const colSpan =
+    7 + (activeTab === "historial" ? 1 : 0) + (showAcciones ? 1 : 0);
 
   if (isLoading) return <ContentLoadingSpinner />;
 
@@ -93,30 +100,53 @@ export function PagosPendientesTable({
           <Table>
             <TableHeader>
               <TableRow className="bg-[#F8F9FA] hover:bg-[#F8F9FA] border-b-2 border-[#E0E0E0]">
-                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Fecha</TableHead>
-                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Concepto</TableHead>
-                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Solicitante</TableHead>
-                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-right">Monto</TableHead>
-                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Tipo</TableHead>
-                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Prioridad</TableHead>
-                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Estado</TableHead>
+                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">
+                  Fecha
+                </TableHead>
+                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">
+                  Concepto
+                </TableHead>
+                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">
+                  Solicitante
+                </TableHead>
+                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-right">
+                  Monto
+                </TableHead>
+                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">
+                  Tipo
+                </TableHead>
+                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">
+                  Prioridad
+                </TableHead>
+                <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">
+                  Estado
+                </TableHead>
                 {activeTab === "historial" && (
-                  <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Resolución</TableHead>
+                  <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">
+                    Resolución
+                  </TableHead>
                 )}
                 {showAcciones && (
-                  <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Acciones</TableHead>
+                  <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">
+                    Acciones
+                  </TableHead>
                 )}
               </TableRow>
             </TableHeader>
             <TableBody>
               {displayData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={colSpan} className="text-center text-[#666666] py-16">
+                  <TableCell
+                    colSpan={colSpan}
+                    className="text-center text-[#666666] py-16"
+                  >
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
                         <Inbox className="w-8 h-8 text-[#666666]/30" />
                       </div>
-                      <p className="font-medium">No se encontraron movimientos registrados</p>
+                      <p className="font-medium">
+                        No se encontraron movimientos registrados
+                      </p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -131,23 +161,45 @@ export function PagosPendientesTable({
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-semibold text-[#1A1A1A]">{pago.concepto}</span>
-                        {pago.descripcion && pago.descripcion.includes("[Nota del sistema:") ? (
+                        <span className="font-semibold text-[#1A1A1A]">
+                          {pago.concepto}
+                        </span>
+                        {pago.descripcion &&
+                        pago.descripcion.includes("[Nota del sistema:") ? (
                           <div className="flex flex-col gap-1.5 mt-1">
-                            {pago.descripcion.split("[Nota del sistema:")[0].trim() && (
-                              <span className="text-xs text-[#666666] inline-block" title={pago.descripcion.split("[Nota del sistema:")[0].trim()}>
-                                {truncarTexto(pago.descripcion.split("[Nota del sistema:")[0].trim())}
+                            {pago.descripcion
+                              .split("[Nota del sistema:")[0]
+                              .trim() && (
+                              <span
+                                className="text-xs text-[#666666] inline-block"
+                                title={pago.descripcion
+                                  .split("[Nota del sistema:")[0]
+                                  .trim()}
+                              >
+                                {truncarTexto(
+                                  pago.descripcion
+                                    .split("[Nota del sistema:")[0]
+                                    .trim(),
+                                )}
                               </span>
                             )}
                             <div className="bg-amber-50 text-amber-800 text-[11px] px-2.5 py-1.5 rounded-md border border-amber-200 flex items-start gap-1.5 w-fit max-w-sm mt-0.5">
                               <Megaphone className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
                               <span className="font-medium whitespace-normal break-words leading-snug">
-                                {truncarTexto(pago.descripcion.split("[Nota del sistema:")[1].split("]")[0].trim())}
+                                {truncarTexto(
+                                  pago.descripcion
+                                    .split("[Nota del sistema:")[1]
+                                    .split("]")[0]
+                                    .trim(),
+                                )}
                               </span>
                             </div>
                           </div>
                         ) : (
-                          <span className="text-xs text-[#666666]" title={pago.descripcion || ""}>
+                          <span
+                            className="text-xs text-[#666666]"
+                            title={pago.descripcion || ""}
+                          >
                             {truncarTexto(pago.descripcion)}
                           </span>
                         )}
@@ -159,7 +211,10 @@ export function PagosPendientesTable({
                           <div className="w-6 h-6 rounded-full bg-[#002868]/10 flex items-center justify-center flex-shrink-0">
                             <User className="w-3.5 h-3.5 text-[#002868]" />
                           </div>
-                          <span className="text-sm font-medium text-[#1A1A1A] truncate max-w-[120px]" title={pago.usuario_creador_nombre}>
+                          <span
+                            className="text-sm font-medium text-[#1A1A1A] truncate max-w-[120px]"
+                            title={pago.usuario_creador_nombre}
+                          >
                             {pago.usuario_creador_nombre.split(" ")[0]}
                           </span>
                         </div>
@@ -179,7 +234,8 @@ export function PagosPendientesTable({
                     <TableCell className="text-center">
                       <StatusBadge
                         value={
-                          pago.tipo === "egreso" || (!pago.tipo && Number(pago.monto) < 0)
+                          pago.tipo === "egreso" ||
+                          (!pago.tipo && Number(pago.monto) < 0)
                             ? "egreso"
                             : "ingreso"
                         }
@@ -190,31 +246,44 @@ export function PagosPendientesTable({
                       />
                     </TableCell>
                     <TableCell className="text-center">
-                      <StatusBadge value={pago.prioridad} colorMap={PRIORIDAD_COLOR_MAP} />
+                      <StatusBadge
+                        value={pago.prioridad}
+                        colorMap={PRIORIDAD_COLOR_MAP}
+                      />
                     </TableCell>
                     <TableCell className="text-center">
-                      <StatusBadge value={pago.estado} colorMap={ESTADO_COLOR_MAP} />
+                      <StatusBadge
+                        value={pago.estado}
+                        colorMap={ESTADO_COLOR_MAP}
+                      />
                     </TableCell>
                     {activeTab === "historial" && (
                       <TableCell>
                         <div className="flex flex-col gap-0.5">
                           {pago.estado === "aprobado" && (
                             <span className="text-xs font-medium text-emerald-600">
-                              Aprobado por {pago.usuario_revisor_nombre || "Admin"}
+                              Aprobado por{" "}
+                              {pago.usuario_revisor_nombre || "Admin"}
                             </span>
                           )}
                           {pago.estado === "rechazado" && (
                             <>
                               <span className="text-xs font-bold text-rose-600">
-                                Rechazado por {pago.usuario_revisor_nombre || "Admin"}
+                                Rechazado por{" "}
+                                {pago.usuario_revisor_nombre || "Admin"}
                               </span>
                               <span className="text-[11px] text-[#666666] italic leading-tight">
-                                &quot;{pago.motivo_rechazo || "Sin motivo especificado"}&quot;
+                                &quot;
+                                {pago.motivo_rechazo ||
+                                  "Sin motivo especificado"}
+                                &quot;
                               </span>
                             </>
                           )}
                           {pago.estado === "pendiente" && (
-                            <span className="text-xs text-[#8A8F9C]">En revisión...</span>
+                            <span className="text-xs text-[#8A8F9C]">
+                              En revisión...
+                            </span>
                           )}
                         </div>
                       </TableCell>
@@ -228,7 +297,11 @@ export function PagosPendientesTable({
                                 size="sm"
                                 onClick={() => !isReadOnly && onAprobar(pago)}
                                 disabled={isReadOnly}
-                                title={isReadOnly ? "Sucursal inactiva" : "Aprobar pago"}
+                                title={
+                                  isReadOnly
+                                    ? "Sucursal inactiva"
+                                    : "Aprobar pago"
+                                }
                                 className="bg-emerald-500 hover:bg-emerald-600 text-white border-none shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                               >
                                 <Check className="w-4 h-4" strokeWidth={2.5} />
@@ -237,7 +310,11 @@ export function PagosPendientesTable({
                                 size="sm"
                                 onClick={() => !isReadOnly && onRechazar(pago)}
                                 disabled={isReadOnly}
-                                title={isReadOnly ? "Sucursal inactiva" : "Rechazar pago"}
+                                title={
+                                  isReadOnly
+                                    ? "Sucursal inactiva"
+                                    : "Rechazar pago"
+                                }
                                 className="bg-rose-500 hover:bg-rose-600 text-white border-none shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                               >
                                 <X className="w-4 h-4" strokeWidth={2.5} />

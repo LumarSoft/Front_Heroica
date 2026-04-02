@@ -20,7 +20,12 @@ import { BancosSection } from "@/components/configuracion/BancosSection";
 import { MediosPagoSection } from "@/components/configuracion/MediosPagoSection";
 import { UsuariosSection } from "@/components/configuracion/UsuariosSection";
 
-type ActiveTab = "categorias" | "subcategorias" | "bancos" | "medios" | "usuarios";
+type ActiveTab =
+  | "categorias"
+  | "subcategorias"
+  | "bancos"
+  | "medios"
+  | "usuarios";
 
 const TABS: { id: ActiveTab; label: string; Icon: React.ElementType }[] = [
   { id: "categorias", label: "Categorías", Icon: Folder },

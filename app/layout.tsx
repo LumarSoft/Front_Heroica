@@ -15,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Heroica — Sistema Administrativo",
-  description: "Sistema de gestión contable y administrativa de sucursales Heroica",
+  description:
+    "Sistema de gestión contable y administrativa de sucursales Heroica",
 };
 
 export default function RootLayout({

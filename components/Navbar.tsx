@@ -58,7 +58,14 @@ export default function Navbar({
             {/* Logo */}
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Image src="/HEROICA.svg" alt="Heroica" width={80} height={32} className="h-8 w-auto" priority />
+                <Image
+                  src="/HEROICA.svg"
+                  alt="Heroica"
+                  width={80}
+                  height={32}
+                  className="h-8 w-auto"
+                  priority
+                />
               </div>
               <div className="h-8 w-px bg-[#E0E0E0] hidden sm:block"></div>
             </div>
@@ -164,7 +171,9 @@ export default function Navbar({
                   <p className="text-sm font-semibold text-[#002868]">
                     {greeting}, {userName?.split(" ")[0]}
                   </p>
-                  <p className="text-xs text-[#666666] capitalize">{userRole}</p>
+                  <p className="text-xs text-[#666666] capitalize">
+                    {userRole}
+                  </p>
                 </>
               )}
             </div>

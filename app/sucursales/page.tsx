@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
-import { PageLoadingSpinner, LoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+  PageLoadingSpinner,
+  LoadingSpinner,
+} from "@/components/ui/loading-spinner";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import {
   Card,
@@ -61,7 +64,8 @@ export default function SucursalesPage() {
 
         setSucursales(data.data);
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Error al cargar sucursales";
+        const message =
+          err instanceof Error ? err.message : "Error al cargar sucursales";
         setError(message);
       } finally {
         setIsLoading(false);
@@ -92,19 +96,25 @@ export default function SucursalesPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleToggleActivo = async (e: React.MouseEvent, sucursal: Sucursal) => {
+  const handleToggleActivo = async (
+    e: React.MouseEvent,
+    sucursal: Sucursal,
+  ) => {
     e.stopPropagation();
     try {
-      const response = await apiFetch(API_ENDPOINTS.SUCURSALES.UPDATE(sucursal.id), {
-        method: "PUT",
-        body: JSON.stringify({ ...sucursal, activo: !sucursal.activo }),
-      });
+      const response = await apiFetch(
+        API_ENDPOINTS.SUCURSALES.UPDATE(sucursal.id),
+        {
+          method: "PUT",
+          body: JSON.stringify({ ...sucursal, activo: !sucursal.activo }),
+        },
+      );
       if (!response.ok) throw new Error("Error al actualizar estado");
 
       setSucursales((prev) =>
         prev.map((s) =>
-          s.id === sucursal.id ? { ...s, activo: !s.activo } : s
-        )
+          s.id === sucursal.id ? { ...s, activo: !s.activo } : s,
+        ),
       );
     } catch {
       setError("Error al cambiar estado de sucursal");
@@ -139,7 +149,8 @@ export default function SucursalesPage() {
       setIsModalOpen(false);
       setFormData({ nombre: "", razon_social: "", cuit: "", direccion: "" });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Error al crear sucursal";
+      const message =
+        err instanceof Error ? err.message : "Error al crear sucursal";
       setError(message);
     } finally {
       setIsCreating(false);
@@ -168,7 +179,7 @@ export default function SucursalesPage() {
     try {
       const response = await apiFetch(
         API_ENDPOINTS.SUCURSALES.DELETE(sucursalToDelete.id),
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       const data = await response.json();
@@ -181,7 +192,8 @@ export default function SucursalesPage() {
       setDeleteModalOpen(false);
       setSucursalToDelete(null);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Error al eliminar sucursal";
+      const message =
+        err instanceof Error ? err.message : "Error al eliminar sucursal";
       setError(message);
     } finally {
       setIsDeleting(false);
@@ -206,9 +218,7 @@ export default function SucursalesPage() {
       {/* Main Content */}
       <main className="container mx-auto px-6 py-12 flex-1">
         <div className="mb-10">
-          <h2 className="text-4xl font-bold text-[#002868] mb-2">
-            Sucursales
-          </h2>
+          <h2 className="text-4xl font-bold text-[#002868] mb-2">Sucursales</h2>
           <p className="text-[#666666] text-lg">
             Selecciona una sucursal para gestionar.
           </p>
@@ -225,10 +235,11 @@ export default function SucursalesPage() {
             {sucursales.map((sucursal) => (
               <Card
                 key={sucursal.id}
-                className={`group border-[#E0E0E0] bg-white shadow-md transition-all duration-300 relative overflow-hidden cursor-pointer ${sucursal.activo
+                className={`group border-[#E0E0E0] bg-white shadow-md transition-all duration-300 relative overflow-hidden cursor-pointer ${
+                  sucursal.activo
                     ? "hover:border-[#002868] hover:shadow-xl"
                     : "opacity-60 grayscale"
-                  }`}
+                }`}
                 onClick={() => handleSucursalClick(sucursal.id)}
               >
                 <CardHeader className="pb-4">
@@ -302,14 +313,16 @@ export default function SucursalesPage() {
 
                   <div className="pt-3 border-t border-[#E0E0E0] flex justify-between items-center">
                     <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${sucursal.activo
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
-                        }`}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+                        sucursal.activo
+                          ? "bg-green-50 text-green-700 border border-green-200"
+                          : "bg-red-50 text-red-700 border border-red-200"
+                      }`}
                     >
                       <span
-                        className={`w-1.5 h-1.5 rounded-full ${sucursal.activo ? "bg-green-500" : "bg-red-500"
-                          }`}
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          sucursal.activo ? "bg-green-500" : "bg-red-500"
+                        }`}
                       ></span>
                       {sucursal.activo ? "Activa" : "Inactiva"}
                     </span>
@@ -317,7 +330,11 @@ export default function SucursalesPage() {
                       variant="outline"
                       size="sm"
                       onClick={(e) => handleToggleActivo(e, sucursal)}
-                      className={sucursal.activo ? "text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300" : "text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 hover:border-green-300"}
+                      className={
+                        sucursal.activo
+                          ? "text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                          : "text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 hover:border-green-300"
+                      }
                     >
                       {sucursal.activo ? "Desactivar" : "Activar"}
                     </Button>
@@ -581,6 +598,6 @@ export default function SucursalesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div >
+    </div>
   );
 }

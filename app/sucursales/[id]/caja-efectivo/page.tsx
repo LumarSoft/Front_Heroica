@@ -10,7 +10,10 @@ import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useCajaData } from "@/hooks/use-caja-data";
 import { calcularTotal } from "@/lib/formatters";
 import { PageHeader } from "@/components/caja/PageHeader";
-import { PageLoadingSpinner, ContentLoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+  PageLoadingSpinner,
+  ContentLoadingSpinner,
+} from "@/components/ui/loading-spinner";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { AccessDenied } from "@/components/ui/access-denied";
 import { CajaTabs, TabsContent } from "@/components/caja/CajaTabs";
@@ -117,19 +120,22 @@ export default function CajaEfectivoPage() {
 
       <main className="container mx-auto px-6 py-8 flex flex-col h-full">
         {user?.rol === "empleado" ? (
-          <AccessDenied resource="la caja de efectivo" backUrl={`/sucursales/${params.id}`} />
+          <AccessDenied
+            resource="la caja de efectivo"
+            backUrl={`/sucursales/${params.id}`}
+          />
         ) : (
           <div className="flex flex-col space-y-6 flex-grow">
             {/* Mensajes */}
             <ErrorBanner error={caja.error} />
-
 
             {/* Banner solo lectura */}
             {isReadOnly && (
               <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                 <p className="text-sm text-amber-800 font-medium">
-                  Esta sucursal está <strong>inactiva</strong>. Podés ver los datos pero no crear ni modificar movimientos.
+                  Esta sucursal está <strong>inactiva</strong>. Podés ver los
+                  datos pero no crear ni modificar movimientos.
                 </p>
               </div>
             )}
@@ -164,7 +170,10 @@ export default function CajaEfectivoPage() {
                   value={activeTab}
                   onValueChange={setActiveTab}
                 >
-                  <TabsContent value="real" className="mt-0 outline-none flex-grow">
+                  <TabsContent
+                    value="real"
+                    className="mt-0 outline-none flex-grow"
+                  >
                     <TransactionTable
                       title="Saldo Real"
                       description="Movimientos de efectivo confirmados para el periodo actual."
@@ -179,12 +188,18 @@ export default function CajaEfectivoPage() {
                       isReadOnly={isReadOnly}
                     />
                   </TabsContent>
-                  <TabsContent value="necesario" className="mt-0 outline-none flex-grow">
+                  <TabsContent
+                    value="necesario"
+                    className="mt-0 outline-none flex-grow"
+                  >
                     <TransactionTable
                       title="Saldo Necesario"
                       description="Pagos y compromisos en efectivo programados."
                       transactions={caja.saldoNecesarioFiltrado}
-                      customTotal={calcularTotal(caja.saldoReal) + calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)}
+                      customTotal={
+                        calcularTotal(caja.saldoReal) +
+                        calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
+                      }
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}

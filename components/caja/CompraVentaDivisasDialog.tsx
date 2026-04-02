@@ -15,7 +15,11 @@ import {
 } from "@/components/ui/dialog";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
-import { parseInputMonto, formatInputMonto, formatMonto } from "@/lib/formatters";
+import {
+  parseInputMonto,
+  formatInputMonto,
+  formatMonto,
+} from "@/lib/formatters";
 import { inputClasses, labelClasses, selectClasses } from "@/lib/dialog-styles";
 import { ArrowRightLeft, TrendingDown, TrendingUp } from "lucide-react";
 
@@ -80,7 +84,7 @@ export function CompraVentaDivisasDialog({
   const montoArs = cantidadUsdNum * cotizacionNum;
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     if (name === "cantidad_usd" || name === "cotizacion") {
@@ -113,27 +117,32 @@ export function CompraVentaDivisasDialog({
       setIsSaving(true);
       setError("");
 
-      const response = await apiFetch(API_ENDPOINTS.MOVIMIENTOS.COMPRA_VENTA_DIVISAS, {
-        method: "POST",
-        body: JSON.stringify({
-          sucursal_id: sucursalId,
-          user_id: user?.id,
-          fecha: formData.fecha,
-          cantidad_usd: cantidadUsdNum,
-          cotizacion: cotizacionNum,
-          operacion: formData.operacion,
-          concepto: formData.concepto || undefined,
-          descripcion: formData.descripcion || undefined,
-        }),
-      });
+      const response = await apiFetch(
+        API_ENDPOINTS.MOVIMIENTOS.COMPRA_VENTA_DIVISAS,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            sucursal_id: sucursalId,
+            user_id: user?.id,
+            fecha: formData.fecha,
+            cantidad_usd: cantidadUsdNum,
+            cotizacion: cotizacionNum,
+            operacion: formData.operacion,
+            concepto: formData.concepto || undefined,
+            descripcion: formData.descripcion || undefined,
+          }),
+        },
+      );
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Error al registrar la operación");
+      if (!response.ok)
+        throw new Error(data.message || "Error al registrar la operación");
 
       onSuccess();
       handleClose();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Error al registrar la operación";
+      const message =
+        err instanceof Error ? err.message : "Error al registrar la operación";
       setError(message);
     } finally {
       setIsSaving(false);
@@ -142,9 +151,13 @@ export function CompraVentaDivisasDialog({
 
   const isVenta = formData.operacion === "venta";
   const accentColor = isVenta ? "#C53030" : "#276749";
-  const accentBg = isVenta ? "bg-rose-50 border-rose-100" : "bg-emerald-50 border-emerald-100";
+  const accentBg = isVenta
+    ? "bg-rose-50 border-rose-100"
+    : "bg-emerald-50 border-emerald-100";
   const accentText = isVenta ? "text-rose-700" : "text-emerald-700";
-  const accentBadge = isVenta ? "bg-rose-100 text-rose-800" : "bg-emerald-100 text-emerald-800";
+  const accentBadge = isVenta
+    ? "bg-rose-100 text-rose-800"
+    : "bg-emerald-100 text-emerald-800";
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -175,7 +188,6 @@ export function CompraVentaDivisasDialog({
 
         {/* Body */}
         <div className="px-8 py-6 space-y-6 overflow-y-auto flex-1">
-
           {/* Tipo de Operación */}
           <section className="space-y-3">
             <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
@@ -391,14 +403,18 @@ export function CompraVentaDivisasDialog({
                   Resumen de la operación
                 </h4>
                 <div className={`rounded-xl border p-4 space-y-3 ${accentBg}`}>
-                  <p className={`text-xs font-bold uppercase tracking-wide ${accentText}`}>
+                  <p
+                    className={`text-xs font-bold uppercase tracking-wide ${accentText}`}
+                  >
                     {isVenta ? "Venta de dólares" : "Compra de dólares"}
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-[#555]">
                         Caja USD{" "}
-                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${accentBadge}`}>
+                        <span
+                          className={`text-xs font-semibold px-1.5 py-0.5 rounded ${accentBadge}`}
+                        >
                           {isVenta ? "Egreso" : "Ingreso"}
                         </span>
                       </span>
@@ -410,7 +426,9 @@ export function CompraVentaDivisasDialog({
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-[#555]">
                         Caja ARS{" "}
-                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${accentBadge}`}>
+                        <span
+                          className={`text-xs font-semibold px-1.5 py-0.5 rounded ${accentBadge}`}
+                        >
                           {isVenta ? "Ingreso" : "Egreso"}
                         </span>
                       </span>
