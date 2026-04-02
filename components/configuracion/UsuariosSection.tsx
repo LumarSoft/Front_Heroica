@@ -225,10 +225,10 @@ export function UsuariosSection() {
     if (!usuarioToReset) return;
     setIsResetting(true);
     try {
-      const res = await apiFetch(
-        API_ENDPOINTS.AUTH.RESET_2FA,
-        { method: "POST", body: JSON.stringify({ userId: usuarioToReset.id }) }
-      );
+      const res = await apiFetch(API_ENDPOINTS.AUTH.RESET_2FA, {
+        method: "POST",
+        body: JSON.stringify({ userId: usuarioToReset.id }),
+      });
       const data = await res.json();
       if (data.success) {
         toast.success(data.message);
@@ -324,8 +324,16 @@ export function UsuariosSection() {
                         </span>
                         {usuario.two_factor_enabled && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-200 flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                            <svg
+                              className="w-3 h-3"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                clipRule="evenodd"
+                              />
                             </svg>
                             2FA
                           </span>
@@ -595,7 +603,8 @@ export function UsuariosSection() {
               Resetear Autenticación 2FA
             </DialogTitle>
             <DialogDescription className="text-[#666666]">
-              El usuario deberá configurar nuevamente su 2FA en el próximo inicio de sesión
+              El usuario deberá configurar nuevamente su 2FA en el próximo
+              inicio de sesión
             </DialogDescription>
           </DialogHeader>
 
@@ -606,8 +615,12 @@ export function UsuariosSection() {
                   {getInitials(usuarioToReset.nombre)}
                 </div>
                 <div>
-                  <p className="font-semibold text-[#1A1A1A]">{usuarioToReset.nombre}</p>
-                  <p className="text-sm text-[#666666]">{usuarioToReset.email}</p>
+                  <p className="font-semibold text-[#1A1A1A]">
+                    {usuarioToReset.nombre}
+                  </p>
+                  <p className="text-sm text-[#666666]">
+                    {usuarioToReset.email}
+                  </p>
                 </div>
               </div>
             </div>
