@@ -7,6 +7,11 @@ export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: `${API_URL}/api/auth/login`,
     VERIFY: `${API_URL}/api/auth/verify`,
+    VERIFY_2FA: `${API_URL}/api/auth/verify-2fa`,
+    ENABLE_2FA: `${API_URL}/api/auth/enable-2fa`,
+    CONFIRM_2FA: `${API_URL}/api/auth/confirm-2fa`,
+    DISABLE_2FA: `${API_URL}/api/auth/disable-2fa`,
+    RESET_2FA: `${API_URL}/api/auth/reset-2fa`,
   },
   SUCURSALES: {
     GET_ALL: `${API_URL}/api/sucursales`,

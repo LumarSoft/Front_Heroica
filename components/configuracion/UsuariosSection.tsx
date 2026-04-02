@@ -35,6 +35,7 @@ interface Usuario {
   rol: string;
   rol_id: number;
   activo: boolean;
+  two_factor_enabled: boolean;
 }
 
 interface UsuarioForm {
@@ -95,6 +96,11 @@ export function UsuariosSection() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Reset 2FA dialog
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [usuarioToReset, setUsuarioToReset] = useState<Usuario | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     fetchUsuarios();
@@ -210,6 +216,35 @@ export function UsuariosSection() {
     }
   };
 
+  const handleResetClick = (usuario: Usuario) => {
+    setUsuarioToReset(usuario);
+    setResetDialogOpen(true);
+  };
+
+  const handleConfirmReset = async () => {
+    if (!usuarioToReset) return;
+    setIsResetting(true);
+    try {
+      const res = await apiFetch(
+        API_ENDPOINTS.AUTH.RESET_2FA,
+        { method: "POST", body: JSON.stringify({ userId: usuarioToReset.id }) }
+      );
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message);
+        setResetDialogOpen(false);
+        setUsuarioToReset(null);
+        await fetchUsuarios();
+      } else {
+        toast.error(data.message || "Error al resetear 2FA");
+      }
+    } catch {
+      toast.error("Error al resetear 2FA");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const isMainAdmin = (email: string) => email === "admin@heroica.com";
 
   if (isLoading) {
@@ -287,6 +322,14 @@ export function UsuariosSection() {
                         >
                           {badge.label}
                         </span>
+                        {usuario.two_factor_enabled && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-200 flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                            </svg>
+                            2FA
+                          </span>
+                        )}
                         {!usuario.activo && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
                             Inactivo
@@ -356,6 +399,17 @@ export function UsuariosSection() {
                               {usuario.activo ? "Activo" : "Inactivo"}
                             </Label>
                           </div>
+
+                          {usuario.two_factor_enabled && (
+                            <Button
+                              onClick={() => handleResetClick(usuario)}
+                              variant="outline"
+                              size="sm"
+                              className="border-orange-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700 h-8 text-xs"
+                            >
+                              Resetear 2FA
+                            </Button>
+                          )}
 
                           {isSuperAdmin && (
                             <button
@@ -527,6 +581,59 @@ export function UsuariosSection() {
                 </div>
               ) : (
                 "Eliminar Usuario"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Resetear 2FA */}
+      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-orange-600">
+              Resetear Autenticación 2FA
+            </DialogTitle>
+            <DialogDescription className="text-[#666666]">
+              El usuario deberá configurar nuevamente su 2FA en el próximo inicio de sesión
+            </DialogDescription>
+          </DialogHeader>
+
+          {usuarioToReset && (
+            <div className="py-3">
+              <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  {getInitials(usuarioToReset.nombre)}
+                </div>
+                <div>
+                  <p className="font-semibold text-[#1A1A1A]">{usuarioToReset.nombre}</p>
+                  <p className="text-sm text-[#666666]">{usuarioToReset.email}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setResetDialogOpen(false)}
+              disabled={isResetting}
+              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A]"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmReset}
+              disabled={isResetting}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              {isResetting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Reseteando...</span>
+                </div>
+              ) : (
+                "Resetear 2FA"
               )}
             </Button>
           </DialogFooter>
