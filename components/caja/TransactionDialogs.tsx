@@ -45,6 +45,7 @@ interface DetailsDialogProps {
         comprobante: string;
         banco_id: string;
         medio_pago_id: string;
+        numero_cheque: string;
     };
     onInputChange: (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -316,46 +317,67 @@ export function DetailsDialog({
                         </div>
 
                         {showBancoFields && (
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="banco_id" className={labelClasses}>
-                                        Banco
-                                    </Label>
-                                    <select
-                                        id="banco_id"
-                                        name="banco_id"
-                                        value={formData.banco_id}
-                                        onChange={onInputChange}
-                                        className={selectClasses}
-                                    >
-                                        <option value="">Seleccione un banco</option>
-                                        {bancos.map((b) => (
-                                            <option key={b.id} value={b.id}>
-                                                {b.nombre}
-                                            </option>
-                                        ))}
-                                    </select>
+                            <>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="banco_id" className={labelClasses}>
+                                            Banco
+                                        </Label>
+                                        <select
+                                            id="banco_id"
+                                            name="banco_id"
+                                            value={formData.banco_id}
+                                            onChange={onInputChange}
+                                            className={selectClasses}
+                                        >
+                                            <option value="">Seleccione un banco</option>
+                                            {bancos.map((b) => (
+                                                <option key={b.id} value={b.id}>
+                                                    {b.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="medio_pago_id" className={labelClasses}>
+                                            Medio de Pago
+                                        </Label>
+                                        <select
+                                            id="medio_pago_id"
+                                            name="medio_pago_id"
+                                            value={formData.medio_pago_id}
+                                            onChange={onInputChange}
+                                            className={selectClasses}
+                                        >
+                                            <option value="">Seleccione medio de pago</option>
+                                            {mediosPago.map((m) => (
+                                                <option key={m.id} value={m.id}>
+                                                    {m.nombre}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="medio_pago_id" className={labelClasses}>
-                                        Medio de Pago
-                                    </Label>
-                                    <select
-                                        id="medio_pago_id"
-                                        name="medio_pago_id"
-                                        value={formData.medio_pago_id}
-                                        onChange={onInputChange}
-                                        className={selectClasses}
-                                    >
-                                        <option value="">Seleccione medio de pago</option>
-                                        {mediosPago.map((m) => (
-                                            <option key={m.id} value={m.id}>
-                                                {m.nombre}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
+                                {(() => {
+                                    const selectedMedio = mediosPago.find(m => m.id.toString() === formData.medio_pago_id);
+                                    const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre);
+                                    return isCheque ? (
+                                        <div className="space-y-1.5">
+                                            <Label htmlFor="numero_cheque" className={labelClasses}>
+                                                N° de Cheque
+                                            </Label>
+                                            <Input
+                                                id="numero_cheque"
+                                                name="numero_cheque"
+                                                placeholder="Ej: 00012345"
+                                                value={formData.numero_cheque}
+                                                onChange={onInputChange}
+                                                className={inputClasses}
+                                            />
+                                        </div>
+                                    ) : null;
+                                })()}
+                            </>
                         )}
 
                         <div className="space-y-1.5">
@@ -848,6 +870,7 @@ interface DeleteDialogProps {
     onOpenChange: (open: boolean) => void;
     onConfirm: () => void;
     isSaving: boolean;
+    count?: number; // cuando se pasa (> 1) muestra texto de eliminación masiva
 }
 
 export function DeleteDialog({
@@ -855,7 +878,9 @@ export function DeleteDialog({
     onOpenChange,
     onConfirm,
     isSaving,
+    count,
 }: DeleteDialogProps) {
+    const isBulk = count !== undefined && count > 1;
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[400px] bg-white border-rose-200 shadow-2xl">
@@ -880,8 +905,12 @@ export function DeleteDialog({
                         Confirmar Eliminación
                     </DialogTitle>
                     <DialogDescription className="text-[#666666] mt-2">
-                        ¿Estás seguro de que deseas eliminar este movimiento? Esta acción no
-                        se puede deshacer.
+                        {isBulk
+                            ? <>¿Estás seguro de que deseas eliminar{" "}
+                                <span className="font-semibold text-rose-600">{count} movimientos</span>?
+                                Esta acción no se puede deshacer.</>
+                            : <>¿Estás seguro de que deseas eliminar este movimiento? Esta acción no se puede deshacer.</>
+                        }
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
@@ -898,7 +927,7 @@ export function DeleteDialog({
                         disabled={isSaving}
                         className="bg-rose-500 text-white hover:bg-rose-600 cursor-pointer"
                     >
-                        {isSaving ? "Eliminando..." : "Eliminar"}
+                        {isSaving ? "Eliminando..." : isBulk ? `Eliminar ${count}` : "Eliminar"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

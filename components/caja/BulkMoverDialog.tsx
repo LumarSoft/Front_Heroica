@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { selectClasses, labelClasses, inputClasses } from "@/lib/dialog-styles";
-import { API_ENDPOINTS, API_URL } from "@/lib/config";
+import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
-import type { Transaction, SelectOption } from "@/lib/types";
+import type { SelectOption } from "@/lib/types";
 import { ArrowRightLeft } from "lucide-react";
-import { toast } from "sonner"; // using sonner since it's what hook uses
+import { toast } from "sonner";
 
 interface Sucursal {
     id: number;
@@ -18,111 +18,122 @@ interface Sucursal {
     activo: boolean;
 }
 
-interface MoverMovimientoDialogProps {
+interface BulkMoverDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    transaction: Transaction | null;
+    selectedIds: number[];
     currentSucursalId: number;
+    cajaTipo: "efectivo" | "banco";
     onSuccess: () => void;
     bancosExternos?: SelectOption[];
     mediosPagoExternos?: SelectOption[];
 }
 
-export function MoverMovimientoDialog({
+export function BulkMoverDialog({
     open,
     onOpenChange,
-    transaction,
+    selectedIds,
     currentSucursalId,
+    cajaTipo,
     onSuccess,
     bancosExternos = [],
     mediosPagoExternos = [],
-}: MoverMovimientoDialogProps) {
+}: BulkMoverDialogProps) {
     const [isSaving, setIsSaving] = useState(false);
     const [sucursales, setSucursales] = useState<Sucursal[]>([]);
     const [isLoadingSucursales, setIsLoadingSucursales] = useState(false);
-
     const [formData, setFormData] = useState({
-        destino_sucursal_id: "",
-        destino_tipo_movimiento: "",
-        destino_saldo: "",
+        destino_sucursal_id: String(currentSucursalId),
+        destino_tipo_movimiento: cajaTipo,
+        destino_saldo: "saldo_necesario",
         banco_id: "",
         medio_pago_id: "",
         numero_cheque: "",
-        banco: "",
-        cuenta: "",
-        cbu: "",
-        tipo_operacion: "",
-        nota_descripcion: "",
-        es_credito: false,
     });
-
-    // Checkbox is only valid/visible if destination branch is different from origin branch
-    const isDifferentSucursal = formData.destino_sucursal_id !== "" && formData.destino_sucursal_id !== currentSucursalId.toString();
 
     useEffect(() => {
         if (open) {
             setIsLoadingSucursales(true);
             apiFetch(API_ENDPOINTS.SUCURSALES.GET_ALL)
-                .then(r => r.json())
-                .then(d => {
+                .then((r) => r.json())
+                .then((d) => {
                     if (d.success) setSucursales(d.data.filter((s: Sucursal) => s.activo));
                 })
                 .finally(() => setIsLoadingSucursales(false));
 
             setFormData({
-                destino_sucursal_id: currentSucursalId.toString(),
-                destino_tipo_movimiento: transaction?.tipo_movimiento === "efectivo" ? "banco" : "efectivo",
-                destino_saldo: transaction?.estado === "completado" ? "saldo_real" : "saldo_necesario",
-                banco_id: transaction?.banco_id?.toString() || "",
-                medio_pago_id: transaction?.medio_pago_id?.toString() || "",
-                numero_cheque: transaction?.numero_cheque || "",
-                banco: transaction?.banco || "",
-                cuenta: transaction?.cuenta || "",
-                cbu: transaction?.cbu || "",
-                tipo_operacion: transaction?.tipo_operacion || "",
-                nota_descripcion: `Movido desde ${transaction?.tipo_movimiento === "efectivo" ? "Efectivo" : "Banco"}`,
-                es_credito: false,
+                destino_sucursal_id: String(currentSucursalId),
+                destino_tipo_movimiento: cajaTipo,
+                destino_saldo: "saldo_necesario",
+                banco_id: "",
+                medio_pago_id: "",
+                numero_cheque: "",
             });
         }
-    }, [open, transaction, currentSucursalId]);
+    }, [open, currentSucursalId, cajaTipo]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const value = e.target.type === "checkbox" ? (e.target as HTMLInputElement).checked : e.target.value;
-        setFormData(prev => ({ ...prev, [e.target.name]: value }));
+    const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+        setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
+    const isDestinoBanco = formData.destino_tipo_movimiento === "banco";
+
+    const selectedMedio = mediosPagoExternos.find(
+        (m) => m.id.toString() === formData.medio_pago_id
+    );
+    const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre);
+
     const handleSave = async () => {
-        if (!transaction) return;
-        if (!formData.destino_sucursal_id || !formData.destino_tipo_movimiento || !formData.destino_saldo) {
-            toast.error("Faltan datos obligatorios.");
+        if (!formData.destino_sucursal_id) {
+            toast.error("Seleccioná una sucursal destino.");
             return;
+        }
+        if (isDestinoBanco && !formData.banco_id) {
+            toast.error("Seleccioná un banco destino.");
+            return;
+        }
+        if (isDestinoBanco && !formData.medio_pago_id) {
+            toast.error("Seleccioná un medio de pago.");
+            return;
+        }
+
+        const endpoint = cajaTipo === "banco"
+            ? API_ENDPOINTS.CAJA_BANCO.BULK_MOVER
+            : API_ENDPOINTS.MOVIMIENTOS.BULK_MOVER;
+
+        const body: Record<string, unknown> = {
+            ids: selectedIds,
+            destino_sucursal_id: Number(formData.destino_sucursal_id),
+            destino_tipo_movimiento: formData.destino_tipo_movimiento,
+            destino_saldo: formData.destino_saldo,
+        };
+
+        if (isDestinoBanco) {
+            body.banco_id = formData.banco_id ? Number(formData.banco_id) : null;
+            body.medio_pago_id = formData.medio_pago_id ? Number(formData.medio_pago_id) : null;
+            body.numero_cheque = formData.numero_cheque || null;
         }
 
         setIsSaving(true);
         try {
-            const res = await apiFetch(`${API_URL}/api/movimientos/${transaction.id}/mover`, {
+            const res = await apiFetch(endpoint, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(body),
             });
             const data = await res.json();
             if (data.success) {
-                toast.success("Movimiento movido correctamente.");
+                toast.success(data.message);
                 onSuccess();
                 onOpenChange(false);
             } else {
-                toast.error(data.message || "Error al mover movimiento.");
+                toast.error(data.message || "Error al mover.");
             }
-        } catch (error) {
+        } catch {
             toast.error("Error de red al mover.");
         } finally {
             setIsSaving(false);
         }
     };
-
-    if (!transaction) return null;
-
-    const isDestinoBanco = formData.destino_tipo_movimiento === "banco";
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -133,10 +144,10 @@ export function MoverMovimientoDialog({
                             <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
                                 <ArrowRightLeft className="w-5 h-5 text-indigo-600" />
                             </div>
-                            Mover Movimiento
+                            Mover {selectedIds.length} movimiento{selectedIds.length !== 1 ? "s" : ""}
                         </DialogTitle>
                         <DialogDescription className="text-sm text-[#8A8F9C] mt-2">
-                            Mueve este registro hacia otra sucursal o caja.
+                            Todos los seleccionados se moverán al mismo destino.
                         </DialogDescription>
                     </DialogHeader>
                 </div>
@@ -147,12 +158,12 @@ export function MoverMovimientoDialog({
                         <select
                             name="destino_sucursal_id"
                             value={formData.destino_sucursal_id}
-                            onChange={handleInputChange}
+                            onChange={handleChange}
                             className={selectClasses}
                             disabled={isLoadingSucursales}
                         >
                             <option value="">Seleccione sucursal</option>
-                            {sucursales.map(s => (
+                            {sucursales.map((s) => (
                                 <option key={s.id} value={s.id}>{s.nombre}</option>
                             ))}
                         </select>
@@ -164,7 +175,7 @@ export function MoverMovimientoDialog({
                             <select
                                 name="destino_tipo_movimiento"
                                 value={formData.destino_tipo_movimiento}
-                                onChange={handleInputChange}
+                                onChange={handleChange}
                                 className={selectClasses}
                             >
                                 <option value="efectivo">Efectivo</option>
@@ -176,7 +187,7 @@ export function MoverMovimientoDialog({
                             <select
                                 name="destino_saldo"
                                 value={formData.destino_saldo}
-                                onChange={handleInputChange}
+                                onChange={handleChange}
                                 className={selectClasses}
                             >
                                 <option value="saldo_real">Saldo Real (Completado)</option>
@@ -194,11 +205,11 @@ export function MoverMovimientoDialog({
                                     <select
                                         name="banco_id"
                                         value={formData.banco_id}
-                                        onChange={handleInputChange}
+                                        onChange={handleChange}
                                         className={selectClasses}
                                     >
                                         <option value="">Seleccione banco</option>
-                                        {bancosExternos.map(b => (
+                                        {bancosExternos.map((b) => (
                                             <option key={b.id} value={b.id}>{b.nombre}</option>
                                         ))}
                                     </select>
@@ -208,62 +219,28 @@ export function MoverMovimientoDialog({
                                     <select
                                         name="medio_pago_id"
                                         value={formData.medio_pago_id}
-                                        onChange={handleInputChange}
+                                        onChange={handleChange}
                                         className={selectClasses}
                                     >
                                         <option value="">Seleccione medio</option>
-                                        {mediosPagoExternos.map(m => (
+                                        {mediosPagoExternos.map((m) => (
                                             <option key={m.id} value={m.id}>{m.nombre}</option>
                                         ))}
                                     </select>
                                 </div>
                             </div>
-                            {(() => {
-                                const selectedMedio = mediosPagoExternos.find(m => m.id.toString() === formData.medio_pago_id);
-                                const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre);
-                                return isCheque ? (
-                                    <div className="space-y-1.5">
-                                        <Label className={labelClasses}>N° de Cheque</Label>
-                                        <Input
-                                            name="numero_cheque"
-                                            value={formData.numero_cheque}
-                                            onChange={handleInputChange}
-                                            placeholder="Ej: 00012345"
-                                            className={inputClasses}
-                                        />
-                                    </div>
-                                ) : null;
-                            })()}
-                        </div>
-                    )}
-
-                    <div className="space-y-1.5">
-                        <Label className={labelClasses}>Nota de Movimiento (se anexa a Descripción)</Label>
-                        <Input
-                            name="nota_descripcion"
-                            value={formData.nota_descripcion}
-                            onChange={handleInputChange}
-                            className={inputClasses}
-                        />
-                    </div>
-
-                    {isDifferentSucursal && (
-                        <div className="pt-2">
-                            <label className="flex items-center gap-3 p-3 rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] cursor-pointer hover:bg-[#F0F2F5] transition-colors">
-                                <input
-                                    type="checkbox"
-                                    name="es_credito"
-                                    checked={formData.es_credito}
-                                    onChange={handleInputChange}
-                                    className="w-5 h-5 rounded border-[#C0C0C0] text-indigo-600 focus:ring-indigo-500"
-                                />
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-semibold text-[#1A1A1A]">Es Crédito</span>
-                                    <span className="text-xs text-[#666666]">
-                                        Genera automáticamente las contrapartes de deuda en ambas sucursales.
-                                    </span>
+                            {isCheque && (
+                                <div className="space-y-1.5">
+                                    <Label className={labelClasses}>N° de Cheque</Label>
+                                    <Input
+                                        name="numero_cheque"
+                                        value={formData.numero_cheque}
+                                        onChange={handleChange}
+                                        placeholder="Ej: 00012345"
+                                        className={inputClasses}
+                                    />
                                 </div>
-                            </label>
+                            )}
                         </div>
                     )}
                 </div>
@@ -280,10 +257,10 @@ export function MoverMovimientoDialog({
                         </Button>
                         <Button
                             onClick={handleSave}
-                            disabled={isSaving}
+                            disabled={isSaving || selectedIds.length === 0}
                             className="h-10 px-6 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all cursor-pointer disabled:opacity-50"
                         >
-                            {isSaving ? "Guardando..." : "Mover"}
+                            {isSaving ? "Moviendo..." : `Mover ${selectedIds.length}`}
                         </Button>
                     </DialogFooter>
                 </div>

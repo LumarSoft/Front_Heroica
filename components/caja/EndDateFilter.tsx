@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarDays, ChevronDown, FilterX, Landmark } from "lucide-react";
+import { CalendarDays, ChevronDown, FilterX, Landmark, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -23,6 +23,8 @@ interface EndDateFilterProps {
     bancos?: SelectOption[];
     bancosSeleccionados?: string[];
     onBancosChange?: (ids: string[]) => void;
+    searchText?: string;
+    onSearchTextChange?: (text: string) => void;
 }
 
 export function EndDateFilter({
@@ -33,6 +35,8 @@ export function EndDateFilter({
     bancos,
     bancosSeleccionados = [],
     onBancosChange,
+    searchText = "",
+    onSearchTextChange,
 }: EndDateFilterProps) {
     const showBancoFilter = Boolean(bancos?.length && onBancosChange);
     const [isOpen, setIsOpen] = useState(false);
@@ -192,6 +196,23 @@ export function EndDateFilter({
                         </div>
                     )}
                 </div>
+            )}
+
+            {/* Buscador de texto */}
+            {onSearchTextChange && (
+                <>
+                    <div className="hidden sm:block w-px h-7 bg-[#E0E0E0]" />
+                    <div className="relative flex items-center">
+                        <Search className="absolute left-3 w-4 h-4 text-[#9AA0AC] pointer-events-none" />
+                        <input
+                            type="text"
+                            value={searchText}
+                            onChange={(e) => onSearchTextChange(e.target.value)}
+                            placeholder="Buscar concepto, N° cheque..."
+                            className="h-9 pl-9 pr-3 rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] text-sm text-[#1A1A1A] placeholder:text-[#9AA0AC] outline-none focus:border-[#002868]/60 focus:bg-white transition-all min-w-[220px]"
+                        />
+                    </div>
+                </>
             )}
 
             {/* Botón Limpiar */}

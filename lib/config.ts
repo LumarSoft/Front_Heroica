@@ -34,6 +34,8 @@ export const API_ENDPOINTS = {
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/movimientos/${id}/estado`,
     TOGGLE_DEUDA: (id: number) => `${API_URL}/api/movimientos/${id}/deuda`,
     DELETE: (id: number) => `${API_URL}/api/movimientos/${id}`,
+    BULK_DELETE: `${API_URL}/api/movimientos/bulk`,
+    BULK_MOVER: `${API_URL}/api/movimientos/bulk/mover`,
     // Documentos
     GET_DOCUMENTOS: (id: number) => `${API_URL}/api/movimientos/${id}/documentos`,
     UPLOAD_DOCUMENTO: (id: number) => `${API_URL}/api/movimientos/${id}/documentos`,
@@ -56,6 +58,8 @@ export const API_ENDPOINTS = {
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/caja-banco/${id}/estado`,
     TOGGLE_DEUDA: (id: number) => `${API_URL}/api/caja-banco/${id}/deuda`,
     DELETE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
+    BULK_DELETE: `${API_URL}/api/caja-banco/bulk`,
+    BULK_MOVER: `${API_URL}/api/caja-banco/bulk/mover`,
     // Documentos
     GET_DOCUMENTOS: (id: number) => `${API_URL}/api/caja-banco/${id}/documentos`,
     UPLOAD_DOCUMENTO: (id: number) => `${API_URL}/api/caja-banco/${id}/documentos`,

@@ -31,6 +31,7 @@ interface TransactionFormData {
     comprobante: string;
     banco_id: string;
     medio_pago_id: string;
+    numero_cheque: string;
 }
 
 const INITIAL_FORM: TransactionFormData = {
@@ -45,7 +46,29 @@ const INITIAL_FORM: TransactionFormData = {
     comprobante: "",
     banco_id: "",
     medio_pago_id: "",
+    numero_cheque: "",
 };
+
+// =============================================
+// Helper: Obtiene la parte YYYY-MM-DD de una fecha (string o Date)
+// =============================================
+function getISODateOnly(dateInput: string | Date | undefined): string | null {
+    if (!dateInput) return null;
+    const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+
+    // Si es un string YYYY-MM-DD puro de MySQL, new Date(string) lo toma como UTC.
+    // Para evitar desfases, si es un string de 10 caracteres, usamos los componentes UTC.
+    // Si viene de un Date picker (Date object), usamos los componentes locales.
+    if (typeof dateInput === "string" && dateInput.length <= 10) {
+        return date.toISOString().split("T")[0];
+    }
+
+    // Para objetos Date locales (del picker)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
 
 // =============================================
 // Normaliza un movimiento recibido de la API, coerciendo monto a number
@@ -54,6 +77,8 @@ const INITIAL_FORM: TransactionFormData = {
 function normalizeTransaction(m: Omit<Transaction, "monto" | "es_deuda"> & { monto?: number | string; es_deuda?: number }): Transaction {
     return {
         ...m,
+        // Normalizamos la fecha a YYYY-MM-DD para evitar problemas de horas/minutos
+        fecha: getISODateOnly(m.fecha) || m.fecha,
         monto: Number(m.monto),
         es_deuda: m.es_deuda === 1,
     };
@@ -111,6 +136,8 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
     const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
     // --- Filtro por banco (solo relevante en caja banco) ---
     const [bancosFiltro, setBancosFiltro] = useState<string[]>([]);
+    // --- Búsqueda por texto (concepto, descripción, N° cheque) ---
+    const [searchText, setSearchText] = useState("");
 
     // --- Catálogos ---
     const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -271,6 +298,7 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
             medio_pago_id: transaction.medio_pago_id
                 ? transaction.medio_pago_id.toString()
                 : "",
+            numero_cheque: transaction.numero_cheque || "",
         });
         setIsDetailsDialogOpen(true);
     };
@@ -329,6 +357,7 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
                         medio_pago_id: formData.medio_pago_id
                             ? Number(formData.medio_pago_id)
                             : null,
+                        numero_cheque: formData.numero_cheque || null,
                     }),
                 }
             );
@@ -479,80 +508,81 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
         return new Set(ids);
     }, [bancosFiltro]);
 
+    const matchesSearch = useCallback((m: Transaction, q: string): boolean => {
+        if (!q) return true;
+        const lower = q.toLowerCase();
+        return (
+            (m.concepto?.toLowerCase().includes(lower) ?? false) ||
+            (m.descripcion?.toLowerCase().includes(lower) ?? false) ||
+            (m.numero_cheque?.toLowerCase().includes(lower) ?? false) ||
+            (m.comprobante?.toLowerCase().includes(lower) ?? false)
+        );
+    }, []);
+
     const saldoRealFiltrado = useMemo(() => {
         let filteredByDate = saldoReal;
-        if (dateRange?.from || dateRange?.to) {
-            let fromTime: number | null = null;
-            if (dateRange.from) {
-                const f = new Date(dateRange.from);
-                f.setHours(0, 0, 0, 0);
-                fromTime = f.getTime();
-            }
-            
-            let toTime: number | null = null;
-            if (dateRange.to) {
-                const t = new Date(dateRange.to);
-                t.setHours(23, 59, 59, 999);
-                toTime = t.getTime();
-            }
+        const fromStr = getISODateOnly(dateRange?.from);
+        const toStr = getISODateOnly(dateRange?.to);
 
+        if (fromStr || toStr) {
             filteredByDate = saldoReal.filter((m) => {
-                if (!m.fecha) return true; 
-                const movTime = new Date(m.fecha).getTime();
-                
-                if (fromTime !== null && movTime < fromTime) return false;
-                if (toTime !== null && movTime > toTime) return false;
-                
+                if (!m.fecha) return true;
+                const movStr = getISODateOnly(m.fecha);
+                if (!movStr) return true;
+
+                if (fromStr && movStr < fromStr) return false;
+                if (toStr && movStr > toStr) return false;
+
                 return true;
             });
         }
 
-        if (bancosFiltroSet.size === 0) return filteredByDate;
-        return filteredByDate.filter((m) => {
-            const id = m.banco_id?.toString();
-            return id ? bancosFiltroSet.has(id) : false;
-        });
-    }, [saldoReal, dateRange, bancosFiltroSet]);
+        const filteredByBanco = bancosFiltroSet.size === 0
+            ? filteredByDate
+            : filteredByDate.filter((m) => {
+                const id = m.banco_id?.toString();
+                return id ? bancosFiltroSet.has(id) : false;
+            });
+
+        return searchText.trim()
+            ? filteredByBanco.filter((m) => matchesSearch(m, searchText.trim()))
+            : filteredByBanco;
+    }, [saldoReal, dateRange, bancosFiltroSet, searchText, matchesSearch]);
 
     const { saldoNecesarioFiltrado, saldoNecesarioSinDeudaFiltrado } = useMemo(() => {
         let filteredByDate = saldoNecesario;
-        if (dateRange?.from || dateRange?.to) {
-            let fromTime: number | null = null;
-            if (dateRange.from) {
-                const f = new Date(dateRange.from);
-                f.setHours(0, 0, 0, 0);
-                fromTime = f.getTime();
-            }
-            
-            let toTime: number | null = null;
-            if (dateRange.to) {
-                const t = new Date(dateRange.to);
-                t.setHours(23, 59, 59, 999);
-                toTime = t.getTime();
-            }
+        const fromStr = getISODateOnly(dateRange?.from);
+        const toStr = getISODateOnly(dateRange?.to);
 
+        if (fromStr || toStr) {
             filteredByDate = saldoNecesario.filter((m) => {
                 if (!m.fecha) return true;
-                const movTime = new Date(m.fecha).getTime();
-                
-                if (fromTime !== null && movTime < fromTime) return false;
-                if (toTime !== null && movTime > toTime) return false;
-                
+                const movStr = getISODateOnly(m.fecha);
+                if (!movStr) return true;
+
+                if (fromStr && movStr < fromStr) return false;
+                if (toStr && movStr > toStr) return false;
+
                 return true;
             });
         }
 
-        const filtered = bancosFiltroSet.size === 0
+        const filteredByBanco = bancosFiltroSet.size === 0
             ? filteredByDate
             : filteredByDate.filter((m) => {
                   const id = m.banco_id?.toString();
                   return id ? bancosFiltroSet.has(id) : false;
               });
+
+        const filtered = searchText.trim()
+            ? filteredByBanco.filter((m) => matchesSearch(m, searchText.trim()))
+            : filteredByBanco;
+
         return {
             saldoNecesarioFiltrado: filtered,
             saldoNecesarioSinDeudaFiltrado: filtered.filter((m) => !m.es_deuda),
         };
-    }, [saldoNecesario, dateRange, bancosFiltroSet]);
+    }, [saldoNecesario, dateRange, bancosFiltroSet, searchText, matchesSearch]);
 
     // Parciales filtrados: agrupar saldoReal + saldoNecesarioSinDeudaFiltrado por banco_id
     const parcialesFiltrados = useMemo<BancoParcial[]>(() => {
@@ -579,6 +609,7 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
     const limpiarFiltros = () => {
         setDateRange(undefined);
         setBancosFiltro([]);
+        setSearchText("");
     };
 
     return {
@@ -609,8 +640,10 @@ export function useCajaData(tipo: "efectivo" | "banco", moneda: "ARS" | "USD" = 
         setDateRange,
         bancosFiltro,
         setBancosFiltro,
+        searchText,
+        setSearchText,
         limpiarFiltros,
-        hayFiltroActivo: dateRange !== undefined || bancosFiltro.length > 0,
+        hayFiltroActivo: dateRange !== undefined || bancosFiltro.length > 0 || searchText !== "",
 
         // Estado de dialogs
         isDetailsDialogOpen,
