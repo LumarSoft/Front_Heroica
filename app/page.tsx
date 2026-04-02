@@ -139,6 +139,12 @@ export default function LoginPage() {
     setPendingUserId(null);
   };
 
+  const handleClose2FASetup = () => {
+    setNeedsSetup2FA(false);
+    setPendingUserId(null);
+    setError("Debes configurar 2FA para poder acceder al sistema");
+  };
+
   return (
     <div className="min-h-screen bg-white flex">
       {/* Lado izquierdo - Branding CON FONDO BLANCO */}
@@ -555,6 +561,7 @@ export default function LoginPage() {
           open={needsSetup2FA}
           userId={pendingUserId}
           onSuccess={handle2FASetupSuccess}
+          onClose={handleClose2FASetup}
         />
       )}
     </div>

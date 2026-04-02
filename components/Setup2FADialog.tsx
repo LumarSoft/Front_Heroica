@@ -19,12 +19,14 @@ interface Setup2FADialogProps {
   open: boolean;
   userId: number;
   onSuccess: (tempToken: string) => void;
+  onClose: () => void;
 }
 
 export function Setup2FADialog({
   open,
   userId,
   onSuccess,
+  onClose,
 }: Setup2FADialogProps) {
   const [step, setStep] = useState<"loading" | "setup" | "verify">("loading");
   const [qrCode, setQrCode] = useState("");
@@ -108,12 +110,8 @@ export function Setup2FADialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent
-        className="sm:max-w-md bg-white"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-[#002868] flex items-center gap-2">
             <Shield className="w-6 h-6" />
