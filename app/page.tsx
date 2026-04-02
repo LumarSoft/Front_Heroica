@@ -25,6 +25,7 @@ import { API_ENDPOINTS } from "@/lib/config";
 import { useAuthStore } from "@/store/authStore";
 import { loginSchema } from "@/lib/schemas";
 import { Eye, EyeOff } from "lucide-react";
+import { Setup2FADialog } from "@/components/Setup2FADialog";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -36,6 +37,13 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [tempToken, setTempToken] = useState("");
+  const [code2FA, setCode2FA] = useState("");
+
+  const [needsSetup2FA, setNeedsSetup2FA] = useState(false);
+  const [pendingUserId, setPendingUserId] = useState<number | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +58,6 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // Llamada a la API de login
       const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -61,6 +68,18 @@ export default function LoginPage() {
 
       if (!response.ok) {
         throw new Error(data.message || "Error al iniciar sesión");
+      }
+
+      if (data.needsSetup2FA) {
+        setPendingUserId(data.userId);
+        setNeedsSetup2FA(true);
+        return;
+      }
+
+      if (data.requires2FA) {
+        setRequires2FA(true);
+        setTempToken(data.tempToken);
+        return;
       }
 
       login(data.data.token, data.data.user);
@@ -74,6 +93,56 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleVerify2FA = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!code2FA || code2FA.length !== 6) {
+      setError("El código debe tener 6 dígitos");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(API_ENDPOINTS.AUTH.VERIFY_2FA, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tempToken, code: code2FA }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Código inválido");
+      }
+
+      login(data.data.token, data.data.user);
+      router.push("/sucursales");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Error al verificar código";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handle2FASetupSuccess = (receivedTempToken: string) => {
+    setNeedsSetup2FA(false);
+    setRequires2FA(true);
+    setTempToken(receivedTempToken);
+    setCode2FA("");
+    setError("");
+    setPendingUserId(null);
+  };
+
+  const handleClose2FASetup = () => {
+    setNeedsSetup2FA(false);
+    setPendingUserId(null);
+    setError("Debes configurar 2FA para poder acceder al sistema");
   };
 
   return (
@@ -140,122 +209,204 @@ export default function LoginPage() {
           <Card className="border-[#E0E0E0] lg:border-white/20 bg-white lg:bg-white/95 lg:backdrop-blur-sm shadow-xl lg:shadow-2xl">
             <CardHeader className="space-y-2 pb-6">
               <CardTitle className="text-3xl font-bold text-[#002868]">
-                Iniciar Sesión
+                {requires2FA ? "Verificación 2FA" : "Iniciar Sesión"}
               </CardTitle>
               <CardDescription className="text-[#666666] text-base">
-                Ingresa tus credenciales para acceder al sistema
+                {requires2FA
+                  ? "Ingresa el código de 6 dígitos de tu aplicación autenticadora"
+                  : "Ingresa tus credenciales para acceder al sistema"}
               </CardDescription>
             </CardHeader>
 
-            <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-5">
-                {/* Mensaje de error */}
-                {error && (
-                  <div className="p-4 rounded-lg bg-red-50 border border-red-200 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-start gap-3">
-                      <svg
-                        className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
+            {!requires2FA ? (
+              <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-5">
+                  {error && (
+                    <div className="p-4 rounded-lg bg-red-50 border border-red-200 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="flex items-start gap-3">
+                        <svg
+                          className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <p className="text-sm text-red-700 font-medium">
+                          {error}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="email"
+                      className="text-[#002868] font-semibold text-sm"
+                    >
+                      Correo Electrónico
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="tu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="h-12 border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868] transition-all text-base"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="password"
+                      className="text-[#002868] font-semibold text-sm"
+                    >
+                      Contraseña
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="h-12 border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868] transition-all text-base pr-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666666] hover:text-[#002868] transition-colors cursor-pointer"
+                        aria-label={
+                          showPassword
+                            ? "Ocultar contraseña"
+                            : "Mostrar contraseña"
+                        }
                       >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <p className="text-sm text-red-700 font-medium">
-                        {error}
-                      </p>
+                        {showPassword ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
                     </div>
                   </div>
-                )}
+                </CardContent>
 
-                {/* Campo de email */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="email"
-                    className="text-[#002868] font-semibold text-sm"
+                <CardFooter className="flex flex-col space-y-4 pt-2">
+                  <Button
+                    type="submit"
+                    className="w-full h-12 bg-[#002868] hover:bg-[#003d8f] text-white font-semibold text-base shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                    disabled={isLoading}
                   >
-                    Correo Electrónico
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="tu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="h-12 border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868] transition-all text-base"
-                  />
-                </div>
+                    {isLoading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>Iniciando sesión...</span>
+                      </div>
+                    ) : (
+                      "Iniciar Sesión"
+                    )}
+                  </Button>
 
-                {/* Campo de contraseña */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="password"
-                    className="text-[#002868] font-semibold text-sm"
-                  >
-                    Contraseña
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="h-12 border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868] transition-all text-base pr-12"
-                    />
+                  <p className="text-center text-sm text-[#666666]">
+                    ¿No tienes una cuenta?{" "}
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666666] hover:text-[#002868] transition-colors cursor-pointer"
-                      aria-label={
-                        showPassword
-                          ? "Ocultar contraseña"
-                          : "Mostrar contraseña"
-                      }
+                      onClick={() => setIsContactDialogOpen(true)}
+                      className="text-[#002868] hover:text-[#003d8f] font-semibold transition-colors cursor-pointer underline-offset-2 hover:underline"
                     >
-                      {showPassword ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
+                      Contacta al administrador
                     </button>
-                  </div>
-                </div>
-              </CardContent>
-
-              <CardFooter className="flex flex-col space-y-4 pt-2">
-                <Button
-                  type="submit"
-                  className="w-full h-12 bg-[#002868] hover:bg-[#003d8f] text-white font-semibold text-base shadow-lg hover:shadow-xl transition-all cursor-pointer"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span>Iniciando sesión...</span>
+                  </p>
+                </CardFooter>
+              </form>
+            ) : (
+              <form onSubmit={handleVerify2FA}>
+                <CardContent className="space-y-5">
+                  {error && (
+                    <div className="p-4 rounded-lg bg-red-50 border border-red-200 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="flex items-start gap-3">
+                        <svg
+                          className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <p className="text-sm text-red-700 font-medium">
+                          {error}
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    "Iniciar Sesión"
                   )}
-                </Button>
 
-                <p className="text-center text-sm text-[#666666]">
-                  ¿No tienes una cuenta?{" "}
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="code2fa"
+                      className="text-[#002868] font-semibold text-sm"
+                    >
+                      Código de Verificación
+                    </Label>
+                    <Input
+                      id="code2fa"
+                      type="text"
+                      placeholder="000000"
+                      value={code2FA}
+                      onChange={(e) =>
+                        setCode2FA(
+                          e.target.value.replace(/\D/g, "").slice(0, 6),
+                        )
+                      }
+                      required
+                      maxLength={6}
+                      className="h-12 border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868] transition-all text-base text-center text-2xl tracking-widest font-mono"
+                    />
+                    <p className="text-xs text-[#666666] text-center">
+                      Abre tu aplicación autenticadora y verifica el código
+                    </p>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="flex flex-col space-y-4 pt-2">
+                  <Button
+                    type="submit"
+                    className="w-full h-12 bg-[#002868] hover:bg-[#003d8f] text-white font-semibold text-base shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                    disabled={isLoading || code2FA.length !== 6}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>Verificando...</span>
+                      </div>
+                    ) : (
+                      "Verificar Código"
+                    )}
+                  </Button>
+
                   <button
                     type="button"
-                    onClick={() => setIsContactDialogOpen(true)}
-                    className="text-[#002868] hover:text-[#003d8f] font-semibold transition-colors cursor-pointer underline-offset-2 hover:underline"
+                    onClick={() => {
+                      setRequires2FA(false);
+                      setTempToken("");
+                      setCode2FA("");
+                      setError("");
+                    }}
+                    className="text-sm text-[#666666] hover:text-[#002868] transition-colors"
                   >
-                    Contacta al administrador
+                    Volver al inicio de sesión
                   </button>
-                </p>
-              </CardFooter>
-            </form>
+                </CardFooter>
+              </form>
+            )}
           </Card>
 
           {/* Footer */}
@@ -404,6 +555,15 @@ export default function LoginPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {needsSetup2FA && pendingUserId && (
+        <Setup2FADialog
+          open={needsSetup2FA}
+          userId={pendingUserId}
+          onSuccess={handle2FASetupSuccess}
+          onClose={handleClose2FASetup}
+        />
+      )}
     </div>
   );
 }

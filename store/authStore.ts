@@ -8,6 +8,7 @@ interface User {
   nombre: string;
   rol: string;
   rol_id: number;
+  two_factor_enabled?: boolean;
 }
 
 interface AuthState {
