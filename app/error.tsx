@@ -19,9 +19,7 @@ export default function GlobalError({ error, reset }: ErrorPageProps) {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-slate-800">
-            Algo salió mal
-          </h1>
+          <h1 className="text-2xl font-bold text-slate-800">Algo salió mal</h1>
           <p className="text-slate-500 text-sm">
             Ocurrió un error inesperado. Por favor, intentá nuevamente o volvé
             al inicio.

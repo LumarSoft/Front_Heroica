@@ -47,6 +47,7 @@ interface Rol {
 interface Sucursal {
   id: number;
   nombre: string;
+  two_factor_enabled: boolean;
 }
 
 interface UsuarioForm {
@@ -95,6 +96,18 @@ function getRolLabel(rolNombre: string) {
     gerente: "Gerente",
   };
   return labels[rolNombre?.toLowerCase()] || rolNombre;
+  
+function getRolBadge(rolId: number) {
+  if (rolId === ROLES.SUPERADMIN.id) {
+    return {
+      label: "Super Admin",
+      classes: "bg-purple-50 text-purple-700 border border-purple-200",
+    };
+  }
+  return {
+    label: "Administrador",
+    classes: "bg-blue-50 text-blue-700 border border-blue-200",
+  };
 }
 
 export function UsuariosSection() {
@@ -123,6 +136,11 @@ export function UsuariosSection() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Reset 2FA dialog
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [usuarioToReset, setUsuarioToReset] = useState<Usuario | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     fetchAll();
@@ -194,7 +212,7 @@ export function UsuariosSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.USUARIOS.UPDATE_ROL(userId),
-        { method: "PUT", body: JSON.stringify({ rol_id: nuevoRolId }) }
+        { method: "PUT", body: JSON.stringify({ rol_id: nuevoRolId }) },
       );
       const data = await res.json();
       if (data.success) {
@@ -212,7 +230,7 @@ export function UsuariosSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.USUARIOS.TOGGLE_ACTIVO(userId),
-        { method: "PUT" }
+        { method: "PUT" },
       );
       const data = await res.json();
       if (data.success) {
@@ -237,7 +255,7 @@ export function UsuariosSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.USUARIOS.DELETE(usuarioToDelete.id),
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       const data = await res.json();
       if (data.success) {
@@ -311,6 +329,35 @@ export function UsuariosSection() {
     );
   };
 
+  const handleResetClick = (usuario: Usuario) => {
+    setUsuarioToReset(usuario);
+    setResetDialogOpen(true);
+  };
+
+  const handleConfirmReset = async () => {
+    if (!usuarioToReset) return;
+    setIsResetting(true);
+    try {
+      const res = await apiFetch(API_ENDPOINTS.AUTH.RESET_2FA, {
+        method: "POST",
+        body: JSON.stringify({ userId: usuarioToReset.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message);
+        setResetDialogOpen(false);
+        setUsuarioToReset(null);
+        await fetchUsuarios();
+      } else {
+        toast.error(data.message || "Error al resetear 2FA");
+      }
+    } catch {
+      toast.error("Error al resetear 2FA");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const isMainAdmin = (email: string) => email === "admin@heroica.com";
 
   if (isLoading) {
@@ -330,7 +377,8 @@ export function UsuariosSection() {
           <div>
             <CardTitle className="text-[#002868]">Usuarios y Roles</CardTitle>
             <p className="text-sm text-[#666666] mt-0.5">
-              {usuarios.length} usuario{usuarios.length !== 1 ? "s" : ""} registrado{usuarios.length !== 1 ? "s" : ""}
+              {usuarios.length} usuario{usuarios.length !== 1 ? "s" : ""}{" "}
+              registrado{usuarios.length !== 1 ? "s" : ""}
             </p>
           </div>
           {canGestionarUsuarios && (
@@ -346,7 +394,9 @@ export function UsuariosSection() {
 
         <CardContent className="p-0">
           {usuarios.length === 0 ? (
-            <p className="text-center text-[#666666] py-10">No hay usuarios registrados</p>
+            <p className="text-center text-[#666666] py-10">
+              No hay usuarios registrados
+            </p>
           ) : (
             <div className="divide-y divide-[#F0F0F0]">
               {usuarios.map((usuario) => {
@@ -375,6 +425,22 @@ export function UsuariosSection() {
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
                           {badgeLabel}
                         </span>
+                        {usuario.two_factor_enabled && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-200 flex items-center gap-1">
+                            <svg
+                              className="w-3 h-3"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            2FA
+                          </span>
+                        )}
                         {!usuario.activo && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
                             Inactivo
@@ -391,13 +457,17 @@ export function UsuariosSection() {
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-[#666666] truncate mt-0.5">{usuario.email}</p>
+                      <p className="text-sm text-[#666666] truncate mt-0.5">
+                        {usuario.email}
+                      </p>
                     </div>
 
                     {/* Acciones */}
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {isProtected ? (
-                        <span className="text-xs text-[#999999] italic px-2">No editable</span>
+                        <span className="text-xs text-[#999999] italic px-2">
+                          No editable
+                        </span>
                       ) : isSelf ? (
                         <span className="text-xs text-[#999999] italic px-2">Sesión actual</span>
                       ) : !canGestionarUsuarios ? (
@@ -407,7 +477,9 @@ export function UsuariosSection() {
                           {/* Selector de rol dinámico */}
                           <Select
                             value={usuario.rol_id.toString()}
-                            onValueChange={(value) => handleChangeRol(usuario.id, parseInt(value))}
+                            onValueChange={(value) =>
+                              handleChangeRol(usuario.id, parseInt(value))
+                            }
                           >
                             <SelectTrigger className="w-[160px] h-9 text-sm border-[#E0E0E0] bg-white text-[#1A1A1A]">
                               <SelectValue />
@@ -436,7 +508,9 @@ export function UsuariosSection() {
                             <Switch
                               id={`activo-${usuario.id}`}
                               checked={usuario.activo}
-                              onCheckedChange={() => handleToggleActivo(usuario.id)}
+                              onCheckedChange={() =>
+                                handleToggleActivo(usuario.id)
+                              }
                               className="data-[state=checked]:bg-[#002868]"
                             />
                             <Label
@@ -456,6 +530,16 @@ export function UsuariosSection() {
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
+                          {usuario.two_factor_enabled && (
+                            <Button
+                              onClick={() => handleResetClick(usuario)}
+                              variant="outline"
+                              size="sm"
+                              className="border-orange-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700 h-8 text-xs"
+                            >
+                              Resetear 2FA
+                            </Button>
+                          )}
                         </>
                       )}
                     </div>
@@ -531,7 +615,9 @@ export function UsuariosSection() {
               </Label>
               <Select
                 value={form.rol_id.toString()}
-                onValueChange={(value) => setForm({ ...form, rol_id: parseInt(value) })}
+                onValueChange={(value) =>
+                  setForm({ ...form, rol_id: parseInt(value) })
+                }
               >
                 <SelectTrigger className="h-10 border-[#E0E0E0] text-[#1A1A1A]">
                   <SelectValue placeholder="Seleccioná un rol" />
@@ -718,8 +804,12 @@ export function UsuariosSection() {
                   {getInitials(usuarioToDelete.nombre)}
                 </div>
                 <div>
-                  <p className="font-semibold text-[#1A1A1A]">{usuarioToDelete.nombre}</p>
-                  <p className="text-sm text-[#666666]">{usuarioToDelete.email}</p>
+                  <p className="font-semibold text-[#1A1A1A]">
+                    {usuarioToDelete.nombre}
+                  </p>
+                  <p className="text-sm text-[#666666]">
+                    {usuarioToDelete.email}
+                  </p>
                 </div>
               </div>
             </div>
@@ -747,6 +837,64 @@ export function UsuariosSection() {
                 </div>
               ) : (
                 "Eliminar Usuario"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Resetear 2FA */}
+      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-orange-600">
+              Resetear Autenticación 2FA
+            </DialogTitle>
+            <DialogDescription className="text-[#666666]">
+              El usuario deberá configurar nuevamente su 2FA en el próximo
+              inicio de sesión
+            </DialogDescription>
+          </DialogHeader>
+
+          {usuarioToReset && (
+            <div className="py-3">
+              <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  {getInitials(usuarioToReset.nombre)}
+                </div>
+                <div>
+                  <p className="font-semibold text-[#1A1A1A]">
+                    {usuarioToReset.nombre}
+                  </p>
+                  <p className="text-sm text-[#666666]">
+                    {usuarioToReset.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setResetDialogOpen(false)}
+              disabled={isResetting}
+              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A]"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmReset}
+              disabled={isResetting}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              {isResetting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Reseteando...</span>
+                </div>
+              ) : (
+                "Resetear 2FA"
               )}
             </Button>
           </DialogFooter>

@@ -28,7 +28,7 @@ export const movimientoBaseSchema = z.object({
     .min(1, "El monto es obligatorio")
     .refine(
       (v) => !isNaN(parseFloat(v)) && parseFloat(v) !== 0,
-      "El monto debe ser diferente de cero"
+      "El monto debe ser diferente de cero",
     ),
   categoria_id: z.string().min(1, "Debes seleccionar una categoría"),
   descripcion: z.string().optional(),
@@ -51,10 +51,7 @@ export type CategoriaFormValues = z.infer<typeof categoriaSchema>;
 export const subcategoriaSchema = z.object({
   nombre: z.string().min(1, "El nombre es obligatorio"),
   descripcion: z.string().optional(),
-  categoria_id: z
-    .number()
-    .int()
-    .positive("Debes seleccionar una categoría"),
+  categoria_id: z.number().int().positive("Debes seleccionar una categoría"),
 });
 export type SubcategoriaFormValues = z.infer<typeof subcategoriaSchema>;
 

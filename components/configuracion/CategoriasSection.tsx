@@ -55,7 +55,10 @@ export function CategoriasSection() {
   const [form, setForm] = useState<CategoriaForm>(DEFAULT_FORM);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; nombre: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: number;
+    nombre: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchCategorias();
@@ -120,7 +123,7 @@ export function CategoriasSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.CATEGORIAS.DELETE(deleteTarget.id),
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       const data = await res.json();
       if (data.success) {
@@ -139,7 +142,10 @@ export function CategoriasSection() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Categorías</CardTitle>
-          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f]">
+          <Button
+            onClick={handleOpenNew}
+            className="bg-[#002868] hover:bg-[#003d8f]"
+          >
             + Nueva Categoría
           </Button>
         </CardHeader>
@@ -168,11 +174,17 @@ export function CategoriasSection() {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={() => handleOpenEdit(cat)} variant="outline" size="sm">
+                  <Button
+                    onClick={() => handleOpenEdit(cat)}
+                    variant="outline"
+                    size="sm"
+                  >
                     Editar
                   </Button>
                   <Button
-                    onClick={() => setDeleteTarget({ id: cat.id, nombre: cat.nombre })}
+                    onClick={() =>
+                      setDeleteTarget({ id: cat.id, nombre: cat.nombre })
+                    }
                     variant="outline"
                     size="sm"
                     className="text-rose-600 hover:bg-rose-50"
@@ -226,7 +238,9 @@ export function CategoriasSection() {
               <Textarea
                 id="cat-desc"
                 value={form.descripcion || ""}
-                onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, descripcion: e.target.value })
+                }
                 placeholder="Descripción opcional"
                 className="min-h-[80px] rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
               />

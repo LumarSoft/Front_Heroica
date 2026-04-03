@@ -1,6 +1,7 @@
 # AGENTS.md — Front_Heroica (Global Rules)
 
 ## Project Stack
+
 - **Framework:** Next.js (App Router) with TypeScript
 - **State:** Zustand
 - **UI Components:** Shadcn/ui
@@ -44,14 +45,16 @@ Using `npm` or `yarn` will create a conflicting lockfile (`package-lock.json` / 
 - **NEVER** use `dangerouslySetInnerHTML` unless absolutely unavoidable and sanitized.
 - Remove all `console.log`, `console.error`, and `console.warn` before considering any task complete. Use proper error boundaries or error state instead.
 - **NEVER** build URLs by interpolating user input directly. Always sanitize or encode dynamic values before including them in a URL:
+
   ```ts
   // ❌ Wrong
-  fetch(`/api/sucursales/${userInput}/movimientos`)
-  
+  fetch(`/api/sucursales/${userInput}/movimientos`);
+
   // ✅ Correct
-  const safeId = encodeURIComponent(userInput)
-  fetch(`/api/sucursales/${safeId}/movimientos`)
+  const safeId = encodeURIComponent(userInput);
+  fetch(`/api/sucursales/${safeId}/movimientos`);
   ```
+
 - **NEVER** trust client-side validation alone. It is UI feedback only. The server must always validate independently. Zod schemas on the client do not replace server-side validation.
 - **NEVER** store the auth token in `localStorage` without evaluating XSS risk. Prefer `httpOnly` cookies managed by the server. If `localStorage` is used, document explicitly why and what mitigations are in place.
 

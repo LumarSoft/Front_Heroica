@@ -10,7 +10,10 @@ import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useCajaData } from "@/hooks/use-caja-data";
 import { calcularTotal } from "@/lib/formatters";
 import { PageHeader } from "@/components/caja/PageHeader";
-import { PageLoadingSpinner, ContentLoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+  PageLoadingSpinner,
+  ContentLoadingSpinner,
+} from "@/components/ui/loading-spinner";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { AccessDenied } from "@/components/ui/access-denied";
 import { CajaTabs, TabsContent } from "@/components/caja/CajaTabs";
@@ -26,9 +29,11 @@ import {
   DeudaDialog,
 } from "@/components/caja/TransactionDialogs";
 import { MoverMovimientoDialog } from "@/components/caja/MoverMovimientoDialog";
+import { BulkMoverDialog } from "@/components/caja/BulkMoverDialog";
 import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
 import { AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 
 const columns = getEfectivoColumns();
 
@@ -42,6 +47,42 @@ export default function CajaEfectivoPage() {
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null);
   const [sucursalNombre, setSucursalNombre] = useState("");
   const [isCompraVentaDialogOpen, setIsCompraVentaDialogOpen] = useState(false);
+  const [isBulkMoverDialogOpen, setIsBulkMoverDialogOpen] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [bulkSelectedIds, setBulkSelectedIds] = useState<number[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  const handleBulkDelete = (ids: number[]) => {
+    setBulkSelectedIds(ids);
+    setIsBulkDeleteDialogOpen(true);
+  };
+
+  const handleBulkDeleteConfirm = async () => {
+    setIsBulkDeleting(true);
+    try {
+      const res = await apiFetch(API_ENDPOINTS.MOVIMIENTOS.BULK_DELETE, {
+        method: "DELETE",
+        body: JSON.stringify({ ids: bulkSelectedIds }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message);
+        caja.fetchMovimientos();
+        setIsBulkDeleteDialogOpen(false);
+      } else {
+        toast.error(data.message || "Error al eliminar.");
+      }
+    } catch {
+      toast.error("Error de red al eliminar.");
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
+  const handleBulkMove = (ids: number[]) => {
+    setBulkSelectedIds(ids);
+    setIsBulkMoverDialogOpen(true);
+  };
 
   // Verificar si la sucursal está activa
   useEffect(() => {
@@ -79,19 +120,22 @@ export default function CajaEfectivoPage() {
 
       <main className="container mx-auto px-6 py-8 flex flex-col h-full">
         {user?.rol === "empleado" ? (
-          <AccessDenied resource="la caja de efectivo" backUrl={`/sucursales/${params.id}`} />
+          <AccessDenied
+            resource="la caja de efectivo"
+            backUrl={`/sucursales/${params.id}`}
+          />
         ) : (
           <div className="flex flex-col space-y-6 flex-grow">
             {/* Mensajes */}
             <ErrorBanner error={caja.error} />
-
 
             {/* Banner solo lectura */}
             {isReadOnly && (
               <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                 <p className="text-sm text-amber-800 font-medium">
-                  Esta sucursal está <strong>inactiva</strong>. Podés ver los datos pero no crear ni modificar movimientos.
+                  Esta sucursal está <strong>inactiva</strong>. Podés ver los
+                  datos pero no crear ni modificar movimientos.
                 </p>
               </div>
             )}
@@ -116,6 +160,8 @@ export default function CajaEfectivoPage() {
                   onDateRangeChange={caja.setDateRange}
                   onLimpiar={caja.limpiarFiltros}
                   hayFiltro={caja.hayFiltroActivo}
+                  searchText={caja.searchText}
+                  onSearchTextChange={caja.setSearchText}
                 />
 
                 <CajaTabs
@@ -124,7 +170,10 @@ export default function CajaEfectivoPage() {
                   value={activeTab}
                   onValueChange={setActiveTab}
                 >
-                  <TabsContent value="real" className="mt-0 outline-none flex-grow">
+                  <TabsContent
+                    value="real"
+                    className="mt-0 outline-none flex-grow"
+                  >
                     <TransactionTable
                       title="Saldo Real"
                       description="Movimientos de efectivo confirmados para el periodo actual."
@@ -134,21 +183,31 @@ export default function CajaEfectivoPage() {
                       onChangeState={caja.handleOpenStateChange}
                       onDelete={caja.handleOpenDelete}
                       onMove={caja.handleOpenMover}
+                      onBulkDelete={!isReadOnly ? handleBulkDelete : undefined}
+                      onBulkMove={!isReadOnly ? handleBulkMove : undefined}
                       isReadOnly={isReadOnly}
                     />
                   </TabsContent>
-                  <TabsContent value="necesario" className="mt-0 outline-none flex-grow">
+                  <TabsContent
+                    value="necesario"
+                    className="mt-0 outline-none flex-grow"
+                  >
                     <TransactionTable
                       title="Saldo Necesario"
                       description="Pagos y compromisos en efectivo programados."
                       transactions={caja.saldoNecesarioFiltrado}
-                      customTotal={calcularTotal(caja.saldoReal) + calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)}
+                      customTotal={
+                        calcularTotal(caja.saldoReal) +
+                        calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
+                      }
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
                       onDelete={caja.handleOpenDelete}
                       onToggleDeuda={caja.handleOpenDeuda}
                       onMove={caja.handleOpenMover}
+                      onBulkDelete={!isReadOnly ? handleBulkDelete : undefined}
+                      onBulkMove={!isReadOnly ? handleBulkMove : undefined}
                       isReadOnly={isReadOnly}
                     />
                   </TabsContent>
@@ -193,6 +252,14 @@ export default function CajaEfectivoPage() {
         isSaving={caja.isSaving}
       />
 
+      <DeleteDialog
+        open={isBulkDeleteDialogOpen}
+        onOpenChange={setIsBulkDeleteDialogOpen}
+        onConfirm={handleBulkDeleteConfirm}
+        isSaving={isBulkDeleting}
+        count={bulkSelectedIds.length}
+      />
+
       <DeudaDialog
         open={caja.isDeudaDialogOpen}
         onOpenChange={caja.setIsDeudaDialogOpen}
@@ -228,6 +295,17 @@ export default function CajaEfectivoPage() {
         onClose={() => setIsCompraVentaDialogOpen(false)}
         sucursalId={caja.sucursalId}
         onSuccess={caja.fetchMovimientos}
+      />
+
+      <BulkMoverDialog
+        open={isBulkMoverDialogOpen}
+        onOpenChange={setIsBulkMoverDialogOpen}
+        selectedIds={bulkSelectedIds}
+        currentSucursalId={caja.sucursalId}
+        cajaTipo="efectivo"
+        onSuccess={caja.fetchMovimientos}
+        bancosExternos={caja.bancos}
+        mediosPagoExternos={caja.mediosPago}
       />
     </div>
   );

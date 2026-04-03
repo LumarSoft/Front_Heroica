@@ -11,7 +11,13 @@ import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
 import { formatMonto } from "@/lib/formatters";
 import type { Sucursal } from "@/lib/types";
-import { Printer, TrendingUp, TrendingDown, AlertTriangle, ArrowLeft } from "lucide-react";
+import {
+  Printer,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  ArrowLeft,
+} from "lucide-react";
 import { SectionHeading } from "@/components/reportes/SectionHeading";
 import { SummaryCard } from "@/components/reportes/SummaryCard";
 import { BreakdownPanel } from "@/components/reportes/BreakdownPanel";
@@ -29,8 +35,12 @@ export default function ReportesPage() {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [selectedIngresoCategory, setSelectedIngresoCategory] = useState<string | null>(null);
-  const [selectedEgresoCategory, setSelectedEgresoCategory] = useState<string | null>(null);
+  const [selectedIngresoCategory, setSelectedIngresoCategory] = useState<
+    string | null
+  >(null);
+  const [selectedEgresoCategory, setSelectedEgresoCategory] = useState<
+    string | null
+  >(null);
 
   // Selector mensual con debounce para evitar fetches por cada tecla
   const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -60,12 +70,15 @@ export default function ReportesPage() {
 
   const fetchSucursal = useCallback(async () => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)));
+      const response = await apiFetch(
+        API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)),
+      );
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
       setSucursal(data.data);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Error al cargar sucursal";
+      const message =
+        err instanceof Error ? err.message : "Error al cargar sucursal";
       toast.error(message);
     }
   }, [params.id]);
@@ -78,13 +91,19 @@ export default function ReportesPage() {
       const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
       const safeId = rawId != null ? encodeURIComponent(String(rawId)) : "";
       if (!safeId) return;
-      const url = API_ENDPOINTS.REPORTES.GET_BY_SUCURSAL(safeId, startDate, endDate, moneda);
+      const url = API_ENDPOINTS.REPORTES.GET_BY_SUCURSAL(
+        safeId,
+        startDate,
+        endDate,
+        moneda,
+      );
       const response = await apiFetch(url);
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
       setReportData(data.data);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Error al cargar reportes";
+      const message =
+        err instanceof Error ? err.message : "Error al cargar reportes";
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -101,7 +120,9 @@ export default function ReportesPage() {
   const currentIngresosData = useMemo(() => {
     if (!reportData?.ingresosBreakdown) return [];
     if (selectedIngresoCategory) {
-      const cat = reportData.ingresosBreakdown.find((c) => c.name === selectedIngresoCategory);
+      const cat = reportData.ingresosBreakdown.find(
+        (c) => c.name === selectedIngresoCategory,
+      );
       return cat?.subcategorias ?? [];
     }
     return reportData.ingresosBreakdown;
@@ -110,7 +131,9 @@ export default function ReportesPage() {
   const currentIngresosTotal = useMemo(() => {
     if (!reportData?.ingresosBreakdown) return 0;
     if (selectedIngresoCategory) {
-      const cat = reportData.ingresosBreakdown.find((c) => c.name === selectedIngresoCategory);
+      const cat = reportData.ingresosBreakdown.find(
+        (c) => c.name === selectedIngresoCategory,
+      );
       return cat?.value ?? 0;
     }
     return reportData.resumen.ingresos;
@@ -119,7 +142,9 @@ export default function ReportesPage() {
   const currentEgresosData = useMemo(() => {
     if (!reportData?.egresosBreakdown) return [];
     if (selectedEgresoCategory) {
-      const cat = reportData.egresosBreakdown.find((c) => c.name === selectedEgresoCategory);
+      const cat = reportData.egresosBreakdown.find(
+        (c) => c.name === selectedEgresoCategory,
+      );
       return cat?.subcategorias ?? [];
     }
     return reportData.egresosBreakdown;
@@ -128,7 +153,9 @@ export default function ReportesPage() {
   const currentEgresosTotal = useMemo(() => {
     if (!reportData?.egresosBreakdown) return 0;
     if (selectedEgresoCategory) {
-      const cat = reportData.egresosBreakdown.find((c) => c.name === selectedEgresoCategory);
+      const cat = reportData.egresosBreakdown.find(
+        (c) => c.name === selectedEgresoCategory,
+      );
       return cat?.value ?? 0;
     }
     return reportData.resumen.egresos;
@@ -152,7 +179,9 @@ export default function ReportesPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Button
-                onClick={() => router.push(`/sucursales/${params.id}?moneda=${moneda}`)}
+                onClick={() =>
+                  router.push(`/sucursales/${params.id}?moneda=${moneda}`)
+                }
                 variant="outline"
                 size="sm"
                 className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer"
@@ -161,14 +190,21 @@ export default function ReportesPage() {
                 Volver
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-[#002868]">Reportes — {moneda}</h1>
+                <h1 className="text-2xl font-bold text-[#002868]">
+                  Reportes — {moneda}
+                </h1>
                 <p className="text-sm text-slate-500">{sucursal?.nombre}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-gray-100">
               <div className="flex items-center gap-2">
-                <Label htmlFor="month" className="text-sm font-medium whitespace-nowrap">Mes a consultar:</Label>
+                <Label
+                  htmlFor="month"
+                  className="text-sm font-medium whitespace-nowrap"
+                >
+                  Mes a consultar:
+                </Label>
                 <Input
                   id="month"
                   type="month"
@@ -213,15 +249,26 @@ export default function ReportesPage() {
             <div className="hidden print:flex flex-col mb-8 border-b-2 border-[#002868] pb-4">
               <div className="flex justify-between items-end">
                 <div>
-                  <h2 className="text-3xl font-black text-[#002868] tracking-tight">Reporte de Resultados</h2>
-                  <p className="text-slate-600 font-medium text-lg mt-1">Sucursal: {sucursal?.nombre}</p>
+                  <h2 className="text-3xl font-black text-[#002868] tracking-tight">
+                    Reporte de Resultados
+                  </h2>
+                  <p className="text-slate-600 font-medium text-lg mt-1">
+                    Sucursal: {sucursal?.nombre}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-slate-800 capitalize">
-                    {new Date(startDate + "T12:00:00").toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}
+                    {new Date(startDate + "T12:00:00").toLocaleDateString(
+                      "es-AR",
+                      { month: "long", year: "numeric" },
+                    )}
                   </p>
-                  <p className={`text-sm font-bold mt-1 uppercase tracking-widest ${isClosedMonth ? "text-blue-600" : "text-emerald-600"}`}>
-                    {isClosedMonth ? "Período Cerrado" : "Mes en Curso (Parcial)"}
+                  <p
+                    className={`text-sm font-bold mt-1 uppercase tracking-widest ${isClosedMonth ? "text-blue-600" : "text-emerald-600"}`}
+                  >
+                    {isClosedMonth
+                      ? "Período Cerrado"
+                      : "Mes en Curso (Parcial)"}
                   </p>
                 </div>
               </div>
@@ -247,7 +294,13 @@ export default function ReportesPage() {
                   label="Resultado Neto"
                   value={formatMonto(reportData.resumen.resultado, moneda)}
                   accent={reportData.resumen.resultado >= 0 ? "blue" : "red"}
-                  icon={reportData.resumen.resultado >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                  icon={
+                    reportData.resumen.resultado >= 0 ? (
+                      <TrendingUp className="w-5 h-5" />
+                    ) : (
+                      <TrendingDown className="w-5 h-5" />
+                    )
+                  }
                   sub={
                     reportData.resumen.resultado > 0
                       ? "Ganancia"
@@ -268,7 +321,11 @@ export default function ReportesPage() {
 
             {/* ── 2 · Ingresos ─────────────────────────────────────────────── */}
             <section className="page-break-before">
-              <SectionHeading number="2" title="Discriminado de Ingresos" className="mt-4" />
+              <SectionHeading
+                number="2"
+                title="Discriminado de Ingresos"
+                className="mt-4"
+              />
               <BreakdownPanel
                 breakdownData={reportData.ingresosBreakdown}
                 currentData={currentIngresosData}
@@ -287,7 +344,11 @@ export default function ReportesPage() {
 
             {/* ── 3 · Egresos ──────────────────────────────────────────────── */}
             <section className="page-break-before">
-              <SectionHeading number="3" title="Discriminado de Egresos" className="mt-4" />
+              <SectionHeading
+                number="3"
+                title="Discriminado de Egresos"
+                className="mt-4"
+              />
               <BreakdownPanel
                 breakdownData={reportData.egresosBreakdown}
                 currentData={currentEgresosData}
@@ -306,8 +367,15 @@ export default function ReportesPage() {
 
             {/* ── 4 · Deudas ──────────────────────────────────────── */}
             <section className="mt-8 page-break-before">
-              <SectionHeading number="4" title="Listado de Deudas" className="mt-4" />
-              <DeudaPanel deudas={reportData.detalles?.deudas || []} moneda={moneda} />
+              <SectionHeading
+                number="4"
+                title="Listado de Deudas"
+                className="mt-4"
+              />
+              <DeudaPanel
+                deudas={reportData.detalles?.deudas || []}
+                moneda={moneda}
+              />
             </section>
 
             {/* ── Print: Detalle extendido ──────────────────────────────────── */}
@@ -316,33 +384,65 @@ export default function ReportesPage() {
                 Detalle de Movimientos Principales
               </h2>
               {(() => {
-                const allMovs = [...(reportData.detalles?.ingresos ?? []), ...(reportData.detalles?.egresos ?? [])].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
-                if (allMovs.length === 0) return <p className="text-center italic text-slate-500 mt-10 text-sm">No hay movimientos en este período.</p>;
+                const allMovs = [
+                  ...(reportData.detalles?.ingresos ?? []),
+                  ...(reportData.detalles?.egresos ?? []),
+                ].sort(
+                  (a, b) =>
+                    new Date(b.fecha).getTime() - new Date(a.fecha).getTime(),
+                );
+                if (allMovs.length === 0)
+                  return (
+                    <p className="text-center italic text-slate-500 mt-10 text-sm">
+                      No hay movimientos en este período.
+                    </p>
+                  );
 
                 return (
                   <table className="w-full text-sm text-left border-collapse mt-4">
                     <thead>
                       <tr className="border-b-2 border-slate-300 text-slate-700">
-                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">Fecha</th>
-                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">Concepto</th>
-                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">Categoría / Subcategoría</th>
-                        <th className="py-2 px-2 text-right font-bold uppercase text-xs tracking-wider">Monto</th>
+                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">
+                          Fecha
+                        </th>
+                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">
+                          Concepto
+                        </th>
+                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">
+                          Categoría / Subcategoría
+                        </th>
+                        <th className="py-2 px-2 text-right font-bold uppercase text-xs tracking-wider">
+                          Monto
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {allMovs.map((mov, i) => (
-                        <tr key={mov.id ?? i} className="print:break-inside-avoid">
+                        <tr
+                          key={mov.id ?? i}
+                          className="print:break-inside-avoid"
+                        >
                           <td className="py-2 px-2 text-slate-500 whitespace-nowrap">
-                            {new Date(mov.fecha).toLocaleDateString("es-AR", { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                            {new Date(mov.fecha).toLocaleDateString("es-AR", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            })}
                           </td>
                           <td className="py-2 px-2 font-medium text-slate-800">
                             {mov.concepto || "Sin concepto"}
                           </td>
                           <td className="py-2 px-2 text-slate-500 text-xs">
-                            {mov.categoria_nombre || "General"}{mov.subcategoria_nombre ? ` / ${mov.subcategoria_nombre}` : ''}
+                            {mov.categoria_nombre || "General"}
+                            {mov.subcategoria_nombre
+                              ? ` / ${mov.subcategoria_nombre}`
+                              : ""}
                           </td>
-                          <td className={`py-2 px-2 text-right font-bold tabular-nums whitespace-nowrap ${mov.tipo === 'ingreso' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                            {mov.tipo === 'ingreso' ? '+' : '-'}{formatMonto(Math.abs(mov.monto), moneda)}
+                          <td
+                            className={`py-2 px-2 text-right font-bold tabular-nums whitespace-nowrap ${mov.tipo === "ingreso" ? "text-emerald-600" : "text-rose-600"}`}
+                          >
+                            {mov.tipo === "ingreso" ? "+" : "-"}
+                            {formatMonto(Math.abs(mov.monto), moneda)}
                           </td>
                         </tr>
                       ))}
@@ -354,8 +454,6 @@ export default function ReportesPage() {
           </div>
         ) : null}
       </main>
-
     </div>
   );
 }
-

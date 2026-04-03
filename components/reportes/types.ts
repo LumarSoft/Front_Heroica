@@ -3,50 +3,50 @@
 // =============================================
 
 export interface ReportBreakdownItem {
-    name: string;
-    value: number;
-    subcategorias?: ReportBreakdownItem[];
+  name: string;
+  value: number;
+  subcategorias?: ReportBreakdownItem[];
 }
 
 export interface ReportResumen {
-    ingresos: number;
-    egresos: number;
-    resultado: number;
-    resultado_banco?: number;
-    deudas?: number;
+  ingresos: number;
+  egresos: number;
+  resultado: number;
+  resultado_banco?: number;
+  deudas?: number;
 }
 
 export interface ReportDeuda {
-    id?: number;
-    fecha: string;
-    concepto?: string;
-    monto: number;
-    categoria_nombre?: string;
-    subcategoria_nombre?: string;
+  id?: number;
+  fecha: string;
+  concepto?: string;
+  monto: number;
+  categoria_nombre?: string;
+  subcategoria_nombre?: string;
 }
 
 export interface ReportMovimiento {
-    id?: number;
-    fecha: string;
-    concepto?: string;
-    monto: number;
-    tipo: "ingreso" | "egreso";
-    categoria_nombre?: string;
-    subcategoria_nombre?: string;
+  id?: number;
+  fecha: string;
+  concepto?: string;
+  monto: number;
+  tipo: "ingreso" | "egreso";
+  categoria_nombre?: string;
+  subcategoria_nombre?: string;
 }
 
 export interface ReportData {
-    resumen: ReportResumen;
-    ingresosBreakdown: ReportBreakdownItem[];
-    egresosBreakdown: ReportBreakdownItem[];
-    detalles?: {
-        ingresos: ReportMovimiento[];
-        egresos: ReportMovimiento[];
-        deudas: ReportDeuda[];
-    };
+  resumen: ReportResumen;
+  ingresosBreakdown: ReportBreakdownItem[];
+  egresosBreakdown: ReportBreakdownItem[];
+  detalles?: {
+    ingresos: ReportMovimiento[];
+    egresos: ReportMovimiento[];
+    deudas: ReportDeuda[];
+  };
 }
 
 export interface PieTooltipProps {
-    active?: boolean;
-    payload?: Array<{ name: string; value: number }>;
+  active?: boolean;
+  payload?: Array<{ name: string; value: number }>;
 }

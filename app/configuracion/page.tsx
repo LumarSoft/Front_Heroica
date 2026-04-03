@@ -32,6 +32,15 @@ type ActiveTab =
   | "usuarios"
   | "roles"
   | "mi-cuenta";
+  | "usuarios";
+
+const TABS: { id: ActiveTab; label: string; Icon: React.ElementType }[] = [
+  { id: "categorias", label: "Categorías", Icon: Folder },
+  { id: "subcategorias", label: "Subcategorías", Icon: FolderOpen },
+  { id: "bancos", label: "Bancos", Icon: Building2 },
+  { id: "medios", label: "Medios de Pago", Icon: CreditCard },
+  { id: "usuarios", label: "Usuarios y Roles", Icon: Users },
+];
 
 export default function ConfiguracionPage() {
   const router = useRouter();

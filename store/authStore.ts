@@ -10,6 +10,7 @@ interface User {
   rol_id: number;
   must_change_password?: boolean;
   permisos?: string[];
+  two_factor_enabled?: boolean;
 }
 
 interface AuthState {
@@ -85,6 +86,6 @@ export const useAuthStore = create<AuthState>()(
        * gestionadas por el servidor para mayor seguridad.
        */
       storage: createJSONStorage(() => localStorage),
-    }
-  )
+    },
+  ),
 );

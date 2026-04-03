@@ -16,9 +16,19 @@ interface DeleteDialogProps {
   onCancel: () => void;
 }
 
-export function DeleteDialog({ open, nombre, onConfirm, onCancel }: DeleteDialogProps) {
+export function DeleteDialog({
+  open,
+  nombre,
+  onConfirm,
+  onCancel,
+}: DeleteDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onCancel(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onCancel();
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-rose-600">
@@ -36,7 +46,10 @@ export function DeleteDialog({ open, nombre, onConfirm, onCancel }: DeleteDialog
           <Button variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button onClick={onConfirm} className="bg-rose-600 hover:bg-rose-700 text-white">
+          <Button
+            onClick={onConfirm}
+            className="bg-rose-600 hover:bg-rose-700 text-white"
+          >
             Eliminar
           </Button>
         </DialogFooter>

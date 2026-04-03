@@ -49,36 +49,36 @@
 :root {
   --radius: 0.625rem;
   /* Identidad Corporativa Heroica - White Mode */
-  --background: #FFFFFF; /* Blanco puro para fondos */
-  --foreground: #1A1A1A; /* Gris oscuro para texto principal */
-  --card: #FFFFFF; /* Blanco para tarjetas */
-  --card-foreground: #1A1A1A; /* Texto en tarjetas */
-  --popover: #FFFFFF; /* Blanco para popovers */
-  --popover-foreground: #1A1A1A; /* Texto en popovers */
+  --background: #ffffff; /* Blanco puro para fondos */
+  --foreground: #1a1a1a; /* Gris oscuro para texto principal */
+  --card: #ffffff; /* Blanco para tarjetas */
+  --card-foreground: #1a1a1a; /* Texto en tarjetas */
+  --popover: #ffffff; /* Blanco para popovers */
+  --popover-foreground: #1a1a1a; /* Texto en popovers */
   --primary: #002868; /* Azul Marino - Color primario de marca */
-  --primary-foreground: #FFFFFF; /* Texto blanco sobre azul marino */
-  --secondary: #F5F5F5; /* Gris muy claro para fondos secundarios */
-  --secondary-foreground: #1A1A1A; /* Texto oscuro en fondos secundarios */
-  --muted: #F5F5F5; /* Gris claro para elementos apagados */
+  --primary-foreground: #ffffff; /* Texto blanco sobre azul marino */
+  --secondary: #f5f5f5; /* Gris muy claro para fondos secundarios */
+  --secondary-foreground: #1a1a1a; /* Texto oscuro en fondos secundarios */
+  --muted: #f5f5f5; /* Gris claro para elementos apagados */
   --muted-foreground: #666666; /* Gris medio para texto secundario */
   --accent: #002868; /* Azul Marino para acentos */
-  --accent-foreground: #FFFFFF; /* Texto blanco en acentos */
-  --destructive: #DC2626; /* Rojo para acciones destructivas */
-  --border: #E0E0E0; /* Gris claro para bordes */
-  --input: #E0E0E0; /* Gris claro para inputs */
+  --accent-foreground: #ffffff; /* Texto blanco en acentos */
+  --destructive: #dc2626; /* Rojo para acciones destructivas */
+  --border: #e0e0e0; /* Gris claro para bordes */
+  --input: #e0e0e0; /* Gris claro para inputs */
   --ring: #002868; /* Azul Marino para focus rings */
   --chart-1: #002868; /* Azul Marino para gráficos */
-  --chart-2: #0047AB; /* Azul más claro */
-  --chart-3: #4A90E2; /* Azul cielo */
-  --chart-4: #7CB9E8; /* Azul claro */
-  --chart-5: #B0D4F1; /* Azul muy claro */
-  --sidebar: #FFFFFF; /* Blanco para sidebar */
-  --sidebar-foreground: #1A1A1A; /* Texto oscuro en sidebar */
+  --chart-2: #0047ab; /* Azul más claro */
+  --chart-3: #4a90e2; /* Azul cielo */
+  --chart-4: #7cb9e8; /* Azul claro */
+  --chart-5: #b0d4f1; /* Azul muy claro */
+  --sidebar: #ffffff; /* Blanco para sidebar */
+  --sidebar-foreground: #1a1a1a; /* Texto oscuro en sidebar */
   --sidebar-primary: #002868; /* Azul Marino para elementos primarios */
-  --sidebar-primary-foreground: #FFFFFF; /* Texto blanco */
-  --sidebar-accent: #F5F5F5; /* Gris claro para acentos */
-  --sidebar-accent-foreground: #1A1A1A; /* Texto oscuro */
-  --sidebar-border: #E0E0E0; /* Bordes grises */
+  --sidebar-primary-foreground: #ffffff; /* Texto blanco */
+  --sidebar-accent: #f5f5f5; /* Gris claro para acentos */
+  --sidebar-accent-foreground: #1a1a1a; /* Texto oscuro */
+  --sidebar-border: #e0e0e0; /* Bordes grises */
   --sidebar-ring: #002868; /* Focus ring azul marino */
 }
 
@@ -136,11 +136,32 @@
 }
 
 @media print {
-  @page { margin: 1.5cm; size: A4 portrait; }
-  body { background: white !important; font-size: 11pt; color: #111827; }
-  .page-break-before { page-break-before: always; }
-  .shadow-sm, .shadow-md { box-shadow: none !important; border-color: #e5e7eb !important; }
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  main { padding: 0 !important; max-width: 100% !important; }
-  .grid { gap: 1rem !important; }
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
+  }
+  body {
+    background: white !important;
+    font-size: 11pt;
+    color: #111827;
+  }
+  .page-break-before {
+    page-break-before: always;
+  }
+  .shadow-sm,
+  .shadow-md {
+    box-shadow: none !important;
+    border-color: #e5e7eb !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  .grid {
+    gap: 1rem !important;
+  }
 }

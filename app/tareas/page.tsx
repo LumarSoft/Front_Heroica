@@ -12,7 +12,6 @@ import {
   ChevronRight,
   ChevronLeft,
   CheckCheck,
-  XCircle,
   Clock,
   Loader2,
   LayoutList,
@@ -21,6 +20,7 @@ import {
   CalendarDays,
   User,
   RefreshCw,
+  FlaskConical,
 } from "lucide-react";
 import { toast } from "sonner";
 import { API_ENDPOINTS } from "@/lib/config";
@@ -52,10 +52,11 @@ import { cn } from "@/lib/utils";
 
 type Tipo = "bug" | "mejora" | "implementacion" | "otro";
 type Prioridad = "alta" | "media" | "baja";
-type Estado = "pendiente" | "en_progreso" | "completado" | "cancelado";
+type Estado = "pendiente" | "en_progreso" | "en_pruebas" | "completado";
 
 interface Tarea {
   id: number;
+  codigo: string;
   titulo: string;
   descripcion: string | null;
   tipo: Tipo;
@@ -140,30 +141,37 @@ const ESTADO_CONFIG: Record<
     icon: <Loader2 className="w-4 h-4 text-blue-500" />,
     count_bg: "bg-blue-100 text-blue-700",
   },
+  en_pruebas: {
+    label: "En Pruebas",
+    header: "bg-purple-50 border-purple-200",
+    icon: <FlaskConical className="w-4 h-4 text-purple-500" />,
+    count_bg: "bg-purple-100 text-purple-700",
+  },
   completado: {
     label: "Completado",
     header: "bg-green-50 border-green-200",
     icon: <CheckCheck className="w-4 h-4 text-green-600" />,
     count_bg: "bg-green-100 text-green-700",
   },
-  cancelado: {
-    label: "Cancelado",
-    header: "bg-red-50 border-red-200",
-    icon: <XCircle className="w-4 h-4 text-red-500" />,
-    count_bg: "bg-red-100 text-red-700",
-  },
 };
 
-const COLUMNAS: Estado[] = ["pendiente", "en_progreso", "completado", "cancelado"];
+const COLUMNAS: Estado[] = [
+  "pendiente",
+  "en_progreso",
+  "en_pruebas",
+  "completado",
+];
 
 const ESTADO_SIGUIENTE: Partial<Record<Estado, Estado>> = {
   pendiente: "en_progreso",
-  en_progreso: "completado",
+  en_progreso: "en_pruebas",
+  en_pruebas: "completado",
 };
 
 const ESTADO_ANTERIOR: Partial<Record<Estado, Estado>> = {
   en_progreso: "pendiente",
-  completado: "en_progreso",
+  en_pruebas: "en_progreso",
+  completado: "en_pruebas",
 };
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
@@ -185,25 +193,30 @@ interface TaskCardProps {
   onDelete: (t: Tarea) => void;
   onMoveForward: (t: Tarea) => void;
   onMoveBack: (t: Tarea) => void;
-  onCancel: (t: Tarea) => void;
   moving: boolean;
   searchQuery: string;
 }
 
 function highlightText(text: string, query: string) {
   if (!query.trim()) return <>{text}</>;
-  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+  const regex = new RegExp(
+    `(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+    "gi",
+  );
   const parts = text.split(regex);
   return (
     <>
       {parts.map((part, i) =>
         regex.test(part) ? (
-          <mark key={i} className="bg-yellow-200 text-[#1A1A1A] rounded-sm px-0.5">
+          <mark
+            key={i}
+            className="bg-yellow-200 text-[#1A1A1A] rounded-sm px-0.5"
+          >
             {part}
           </mark>
         ) : (
           part
-        )
+        ),
       )}
     </>
   );
@@ -216,7 +229,6 @@ function TaskCard({
   onDelete,
   onMoveForward,
   onMoveBack,
-  onCancel,
   moving,
   searchQuery,
 }: TaskCardProps) {
@@ -224,7 +236,6 @@ function TaskCard({
   const prio = PRIORIDAD_CONFIG[tarea.prioridad];
   const canGoForward = !!ESTADO_SIGUIENTE[tarea.estado];
   const canGoBack = !!ESTADO_ANTERIOR[tarea.estado];
-  const isCanceled = tarea.estado === "cancelado";
   const isDone = tarea.estado === "completado";
 
   return (
@@ -233,16 +244,19 @@ function TaskCard({
       className={cn(
         "bg-white rounded-lg border border-[#E0E0E0] shadow-sm border-l-4 p-4 flex flex-col gap-3 transition-all hover:shadow-md cursor-pointer group",
         prio.border,
-        (isCanceled || isDone) && "opacity-70"
+        isDone && "opacity-70",
       )}
     >
       {/* Badges row */}
       <div className="flex items-center gap-2 flex-wrap">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-[#002868] text-white border border-[#002868]">
+          {tarea.codigo}
+        </span>
         <span
           className={cn(
             "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border",
             tipo.bg,
-            tipo.color
+            tipo.color,
           )}
         >
           {tipo.icon}
@@ -251,7 +265,7 @@ function TaskCard({
         <span
           className={cn(
             "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border",
-            prio.badge
+            prio.badge,
           )}
         >
           <span className={cn("w-1.5 h-1.5 rounded-full", prio.dot)} />
@@ -287,7 +301,10 @@ function TaskCard({
       <div className="flex items-center gap-1 flex-wrap">
         {canGoBack && (
           <button
-            onClick={(e) => { e.stopPropagation(); onMoveBack(tarea); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMoveBack(tarea);
+            }}
             disabled={moving}
             title="Mover atrás"
             className="flex items-center gap-1 px-2 py-1 rounded text-xs text-[#666] border border-[#E0E0E0] hover:bg-[#F5F5F5] disabled:opacity-40 transition-colors cursor-pointer"
@@ -299,7 +316,10 @@ function TaskCard({
 
         {canGoForward && (
           <button
-            onClick={(e) => { e.stopPropagation(); onMoveForward(tarea); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMoveForward(tarea);
+            }}
             disabled={moving}
             title="Mover adelante"
             className="flex items-center gap-1 px-2 py-1 rounded text-xs text-white bg-[#002868] hover:bg-[#003d8f] disabled:opacity-40 transition-colors cursor-pointer"
@@ -309,21 +329,13 @@ function TaskCard({
           </button>
         )}
 
-        {!isCanceled && !isDone && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onCancel(tarea); }}
-            disabled={moving}
-            title="Cancelar tarea"
-            className="flex items-center gap-1 px-2 py-1 rounded text-xs text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-40 transition-colors cursor-pointer ml-auto"
-          >
-            <XCircle className="w-3 h-3" />
-          </button>
-        )}
-
-        {!isCanceled && (
+        {!isDone && (
           <>
             <button
-              onClick={(e) => { e.stopPropagation(); onEdit(tarea); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(tarea);
+              }}
               title="Editar"
               className="flex items-center gap-1 px-2 py-1 rounded text-xs text-[#002868] border border-[#002868]/20 hover:bg-[#002868]/5 transition-colors cursor-pointer ml-auto"
             >
@@ -331,7 +343,10 @@ function TaskCard({
             </button>
 
             <button
-              onClick={(e) => { e.stopPropagation(); onDelete(tarea); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(tarea);
+              }}
               title="Eliminar"
               className="flex items-center gap-1 px-2 py-1 rounded text-xs text-red-600 border border-red-200 hover:bg-red-50 transition-colors cursor-pointer"
             >
@@ -370,7 +385,13 @@ interface TareaDialogProps {
   initial?: Tarea | null;
 }
 
-function TareaDialog({ open, onClose, onSave, saving, initial }: TareaDialogProps) {
+function TareaDialog({
+  open,
+  onClose,
+  onSave,
+  saving,
+  initial,
+}: TareaDialogProps) {
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [tipo, setTipo] = useState<Tipo>("otro");
@@ -388,7 +409,12 @@ function TareaDialog({ open, onClose, onSave, saving, initial }: TareaDialogProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!titulo.trim()) return;
-    await onSave({ titulo: titulo.trim(), descripcion: descripcion.trim(), tipo, prioridad });
+    await onSave({
+      titulo: titulo.trim(),
+      descripcion: descripcion.trim(),
+      tipo,
+      prioridad,
+    });
   };
 
   return (
@@ -433,14 +459,18 @@ function TareaDialog({ open, onClose, onSave, saving, initial }: TareaDialogProp
                   <SelectContent>
                     <SelectItem value="bug">🐛 Bug</SelectItem>
                     <SelectItem value="mejora">✨ Mejora</SelectItem>
-                    <SelectItem value="implementacion">🚀 Implementación</SelectItem>
+                    <SelectItem value="implementacion">
+                      🚀 Implementación
+                    </SelectItem>
                     <SelectItem value="otro">○ Otro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[#002868] font-semibold">Prioridad *</Label>
+                <Label className="text-[#002868] font-semibold">
+                  Prioridad *
+                </Label>
                 <Select
                   value={prioridad}
                   onValueChange={(v) => setPrioridad(v as Prioridad)}
@@ -459,7 +489,10 @@ function TareaDialog({ open, onClose, onSave, saving, initial }: TareaDialogProp
 
             {/* Descripción */}
             <div className="space-y-2">
-              <Label htmlFor="descripcion" className="text-[#002868] font-semibold">
+              <Label
+                htmlFor="descripcion"
+                className="text-[#002868] font-semibold"
+              >
                 Descripción
               </Label>
               <textarea
@@ -534,7 +567,9 @@ function DeleteDialog({
         {tarea && (
           <div className="py-2">
             <div className="p-4 bg-[#F5F5F5] rounded-lg border border-[#E0E0E0]">
-              <p className="font-semibold text-[#002868] text-sm">{tarea.titulo}</p>
+              <p className="font-semibold text-[#002868] text-sm">
+                {tarea.titulo}
+              </p>
               {tarea.descripcion && (
                 <p className="text-xs text-[#666] mt-1 line-clamp-2">
                   {tarea.descripcion}
@@ -581,7 +616,6 @@ interface DetailDialogProps {
   onEdit: (t: Tarea) => void;
   onMoveForward: (t: Tarea) => void;
   onMoveBack: (t: Tarea) => void;
-  onCancel: (t: Tarea) => void;
   moving: boolean;
 }
 
@@ -591,7 +625,6 @@ function DetailDialog({
   onEdit,
   onMoveForward,
   onMoveBack,
-  onCancel,
   moving,
 }: DetailDialogProps) {
   if (!tarea) return null;
@@ -601,7 +634,6 @@ function DetailDialog({
   const estado = ESTADO_CONFIG[tarea.estado];
   const canGoForward = !!ESTADO_SIGUIENTE[tarea.estado];
   const canGoBack = !!ESTADO_ANTERIOR[tarea.estado];
-  const isCanceled = tarea.estado === "cancelado";
   const isDone = tarea.estado === "completado";
 
   return (
@@ -613,7 +645,7 @@ function DetailDialog({
             "h-1.5 w-full",
             tarea.prioridad === "alta" && "bg-red-500",
             tarea.prioridad === "media" && "bg-amber-400",
-            tarea.prioridad === "baja" && "bg-green-500"
+            tarea.prioridad === "baja" && "bg-green-500",
           )}
         />
 
@@ -621,15 +653,34 @@ function DetailDialog({
           <DialogHeader className="mb-4">
             {/* Badges */}
             <div className="flex items-center gap-2 flex-wrap mb-3">
-              <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border", tipo.bg, tipo.color)}>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-[#002868] text-white border border-[#002868]">
+                {tarea.codigo}
+              </span>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border",
+                  tipo.bg,
+                  tipo.color,
+                )}
+              >
                 {tipo.icon}
                 {tipo.label}
               </span>
-              <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border", prio.badge)}>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border",
+                  prio.badge,
+                )}
+              >
                 <span className={cn("w-1.5 h-1.5 rounded-full", prio.dot)} />
                 {prio.label}
               </span>
-              <span className={cn("inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border", estado.header)}>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border",
+                  estado.header,
+                )}
+              >
                 {estado.icon}
                 {estado.label}
               </span>
@@ -658,16 +709,24 @@ function DetailDialog({
             <div className="flex items-start gap-2">
               <CalendarDays className="w-3.5 h-3.5 text-[#999] mt-0.5 shrink-0" />
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">Creada</p>
-                <p className="text-xs text-[#444] font-medium">{formatDate(tarea.created_at)}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">
+                  Creada
+                </p>
+                <p className="text-xs text-[#444] font-medium">
+                  {formatDate(tarea.created_at)}
+                </p>
               </div>
             </div>
 
             <div className="flex items-start gap-2">
               <RefreshCw className="w-3.5 h-3.5 text-[#999] mt-0.5 shrink-0" />
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">Actualizada</p>
-                <p className="text-xs text-[#444] font-medium">{formatDate(tarea.updated_at)}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">
+                  Actualizada
+                </p>
+                <p className="text-xs text-[#444] font-medium">
+                  {formatDate(tarea.updated_at)}
+                </p>
               </div>
             </div>
 
@@ -675,8 +734,12 @@ function DetailDialog({
               <div className="flex items-start gap-2">
                 <User className="w-3.5 h-3.5 text-[#999] mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">Reportada por</p>
-                  <p className="text-xs text-[#444] font-medium">{tarea.creado_por_nombre}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">
+                    Reportada por
+                  </p>
+                  <p className="text-xs text-[#444] font-medium">
+                    {tarea.creado_por_nombre}
+                  </p>
                 </div>
               </div>
             )}
@@ -685,8 +748,12 @@ function DetailDialog({
               <div className="flex items-start gap-2">
                 <CheckCheck className="w-3.5 h-3.5 text-green-500 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">Completada</p>
-                  <p className="text-xs text-[#444] font-medium">{formatDate(tarea.completed_at)}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">
+                    Completada
+                  </p>
+                  <p className="text-xs text-[#444] font-medium">
+                    {formatDate(tarea.completed_at)}
+                  </p>
                 </div>
               </div>
             )}
@@ -701,7 +768,10 @@ function DetailDialog({
                 variant="outline"
                 size="sm"
                 disabled={moving}
-                onClick={() => { onMoveBack(tarea); onClose(); }}
+                onClick={() => {
+                  onMoveBack(tarea);
+                  onClose();
+                }}
                 className="border-[#E0E0E0] text-[#555] hover:bg-[#F0F0F0] cursor-pointer"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
@@ -712,38 +782,31 @@ function DetailDialog({
               <Button
                 size="sm"
                 disabled={moving}
-                onClick={() => { onMoveForward(tarea); onClose(); }}
+                onClick={() => {
+                  onMoveForward(tarea);
+                  onClose();
+                }}
                 className="bg-[#002868] hover:bg-[#003d8f] text-white cursor-pointer"
               >
                 Avanzar
                 <ChevronRight className="w-3.5 h-3.5" />
               </Button>
             )}
-            {!isCanceled && !isDone && (
+            {!isDone && (
               <Button
                 variant="outline"
                 size="sm"
-                disabled={moving}
-                onClick={() => { onCancel(tarea); onClose(); }}
-                className="border-red-200 text-red-600 hover:bg-red-50 cursor-pointer"
+                onClick={() => {
+                  onClose();
+                  onEdit(tarea);
+                }}
+                className="border-[#002868]/20 text-[#002868] hover:bg-[#002868]/5 cursor-pointer"
               >
-                <XCircle className="w-3.5 h-3.5" />
-                Cancelar
+                <Pencil className="w-3.5 h-3.5" />
+                Editar
               </Button>
             )}
           </div>
-
-          {!isCanceled && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => { onClose(); onEdit(tarea); }}
-              className="border-[#002868]/20 text-[#002868] hover:bg-[#002868]/5 cursor-pointer"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-              Editar
-            </Button>
-          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -761,7 +824,9 @@ export default function TareasPage() {
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [filterTipo, setFilterTipo] = useState<"all" | Tipo>("all");
-  const [filterPrioridad, setFilterPrioridad] = useState<"all" | Prioridad>("all");
+  const [filterPrioridad, setFilterPrioridad] = useState<"all" | Prioridad>(
+    "all",
+  );
 
   // Detail view
   const [detailTarget, setDetailTarget] = useState<Tarea | null>(null);
@@ -813,7 +878,9 @@ export default function TareasPage() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);
-        setTareas((prev) => prev.map((t) => (t.id === editTarget.id ? data.data : t)));
+        setTareas((prev) =>
+          prev.map((t) => (t.id === editTarget.id ? data.data : t)),
+        );
         toast.success("Tarea actualizada");
       } else {
         const res = await apiFetch(API_ENDPOINTS.TAREAS.CREATE, {
@@ -881,7 +948,8 @@ export default function TareasPage() {
     const q = searchQuery.toLowerCase().trim();
     return tareas.filter((t) => {
       if (filterTipo !== "all" && t.tipo !== filterTipo) return false;
-      if (filterPrioridad !== "all" && t.prioridad !== filterPrioridad) return false;
+      if (filterPrioridad !== "all" && t.prioridad !== filterPrioridad)
+        return false;
       if (q) {
         const inTitle = t.titulo.toLowerCase().includes(q);
         const inDesc = t.descripcion?.toLowerCase().includes(q) ?? false;
@@ -895,8 +963,8 @@ export default function TareasPage() {
     const map: Record<Estado, Tarea[]> = {
       pendiente: [],
       en_progreso: [],
+      en_pruebas: [],
       completado: [],
-      cancelado: [],
     };
     for (const t of filtered) {
       map[t.estado].push(t);
@@ -910,8 +978,9 @@ export default function TareasPage() {
     const total = tareas.length;
     const pendientes = tareas.filter((t) => t.estado === "pendiente").length;
     const enProgreso = tareas.filter((t) => t.estado === "en_progreso").length;
+    const enPruebas = tareas.filter((t) => t.estado === "en_pruebas").length;
     const completados = tareas.filter((t) => t.estado === "completado").length;
-    return { total, pendientes, enProgreso, completados };
+    return { total, pendientes, enProgreso, enPruebas, completados };
   }, [tareas]);
 
   // ─── Guard ───────────────────────────────────────────────────────────────────
@@ -940,7 +1009,10 @@ export default function TareasPage() {
             </p>
           </div>
           <Button
-            onClick={() => { setEditTarget(null); setDialogOpen(true); }}
+            onClick={() => {
+              setEditTarget(null);
+              setDialogOpen(true);
+            }}
             className="bg-[#002868] hover:bg-[#003d8f] text-white cursor-pointer self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
@@ -949,23 +1021,51 @@ export default function TareasPage() {
         </div>
 
         {/* ── Stats Bar ──────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
           {[
-            { label: "Total", value: stats.total, color: "text-[#002868]", bg: "bg-[#002868]/8" },
-            { label: "Pendientes", value: stats.pendientes, color: "text-gray-600", bg: "bg-gray-100" },
-            { label: "En Progreso", value: stats.enProgreso, color: "text-blue-600", bg: "bg-blue-50" },
-            { label: "Completadas", value: stats.completados, color: "text-green-600", bg: "bg-green-50" },
+            {
+              label: "Total",
+              value: stats.total,
+              color: "text-[#002868]",
+              bg: "bg-[#002868]/8",
+            },
+            {
+              label: "Pendientes",
+              value: stats.pendientes,
+              color: "text-gray-600",
+              bg: "bg-gray-100",
+            },
+            {
+              label: "En Progreso",
+              value: stats.enProgreso,
+              color: "text-blue-600",
+              bg: "bg-blue-50",
+            },
+            {
+              label: "En Pruebas",
+              value: stats.enPruebas,
+              color: "text-purple-600",
+              bg: "bg-purple-50",
+            },
+            {
+              label: "Completadas",
+              value: stats.completados,
+              color: "text-green-600",
+              bg: "bg-green-50",
+            },
           ].map((s) => (
             <div
               key={s.label}
               className={cn(
-                "rounded-xl p-4 border border-[#E0E0E0] bg-white flex flex-col gap-1 shadow-sm"
+                "rounded-xl p-4 border border-[#E0E0E0] bg-white flex flex-col gap-1 shadow-sm",
               )}
             >
               <span className="text-xs font-semibold text-[#888] uppercase tracking-wider">
                 {s.label}
               </span>
-              <span className={cn("text-3xl font-bold", s.color)}>{s.value}</span>
+              <span className={cn("text-3xl font-bold", s.color)}>
+                {s.value}
+              </span>
             </div>
           ))}
         </div>
@@ -996,51 +1096,55 @@ export default function TareasPage() {
 
           {/* Tipo + Prioridad */}
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 sm:divide-x sm:divide-[#E0E0E0]">
-          {/* Tipo */}
-          <div className="flex flex-col gap-2 sm:pr-6">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#999]">
-              Tipo
-            </span>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {(["all", "bug", "mejora", "implementacion", "otro"] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setFilterTipo(t)}
-                  className={cn(
-                    "px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer",
-                    filterTipo === t
-                      ? "bg-[#002868] text-white border-[#002868]"
-                      : "bg-[#F5F5F5] text-[#555] border-transparent hover:border-[#002868] hover:text-[#002868]"
-                  )}
-                >
-                  {t === "all" ? "Todos" : TIPO_CONFIG[t as Tipo].label}
-                </button>
-              ))}
+            {/* Tipo */}
+            <div className="flex flex-col gap-2 sm:pr-6">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#999]">
+                Tipo
+              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {(
+                  ["all", "bug", "mejora", "implementacion", "otro"] as const
+                ).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setFilterTipo(t)}
+                    className={cn(
+                      "px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer",
+                      filterTipo === t
+                        ? "bg-[#002868] text-white border-[#002868]"
+                        : "bg-[#F5F5F5] text-[#555] border-transparent hover:border-[#002868] hover:text-[#002868]",
+                    )}
+                  >
+                    {t === "all" ? "Todos" : TIPO_CONFIG[t as Tipo].label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Prioridad */}
-          <div className="flex flex-col gap-2 sm:pl-6">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#999]">
-              Prioridad
-            </span>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {(["all", "alta", "media", "baja"] as const).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setFilterPrioridad(p)}
-                  className={cn(
-                    "px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer",
-                    filterPrioridad === p
-                      ? "bg-[#002868] text-white border-[#002868]"
-                      : "bg-[#F5F5F5] text-[#555] border-transparent hover:border-[#002868] hover:text-[#002868]"
-                  )}
-                >
-                  {p === "all" ? "Todas" : PRIORIDAD_CONFIG[p as Prioridad].label}
-                </button>
-              ))}
+            {/* Prioridad */}
+            <div className="flex flex-col gap-2 sm:pl-6">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#999]">
+                Prioridad
+              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {(["all", "alta", "media", "baja"] as const).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setFilterPrioridad(p)}
+                    className={cn(
+                      "px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer",
+                      filterPrioridad === p
+                        ? "bg-[#002868] text-white border-[#002868]"
+                        : "bg-[#F5F5F5] text-[#555] border-transparent hover:border-[#002868] hover:text-[#002868]",
+                    )}
+                  >
+                    {p === "all"
+                      ? "Todas"
+                      : PRIORIDAD_CONFIG[p as Prioridad].label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
           </div>
         </div>
 
@@ -1061,7 +1165,7 @@ export default function TareasPage() {
                   <div
                     className={cn(
                       "flex items-center justify-between px-4 py-3 rounded-xl border font-semibold",
-                      cfg.header
+                      cfg.header,
                     )}
                   >
                     <div className="flex items-center gap-2 text-[#333] text-sm">
@@ -1071,7 +1175,7 @@ export default function TareasPage() {
                     <span
                       className={cn(
                         "text-xs font-bold px-2 py-0.5 rounded-full",
-                        cfg.count_bg
+                        cfg.count_bg,
                       )}
                     >
                       {cards.length}
@@ -1096,13 +1200,16 @@ export default function TareasPage() {
                           }}
                           onDelete={setDeleteTarget}
                           onMoveForward={(tarea) =>
-                            handleMoveEstado(tarea, ESTADO_SIGUIENTE[tarea.estado]!)
+                            handleMoveEstado(
+                              tarea,
+                              ESTADO_SIGUIENTE[tarea.estado]!,
+                            )
                           }
                           onMoveBack={(tarea) =>
-                            handleMoveEstado(tarea, ESTADO_ANTERIOR[tarea.estado]!)
-                          }
-                          onCancel={(tarea) =>
-                            handleMoveEstado(tarea, "cancelado")
+                            handleMoveEstado(
+                              tarea,
+                              ESTADO_ANTERIOR[tarea.estado]!,
+                            )
                           }
                         />
                       ))
@@ -1131,7 +1238,10 @@ export default function TareasPage() {
       {/* ── Dialogs ─────────────────────────────────────────────────────────── */}
       <TareaDialog
         open={dialogOpen}
-        onClose={() => { setDialogOpen(false); setEditTarget(null); }}
+        onClose={() => {
+          setDialogOpen(false);
+          setEditTarget(null);
+        }}
         onSave={handleSave}
         saving={saving}
         initial={editTarget}
@@ -1154,7 +1264,6 @@ export default function TareasPage() {
         }}
         onMoveForward={(t) => handleMoveEstado(t, ESTADO_SIGUIENTE[t.estado]!)}
         onMoveBack={(t) => handleMoveEstado(t, ESTADO_ANTERIOR[t.estado]!)}
-        onCancel={(t) => handleMoveEstado(t, "cancelado")}
         moving={movingId === detailTarget?.id}
       />
     </div>

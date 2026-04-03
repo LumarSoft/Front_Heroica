@@ -9,7 +9,10 @@ import { useAuthStore } from "@/store/authStore";
  *   the correct multipart/form-data boundary.
  * - Per-call headers always override the defaults.
  */
-export function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
+export function apiFetch(
+  url: string,
+  options: RequestInit = {},
+): Promise<Response> {
   const token = useAuthStore.getState().token;
 
   const defaultHeaders: Record<string, string> = {};

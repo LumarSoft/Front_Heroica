@@ -38,7 +38,9 @@ export function HistorialFiltros({
   return (
     <div className="mb-6 p-4 bg-white rounded-xl border border-[#E0E0E0] shadow-sm flex flex-wrap items-center gap-3">
       <div className="flex items-center gap-1.5">
-        <span className="text-xs font-bold text-[#5A6070] uppercase tracking-wider mr-1">Estado:</span>
+        <span className="text-xs font-bold text-[#5A6070] uppercase tracking-wider mr-1">
+          Estado:
+        </span>
         {(["todos", "aprobado", "rechazado"] as const).map((est) => (
           <button
             key={est}
@@ -48,12 +50,16 @@ export function HistorialFiltros({
                 ? est === "todos"
                   ? "bg-[#002868] text-white border-[#002868]"
                   : est === "aprobado"
-                  ? "bg-emerald-500 text-white border-emerald-500"
-                  : "bg-rose-500 text-white border-rose-500"
+                    ? "bg-emerald-500 text-white border-emerald-500"
+                    : "bg-rose-500 text-white border-rose-500"
                 : "bg-white text-[#666666] border-[#E0E0E0] hover:border-[#B0B0B0]"
             }`}
           >
-            {est === "todos" ? "Todos" : est === "aprobado" ? "Aprobados" : "Rechazados"}
+            {est === "todos"
+              ? "Todos"
+              : est === "aprobado"
+                ? "Aprobados"
+                : "Rechazados"}
           </button>
         ))}
       </div>
@@ -61,7 +67,9 @@ export function HistorialFiltros({
       <div className="h-5 w-px bg-[#E0E0E0]" />
 
       <div className="flex items-center gap-2">
-        <span className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">Revisado por:</span>
+        <span className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">
+          Revisado por:
+        </span>
         <Select
           value={filtroUsuario || "_all_"}
           onValueChange={(v) => onFiltroUsuarioChange(v === "_all_" ? "" : v)}
@@ -72,7 +80,9 @@ export function HistorialFiltros({
           <SelectContent>
             <SelectItem value="_all_">Todos los usuarios</SelectItem>
             {usuariosRevisores.map((nombre) => (
-              <SelectItem key={nombre} value={nombre}>{nombre}</SelectItem>
+              <SelectItem key={nombre} value={nombre}>
+                {nombre}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>

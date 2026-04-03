@@ -22,7 +22,9 @@ function storageKey(userId: number, type: "tracked" | "seen" | "initialized") {
 
 function getTracked(userId: number): TrackedPago[] {
   try {
-    return JSON.parse(localStorage.getItem(storageKey(userId, "tracked")) ?? "[]");
+    return JSON.parse(
+      localStorage.getItem(storageKey(userId, "tracked")) ?? "[]",
+    );
   } catch {
     return [];
   }
@@ -38,7 +40,9 @@ function getSeen(userId: number): number[] {
 
 function isInitialized(userId: number, sucursalId: number): boolean {
   try {
-    const data = JSON.parse(localStorage.getItem(storageKey(userId, "initialized")) ?? "{}");
+    const data = JSON.parse(
+      localStorage.getItem(storageKey(userId, "initialized")) ?? "{}",
+    );
     return Boolean(data[sucursalId]);
   } catch {
     return false;
@@ -47,9 +51,14 @@ function isInitialized(userId: number, sucursalId: number): boolean {
 
 function markInitialized(userId: number, sucursalId: number) {
   try {
-    const data = JSON.parse(localStorage.getItem(storageKey(userId, "initialized")) ?? "{}");
+    const data = JSON.parse(
+      localStorage.getItem(storageKey(userId, "initialized")) ?? "{}",
+    );
     data[sucursalId] = true;
-    localStorage.setItem(storageKey(userId, "initialized"), JSON.stringify(data));
+    localStorage.setItem(
+      storageKey(userId, "initialized"),
+      JSON.stringify(data),
+    );
   } catch {}
 }
 
@@ -60,13 +69,16 @@ function markInitialized(userId: number, sucursalId: number) {
  */
 export function trackCreatedPago(
   userId: number,
-  pago: Omit<TrackedPago, never>
+  pago: Omit<TrackedPago, never>,
 ) {
   try {
     const tracked = getTracked(userId);
     if (!tracked.find((t) => t.id === pago.id)) {
       tracked.push(pago);
-      localStorage.setItem(storageKey(userId, "tracked"), JSON.stringify(tracked));
+      localStorage.setItem(
+        storageKey(userId, "tracked"),
+        JSON.stringify(tracked),
+      );
     }
   } catch {}
 }
@@ -83,7 +95,7 @@ export function trackCreatedPago(
 export function useEmployeeNotifications(
   userId: number | undefined,
   sucursalId: number,
-  isEmployee: boolean
+  isEmployee: boolean,
 ) {
   const [unseenCount, setUnseenCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -98,7 +110,7 @@ export function useEmployeeNotifications(
 
     try {
       const res = await apiFetch(
-        `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(userId)}?sucursal_id=${encodeURIComponent(String(sucursalId))}`
+        `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(userId)}?sucursal_id=${encodeURIComponent(String(sucursalId))}`,
       );
       if (!res.ok) return;
 
@@ -112,7 +124,10 @@ export function useEmployeeNotifications(
           .map((p) => p.id);
         const existing = getSeen(userId);
         const merged = Array.from(new Set([...existing, ...processed]));
-        localStorage.setItem(storageKey(userId, "seen"), JSON.stringify(merged));
+        localStorage.setItem(
+          storageKey(userId, "seen"),
+          JSON.stringify(merged),
+        );
         markInitialized(userId, sucursalId);
         return;
       }
@@ -131,8 +146,7 @@ export function useEmployeeNotifications(
         const trackedItem = tracked.find((t) => t.id === item.id);
         const fechaOriginal = trackedItem?.fecha_original;
         const fechaActual = normalizeDate(item.fecha ?? "");
-        const fechaCambio =
-          fechaOriginal && fechaOriginal !== fechaActual;
+        const fechaCambio = fechaOriginal && fechaOriginal !== fechaActual;
 
         // ── Toast según estado ──
         if (estado === "aprobado") {
@@ -142,9 +156,12 @@ export function useEmployeeNotifications(
               duration: 9000,
             });
           } else {
-            toast.success(`Tu pago "${item.concepto}" fue aprobado por el administrador.`, {
-              duration: 7000,
-            });
+            toast.success(
+              `Tu pago "${item.concepto}" fue aprobado por el administrador.`,
+              {
+                duration: 7000,
+              },
+            );
           }
         } else {
           toast.error(`Tu pago "${item.concepto}" fue rechazado.`, {
@@ -161,7 +178,10 @@ export function useEmployeeNotifications(
 
       if (newCount > 0) {
         const merged = Array.from(new Set([...Array.from(seen), ...newIds]));
-        localStorage.setItem(storageKey(userId, "seen"), JSON.stringify(merged));
+        localStorage.setItem(
+          storageKey(userId, "seen"),
+          JSON.stringify(merged),
+        );
         setUnseenCount((prev) => prev + newCount);
       }
     } catch (_err: unknown) {
