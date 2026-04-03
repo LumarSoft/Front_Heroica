@@ -32,7 +32,6 @@ interface AuthState {
   canVerReportes: () => boolean;
   canVerSucursales: () => boolean;
   canGestionarSucursales: () => boolean;
-  canAgregarComentarios: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -75,7 +74,6 @@ export const useAuthStore = create<AuthState>()(
       canVerReportes: () => get().hasPermiso("ver_reportes"),
       canVerSucursales: () => get().hasPermiso("ver_sucursales"),
       canGestionarSucursales: () => get().hasPermiso("gestionar_sucursales"),
-      canAgregarComentarios: () => get().hasPermiso("agregar_comentarios"),
     }),
     {
       name: "auth-storage",

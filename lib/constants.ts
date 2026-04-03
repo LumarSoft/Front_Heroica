@@ -10,7 +10,6 @@ export const PERMISOS = {
   EDITAR_MOVIMIENTOS: 'editar_movimientos',
   ELIMINAR_MOVIMIENTOS: 'eliminar_movimientos',
   APROBAR_MOVIMIENTOS: 'aprobar_movimientos',
-  AGREGAR_COMENTARIOS: 'agregar_comentarios',
   VER_PENDIENTES: 'ver_pendientes',
   CARGAR_PENDIENTES: 'cargar_pendientes',
   APROBAR_PENDIENTES: 'aprobar_pendientes',
