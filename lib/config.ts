@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: `${API_URL}/api/auth/login`,
     VERIFY: `${API_URL}/api/auth/verify`,
+    CHANGE_PASSWORD: `${API_URL}/api/auth/change-password`,
     VERIFY_2FA: `${API_URL}/api/auth/verify-2fa`,
     ENABLE_2FA: `${API_URL}/api/auth/enable-2fa`,
     CONFIRM_2FA: `${API_URL}/api/auth/confirm-2fa`,
@@ -136,6 +137,19 @@ export const API_ENDPOINTS = {
       TOGGLE_ACTIVO: (id: number) =>
         `${API_URL}/api/configuracion/usuarios/${id}/toggle-activo`,
       DELETE: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}`,
+      GET_SUCURSALES: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
+      UPDATE_SUCURSALES: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
+    },
+    // Roles
+    ROLES: {
+      GET_ALL: `${API_URL}/api/configuracion/roles`,
+      CREATE: `${API_URL}/api/configuracion/roles`,
+      UPDATE: (id: number) => `${API_URL}/api/configuracion/roles/${id}`,
+      DELETE: (id: number) => `${API_URL}/api/configuracion/roles/${id}`,
+    },
+    // Permisos
+    PERMISOS: {
+      GET_ALL: `${API_URL}/api/configuracion/permisos`,
     },
   },
   REPORTES: {

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
+import { useAuthStore } from "@/store/authStore";
 import type { Sucursal } from "@/lib/types";
 import { sucursalSchema } from "@/lib/schemas";
 
@@ -38,6 +39,7 @@ export default function SucursalesPage() {
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const canGestionarSucursales = useAuthStore((state) => state.canGestionarSucursales());
 
   // Estados para el modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -326,42 +328,42 @@ export default function SucursalesPage() {
                       ></span>
                       {sucursal.activo ? "Activa" : "Inactiva"}
                     </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => handleToggleActivo(e, sucursal)}
-                      className={
-                        sucursal.activo
-                          ? "text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-                          : "text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 hover:border-green-300"
-                      }
-                    >
-                      {sucursal.activo ? "Desactivar" : "Activar"}
-                    </Button>
+                    {canGestionarSucursales && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => handleToggleActivo(e, sucursal)}
+                        className={sucursal.activo ? "text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300" : "text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 hover:border-green-300"}
+                      >
+                        {sucursal.activo ? "Desactivar" : "Activar"}
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
 
                 {/* Botón de eliminar - esquina superior derecha */}
-                <button
-                  onClick={(e) => handleDeleteClick(e, sucursal)}
-                  className="absolute top-4 right-4 w-9 h-9 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all flex items-center justify-center shadow-sm hover:shadow-md opacity-0 group-hover:opacity-100 z-10 cursor-pointer"
-                  aria-label="Eliminar sucursal"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                    className="w-4 h-4"
+                {canGestionarSucursales && (
+                  <button
+                    onClick={(e) => handleDeleteClick(e, sucursal)}
+                    className="absolute top-4 right-4 w-9 h-9 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all flex items-center justify-center shadow-sm hover:shadow-md opacity-0 group-hover:opacity-100 z-10 cursor-pointer"
+                    aria-label="Eliminar sucursal"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-4 h-4"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                      />
+                    </svg>
+                  </button>
+                )}
               </Card>
             ))}
           </div>
@@ -407,26 +409,28 @@ export default function SucursalesPage() {
       </footer>
 
       {/* Botón flotante para agregar sucursal */}
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-8 right-8 w-16 h-16 bg-[#002868] text-white rounded-full shadow-2xl hover:bg-[#003d8f] hover:scale-110 transition-all flex items-center justify-center group cursor-pointer"
-        aria-label="Agregar sucursal"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2.5}
-          stroke="currentColor"
-          className="w-8 h-8"
+      {canGestionarSucursales && (
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="fixed bottom-8 right-8 w-16 h-16 bg-[#002868] text-white rounded-full shadow-2xl hover:bg-[#003d8f] hover:scale-110 transition-all flex items-center justify-center group cursor-pointer"
+          aria-label="Agregar sucursal"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 4.5v15m7.5-7.5h-15"
-          />
-        </svg>
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2.5}
+            stroke="currentColor"
+            className="w-8 h-8"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 4.5v15m7.5-7.5h-15"
+            />
+          </svg>
+        </button>
+      )}
 
       {/* Modal para crear sucursal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

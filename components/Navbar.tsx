@@ -24,7 +24,7 @@ export default function Navbar({
   sucursalNombre,
 }: NavbarProps) {
   const router = useRouter();
-  const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin());
+  const canVerConfiguracion = useAuthStore((state) => state.canVerConfiguracion());
 
   const greeting = (() => {
     const hour = new Date().getHours();
@@ -127,8 +127,8 @@ export default function Navbar({
               <span className="hidden sm:inline">Tareas</span>
             </Button>
 
-            {/* Configuration Button (Superadmin Only) */}
-            {isSuperAdmin && (
+            {/* Configuration Button */}
+            {canVerConfiguracion && (
               <Button
                 onClick={() => router.push("/configuracion")}
                 variant="outline"

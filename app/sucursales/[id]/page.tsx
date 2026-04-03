@@ -37,7 +37,12 @@ export default function SucursalDetailPage() {
   const params = useParams();
   const sucursalId = Number(params.id);
   const { user, isGuardLoading } = useAuthGuard();
-  const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin());
+
+  const canVerReportes = useAuthStore((state) => state.canVerReportes());
+  const canAprobarPendientes = useAuthStore((state) => state.canAprobarPendientes());
+  const canVerMovimientos = useAuthStore((state) => state.canVerMovimientos());
+  const canVerPendientes = useAuthStore((state) => state.canVerPendientes());
+  const canGestionarSucursales = useAuthStore((state) => state.canGestionarSucursales());
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const dateInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [pendingCount, setPendingCount] = useState(0);
@@ -205,7 +210,7 @@ export default function SucursalDetailPage() {
   ]);
 
   useEffect(() => {
-    if (isSuperAdmin) {
+    if (canAprobarPendientes) {
       const fetchPendingCount = async () => {
         try {
           const response = await apiFetch(
@@ -514,8 +519,8 @@ export default function SucursalDetailPage() {
                 )}
               </Button>
 
-              {/* Botón Reportes (Solo Superadmin) */}
-              {isSuperAdmin && (
+              {/* Botón Reportes */}
+              {canVerReportes && (
                 <Button
                   onClick={() =>
                     router.push(
@@ -552,16 +557,16 @@ export default function SucursalDetailPage() {
         {/* Título Destacado */}
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold text-[#002868] mb-3">
-            {isSuperAdmin ? "Gestión de Cajas" : "Gestión de Pagos"}
+            {canVerMovimientos ? "Gestión de Cajas" : "Gestión de Pagos"}
           </h2>
           <p className="text-lg text-[#666666] mb-6">
-            {isSuperAdmin
+            {canVerMovimientos
               ? "Selecciona la caja que deseas gestionar"
               : "Gestiona tus solicitudes de pago"}
           </p>
 
           {/* Selector de Moneda */}
-          {isSuperAdmin && (
+          {canVerMovimientos && (
             <div className="flex justify-center gap-2">
               <button
                 onClick={() => handleMonedaChange("ARS")}
@@ -587,7 +592,7 @@ export default function SucursalDetailPage() {
           )}
         </div>
 
-        {isSuperAdmin ? (
+          {canVerMovimientos ? (
           /* Las 3 Cajas - MUY GRANDES Y PROTAGONISTAS */
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Caja en Efectivo */}
@@ -814,7 +819,7 @@ export default function SucursalDetailPage() {
                 </div>
                 <h3 className="text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors relative inline-block">
                   Pagos Pendientes
-                  {isSuperAdmin && pendingCount > 0 && (
+                  {canAprobarPendientes && pendingCount > 0 && (
                     <span className="absolute -top-3 -right-6 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white ring-2 ring-white shadow-lg animate-bounce">
                       {pendingCount > 9 ? "9+" : pendingCount}
                     </span>
@@ -1000,7 +1005,7 @@ export default function SucursalDetailPage() {
                     value={formData.nombre}
                     onChange={handleInputChange}
                     required
-                    readOnly={!sucursal?.activo}
+                    readOnly={!sucursal?.activo || !canGestionarSucursales}
                     className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
@@ -1018,7 +1023,7 @@ export default function SucursalDetailPage() {
                     value={formData.razon_social}
                     onChange={handleInputChange}
                     required
-                    readOnly={!sucursal?.activo}
+                    readOnly={!sucursal?.activo || !canGestionarSucursales}
                     className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
@@ -1036,7 +1041,7 @@ export default function SucursalDetailPage() {
                     value={formData.cuit}
                     onChange={handleInputChange}
                     required
-                    readOnly={!sucursal?.activo}
+                    readOnly={!sucursal?.activo || !canGestionarSucursales}
                     className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
@@ -1054,7 +1059,7 @@ export default function SucursalDetailPage() {
                     value={formData.direccion}
                     onChange={handleInputChange}
                     required
-                    readOnly={!sucursal?.activo}
+                    readOnly={!sucursal?.activo || !canGestionarSucursales}
                     className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
@@ -1074,7 +1079,7 @@ export default function SucursalDetailPage() {
                     value={formData.email_correspondencia}
                     onChange={handleInputChange}
                     placeholder="correo@ejemplo.com"
-                    readOnly={!sucursal?.activo}
+                    readOnly={!sucursal?.activo || !canGestionarSucursales}
                     className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
                   />
                 </div>
@@ -1193,7 +1198,7 @@ export default function SucursalDetailPage() {
                                 >
                                   <Download className="w-4 h-4" />
                                 </Button>
-                                {sucursal?.activo && (
+                                {sucursal?.activo && canGestionarSucursales && (
                                   <Button
                                     type="button"
                                     variant="outline"
@@ -1211,7 +1216,7 @@ export default function SucursalDetailPage() {
                                 )}
                               </div>
                             </div>
-                          ) : sucursal?.activo ? (
+                          ) : sucursal?.activo && canGestionarSucursales ? (
                             <div className="flex flex-col gap-2 mt-2">
                               <div className="flex gap-2 items-center">
                                 <Label className="text-xs text-gray-500 min-w-[120px]">
@@ -1296,7 +1301,7 @@ export default function SucursalDetailPage() {
                     </svg>
                     Datos Bancarios ({cuentasBancarias.length})
                   </h3>
-                  {sucursal?.activo && (
+                  {sucursal?.activo && canGestionarSucursales && (
                     <Button
                       type="button"
                       size="sm"
@@ -1445,7 +1450,7 @@ export default function SucursalDetailPage() {
                             Alias: {cuenta.alias || "-"}
                           </p>
                         </div>
-                        {sucursal?.activo && (
+                        {sucursal?.activo && canGestionarSucursales && (
                           <Button
                             type="button"
                             variant="ghost"
@@ -1470,7 +1475,7 @@ export default function SucursalDetailPage() {
               <div className="flex gap-3 pt-4">
                 <Button
                   type="submit"
-                  disabled={isSaving || !sucursal?.activo}
+                  disabled={isSaving || !sucursal?.activo || !canGestionarSucursales}
                   className="flex-1 bg-[#002868] hover:bg-[#003d8f] text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? (
