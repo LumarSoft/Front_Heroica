@@ -78,7 +78,7 @@ function normalizeTransaction(
   m: Omit<Transaction, "monto" | "es_deuda"> & {
     monto?: number | string;
     es_deuda?: number;
-  },
+  }
 ): Transaction {
   return {
     ...m,
@@ -129,7 +129,7 @@ function getEndpoints(tipo: "efectivo" | "banco") {
  */
 export function useCajaData(
   tipo: "efectivo" | "banco",
-  moneda: "ARS" | "USD" = "ARS",
+  moneda: "ARS" | "USD" = "ARS"
 ) {
   const params = useParams();
   const sucursalId = useMemo(() => Number(params.id), [params.id]);
@@ -196,7 +196,7 @@ export function useCajaData(
       setError("");
 
       const response = await apiFetch(
-        endpoints.getMovimientos(sucursalId, moneda),
+        endpoints.getMovimientos(sucursalId, moneda)
       );
       const data = await response.json();
 
@@ -215,7 +215,11 @@ export function useCajaData(
 
       const movimientosAprobados = allMovimientos
         .filter((m) => m.estado === "aprobado" || m.estado === "pendiente")
-        .sort((a, b) => b.id - a.id);
+        .sort((a, b) => {
+          const fechaA = a.fecha ? new Date(a.fecha).getTime() : 0;
+          const fechaB = b.fecha ? new Date(b.fecha).getTime() : 0;
+          return fechaA - fechaB;
+        });
 
       setSaldoReal(movimientosCompletados);
       // Saldo necesario incluye TODOS los aprobados/pendientes (incluyendo deuda),
@@ -235,7 +239,7 @@ export function useCajaData(
   const fetchCategorias = useCallback(async () => {
     try {
       const response = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL,
+        API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL
       );
       const data = await response.json();
       if (response.ok) setCategorias(data.data || []);
@@ -247,7 +251,7 @@ export function useCajaData(
   const fetchSubcategorias = useCallback(async (categoriaId: number) => {
     try {
       const response = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId),
+        API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId)
       );
       const data = await response.json();
       if (response.ok) setSubcategorias(data.data || []);
@@ -259,7 +263,7 @@ export function useCajaData(
   const fetchBancos = useCallback(async () => {
     try {
       const response = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL,
+        API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL
       );
       const data = await response.json();
       if (response.ok) setBancos(data.data || []);
@@ -271,7 +275,7 @@ export function useCajaData(
   const fetchMediosPago = useCallback(async () => {
     try {
       const response = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL,
+        API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL
       );
       const data = await response.json();
       if (response.ok) setMediosPago(data.data || []);
@@ -376,7 +380,7 @@ export function useCajaData(
               : null,
             numero_cheque: formData.numero_cheque || null,
           }),
-        },
+        }
       );
 
       const data = await response.json();
@@ -408,7 +412,7 @@ export function useCajaData(
         {
           method: "PUT",
           body: JSON.stringify({ estado: nuevoEstado }),
-        },
+        }
       );
 
       const data = await response.json();
@@ -437,7 +441,7 @@ export function useCajaData(
 
       const response = await apiFetch(
         endpoints.deleteMovimiento(selectedTransaction.id),
-        { method: "DELETE" },
+        { method: "DELETE" }
       );
 
       const data = await response.json();
@@ -459,7 +463,7 @@ export function useCajaData(
 
   const handleSaveDeuda = async (
     esDeuda: boolean,
-    fechaOriginalVencimiento?: string,
+    fechaOriginalVencimiento?: string
   ) => {
     if (!selectedTransaction) return;
 
@@ -477,7 +481,7 @@ export function useCajaData(
         {
           method: "PUT",
           body: JSON.stringify(body),
-        },
+        }
       );
 
       const data = await response.json();
@@ -488,7 +492,7 @@ export function useCajaData(
       toast.success(
         esDeuda
           ? "Deuda activada exitosamente"
-          : "Deuda desactivada exitosamente",
+          : "Deuda desactivada exitosamente"
       );
       setIsDeudaDialogOpen(false);
       await fetchMovimientos();
@@ -502,7 +506,7 @@ export function useCajaData(
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     if (name === "monto" || name === "tipo_cambio") {
