@@ -322,6 +322,7 @@ export default function CajaBancoPage() {
         categoriasExternas={caja.categorias}
         bancosExternos={caja.bancos}
         mediosPagoExternos={caja.mediosPago}
+        parcialesBancos={caja.parciales}
       />
 
       <MoverMovimientoDialog

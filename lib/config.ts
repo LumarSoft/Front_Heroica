@@ -85,6 +85,7 @@ export const API_ENDPOINTS = {
     DELETE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
     BULK_DELETE: `${API_URL}/api/caja-banco/bulk`,
     BULK_MOVER: `${API_URL}/api/caja-banco/bulk/mover`,
+    TRANSFERENCIA_INTERNA: `${API_URL}/api/caja-banco/transferencia-interna`,
     // Documentos
     GET_DOCUMENTOS: (id: number) =>
       `${API_URL}/api/caja-banco/${id}/documentos`,

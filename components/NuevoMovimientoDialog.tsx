@@ -5,6 +5,7 @@ import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +18,7 @@ import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
 import { AlertTriangle, Upload, X, FileText, Download } from "lucide-react";
 import { trackCreatedPago } from "@/hooks/use-employee-notifications";
-import type { Categoria, Subcategoria, SelectOption } from "@/lib/types";
+import type { Categoria, Subcategoria, SelectOption, BancoParcial } from "@/lib/types";
 import { selectClasses, labelClasses, inputClasses } from "@/lib/dialog-styles";
 import { movimientoBaseSchema, movimientoBancoSchema } from "@/lib/schemas";
 import { parseInputMonto, formatInputMonto } from "@/lib/formatters";
@@ -48,6 +49,8 @@ interface NuevoMovimientoDialogProps {
   bancosExternos?: SelectOption[];
   mediosPagoExternos?: SelectOption[];
   moneda?: "ARS" | "USD";
+  /** Parciales de saldo real por banco (para validar transferencias internas) */
+  parcialesBancos?: BancoParcial[];
 }
 
 export default function NuevoMovimientoDialog({
@@ -64,6 +67,7 @@ export default function NuevoMovimientoDialog({
   bancosExternos,
   mediosPagoExternos,
   moneda = "ARS",
+  parcialesBancos = [],
 }: NuevoMovimientoDialogProps) {
   const isApprovalMode = pagoIdToApprove !== undefined;
   const { user } = useAuthStore();
@@ -71,6 +75,20 @@ export default function NuevoMovimientoDialog({
   const [error, setError] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // --- Transferencia interna entre bancos ---
+  const [isTransferenciaInterna, setIsTransferenciaInterna] = useState(false);
+  const [transferenciaData, setTransferenciaData] = useState({
+    fecha: (() => {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    })(),
+    concepto: "",
+    descripcion: "",
+    monto: "",
+    banco_origen_id: "",
+    banco_destino_id: "",
+  });
+  // ------------------------------------------
   const [formData, setFormData] = useState({
     fecha: (() => {
       const d = new Date();
@@ -276,6 +294,18 @@ export default function NuevoMovimientoDialog({
   // Cerrar dialog
   const handleClose = () => {
     resetForm();
+    setIsTransferenciaInterna(false);
+    setTransferenciaData({
+      fecha: (() => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      })(),
+      concepto: "",
+      descripcion: "",
+      monto: "",
+      banco_origen_id: "",
+      banco_destino_id: "",
+    });
     onClose();
   };
 
@@ -330,6 +360,64 @@ export default function NuevoMovimientoDialog({
       } catch (error) {
         console.error("Error al subir documento:", error);
       }
+    }
+  };
+
+  // Guardar transferencia interna entre bancos
+  const handleSaveTransferencia = async () => {
+    if (!transferenciaData.banco_origen_id || !transferenciaData.banco_destino_id) {
+      setError("Seleccioná banco origen y banco destino.");
+      return;
+    }
+    if (transferenciaData.banco_origen_id === transferenciaData.banco_destino_id) {
+      setError("El banco origen y destino no pueden ser el mismo.");
+      return;
+    }
+    if (!transferenciaData.monto || parseFloat(transferenciaData.monto) <= 0) {
+      setError("El monto debe ser mayor a cero.");
+      return;
+    }
+    // Validación de saldo real en el frontend (si tenemos los parciales)
+    if (parcialesBancos.length > 0) {
+      const parcial = parcialesBancos.find(
+        (p) => p.banco_id?.toString() === transferenciaData.banco_origen_id
+      );
+      const saldoDisponible = Number(parcial?.total_real ?? 0);
+      const montoSolicitado = parseFloat(transferenciaData.monto);
+      if (montoSolicitado > saldoDisponible) {
+        const simbolo = moneda === "USD" ? "US$" : "$";
+        setError(
+          `Saldo insuficiente. El banco origen tiene ${simbolo} ${saldoDisponible.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} de saldo real y no puede cubrir ${simbolo} ${montoSolicitado.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`
+        );
+        return;
+      }
+    }
+    try {
+      setIsSaving(true);
+      setError("");
+      const res = await apiFetch(API_ENDPOINTS.CAJA_BANCO.TRANSFERENCIA_INTERNA, {
+        method: "POST",
+        body: JSON.stringify({
+          sucursal_id: sucursalId,
+          user_id: user?.id,
+          fecha: transferenciaData.fecha,
+          concepto: transferenciaData.concepto || "Transferencia interna entre bancos",
+          descripcion: transferenciaData.descripcion || null,
+          monto: parseFloat(transferenciaData.monto),
+          banco_origen_id: Number(transferenciaData.banco_origen_id),
+          banco_destino_id: Number(transferenciaData.banco_destino_id),
+          moneda: moneda,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error al realizar transferencia");
+      handleClose();
+      onSuccess();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al realizar transferencia";
+      setError(message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -544,6 +632,188 @@ export default function NuevoMovimientoDialog({
 
         {/* ─── Body ─── */}
         <div className="px-8 py-6 space-y-6 overflow-y-auto flex-1">
+
+          {/* ── Checkbox: Transferencia interna (solo en caja banco, no aprobación) ── */}
+          {cajaTipo === "banco" && !isApprovalMode && !isPagoPendiente && (
+            <div
+              className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer select-none transition-all ${
+                isTransferenciaInterna
+                  ? "border-[#002868] bg-[#EEF3FF]"
+                  : "border-[#E0E0E0] bg-[#FAFAFA] hover:border-[#002868]/40"
+              }`}
+              onClick={() => setIsTransferenciaInterna((v) => !v)}
+            >
+              <Checkbox
+                id="transferencia_interna"
+                checked={isTransferenciaInterna}
+                onCheckedChange={(v) => setIsTransferenciaInterna(Boolean(v))}
+                className="pointer-events-none"
+              />
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-[#002868]">
+                  Transferencia entre bancos
+                </span>
+                <span className="text-xs text-[#8A8F9C]">
+                  Mover dinero de un banco a otro dentro de esta sucursal
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* ── Formulario de transferencia interna ── */}
+          {isTransferenciaInterna ? (
+            <section className="space-y-4">
+              <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
+                <span className="w-1 h-4 bg-[#002868] rounded-full" />
+                Movimiento entre bancos
+              </h4>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="transferencia_fecha" className={labelClasses}>Fecha</Label>
+                  <Input
+                    id="transferencia_fecha"
+                    type="date"
+                    value={transferenciaData.fecha}
+                    onChange={(e) => setTransferenciaData((p) => ({ ...p, fecha: e.target.value }))}
+                    className={inputClasses}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="transferencia_monto" className={labelClasses}>Monto *</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#8A8F9C] select-none pointer-events-none">
+                      {moneda === "USD" ? "US$" : "$"}
+                    </span>
+                    <Input
+                      id="transferencia_monto"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0,00"
+                      value={formatInputMonto(transferenciaData.monto)}
+                      onChange={(e) =>
+                        setTransferenciaData((p) => ({ ...p, monto: parseInputMonto(e.target.value) }))
+                      }
+                      className={`${inputClasses} ${moneda === "USD" ? "pl-12" : "pl-8"}`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="transferencia_concepto" className={labelClasses}>Concepto</Label>
+                <Input
+                  id="transferencia_concepto"
+                  placeholder="Ej: Transferencia Galicia → BBVA"
+                  value={transferenciaData.concepto}
+                  onChange={(e) => setTransferenciaData((p) => ({ ...p, concepto: e.target.value }))}
+                  className={inputClasses}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="transferencia_descripcion" className={labelClasses}>Descripción</Label>
+                <Input
+                  id="transferencia_descripcion"
+                  placeholder="Detalles adicionales (opcional)"
+                  value={transferenciaData.descripcion}
+                  onChange={(e) => setTransferenciaData((p) => ({ ...p, descripcion: e.target.value }))}
+                  className={inputClasses}
+                />
+              </div>
+
+              {/* Origen → Destino */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="transferencia_origen" className={labelClasses}>Banco Origen *</Label>
+                  <select
+                    id="transferencia_origen"
+                    value={transferenciaData.banco_origen_id}
+                    onChange={(e) => setTransferenciaData((p) => ({ ...p, banco_origen_id: e.target.value }))}
+                    className={selectClasses}
+                  >
+                    <option value="">Seleccione banco origen</option>
+                    {bancos
+                      .filter((b) => b.id.toString() !== transferenciaData.banco_destino_id)
+                      .map((b) => (
+                        <option key={b.id} value={b.id}>{b.nombre}</option>
+                      ))}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="transferencia_destino" className={labelClasses}>Banco Destino *</Label>
+                  <select
+                    id="transferencia_destino"
+                    value={transferenciaData.banco_destino_id}
+                    onChange={(e) => setTransferenciaData((p) => ({ ...p, banco_destino_id: e.target.value }))}
+                    className={selectClasses}
+                  >
+                    <option value="">Seleccione banco destino</option>
+                    {bancos
+                      .filter((b) => b.id.toString() !== transferenciaData.banco_origen_id)
+                      .map((b) => (
+                        <option key={b.id} value={b.id}>{b.nombre}</option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Saldo real del banco origen */}
+              {transferenciaData.banco_origen_id && (() => {
+                const parcial = parcialesBancos.find(
+                  (p) => p.banco_id?.toString() === transferenciaData.banco_origen_id
+                );
+                const saldoOrigen = Number(parcial?.total_real ?? 0);
+                const montoSolicitado = parseFloat(transferenciaData.monto) || 0;
+                const excede = montoSolicitado > 0 && montoSolicitado > saldoOrigen;
+                const colorBg = excede ? "bg-rose-50 border-rose-200" : "bg-emerald-50 border-emerald-200";
+                const colorText = excede ? "text-rose-700" : "text-emerald-700";
+                const colorLabel = excede ? "text-rose-500" : "text-emerald-500";
+                return (
+                  <div className={`flex items-center justify-between px-4 py-3 rounded-xl border ${colorBg} transition-all`}>
+                    <div className="flex items-center gap-2">
+                      {excede ? (
+                        <AlertTriangle className="w-4 h-4 text-rose-500 flex-shrink-0" />
+                      ) : (
+                        <span className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                          <span className="w-2 h-2 rounded-full bg-white" />
+                        </span>
+                      )}
+                      <span className={`text-xs font-semibold uppercase tracking-wide ${colorLabel}`}>
+                        Saldo real disponible
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-sm font-bold ${colorText}`}>
+                        {moneda === "USD" ? "US$" : "$"}{" "}
+                        {saldoOrigen.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                      {excede && (
+                        <p className="text-xs text-rose-500 mt-0.5">
+                          Faltan {moneda === "USD" ? "US$" : "$"}{" "}
+                          {(montoSolicitado - saldoOrigen).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Flecha visual */}
+              {transferenciaData.banco_origen_id && transferenciaData.banco_destino_id && (
+                <div className="flex items-center justify-center gap-2 py-2">
+                  <span className="text-sm font-bold text-[#002868]">
+                    {bancos.find((b) => b.id.toString() === transferenciaData.banco_origen_id)?.nombre}
+                  </span>
+                  <span className="text-[#002868] text-lg">→</span>
+                  <span className="text-sm font-bold text-emerald-600">
+                    {bancos.find((b) => b.id.toString() === transferenciaData.banco_destino_id)?.nombre}
+                  </span>
+                </div>
+              )}
+            </section>
+          ) : (
+            <>
           {/* ── Sección: Información General ── */}
           <section className="space-y-4">
             <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
@@ -845,7 +1115,8 @@ export default function NuevoMovimientoDialog({
               </div>
             )}
           </section>
-        </div>
+        </> /* end normal form */
+        )}
 
         {/* ─── Sección de Comprobantes ─── */}
         <div className="px-8 py-4 border-t border-dashed border-[#E8E8E8] flex-shrink-0">
@@ -910,6 +1181,8 @@ export default function NuevoMovimientoDialog({
           </div>
         </div>
 
+        </div>
+
         {/* ─── Footer ─── */}
         <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC] space-y-3 flex-shrink-0">
           {/* Error visible siempre en el footer */}
@@ -929,15 +1202,28 @@ export default function NuevoMovimientoDialog({
               Cancelar
             </Button>
             <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className={`h-10 px-6 rounded-lg text-white font-semibold shadow-sm hover:shadow-md transition-all cursor-pointer ${isApprovalMode ? "bg-emerald-600 hover:bg-emerald-700" : "bg-[#002868] hover:bg-[#003d8f]"}`}
+              onClick={isTransferenciaInterna ? handleSaveTransferencia : handleSave}
+              disabled={isSaving || (() => {
+                if (!isTransferenciaInterna || !transferenciaData.banco_origen_id || !transferenciaData.monto) return false;
+                const parcial = parcialesBancos.find((p) => p.banco_id?.toString() === transferenciaData.banco_origen_id);
+                const saldo = Number(parcial?.total_real ?? 0);
+                return parseFloat(transferenciaData.monto) > saldo;
+              })()}
+              className={`h-10 px-6 rounded-lg text-white font-semibold shadow-sm hover:shadow-md transition-all cursor-pointer ${
+                isTransferenciaInterna
+                  ? "bg-emerald-600 hover:bg-emerald-700"
+                  : isApprovalMode
+                  ? "bg-emerald-600 hover:bg-emerald-700"
+                  : "bg-[#002868] hover:bg-[#003d8f]"
+              }`}
             >
               {isSaving ? (
                 <span className="flex items-center gap-2">
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  {isApprovalMode ? "Aprobando…" : "Creando…"}
+                  {isTransferenciaInterna ? "Transfiriendo…" : isApprovalMode ? "Aprobando…" : "Creando…"}
                 </span>
+              ) : isTransferenciaInterna ? (
+                "Confirmar transferencia"
               ) : isApprovalMode ? (
                 "Confirmar y aprobar"
               ) : (
