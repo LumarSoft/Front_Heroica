@@ -57,6 +57,7 @@ type Estado = "pendiente" | "en_progreso" | "en_pruebas" | "completado";
 interface Tarea {
   id: number;
   codigo: string;
+  version: string | null;
   titulo: string;
   descripcion: string | null;
   tipo: Tipo;
@@ -252,6 +253,11 @@ function TaskCard({
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-[#002868] text-white border border-[#002868]">
           {tarea.codigo}
         </span>
+        {tarea.version && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-white text-[#002868] border border-[#002868]">
+            v{tarea.version}
+          </span>
+        )}
         <span
           className={cn(
             "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border",
@@ -380,6 +386,7 @@ interface TareaDialogProps {
     descripcion: string;
     tipo: Tipo;
     prioridad: Prioridad;
+    version: string;
   }) => Promise<void>;
   saving: boolean;
   initial?: Tarea | null;
@@ -394,6 +401,7 @@ function TareaDialog({
 }: TareaDialogProps) {
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
+  const [version, setVersion] = useState("");
   const [tipo, setTipo] = useState<Tipo>("otro");
   const [prioridad, setPrioridad] = useState<Prioridad>("media");
 
@@ -401,6 +409,7 @@ function TareaDialog({
     if (open) {
       setTitulo(initial?.titulo ?? "");
       setDescripcion(initial?.descripcion ?? "");
+      setVersion(initial?.version ?? "");
       setTipo(initial?.tipo ?? "otro");
       setPrioridad(initial?.prioridad ?? "media");
     }
@@ -412,6 +421,7 @@ function TareaDialog({
     await onSave({
       titulo: titulo.trim(),
       descripcion: descripcion.trim(),
+      version: version.trim(),
       tipo,
       prioridad,
     });
@@ -434,18 +444,32 @@ function TareaDialog({
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             {/* Título */}
-            <div className="space-y-2">
-              <Label htmlFor="titulo" className="text-[#002868] font-semibold">
-                Título *
-              </Label>
-              <Input
-                id="titulo"
-                placeholder="Ej: El botón de guardar no responde"
-                value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
-                required
-                className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="titulo" className="text-[#002868] font-semibold">
+                  Título *
+                </Label>
+                <Input
+                  id="titulo"
+                  placeholder="Ej: El botón de guardar no responde"
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                  required
+                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="version" className="text-[#002868] font-semibold">
+                  Versión
+                </Label>
+                <Input
+                  id="version"
+                  placeholder="Ej: 2604"
+                  value={version}
+                  onChange={(e) => setVersion(e.target.value)}
+                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                />
+              </div>
             </div>
 
             {/* Tipo + Prioridad */}
@@ -656,6 +680,11 @@ function DetailDialog({
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-[#002868] text-white border border-[#002868]">
                 {tarea.codigo}
               </span>
+              {tarea.version && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-white text-[#002868] border border-[#002868]">
+                  v{tarea.version}
+                </span>
+              )}
               <span
                 className={cn(
                   "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border",
@@ -868,6 +897,7 @@ export default function TareasPage() {
     descripcion: string;
     tipo: Tipo;
     prioridad: Prioridad;
+    version: string;
   }) {
     setSaving(true);
     try {

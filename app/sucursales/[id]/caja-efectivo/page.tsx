@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/loading-spinner";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { AccessDenied } from "@/components/ui/access-denied";
+import { useAuthStore } from "@/store/authStore";
 import { CajaTabs, TabsContent } from "@/components/caja/CajaTabs";
 import {
   TransactionTable,
@@ -96,11 +97,22 @@ export default function CajaEfectivoPage() {
       .catch(() => setSucursalActiva(true));
   }, [params.id]);
 
-  const isReadOnly = sucursalActiva === false;
+  const { hasPermiso } = useAuthStore();
+  const isGlobalReadOnly = sucursalActiva === false;
+  
+  const canCrear = !isGlobalReadOnly && hasPermiso("crear_movimientos");
+  const canEditInfo = !isGlobalReadOnly && hasPermiso("editar_movimientos");
+  const canAddComment = !isGlobalReadOnly && hasPermiso("agregar_comentarios");
+  const canDelete = !isGlobalReadOnly && hasPermiso("eliminar_movimientos");
+  const canChangeState = !isGlobalReadOnly && hasPermiso("aprobar_movimientos");
+  const canToggleDeuda = canCrear; // because creating mirror debt acts as "crear"
+
+  const isStrictlyReadOnly = isGlobalReadOnly || (!canEditInfo && !canAddComment);
 
   const { initialize } = caja;
   useEffect(() => {
-    if (!isGuardLoading && user?.rol !== "empleado") {
+    if (!isGuardLoading) {
+      if (user?.rol === "empleado") return;
       initialize();
     }
   }, [isGuardLoading, user?.rol, initialize]);
@@ -129,13 +141,11 @@ export default function CajaEfectivoPage() {
             {/* Mensajes */}
             <ErrorBanner error={caja.error} />
 
-            {/* Banner solo lectura */}
-            {isReadOnly && (
-              <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                <p className="text-sm text-amber-800 font-medium">
-                  Esta sucursal está <strong>inactiva</strong>. Podés ver los
-                  datos pero no crear ni modificar movimientos.
+            {isStrictlyReadOnly && !isGlobalReadOnly && (
+              <div className="mb-4 p-4 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+                <p className="text-sm text-indigo-800 font-medium">
+                  Modo lectura. Solo puedes visualizar los movimientos.
                 </p>
               </div>
             )}
@@ -146,7 +156,7 @@ export default function CajaEfectivoPage() {
               subtitle={`Gestión de saldos y movimientos en efectivo (${moneda})`}
               onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
               onCompraVentaDivisas={() => setIsCompraVentaDialogOpen(true)}
-              isReadOnly={isReadOnly}
+              isReadOnly={!canCrear}
               sucursalId={Number(params.id)}
             />
 
@@ -181,11 +191,11 @@ export default function CajaEfectivoPage() {
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
                       onChangeState={caja.handleOpenStateChange}
-                      onDelete={caja.handleOpenDelete}
-                      onMove={caja.handleOpenMover}
-                      onBulkDelete={!isReadOnly ? handleBulkDelete : undefined}
-                      onBulkMove={!isReadOnly ? handleBulkMove : undefined}
-                      isReadOnly={isReadOnly}
+                      onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                      onMove={canCrear ? caja.handleOpenMover : undefined}
+                      onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                      onBulkMove={canCrear ? handleBulkMove : undefined}
+                      isReadOnly={isStrictlyReadOnly}
                     />
                   </TabsContent>
                   <TabsContent
@@ -202,13 +212,13 @@ export default function CajaEfectivoPage() {
                       }
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
-                      onChangeState={caja.handleOpenStateChange}
-                      onDelete={caja.handleOpenDelete}
-                      onToggleDeuda={caja.handleOpenDeuda}
-                      onMove={caja.handleOpenMover}
-                      onBulkDelete={!isReadOnly ? handleBulkDelete : undefined}
-                      onBulkMove={!isReadOnly ? handleBulkMove : undefined}
-                      isReadOnly={isReadOnly}
+                      onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
+                      onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                      onToggleDeuda={canToggleDeuda ? caja.handleOpenDeuda : undefined}
+                      onMove={canCrear ? caja.handleOpenMover : undefined}
+                      onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                      onBulkMove={canCrear ? handleBulkMove : undefined}
+                      isReadOnly={isStrictlyReadOnly}
                     />
                   </TabsContent>
                 </CajaTabs>
@@ -231,7 +241,9 @@ export default function CajaEfectivoPage() {
         bancos={caja.bancos}
         mediosPago={caja.mediosPago}
         showBancoFields={false}
-        isReadOnly={isReadOnly}
+        isReadOnly={isStrictlyReadOnly}
+        canEditInfo={canEditInfo}
+        canEditComment={canAddComment}
         movimientoId={caja.selectedTransaction?.id}
         cajaTipo="efectivo"
       />

@@ -70,6 +70,8 @@ interface DetailsDialogProps {
   mediosPago: SelectOption[];
   showBancoFields?: boolean;
   isReadOnly?: boolean;
+  canEditInfo?: boolean;
+  canEditComment?: boolean;
   movimientoId?: number;
   cajaTipo?: "efectivo" | "banco";
 }
@@ -87,6 +89,8 @@ export function DetailsDialog({
   mediosPago,
   showBancoFields = false,
   isReadOnly = false,
+  canEditInfo = true,
+  canEditComment = true,
   movimientoId,
   cajaTipo = "efectivo",
 }: DetailsDialogProps) {
@@ -241,7 +245,8 @@ export function DetailsDialog({
                   type="date"
                   value={formData.fecha}
                   onChange={onInputChange}
-                  className={inputClasses}
+                  disabled={!canEditInfo}
+                  className={`${inputClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed" : ""}`}
                 />
               </div>
               <div className="space-y-1.5">
@@ -253,7 +258,8 @@ export function DetailsDialog({
                   name="tipo"
                   value={formData.tipo}
                   onChange={onInputChange}
-                  className={selectClasses}
+                  disabled={!canEditInfo}
+                  className={`${selectClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`}
                 >
                   <option value="ingreso">Ingreso</option>
                   <option value="egreso">Egreso</option>
@@ -271,7 +277,8 @@ export function DetailsDialog({
                 placeholder="Ej: Transferencia recibida"
                 value={formData.concepto}
                 onChange={onInputChange}
-                className={inputClasses}
+                disabled={!canEditInfo}
+                className={`${inputClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed" : ""}`}
               />
             </div>
 
@@ -285,7 +292,8 @@ export function DetailsDialog({
                 placeholder="Detalle adicional del movimiento"
                 value={formData.descripcion}
                 onChange={onInputChange}
-                className={inputClasses}
+                disabled={!canEditComment && !canEditInfo}
+                className={`${inputClasses} ${(!canEditComment && !canEditInfo) ? "opacity-50 cursor-not-allowed" : ""}`}
               />
             </div>
           </section>
@@ -317,7 +325,8 @@ export function DetailsDialog({
                     placeholder="0,00"
                     value={formatInputMonto(formData.monto)}
                     onChange={onInputChange}
-                    className={`${inputClasses} pl-8`}
+                    disabled={!canEditInfo}
+                    className={`${inputClasses} pl-8 ${!canEditInfo ? "opacity-50 cursor-not-allowed" : ""}`}
                   />
                 </div>
               </div>
@@ -331,7 +340,8 @@ export function DetailsDialog({
                   placeholder="Ej: 0001-00012345"
                   value={formData.comprobante}
                   onChange={onInputChange}
-                  className={inputClasses}
+                  disabled={!canEditInfo}
+                  className={`${inputClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed" : ""}`}
                 />
               </div>
             </div>
@@ -348,7 +358,8 @@ export function DetailsDialog({
                       name="banco_id"
                       value={formData.banco_id}
                       onChange={onInputChange}
-                      className={selectClasses}
+                      disabled={!canEditInfo}
+                      className={`${selectClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`}
                     >
                       <option value="">Seleccione un banco</option>
                       {bancos.map((b) => (
@@ -367,7 +378,8 @@ export function DetailsDialog({
                       name="medio_pago_id"
                       value={formData.medio_pago_id}
                       onChange={onInputChange}
-                      className={selectClasses}
+                      disabled={!canEditInfo}
+                      className={`${selectClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`}
                     >
                       <option value="">Seleccione medio de pago</option>
                       {mediosPago.map((m) => (
@@ -395,7 +407,8 @@ export function DetailsDialog({
                         placeholder="Ej: 00012345"
                         value={formData.numero_cheque}
                         onChange={onInputChange}
-                        className={inputClasses}
+                        disabled={!canEditInfo}
+                        className={`${inputClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed" : ""}`}
                       />
                     </div>
                   ) : null;
@@ -412,7 +425,8 @@ export function DetailsDialog({
                 name="prioridad"
                 value={formData.prioridad}
                 onChange={onInputChange}
-                className={selectClasses}
+                disabled={!canEditInfo}
+                className={`${selectClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`}
               >
                 <option value="baja">Baja</option>
                 <option value="media">Media</option>
@@ -441,7 +455,8 @@ export function DetailsDialog({
                   name="categoria_id"
                   value={formData.categoria_id}
                   onChange={onInputChange}
-                  className={selectClasses}
+                  disabled={!canEditInfo}
+                  className={`${selectClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`}
                 >
                   <option value="">Seleccione categoría</option>
                   {categorias
@@ -462,7 +477,7 @@ export function DetailsDialog({
                   name="subcategoria_id"
                   value={formData.subcategoria_id}
                   onChange={onInputChange}
-                  disabled={!formData.categoria_id}
+                  disabled={!formData.categoria_id || !canEditInfo}
                   className={`${selectClasses} disabled:opacity-40 disabled:bg-[#FAFAFA] disabled:cursor-not-allowed`}
                 >
                   <option value="">Seleccione subcategoría</option>
@@ -478,7 +493,7 @@ export function DetailsDialog({
         </div>
 
         {/* ─── Sección de Comprobantes ─── */}
-        {!isReadOnly && movimientoId && (
+        {(!isReadOnly || (canEditInfo || canEditComment)) && movimientoId && (
           <div className="px-8 py-4 border-t border-dashed border-[#E8E8E8] flex-shrink-0">
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
@@ -646,9 +661,9 @@ export function DetailsDialog({
               disabled={isSaving}
               className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] hover:border-[#C0C0C0] transition-all cursor-pointer"
             >
-              {isReadOnly ? "Cerrar" : "Cancelar"}
+              {isReadOnly && !canEditInfo && !canEditComment ? "Cerrar" : "Cancelar"}
             </Button>
-            {!isReadOnly && (
+            {(!isReadOnly || canEditInfo || canEditComment) && (
               <Button
                 onClick={onSave}
                 disabled={isSaving}

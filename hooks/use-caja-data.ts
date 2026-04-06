@@ -7,6 +7,7 @@ import { API_ENDPOINTS } from "@/lib/config";
 import { apiFetch } from "@/lib/api";
 import { parseInputMonto } from "@/lib/formatters";
 import { DateRange } from "react-day-picker";
+import { useAuthStore } from "@/store/authStore";
 import type {
   Transaction,
   BancoParcial,
@@ -356,36 +357,65 @@ export function useCajaData(
       setIsSaving(true);
       setError("");
 
-      const response = await apiFetch(
-        endpoints.update(selectedTransaction.id),
-        {
-          method: "PUT",
-          body: JSON.stringify({
-            fecha: formData.fecha,
-            concepto: formData.concepto,
-            monto: parseFloat(formData.monto),
-            descripcion: formData.descripcion,
-            prioridad: formData.prioridad,
-            tipo: formData.tipo,
-            categoria_id: formData.categoria_id
-              ? Number(formData.categoria_id)
-              : null,
-            subcategoria_id: formData.subcategoria_id
-              ? Number(formData.subcategoria_id)
-              : null,
-            comprobante: formData.comprobante,
-            banco_id: formData.banco_id ? Number(formData.banco_id) : null,
-            medio_pago_id: formData.medio_pago_id
-              ? Number(formData.medio_pago_id)
-              : null,
-            numero_cheque: formData.numero_cheque || null,
-          }),
-        }
-      );
+      const authStore = useAuthStore.getState();
+      const canEditInfo = authStore.hasPermiso("editar_movimientos");
+      const canEditComment = authStore.hasPermiso("agregar_comentarios");
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Error al actualizar movimiento");
+      if (!canEditInfo && canEditComment) {
+        // Solo actualizar comentario
+        const response = await apiFetch(
+          endpoints.update(selectedTransaction.id).replace(
+            `/api/movimientos/${selectedTransaction.id}`,
+            `/api/movimientos/${selectedTransaction.id}/comentario`
+          ).replace(
+            `/api/caja-banco/${selectedTransaction.id}`,
+            `/api/caja-banco/${selectedTransaction.id}/comentario`
+          ),
+          {
+            method: "PATCH",
+            body: JSON.stringify({
+              descripcion: formData.descripcion,
+            }),
+          }
+        );
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Error al actualizar comentario");
+        }
+      } else {
+        // Actualizar información completa
+        const response = await apiFetch(
+          endpoints.update(selectedTransaction.id),
+          {
+            method: "PUT",
+            body: JSON.stringify({
+              fecha: formData.fecha,
+              concepto: formData.concepto,
+              monto: parseFloat(formData.monto),
+              descripcion: formData.descripcion,
+              prioridad: formData.prioridad,
+              tipo: formData.tipo,
+              categoria_id: formData.categoria_id
+                ? Number(formData.categoria_id)
+                : null,
+              subcategoria_id: formData.subcategoria_id
+                ? Number(formData.subcategoria_id)
+                : null,
+              comprobante: formData.comprobante,
+              banco_id: formData.banco_id ? Number(formData.banco_id) : null,
+              medio_pago_id: formData.medio_pago_id
+                ? Number(formData.medio_pago_id)
+                : null,
+              numero_cheque: formData.numero_cheque || null,
+            }),
+          }
+        );
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Error al actualizar movimiento");
+        }
       }
 
       toast.success("Movimiento actualizado exitosamente");

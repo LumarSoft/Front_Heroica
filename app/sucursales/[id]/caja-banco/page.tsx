@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/loading-spinner";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { AccessDenied } from "@/components/ui/access-denied";
+import { useAuthStore } from "@/store/authStore";
 import { BancoParcial } from "@/lib/types";
 import {
   Dialog,
@@ -105,11 +106,22 @@ export default function CajaBancoPage() {
       .catch(() => setSucursalActiva(true));
   }, [params.id]);
 
-  const isReadOnly = sucursalActiva === false;
+  const { hasPermiso } = useAuthStore();
+  const isGlobalReadOnly = sucursalActiva === false;
+  
+  const canCrear = !isGlobalReadOnly && hasPermiso("crear_movimientos");
+  const canEditInfo = !isGlobalReadOnly && hasPermiso("editar_movimientos");
+  const canAddComment = !isGlobalReadOnly && hasPermiso("agregar_comentarios");
+  const canDelete = !isGlobalReadOnly && hasPermiso("eliminar_movimientos");
+  const canChangeState = !isGlobalReadOnly && hasPermiso("aprobar_movimientos");
+  const canToggleDeuda = canCrear; // because creating mirror debt acts as "crear"
+
+  const isStrictlyReadOnly = isGlobalReadOnly || (!canEditInfo && !canAddComment);
 
   const { initialize } = caja;
   useEffect(() => {
-    if (!isGuardLoading && user?.rol !== "empleado") {
+    if (!isGuardLoading) {
+      if (user?.rol === "empleado") return;
       initialize();
     }
   }, [isGuardLoading, user?.rol, initialize]);
@@ -142,8 +154,17 @@ export default function CajaBancoPage() {
             {/* Mensajes */}
             <ErrorBanner error={caja.error} />
 
+            {isStrictlyReadOnly && !isGlobalReadOnly && (
+              <div className="mb-4 p-4 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+                <p className="text-sm text-indigo-800 font-medium">
+                  Modo lectura. Solo puedes visualizar los movimientos.
+                </p>
+              </div>
+            )}
+
             {/* Banner solo lectura */}
-            {isReadOnly && (
+            {isGlobalReadOnly && (
               <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                 <p className="text-sm text-amber-800 font-medium">
@@ -158,7 +179,7 @@ export default function CajaBancoPage() {
               title={`Caja Bancos — ${moneda}`}
               subtitle={`Gestión de saldos y movimientos bancarios (${moneda})`}
               onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
-              isReadOnly={isReadOnly}
+              isReadOnly={!canCrear}
               sucursalId={Number(params.id)}
             />
 
@@ -224,12 +245,12 @@ export default function CajaBancoPage() {
                       transactions={caja.saldoRealFiltrado}
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
-                      onChangeState={caja.handleOpenStateChange}
-                      onDelete={caja.handleOpenDelete}
-                      onMove={caja.handleOpenMover}
-                      onBulkDelete={!isReadOnly ? handleBulkDelete : undefined}
-                      onBulkMove={!isReadOnly ? handleBulkMove : undefined}
-                      isReadOnly={isReadOnly}
+                      onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
+                      onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                      onMove={canCrear ? caja.handleOpenMover : undefined}
+                      onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                      onBulkMove={canCrear ? handleBulkMove : undefined}
+                      isReadOnly={isStrictlyReadOnly}
                     />
                   </TabsContent>
                   <TabsContent
@@ -238,7 +259,7 @@ export default function CajaBancoPage() {
                   >
                     <TransactionTable
                       title="Saldo Necesario"
-                      description="Pagos y compromisos bancarios programados."
+                      description="Pagos y compromisos programados que impactarán en bancos."
                       transactions={caja.saldoNecesarioFiltrado}
                       customTotal={
                         calcularTotal(caja.saldoRealFiltrado) +
@@ -246,13 +267,13 @@ export default function CajaBancoPage() {
                       }
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
-                      onChangeState={caja.handleOpenStateChange}
-                      onDelete={caja.handleOpenDelete}
-                      onToggleDeuda={caja.handleOpenDeuda}
-                      onMove={caja.handleOpenMover}
-                      onBulkDelete={!isReadOnly ? handleBulkDelete : undefined}
-                      onBulkMove={!isReadOnly ? handleBulkMove : undefined}
-                      isReadOnly={isReadOnly}
+                      onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
+                      onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                      onToggleDeuda={canToggleDeuda ? caja.handleOpenDeuda : undefined}
+                      onMove={canCrear ? caja.handleOpenMover : undefined}
+                      onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                      onBulkMove={canCrear ? handleBulkMove : undefined}
+                      isReadOnly={isStrictlyReadOnly}
                     />
                   </TabsContent>
                 </CajaTabs>
@@ -275,7 +296,9 @@ export default function CajaBancoPage() {
         bancos={caja.bancos}
         mediosPago={caja.mediosPago}
         showBancoFields={true}
-        isReadOnly={isReadOnly}
+        isReadOnly={isStrictlyReadOnly}
+        canEditInfo={canEditInfo}
+        canEditComment={canAddComment}
         movimientoId={caja.selectedTransaction?.id}
         cajaTipo="banco"
       />

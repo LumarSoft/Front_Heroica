@@ -26,6 +26,9 @@ interface AuthState {
   canGestionarRoles: () => boolean;
   canVerMovimientos: () => boolean;
   canCrearMovimientos: () => boolean;
+  canEditarMovimientos: () => boolean;
+  canEliminarMovimientos: () => boolean;
+  canComentarMovimientos: () => boolean;
   canAprobarMovimientos: () => boolean;
   canVerPendientes: () => boolean;
   canCargarPendientes: () => boolean;
@@ -62,12 +65,14 @@ export const useAuthStore = create<AuthState>()(
         return user.permisos?.includes(clave) ?? false;
       },
 
-      // Helpers semánticos por permiso
       canVerConfiguracion: () => get().hasPermiso("ver_configuracion"),
       canGestionarUsuarios: () => get().hasPermiso("gestionar_usuarios"),
       canGestionarRoles: () => get().hasPermiso("gestionar_roles"),
       canVerMovimientos: () => get().hasPermiso("ver_movimientos"),
       canCrearMovimientos: () => get().hasPermiso("crear_movimientos"),
+      canEditarMovimientos: () => get().hasPermiso("editar_movimientos"),
+      canEliminarMovimientos: () => get().hasPermiso("eliminar_movimientos"),
+      canComentarMovimientos: () => get().hasPermiso("agregar_comentarios"),
       canAprobarMovimientos: () => get().hasPermiso("aprobar_movimientos"),
       canVerPendientes: () => get().hasPermiso("ver_pendientes"),
       canCargarPendientes: () => get().hasPermiso("cargar_pendientes"),
