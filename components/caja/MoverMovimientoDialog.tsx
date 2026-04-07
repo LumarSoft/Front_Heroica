@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,16 +8,16 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { selectClasses, labelClasses, inputClasses } from "@/lib/dialog-styles";
-import { API_ENDPOINTS, API_URL } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import type { Transaction, SelectOption } from "@/lib/types";
-import { ArrowRightLeft } from "lucide-react";
-import { toast } from "sonner"; // using sonner since it's what hook uses
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles';
+import { API_ENDPOINTS, API_URL } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import type { Transaction, SelectOption } from '@/lib/types';
+import { ArrowRightLeft } from 'lucide-react';
+import { toast } from 'sonner'; // using sonner since it's what hook uses
 
 interface Sucursal {
   id: number;
@@ -49,23 +49,23 @@ export function MoverMovimientoDialog({
   const [isLoadingSucursales, setIsLoadingSucursales] = useState(false);
 
   const [formData, setFormData] = useState({
-    destino_sucursal_id: "",
-    destino_tipo_movimiento: "",
-    destino_saldo: "",
-    banco_id: "",
-    medio_pago_id: "",
-    numero_cheque: "",
-    banco: "",
-    cuenta: "",
-    cbu: "",
-    tipo_operacion: "",
-    nota_descripcion: "",
+    destino_sucursal_id: '',
+    destino_tipo_movimiento: '',
+    destino_saldo: '',
+    banco_id: '',
+    medio_pago_id: '',
+    numero_cheque: '',
+    banco: '',
+    cuenta: '',
+    cbu: '',
+    tipo_operacion: '',
+    nota_descripcion: '',
     es_credito: false,
   });
 
   // Checkbox is only valid/visible if destination branch is different from origin branch
   const isDifferentSucursal =
-    formData.destino_sucursal_id !== "" &&
+    formData.destino_sucursal_id !== '' &&
     formData.destino_sucursal_id !== currentSucursalId.toString();
 
   useEffect(() => {
@@ -82,19 +82,19 @@ export function MoverMovimientoDialog({
       setFormData({
         destino_sucursal_id: currentSucursalId.toString(),
         destino_tipo_movimiento:
-          transaction?.tipo_movimiento === "efectivo" ? "banco" : "efectivo",
+          transaction?.tipo_movimiento === 'efectivo' ? 'banco' : 'efectivo',
         destino_saldo:
-          transaction?.estado === "completado"
-            ? "saldo_real"
-            : "saldo_necesario",
-        banco_id: transaction?.banco_id?.toString() || "",
-        medio_pago_id: transaction?.medio_pago_id?.toString() || "",
-        numero_cheque: transaction?.numero_cheque || "",
-        banco: transaction?.banco || "",
-        cuenta: transaction?.cuenta || "",
-        cbu: transaction?.cbu || "",
-        tipo_operacion: transaction?.tipo_operacion || "",
-        nota_descripcion: `Movido desde ${transaction?.tipo_movimiento === "efectivo" ? "Efectivo" : "Banco"}`,
+          transaction?.estado === 'completado'
+            ? 'saldo_real'
+            : 'saldo_necesario',
+        banco_id: transaction?.banco_id?.toString() || '',
+        medio_pago_id: transaction?.medio_pago_id?.toString() || '',
+        numero_cheque: transaction?.numero_cheque || '',
+        banco: transaction?.banco || '',
+        cuenta: transaction?.cuenta || '',
+        cbu: transaction?.cbu || '',
+        tipo_operacion: transaction?.tipo_operacion || '',
+        nota_descripcion: `Movido desde ${transaction?.tipo_movimiento === 'efectivo' ? 'Efectivo' : 'Banco'}`,
         es_credito: false,
       });
     }
@@ -104,7 +104,7 @@ export function MoverMovimientoDialog({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const value =
-      e.target.type === "checkbox"
+      e.target.type === 'checkbox'
         ? (e.target as HTMLInputElement).checked
         : e.target.value;
     setFormData((prev) => ({ ...prev, [e.target.name]: value }));
@@ -117,7 +117,7 @@ export function MoverMovimientoDialog({
       !formData.destino_tipo_movimiento ||
       !formData.destino_saldo
     ) {
-      toast.error("Faltan datos obligatorios.");
+      toast.error('Faltan datos obligatorios.');
       return;
     }
 
@@ -126,21 +126,21 @@ export function MoverMovimientoDialog({
       const res = await apiFetch(
         `${API_URL}/api/movimientos/${transaction.id}/mover`,
         {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         },
       );
       const data = await res.json();
       if (data.success) {
-        toast.success("Movimiento movido correctamente.");
+        toast.success('Movimiento movido correctamente.');
         onSuccess();
         onOpenChange(false);
       } else {
-        toast.error(data.message || "Error al mover movimiento.");
+        toast.error(data.message || 'Error al mover movimiento.');
       }
     } catch (error) {
-      toast.error("Error de red al mover.");
+      toast.error('Error de red al mover.');
     } finally {
       setIsSaving(false);
     }
@@ -148,7 +148,7 @@ export function MoverMovimientoDialog({
 
   if (!transaction) return null;
 
-  const isDestinoBanco = formData.destino_tipo_movimiento === "banco";
+  const isDestinoBanco = formData.destino_tipo_movimiento === 'banco';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -325,7 +325,7 @@ export function MoverMovimientoDialog({
               disabled={isSaving}
               className="h-10 px-6 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all cursor-pointer disabled:opacity-50"
             >
-              {isSaving ? "Guardando..." : "Mover"}
+              {isSaving ? 'Guardando...' : 'Mover'}
             </Button>
           </DialogFooter>
         </div>

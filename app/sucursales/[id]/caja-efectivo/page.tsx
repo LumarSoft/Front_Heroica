@@ -1,40 +1,40 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 
-import Navbar from "@/components/Navbar";
-import NuevoMovimientoDialog from "@/components/NuevoMovimientoDialog";
-import { CompraVentaDivisasDialog } from "@/components/caja/CompraVentaDivisasDialog";
-import { useAuthGuard } from "@/hooks/use-auth-guard";
-import { useCajaData } from "@/hooks/use-caja-data";
-import { calcularTotal } from "@/lib/formatters";
-import { PageHeader } from "@/components/caja/PageHeader";
+import Navbar from '@/components/Navbar';
+import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog';
+import { CompraVentaDivisasDialog } from '@/components/caja/CompraVentaDivisasDialog';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
+import { useCajaData } from '@/hooks/use-caja-data';
+import { calcularTotal } from '@/lib/formatters';
+import { PageHeader } from '@/components/caja/PageHeader';
 import {
   PageLoadingSpinner,
   ContentLoadingSpinner,
-} from "@/components/ui/loading-spinner";
-import { ErrorBanner } from "@/components/ui/error-banner";
-import { AccessDenied } from "@/components/ui/access-denied";
-import { useAuthStore } from "@/store/authStore";
-import { CajaTabs, TabsContent } from "@/components/caja/CajaTabs";
+} from '@/components/ui/loading-spinner';
+import { ErrorBanner } from '@/components/ui/error-banner';
+import { AccessDenied } from '@/components/ui/access-denied';
+import { useAuthStore } from '@/store/authStore';
+import { CajaTabs, TabsContent } from '@/components/caja/CajaTabs';
 import {
   TransactionTable,
   getEfectivoColumns,
-} from "@/components/caja/TransactionTable";
-import { EndDateFilter } from "@/components/caja/EndDateFilter";
+} from '@/components/caja/TransactionTable';
+import { EndDateFilter } from '@/components/caja/EndDateFilter';
 import {
   DetailsDialog,
   StateDialog,
   DeleteDialog,
   DeudaDialog,
-} from "@/components/caja/TransactionDialogs";
-import { MoverMovimientoDialog } from "@/components/caja/MoverMovimientoDialog";
-import { BulkMoverDialog } from "@/components/caja/BulkMoverDialog";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
+} from '@/components/caja/TransactionDialogs';
+import { MoverMovimientoDialog } from '@/components/caja/MoverMovimientoDialog';
+import { BulkMoverDialog } from '@/components/caja/BulkMoverDialog';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 const columns = getEfectivoColumns();
 
@@ -42,11 +42,11 @@ export default function CajaEfectivoPage() {
   const params = useParams();
   const { user, isGuardLoading, handleLogout } = useAuthGuard();
   const searchParams = useSearchParams();
-  const moneda = (searchParams.get("moneda") as "ARS" | "USD") || "ARS";
-  const caja = useCajaData("efectivo", moneda);
-  const [activeTab, setActiveTab] = useState("real");
+  const moneda = (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS';
+  const caja = useCajaData('efectivo', moneda);
+  const [activeTab, setActiveTab] = useState('real');
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null);
-  const [sucursalNombre, setSucursalNombre] = useState("");
+  const [sucursalNombre, setSucursalNombre] = useState('');
   const [isCompraVentaDialogOpen, setIsCompraVentaDialogOpen] = useState(false);
   const [isBulkMoverDialogOpen, setIsBulkMoverDialogOpen] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
@@ -62,7 +62,7 @@ export default function CajaEfectivoPage() {
     setIsBulkDeleting(true);
     try {
       const res = await apiFetch(API_ENDPOINTS.MOVIMIENTOS.BULK_DELETE, {
-        method: "DELETE",
+        method: 'DELETE',
         body: JSON.stringify({ ids: bulkSelectedIds }),
       });
       const data = await res.json();
@@ -71,10 +71,10 @@ export default function CajaEfectivoPage() {
         caja.fetchMovimientos();
         setIsBulkDeleteDialogOpen(false);
       } else {
-        toast.error(data.message || "Error al eliminar.");
+        toast.error(data.message || 'Error al eliminar.');
       }
     } catch {
-      toast.error("Error de red al eliminar.");
+      toast.error('Error de red al eliminar.');
     } finally {
       setIsBulkDeleting(false);
     }
@@ -92,27 +92,28 @@ export default function CajaEfectivoPage() {
       .then((r) => r.json())
       .then((d) => {
         setSucursalActiva(Boolean(d.data?.activo));
-        setSucursalNombre(d.data?.nombre || "");
+        setSucursalNombre(d.data?.nombre || '');
       })
       .catch(() => setSucursalActiva(true));
   }, [params.id]);
 
   const { hasPermiso } = useAuthStore();
   const isGlobalReadOnly = sucursalActiva === false;
-  
-  const canCrear = !isGlobalReadOnly && hasPermiso("crear_movimientos");
-  const canEditInfo = !isGlobalReadOnly && hasPermiso("editar_movimientos");
-  const canAddComment = !isGlobalReadOnly && hasPermiso("agregar_comentarios");
-  const canDelete = !isGlobalReadOnly && hasPermiso("eliminar_movimientos");
-  const canChangeState = !isGlobalReadOnly && hasPermiso("aprobar_movimientos");
+
+  const canCrear = !isGlobalReadOnly && hasPermiso('crear_movimientos');
+  const canEditInfo = !isGlobalReadOnly && hasPermiso('editar_movimientos');
+  const canAddComment = !isGlobalReadOnly && hasPermiso('agregar_comentarios');
+  const canDelete = !isGlobalReadOnly && hasPermiso('eliminar_movimientos');
+  const canChangeState = !isGlobalReadOnly && hasPermiso('aprobar_movimientos');
   const canToggleDeuda = canCrear; // because creating mirror debt acts as "crear"
 
-  const isStrictlyReadOnly = isGlobalReadOnly || (!canEditInfo && !canAddComment);
+  const isStrictlyReadOnly =
+    isGlobalReadOnly || (!canEditInfo && !canAddComment);
 
   const { initialize } = caja;
   useEffect(() => {
     if (!isGuardLoading) {
-      if (user?.rol === "empleado") return;
+      if (user?.rol === 'empleado') return;
       initialize();
     }
   }, [isGuardLoading, user?.rol, initialize]);
@@ -127,11 +128,11 @@ export default function CajaEfectivoPage() {
         onLogout={handleLogout}
         showBackButton={true}
         backUrl={`/sucursales/${params.id}?moneda=${moneda}`}
-        sucursalNombre={sucursalNombre ? `${sucursalNombre} — ${moneda}` : ""}
+        sucursalNombre={sucursalNombre ? `${sucursalNombre} — ${moneda}` : ''}
       />
 
       <main className="container mx-auto px-6 py-8 flex flex-col h-full">
-        {user?.rol === "empleado" ? (
+        {user?.rol === 'empleado' ? (
           <AccessDenied
             resource="la caja de efectivo"
             backUrl={`/sucursales/${params.id}`}
@@ -212,9 +213,13 @@ export default function CajaEfectivoPage() {
                       }
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
-                      onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
+                      onChangeState={
+                        canChangeState ? caja.handleOpenStateChange : undefined
+                      }
                       onDelete={canDelete ? caja.handleOpenDelete : undefined}
-                      onToggleDeuda={canToggleDeuda ? caja.handleOpenDeuda : undefined}
+                      onToggleDeuda={
+                        canToggleDeuda ? caja.handleOpenDeuda : undefined
+                      }
                       onMove={canCrear ? caja.handleOpenMover : undefined}
                       onBulkDelete={canDelete ? handleBulkDelete : undefined}
                       onBulkMove={canCrear ? handleBulkMove : undefined}

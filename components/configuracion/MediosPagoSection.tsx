@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { medioPagoSchema } from "@/lib/schemas";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { medioPagoSchema } from '@/lib/schemas';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -14,11 +14,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { DeleteDialog } from '@/components/ui/delete-dialog';
 
 interface MedioPago {
   id: number;
@@ -33,14 +33,14 @@ interface MedioPagoForm {
   descripcion: string;
 }
 
-const DEFAULT_FORM: MedioPagoForm = { id: 0, nombre: "", descripcion: "" };
+const DEFAULT_FORM: MedioPagoForm = { id: 0, nombre: '', descripcion: '' };
 
 export function MediosPagoSection() {
   const [mediosPago, setMediosPago] = useState<MedioPago[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [form, setForm] = useState<MedioPagoForm>(DEFAULT_FORM);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{
     id: number;
     nombre: string;
@@ -58,30 +58,30 @@ export function MediosPagoSection() {
 
   const handleOpenNew = () => {
     setForm(DEFAULT_FORM);
-    setError("");
+    setError('');
     setIsDialogOpen(true);
   };
 
   const handleOpenEdit = (medio: MedioPago) => {
     setForm(medio);
-    setError("");
+    setError('');
     setIsDialogOpen(true);
   };
 
   const handleSave = async () => {
     const validation = medioPagoSchema.safeParse(form);
     if (!validation.success) {
-      setError(validation.error.issues[0]?.message ?? "Error de validación");
+      setError(validation.error.issues[0]?.message ?? 'Error de validación');
       return;
     }
     setIsSaving(true);
-    setError("");
+    setError('');
     try {
       const url = form.id
         ? API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.UPDATE(form.id)
         : API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.CREATE;
       const res = await apiFetch(url, {
-        method: form.id ? "PUT" : "POST",
+        method: form.id ? 'PUT' : 'POST',
         body: JSON.stringify(form),
       });
       const data = await res.json();
@@ -93,7 +93,7 @@ export function MediosPagoSection() {
         setError(data.message);
       }
     } catch {
-      setError("Error al guardar medio de pago");
+      setError('Error al guardar medio de pago');
     } finally {
       setIsSaving(false);
     }
@@ -104,7 +104,7 @@ export function MediosPagoSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.DELETE(deleteTarget.id),
-        { method: "DELETE" },
+        { method: 'DELETE' },
       );
       const data = await res.json();
       if (data.success) {
@@ -112,7 +112,7 @@ export function MediosPagoSection() {
         await fetchMediosPago();
       }
     } catch {
-      toast.error("Error al eliminar medio de pago");
+      toast.error('Error al eliminar medio de pago');
     } finally {
       setDeleteTarget(null);
     }
@@ -177,12 +177,12 @@ export function MediosPagoSection() {
           <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
             <DialogHeader className="p-0 border-0">
               <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
-                {form.id ? "Editar Medio de Pago" : "Nuevo Medio de Pago"}
+                {form.id ? 'Editar Medio de Pago' : 'Nuevo Medio de Pago'}
               </DialogTitle>
               <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
                 {form.id
-                  ? "Modifica los detalles de este medio de pago"
-                  : "Agrega un nuevo medio de pago al sistema"}
+                  ? 'Modifica los detalles de este medio de pago'
+                  : 'Agrega un nuevo medio de pago al sistema'}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -211,7 +211,7 @@ export function MediosPagoSection() {
               </Label>
               <Textarea
                 id="medio-desc"
-                value={form.descripcion || ""}
+                value={form.descripcion || ''}
                 onChange={(e) =>
                   setForm({ ...form, descripcion: e.target.value })
                 }
@@ -235,7 +235,7 @@ export function MediosPagoSection() {
                 disabled={isSaving || !form.nombre}
                 className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all"
               >
-                {isSaving ? "Guardando..." : "Guardar"}
+                {isSaving ? 'Guardando...' : 'Guardar'}
               </Button>
             </DialogFooter>
           </div>
@@ -244,7 +244,7 @@ export function MediosPagoSection() {
 
       <DeleteDialog
         open={!!deleteTarget}
-        nombre={deleteTarget?.nombre ?? ""}
+        nombre={deleteTarget?.nombre ?? ''}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />

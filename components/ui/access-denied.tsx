@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 interface AccessDeniedProps {
   /** Nombre del recurso al que se deniega acceso, ej: "caja de efectivo" */

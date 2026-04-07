@@ -1,34 +1,34 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useMemo, useCallback } from "react";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
-import { API_ENDPOINTS } from "@/lib/config";
-import { useAuthGuard } from "@/hooks/use-auth-guard";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { apiFetch } from "@/lib/api";
-import { formatMonto } from "@/lib/formatters";
-import type { Sucursal } from "@/lib/types";
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
+import { API_ENDPOINTS } from '@/lib/config';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { apiFetch } from '@/lib/api';
+import { formatMonto } from '@/lib/formatters';
+import type { Sucursal } from '@/lib/types';
 import {
   Printer,
   TrendingUp,
   TrendingDown,
   AlertTriangle,
   ArrowLeft,
-} from "lucide-react";
-import { SectionHeading } from "@/components/reportes/SectionHeading";
-import { SummaryCard } from "@/components/reportes/SummaryCard";
-import { BreakdownPanel } from "@/components/reportes/BreakdownPanel";
-import { DeudaPanel } from "@/components/reportes/DeudaPanel";
-import type { ReportData } from "@/components/reportes/types";
+} from 'lucide-react';
+import { SectionHeading } from '@/components/reportes/SectionHeading';
+import { SummaryCard } from '@/components/reportes/SummaryCard';
+import { BreakdownPanel } from '@/components/reportes/BreakdownPanel';
+import { DeudaPanel } from '@/components/reportes/DeudaPanel';
+import type { ReportData } from '@/components/reportes/types';
 
 export default function ReportesPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const moneda = (searchParams.get("moneda") as "ARS" | "USD") || "ARS";
+  const moneda = (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS';
   const { isGuardLoading } = useAuthGuard();
 
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
@@ -45,7 +45,7 @@ export default function ReportesPage() {
   // Selector mensual con debounce para evitar fetches por cada tecla
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
   const [debouncedMonth, setDebouncedMonth] = useState(selectedMonth);
 
@@ -56,12 +56,12 @@ export default function ReportesPage() {
 
   const isClosedMonth = useMemo(() => {
     const today = new Date();
-    const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+    const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
     return debouncedMonth < currentMonthStr;
   }, [debouncedMonth]);
 
   const { startDate, endDate } = useMemo(() => {
-    const [year, month] = debouncedMonth.split("-");
+    const [year, month] = debouncedMonth.split('-');
     const start = `${year}-${month}-01`;
     const lastDay = new Date(Number(year), Number(month), 0).getDate();
     const end = `${year}-${month}-${lastDay}`;
@@ -78,7 +78,7 @@ export default function ReportesPage() {
       setSucursal(data.data);
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Error al cargar sucursal";
+        err instanceof Error ? err.message : 'Error al cargar sucursal';
       toast.error(message);
     }
   }, [params.id]);
@@ -89,7 +89,7 @@ export default function ReportesPage() {
     setSelectedEgresoCategory(null);
     try {
       const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
-      const safeId = rawId != null ? encodeURIComponent(String(rawId)) : "";
+      const safeId = rawId != null ? encodeURIComponent(String(rawId)) : '';
       if (!safeId) return;
       const url = API_ENDPOINTS.REPORTES.GET_BY_SUCURSAL(
         safeId,
@@ -103,7 +103,7 @@ export default function ReportesPage() {
       setReportData(data.data);
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Error al cargar reportes";
+        err instanceof Error ? err.message : 'Error al cargar reportes';
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -258,17 +258,17 @@ export default function ReportesPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-slate-800 capitalize">
-                    {new Date(startDate + "T12:00:00").toLocaleDateString(
-                      "es-AR",
-                      { month: "long", year: "numeric" },
+                    {new Date(startDate + 'T12:00:00').toLocaleDateString(
+                      'es-AR',
+                      { month: 'long', year: 'numeric' },
                     )}
                   </p>
                   <p
-                    className={`text-sm font-bold mt-1 uppercase tracking-widest ${isClosedMonth ? "text-blue-600" : "text-emerald-600"}`}
+                    className={`text-sm font-bold mt-1 uppercase tracking-widest ${isClosedMonth ? 'text-blue-600' : 'text-emerald-600'}`}
                   >
                     {isClosedMonth
-                      ? "Período Cerrado"
-                      : "Mes en Curso (Parcial)"}
+                      ? 'Período Cerrado'
+                      : 'Mes en Curso (Parcial)'}
                   </p>
                 </div>
               </div>
@@ -293,7 +293,7 @@ export default function ReportesPage() {
                 <SummaryCard
                   label="Resultado Neto"
                   value={formatMonto(reportData.resumen.resultado, moneda)}
-                  accent={reportData.resumen.resultado >= 0 ? "blue" : "red"}
+                  accent={reportData.resumen.resultado >= 0 ? 'blue' : 'red'}
                   icon={
                     reportData.resumen.resultado >= 0 ? (
                       <TrendingUp className="w-5 h-5" />
@@ -303,10 +303,10 @@ export default function ReportesPage() {
                   }
                   sub={
                     reportData.resumen.resultado > 0
-                      ? "Ganancia"
+                      ? 'Ganancia'
                       : reportData.resumen.resultado < 0
-                        ? "Pérdida"
-                        : "Equilibrio"
+                        ? 'Pérdida'
+                        : 'Equilibrio'
                   }
                 />
                 <SummaryCard
@@ -423,25 +423,25 @@ export default function ReportesPage() {
                           className="print:break-inside-avoid"
                         >
                           <td className="py-2 px-2 text-slate-500 whitespace-nowrap">
-                            {new Date(mov.fecha).toLocaleDateString("es-AR", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
+                            {new Date(mov.fecha).toLocaleDateString('es-AR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
                             })}
                           </td>
                           <td className="py-2 px-2 font-medium text-slate-800">
-                            {mov.concepto || "Sin concepto"}
+                            {mov.concepto || 'Sin concepto'}
                           </td>
                           <td className="py-2 px-2 text-slate-500 text-xs">
-                            {mov.categoria_nombre || "General"}
+                            {mov.categoria_nombre || 'General'}
                             {mov.subcategoria_nombre
                               ? ` / ${mov.subcategoria_nombre}`
-                              : ""}
+                              : ''}
                           </td>
                           <td
-                            className={`py-2 px-2 text-right font-bold tabular-nums whitespace-nowrap ${mov.tipo === "ingreso" ? "text-emerald-600" : "text-rose-600"}`}
+                            className={`py-2 px-2 text-right font-bold tabular-nums whitespace-nowrap ${mov.tipo === 'ingreso' ? 'text-emerald-600' : 'text-rose-600'}`}
                           >
-                            {mov.tipo === "ingreso" ? "+" : "-"}
+                            {mov.tipo === 'ingreso' ? '+' : '-'}
                             {formatMonto(Math.abs(mov.monto), moneda)}
                           </td>
                         </tr>

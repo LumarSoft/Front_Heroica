@@ -106,16 +106,16 @@ pnpm dlx shadcn@latest init
 
 ```typescript
 // vite.config.ts
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import path from "path";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
 });
@@ -149,7 +149,7 @@ This pattern is **mandatory** - skipping steps will break your theme.
 
 ```css
 /* src/index.css */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: hsl(0 0% 100%); /* ← hsl() wrapper required */
@@ -323,7 +323,7 @@ See `reference/dark-mode.md` for ModeToggle component code.
    export default {
      theme: {
        extend: {
-         colors: { primary: "hsl(var(--primary))" },
+         colors: { primary: 'hsl(var(--primary))' },
        },
      },
    };
@@ -486,7 +486,7 @@ Tailwind v4 supports official plugins using the `@plugin` directive in CSS.
 **Quick Example:**
 
 ```css
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 @plugin "@tailwindcss/forms";
 ```

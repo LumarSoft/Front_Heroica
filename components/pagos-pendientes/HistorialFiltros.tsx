@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { X } from "lucide-react";
+import { X } from 'lucide-react';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
 interface HistorialFiltrosProps {
-  filtroEstado: "todos" | "aprobado" | "rechazado";
-  onFiltroEstadoChange: (value: "todos" | "aprobado" | "rechazado") => void;
+  filtroEstado: 'todos' | 'aprobado' | 'rechazado';
+  onFiltroEstadoChange: (value: 'todos' | 'aprobado' | 'rechazado') => void;
   filtroUsuario: string;
   onFiltroUsuarioChange: (value: string) => void;
   usuariosRevisores: string[];
@@ -28,11 +28,11 @@ export function HistorialFiltros({
   resultadosCount,
   totalCount,
 }: HistorialFiltrosProps) {
-  const hayFiltrosActivos = filtroEstado !== "todos" || filtroUsuario !== "";
+  const hayFiltrosActivos = filtroEstado !== 'todos' || filtroUsuario !== '';
 
   const handleLimpiar = () => {
-    onFiltroEstadoChange("todos");
-    onFiltroUsuarioChange("");
+    onFiltroEstadoChange('todos');
+    onFiltroUsuarioChange('');
   };
 
   return (
@@ -41,25 +41,25 @@ export function HistorialFiltros({
         <span className="text-xs font-bold text-[#5A6070] uppercase tracking-wider mr-1">
           Estado:
         </span>
-        {(["todos", "aprobado", "rechazado"] as const).map((est) => (
+        {(['todos', 'aprobado', 'rechazado'] as const).map((est) => (
           <button
             key={est}
             onClick={() => onFiltroEstadoChange(est)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
               filtroEstado === est
-                ? est === "todos"
-                  ? "bg-[#002868] text-white border-[#002868]"
-                  : est === "aprobado"
-                    ? "bg-emerald-500 text-white border-emerald-500"
-                    : "bg-rose-500 text-white border-rose-500"
-                : "bg-white text-[#666666] border-[#E0E0E0] hover:border-[#B0B0B0]"
+                ? est === 'todos'
+                  ? 'bg-[#002868] text-white border-[#002868]'
+                  : est === 'aprobado'
+                    ? 'bg-emerald-500 text-white border-emerald-500'
+                    : 'bg-rose-500 text-white border-rose-500'
+                : 'bg-white text-[#666666] border-[#E0E0E0] hover:border-[#B0B0B0]'
             }`}
           >
-            {est === "todos"
-              ? "Todos"
-              : est === "aprobado"
-                ? "Aprobados"
-                : "Rechazados"}
+            {est === 'todos'
+              ? 'Todos'
+              : est === 'aprobado'
+                ? 'Aprobados'
+                : 'Rechazados'}
           </button>
         ))}
       </div>
@@ -71,8 +71,8 @@ export function HistorialFiltros({
           Revisado por:
         </span>
         <Select
-          value={filtroUsuario || "_all_"}
-          onValueChange={(v) => onFiltroUsuarioChange(v === "_all_" ? "" : v)}
+          value={filtroUsuario || '_all_'}
+          onValueChange={(v) => onFiltroUsuarioChange(v === '_all_' ? '' : v)}
         >
           <SelectTrigger className="h-8 rounded-lg border-[#E0E0E0] text-sm text-[#1A1A1A] min-w-[160px] focus:ring-[#002868]/20">
             <SelectValue placeholder="Todos los usuarios" />
@@ -103,7 +103,7 @@ export function HistorialFiltros({
 
       <div className="ml-auto">
         <span className="text-xs text-[#8A8F9C]">
-          {resultadosCount} resultado{resultadosCount !== 1 ? "s" : ""}
+          {resultadosCount} resultado{resultadosCount !== 1 ? 's' : ''}
           {hayFiltrosActivos && ` de ${totalCount}`}
         </span>
       </div>

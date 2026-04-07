@@ -19,8 +19,8 @@ npm install tailwindcss @tailwindcss/vite
 
 ```javascript
 // vite.config.ts
-import { defineConfig } from "vite";
-import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [tailwindcss()],
@@ -29,7 +29,7 @@ export default defineConfig({
 
 ```css
 /* src/style.css */
-@import "tailwindcss";
+@import 'tailwindcss';
 ```
 
 ```html
@@ -50,12 +50,12 @@ Defining custom design tokens using the `@theme` directive in CSS.
 
 ```css
 /* app.css */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* Custom fonts */
-  --font-display: "Satoshi", "sans-serif";
-  --font-body: "Inter", system-ui, sans-serif;
+  --font-display: 'Satoshi', 'sans-serif';
+  --font-body: 'Inter', system-ui, sans-serif;
 
   /* Custom colors */
   --color-brand-50: oklch(0.98 0.02 264);
@@ -109,7 +109,7 @@ Content automatically adapts
 
 ```css
 /* Manual dark mode toggle with class selector */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
 ```
@@ -122,20 +122,20 @@ Controlled by .dark class
 // Dark mode toggle logic
 // On page load or theme change
 document.documentElement.classList.toggle(
-  "dark",
-  localStorage.theme === "dark" ||
-    (!("theme" in localStorage) &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches),
+  'dark',
+  localStorage.theme === 'dark' ||
+    (!('theme' in localStorage) &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches),
 );
 
 // User chooses light mode
-localStorage.theme = "light";
+localStorage.theme = 'light';
 
 // User chooses dark mode
-localStorage.theme = "dark";
+localStorage.theme = 'dark';
 
 // User chooses system preference
-localStorage.removeItem("theme");
+localStorage.removeItem('theme');
 ```
 
 ## State Variants
@@ -287,7 +287,7 @@ Using the `@variant` directive to apply variants within custom CSS.
 Organizing custom styles into Tailwind's cascade layers.
 
 ```css
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Base styles for HTML elements */
 @layer base {

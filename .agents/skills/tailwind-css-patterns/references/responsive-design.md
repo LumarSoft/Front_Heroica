@@ -94,7 +94,7 @@ Enable dark mode in tailwind.config.js:
 
 ```javascript
 module.exports = {
-  darkMode: "class", // or 'media'
+  darkMode: 'class', // or 'media'
   // ...
 };
 ```
@@ -107,9 +107,9 @@ function ThemeToggle() {
 
   useEffect(() => {
     if (darkMode) {
-      document.documentElement.classList.add("dark");
+      document.documentElement.classList.add('dark');
     } else {
-      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
 
@@ -118,7 +118,7 @@ function ThemeToggle() {
       onClick={() => setDarkMode(!darkMode)}
       className="p-2 rounded-lg bg-gray-200 dark:bg-gray-800"
     >
-      {darkMode ? "🌙" : "☀️"}
+      {darkMode ? '🌙' : '☀️'}
     </button>
   );
 }

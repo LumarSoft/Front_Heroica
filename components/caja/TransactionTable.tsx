@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -16,15 +16,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   formatFecha,
   formatMonto,
   calcularTotal,
   truncarTexto,
-} from "@/lib/formatters";
-import type { Transaction } from "@/lib/types";
-import { Clock, Trash2, ArrowRightLeft } from "lucide-react";
+} from '@/lib/formatters';
+import type { Transaction } from '@/lib/types';
+import { Clock, Trash2, ArrowRightLeft } from 'lucide-react';
 
 // =============================================
 // Definición de columnas
@@ -33,23 +33,23 @@ import { Clock, Trash2, ArrowRightLeft } from "lucide-react";
 export interface ColumnDef {
   key: string;
   label: string;
-  align?: "left" | "center" | "right";
-  hideBelow?: "md" | "lg"; // responsive breakpoint
+  align?: 'left' | 'center' | 'right';
+  hideBelow?: 'md' | 'lg'; // responsive breakpoint
   render: (t: Transaction) => React.ReactNode;
 }
 
 /** Columnas base compartidas */
 const BASE_COLUMNS: ColumnDef[] = [
   {
-    key: "fecha",
-    label: "Fecha",
+    key: 'fecha',
+    label: 'Fecha',
     render: (t) => (
       <span className="font-medium text-[#1A1A1A]">{formatFecha(t.fecha)}</span>
     ),
   },
   {
-    key: "concepto",
-    label: "Concepto",
+    key: 'concepto',
+    label: 'Concepto',
     render: (t) => (
       <div className="flex flex-col gap-1">
         <span className="text-[#1A1A1A]">{t.concepto}</span>
@@ -82,28 +82,28 @@ const BASE_COLUMNS: ColumnDef[] = [
 /** Columnas extra para caja banco */
 const BANCO_COLUMNS: ColumnDef[] = [
   {
-    key: "comprobante",
-    label: "Comprobante",
-    hideBelow: "md",
+    key: 'comprobante',
+    label: 'Comprobante',
+    hideBelow: 'md',
     render: (t) => (
-      <span className="text-[#666666]">{t.comprobante || "-"}</span>
+      <span className="text-[#666666]">{t.comprobante || '-'}</span>
     ),
   },
   {
-    key: "medio_pago",
-    label: "Medio Pago",
-    hideBelow: "lg",
+    key: 'medio_pago',
+    label: 'Medio Pago',
+    hideBelow: 'lg',
     render: (t) => (
-      <span className="text-[#666666]">{t.medio_pago_nombre || "-"}</span>
+      <span className="text-[#666666]">{t.medio_pago_nombre || '-'}</span>
     ),
   },
   {
-    key: "banco",
-    label: "Banco",
-    align: "center",
+    key: 'banco',
+    label: 'Banco',
+    align: 'center',
     render: (t) => (
       <span className="font-medium text-[#002868]">
-        {t.banco_nombre || "-"}
+        {t.banco_nombre || '-'}
       </span>
     ),
   },
@@ -112,11 +112,11 @@ const BANCO_COLUMNS: ColumnDef[] = [
 /** Columnas extra para caja efectivo */
 const EFECTIVO_COLUMNS: ColumnDef[] = [
   {
-    key: "descripcion",
-    label: "Descripción",
-    hideBelow: "md",
+    key: 'descripcion',
+    label: 'Descripción',
+    hideBelow: 'md',
     render: (t) => (
-      <span className="text-[#666666]" title={t.descripcion || ""}>
+      <span className="text-[#666666]" title={t.descripcion || ''}>
         {truncarTexto(t.descripcion)}
       </span>
     ),
@@ -125,12 +125,12 @@ const EFECTIVO_COLUMNS: ColumnDef[] = [
 
 /** Columna de monto (siempre al final antes de acciones) */
 const MONTO_COLUMN: ColumnDef = {
-  key: "monto",
-  label: "Monto",
-  align: "right",
+  key: 'monto',
+  label: 'Monto',
+  align: 'right',
   render: (t) => (
     <span
-      className={`font-bold text-base ${Number(t.monto) >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+      className={`font-bold text-base ${Number(t.monto) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}
     >
       {formatMonto(t.monto)}
     </span>
@@ -139,9 +139,9 @@ const MONTO_COLUMN: ColumnDef = {
 
 /** Columna de DEUDA (opcional, solo para caja efectivo y banco) */
 const DEUDA_COLUMN: ColumnDef = {
-  key: "deuda",
-  label: "Deuda",
-  align: "center",
+  key: 'deuda',
+  label: 'Deuda',
+  align: 'center',
   render: (t) =>
     t.es_deuda ? (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 border border-orange-300 text-orange-700 text-xs font-bold">
@@ -269,10 +269,10 @@ export function TransactionTable({
           <div className="text-right">
             <p className="text-sm text-[#666666] font-medium mb-1">Total</p>
             <div
-              className={`inline-flex items-center justify-center px-4 py-2 rounded-lg ${total >= 0 ? "bg-emerald-50 border border-emerald-200" : "bg-rose-50 border border-rose-200"}`}
+              className={`inline-flex items-center justify-center px-4 py-2 rounded-lg ${total >= 0 ? 'bg-emerald-50 border border-emerald-200' : 'bg-rose-50 border border-rose-200'}`}
             >
               <p
-                className={`text-2xl font-bold ${total >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+                className={`text-2xl font-bold ${total >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}
               >
                 {formatMonto(total)}
               </p>
@@ -285,7 +285,7 @@ export function TransactionTable({
         {showBulkActions && selectedIds.size > 0 && (
           <div className="flex items-center gap-3 p-3 mb-3 rounded-lg bg-indigo-50 border border-indigo-200">
             <span className="text-sm font-semibold text-indigo-700">
-              {selectedIds.size} seleccionado{selectedIds.size !== 1 ? "s" : ""}
+              {selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''}
             </span>
             <Button
               size="sm"
@@ -339,17 +339,17 @@ export function TransactionTable({
                   <TableHead
                     key={col.key}
                     className={`font-bold text-[#002868] text-sm ${
-                      col.align === "center"
-                        ? "text-center"
-                        : col.align === "right"
-                          ? "text-right"
-                          : ""
+                      col.align === 'center'
+                        ? 'text-center'
+                        : col.align === 'right'
+                          ? 'text-right'
+                          : ''
                     } ${
-                      col.hideBelow === "md"
-                        ? "hidden md:table-cell"
-                        : col.hideBelow === "lg"
-                          ? "hidden lg:table-cell"
-                          : ""
+                      col.hideBelow === 'md'
+                        ? 'hidden md:table-cell'
+                        : col.hideBelow === 'lg'
+                          ? 'hidden lg:table-cell'
+                          : ''
                     }`}
                   >
                     {col.label}
@@ -392,7 +392,7 @@ export function TransactionTable({
                 transactions.map((transaction) => (
                   <TableRow
                     key={transaction.id}
-                    className={`hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50 ${selectedIds.has(transaction.id) ? "bg-indigo-50/60" : ""}`}
+                    className={`hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50 ${selectedIds.has(transaction.id) ? 'bg-indigo-50/60' : ''}`}
                   >
                     {showBulkActions && (
                       <TableCell className="text-center w-10">
@@ -408,17 +408,17 @@ export function TransactionTable({
                       <TableCell
                         key={col.key}
                         className={`${
-                          col.align === "center"
-                            ? "text-center"
-                            : col.align === "right"
-                              ? "text-right"
-                              : ""
+                          col.align === 'center'
+                            ? 'text-center'
+                            : col.align === 'right'
+                              ? 'text-right'
+                              : ''
                         } ${
-                          col.hideBelow === "md"
-                            ? "hidden md:table-cell"
-                            : col.hideBelow === "lg"
-                              ? "hidden lg:table-cell"
-                              : ""
+                          col.hideBelow === 'md'
+                            ? 'hidden md:table-cell'
+                            : col.hideBelow === 'lg'
+                              ? 'hidden lg:table-cell'
+                              : ''
                         }`}
                       >
                         {col.render(transaction)}
@@ -432,13 +432,13 @@ export function TransactionTable({
                           onClick={() => onViewDetails(transaction)}
                           className={`text-white border-none cursor-pointer shadow-sm transition-all flex items-center justify-center ${
                             isReadOnly
-                              ? "bg-gray-400 hover:bg-gray-500"
-                              : "bg-[#002868] hover:bg-[#003d8f] hover:shadow-md"
+                              ? 'bg-gray-400 hover:bg-gray-500'
+                              : 'bg-[#002868] hover:bg-[#003d8f] hover:shadow-md'
                           }`}
                           title={
                             isReadOnly
-                              ? "Ver detalles (solo lectura)"
-                              : "Ver detalles"
+                              ? 'Ver detalles (solo lectura)'
+                              : 'Ver detalles'
                           }
                         >
                           <svg
@@ -471,7 +471,9 @@ export function TransactionTable({
                             disabled={isReadOnly}
                             className="bg-[#002868] hover:bg-[#003d8f] text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                             title={
-                              isReadOnly ? "Sucursal inactiva" : "Cambiar estado"
+                              isReadOnly
+                                ? 'Sucursal inactiva'
+                                : 'Cambiar estado'
                             }
                           >
                             <svg
@@ -500,15 +502,15 @@ export function TransactionTable({
                             disabled={isReadOnly}
                             className={`border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none ${
                               transaction.es_deuda
-                                ? "bg-orange-500 hover:bg-orange-600 text-white"
-                                : "bg-orange-100 hover:bg-orange-200 text-orange-700"
+                                ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                                : 'bg-orange-100 hover:bg-orange-200 text-orange-700'
                             }`}
                             title={
                               isReadOnly
-                                ? "Sucursal inactiva"
+                                ? 'Sucursal inactiva'
                                 : transaction.es_deuda
-                                  ? "Quitar deuda"
-                                  : "Marcar como deuda"
+                                  ? 'Quitar deuda'
+                                  : 'Marcar como deuda'
                             }
                           >
                             <Clock className="w-4 h-4" />
@@ -523,8 +525,8 @@ export function TransactionTable({
                             className="bg-indigo-500 hover:bg-indigo-600 text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                             title={
                               isReadOnly
-                                ? "Sucursal inactiva"
-                                : "Mover transacción"
+                                ? 'Sucursal inactiva'
+                                : 'Mover transacción'
                             }
                           >
                             <ArrowRightLeft className="w-4 h-4" />
@@ -539,8 +541,8 @@ export function TransactionTable({
                             className="bg-rose-500 hover:bg-rose-600 text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                             title={
                               isReadOnly
-                                ? "Sucursal inactiva"
-                                : "Eliminar movimiento"
+                                ? 'Sucursal inactiva'
+                                : 'Eliminar movimiento'
                             }
                           >
                             <Trash2 className="w-4 h-4" />

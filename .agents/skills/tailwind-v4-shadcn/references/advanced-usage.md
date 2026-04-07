@@ -74,7 +74,7 @@ For complete v3 → v4 migration steps, see `references/migration-guide.md`.
 **Import:**
 
 ```tsx
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 ```
 
 **Usage:**
@@ -82,9 +82,9 @@ import { cn } from "@/lib/utils";
 ```tsx
 <div
   className={cn(
-    "base-class",
-    isActive && "active-class",
-    hasError && "error-class",
+    'base-class',
+    isActive && 'active-class',
+    hasError && 'error-class',
   )}
 />
 ```
@@ -123,9 +123,9 @@ Apply different variables based on state:
 ```tsx
 <div
   className={cn(
-    "rounded-lg p-4",
-    variant === "success" && "bg-success text-success-foreground",
-    variant === "error" && "bg-destructive text-destructive-foreground",
+    'rounded-lg p-4',
+    variant === 'success' && 'bg-success text-success-foreground',
+    variant === 'error' && 'bg-destructive text-destructive-foreground',
   )}
 />
 ```
@@ -149,25 +149,25 @@ Usage: `className="rounded-[var(--radius-lg)]"`
 Use `cva()` from `class-variance-authority` for complex variants:
 
 ```tsx
-import { cva } from "class-variance-authority";
+import { cva } from 'class-variance-authority';
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-md",
+  'inline-flex items-center justify-center rounded-md',
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground",
-        destructive: "bg-destructive text-destructive-foreground",
+        default: 'bg-primary text-primary-foreground',
+        destructive: 'bg-destructive text-destructive-foreground',
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 px-3",
-        lg: "h-11 px-8",
+        default: 'h-10 px-4 py-2',
+        sm: 'h-9 px-3',
+        lg: 'h-11 px-8',
       },
     },
     defaultVariants: {
-      variant: "default",
-      size: "default",
+      variant: 'default',
+      size: 'default',
     },
   },
 );

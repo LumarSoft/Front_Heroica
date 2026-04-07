@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
@@ -13,34 +13,34 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { API_ENDPOINTS } from "@/lib/config";
-import { useAuthStore } from "@/store/authStore";
-import { loginSchema } from "@/lib/schemas";
-import { Eye, EyeOff } from "lucide-react";
-import { Setup2FADialog } from "@/components/Setup2FADialog";
+} from '@/components/ui/dialog';
+import { API_ENDPOINTS } from '@/lib/config';
+import { useAuthStore } from '@/store/authStore';
+import { loginSchema } from '@/lib/schemas';
+import { Eye, EyeOff } from 'lucide-react';
+import { Setup2FADialog } from '@/components/Setup2FADialog';
 
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
 
   const [requires2FA, setRequires2FA] = useState(false);
-  const [tempToken, setTempToken] = useState("");
-  const [code2FA, setCode2FA] = useState("");
+  const [tempToken, setTempToken] = useState('');
+  const [code2FA, setCode2FA] = useState('');
 
   const [needsSetup2FA, setNeedsSetup2FA] = useState(false);
   const [pendingUserId, setPendingUserId] = useState<number | null>(null);
@@ -50,24 +50,24 @@ export default function LoginPage() {
 
     const validation = loginSchema.safeParse({ email, password });
     if (!validation.success) {
-      setError(validation.error.issues[0]?.message ?? "Datos inválidos");
+      setError(validation.error.issues[0]?.message ?? 'Datos inválidos');
       return;
     }
 
     setIsLoading(true);
-    setError("");
+    setError('');
 
     try {
       const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Error al iniciar sesión");
+        throw new Error(data.message || 'Error al iniciar sesión');
       }
 
       if (data.needsSetup2FA) {
@@ -83,12 +83,12 @@ export default function LoginPage() {
       }
 
       login(data.data.token, data.data.user);
-      router.push("/sucursales");
+      router.push('/sucursales');
     } catch (err: unknown) {
       const message =
         err instanceof Error
           ? err.message
-          : "Error al conectar con el servidor";
+          : 'Error al conectar con el servidor';
       setError(message);
     } finally {
       setIsLoading(false);
@@ -99,31 +99,31 @@ export default function LoginPage() {
     e.preventDefault();
 
     if (!code2FA || code2FA.length !== 6) {
-      setError("El código debe tener 6 dígitos");
+      setError('El código debe tener 6 dígitos');
       return;
     }
 
     setIsLoading(true);
-    setError("");
+    setError('');
 
     try {
       const response = await fetch(API_ENDPOINTS.AUTH.VERIFY_2FA, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tempToken, code: code2FA }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Código inválido");
+        throw new Error(data.message || 'Código inválido');
       }
 
       login(data.data.token, data.data.user);
-      router.push("/sucursales");
+      router.push('/sucursales');
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Error al verificar código";
+        err instanceof Error ? err.message : 'Error al verificar código';
       setError(message);
     } finally {
       setIsLoading(false);
@@ -134,15 +134,15 @@ export default function LoginPage() {
     setNeedsSetup2FA(false);
     setRequires2FA(true);
     setTempToken(receivedTempToken);
-    setCode2FA("");
-    setError("");
+    setCode2FA('');
+    setError('');
     setPendingUserId(null);
   };
 
   const handleClose2FASetup = () => {
     setNeedsSetup2FA(false);
     setPendingUserId(null);
-    setError("Debes configurar 2FA para poder acceder al sistema");
+    setError('Debes configurar 2FA para poder acceder al sistema');
   };
 
   return (
@@ -209,12 +209,12 @@ export default function LoginPage() {
           <Card className="border-[#E0E0E0] lg:border-white/20 bg-white lg:bg-white/95 lg:backdrop-blur-sm shadow-xl lg:shadow-2xl">
             <CardHeader className="space-y-2 pb-6">
               <CardTitle className="text-3xl font-bold text-[#002868]">
-                {requires2FA ? "Verificación 2FA" : "Iniciar Sesión"}
+                {requires2FA ? 'Verificación 2FA' : 'Iniciar Sesión'}
               </CardTitle>
               <CardDescription className="text-[#666666] text-base">
                 {requires2FA
-                  ? "Ingresa el código de 6 dígitos de tu aplicación autenticadora"
-                  : "Ingresa tus credenciales para acceder al sistema"}
+                  ? 'Ingresa el código de 6 dígitos de tu aplicación autenticadora'
+                  : 'Ingresa tus credenciales para acceder al sistema'}
               </CardDescription>
             </CardHeader>
 
@@ -270,7 +270,7 @@ export default function LoginPage() {
                     <div className="relative">
                       <Input
                         id="password"
-                        type={showPassword ? "text" : "password"}
+                        type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -283,8 +283,8 @@ export default function LoginPage() {
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666666] hover:text-[#002868] transition-colors cursor-pointer"
                         aria-label={
                           showPassword
-                            ? "Ocultar contraseña"
-                            : "Mostrar contraseña"
+                            ? 'Ocultar contraseña'
+                            : 'Mostrar contraseña'
                         }
                       >
                         {showPassword ? (
@@ -309,12 +309,12 @@ export default function LoginPage() {
                         <span>Iniciando sesión...</span>
                       </div>
                     ) : (
-                      "Iniciar Sesión"
+                      'Iniciar Sesión'
                     )}
                   </Button>
 
                   <p className="text-center text-sm text-[#666666]">
-                    ¿No tienes una cuenta?{" "}
+                    ¿No tienes una cuenta?{' '}
                     <button
                       type="button"
                       onClick={() => setIsContactDialogOpen(true)}
@@ -363,7 +363,7 @@ export default function LoginPage() {
                       value={code2FA}
                       onChange={(e) =>
                         setCode2FA(
-                          e.target.value.replace(/\D/g, "").slice(0, 6),
+                          e.target.value.replace(/\D/g, '').slice(0, 6),
                         )
                       }
                       required
@@ -388,7 +388,7 @@ export default function LoginPage() {
                         <span>Verificando...</span>
                       </div>
                     ) : (
-                      "Verificar Código"
+                      'Verificar Código'
                     )}
                   </Button>
 
@@ -396,9 +396,9 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => {
                       setRequires2FA(false);
-                      setTempToken("");
-                      setCode2FA("");
-                      setError("");
+                      setTempToken('');
+                      setCode2FA('');
+                      setError('');
                     }}
                     className="text-sm text-[#666666] hover:text-[#002868] transition-colors"
                   >

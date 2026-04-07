@@ -30,7 +30,7 @@ export interface ReportMovimiento {
   fecha: string;
   concepto?: string;
   monto: number;
-  tipo: "ingreso" | "egreso";
+  tipo: 'ingreso' | 'egreso';
   categoria_nombre?: string;
   subcategoria_nombre?: string;
 }

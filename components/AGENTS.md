@@ -73,7 +73,7 @@ Before building anything inline, check if a shared component already exists for 
 
   ```tsx
   // ✅ Correct
-  import { Trash2, ArrowLeft, Mail, Clock } from "lucide-react";
+  import { Trash2, ArrowLeft, Mail, Clock } from 'lucide-react';
 
   // ❌ Wrong
   <svg xmlns="..." viewBox="...">

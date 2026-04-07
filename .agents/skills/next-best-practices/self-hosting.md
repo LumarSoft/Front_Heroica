@@ -9,7 +9,7 @@ For Docker or any containerized deployment, use standalone output:
 ```js
 // next.config.js
 module.exports = {
-  output: "standalone",
+  output: 'standalone',
 };
 ```
 
@@ -71,19 +71,19 @@ CMD ["node", "server.js"]
 ### Docker Compose
 
 ```yaml
-version: "3.8"
+version: '3.8'
 
 services:
   web:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
     restart: unless-stopped
     healthcheck:
       test:
-        ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+        ['CMD', 'wget', '-q', '--spider', 'http://localhost:3000/api/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -98,12 +98,12 @@ For traditional server deployments:
 module.exports = {
   apps: [
     {
-      name: "nextjs",
-      script: ".next/standalone/server.js",
-      instances: "max",
-      exec_mode: "cluster",
+      name: 'nextjs',
+      script: '.next/standalone/server.js',
+      instances: 'max',
+      exec_mode: 'cluster',
       env: {
-        NODE_ENV: "production",
+        NODE_ENV: 'production',
         PORT: 3000,
       },
     },
@@ -133,7 +133,7 @@ Next.js 14+ supports custom cache handlers for shared storage:
 ```js
 // next.config.js
 module.exports = {
-  cacheHandler: require.resolve("./cache-handler.js"),
+  cacheHandler: require.resolve('./cache-handler.js'),
   cacheMaxMemorySize: 0, // Disable in-memory cache
 };
 ```
@@ -142,10 +142,10 @@ module.exports = {
 
 ```js
 // cache-handler.js
-const Redis = require("ioredis");
+const Redis = require('ioredis');
 
 const redis = new Redis(process.env.REDIS_URL);
-const CACHE_PREFIX = "nextjs:";
+const CACHE_PREFIX = 'nextjs:';
 
 module.exports = class CacheHandler {
   constructor(options) {
@@ -196,7 +196,7 @@ const {
   S3Client,
   GetObjectCommand,
   PutObjectCommand,
-} = require("@aws-sdk/client-s3");
+} = require('@aws-sdk/client-s3');
 
 const s3 = new S3Client({ region: process.env.AWS_REGION });
 const BUCKET = process.env.CACHE_BUCKET;
@@ -213,7 +213,7 @@ module.exports = class CacheHandler {
       const body = await response.Body.transformToString();
       return JSON.parse(body);
     } catch (err) {
-      if (err.name === "NoSuchKey") return null;
+      if (err.name === 'NoSuchKey') return null;
       throw err;
     }
   }
@@ -227,7 +227,7 @@ module.exports = class CacheHandler {
           value: data,
           lastModified: Date.now(),
         }),
-        ContentType: "application/json",
+        ContentType: 'application/json',
       }),
     );
   }
@@ -277,8 +277,8 @@ Offload to Cloudinary, Imgix, or similar:
 // next.config.js
 module.exports = {
   images: {
-    loader: "custom",
-    loaderFile: "./lib/image-loader.js",
+    loader: 'custom',
+    loaderFile: './lib/image-loader.js',
   },
 };
 ```
@@ -286,8 +286,8 @@ module.exports = {
 ```js
 // lib/image-loader.js
 export default function cloudinaryLoader({ src, width, quality }) {
-  const params = ["f_auto", "c_limit", `w_${width}`, `q_${quality || "auto"}`];
-  return `https://res.cloudinary.com/demo/image/upload/${params.join(",")}${src}`;
+  const params = ['f_auto', 'c_limit', `w_${width}`, `q_${quality || 'auto'}`];
+  return `https://res.cloudinary.com/demo/image/upload/${params.join(',')}${src}`;
 }
 ```
 
@@ -313,7 +313,7 @@ For truly dynamic config, don't use `NEXT_PUBLIC_*`. Instead:
 export async function GET() {
   return Response.json({
     apiUrl: process.env.API_URL,
-    features: process.env.FEATURES?.split(","),
+    features: process.env.FEATURES?.split(','),
   });
 }
 ```
@@ -346,9 +346,9 @@ export async function GET() {
     // Optional: check database connection
     // await db.$queryRaw`SELECT 1`;
 
-    return Response.json({ status: "healthy" }, { status: 200 });
+    return Response.json({ status: 'healthy' }, { status: 200 });
   } catch (error) {
-    return Response.json({ status: "unhealthy" }, { status: 503 });
+    return Response.json({ status: 'unhealthy' }, { status: 503 });
   }
 }
 ```

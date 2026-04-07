@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -51,7 +51,7 @@ export class ErrorBoundary extends React.Component<
               Ocurrió un error inesperado
             </p>
             <p className="text-sm text-rose-500 mt-1">
-              {this.state.error?.message ?? "Error desconocido"}
+              {this.state.error?.message ?? 'Error desconocido'}
             </p>
           </div>
           <Button

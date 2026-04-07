@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { bancoSchema } from "@/lib/schemas";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { bancoSchema } from '@/lib/schemas';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -14,10 +14,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { DeleteDialog } from '@/components/ui/delete-dialog';
 
 interface Banco {
   id: number;
@@ -32,14 +32,14 @@ interface BancoForm {
   codigo: string;
 }
 
-const DEFAULT_FORM: BancoForm = { id: 0, nombre: "", codigo: "" };
+const DEFAULT_FORM: BancoForm = { id: 0, nombre: '', codigo: '' };
 
 export function BancosSection() {
   const [bancos, setBancos] = useState<Banco[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [form, setForm] = useState<BancoForm>(DEFAULT_FORM);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{
     id: number;
     nombre: string;
@@ -57,30 +57,30 @@ export function BancosSection() {
 
   const handleOpenNew = () => {
     setForm(DEFAULT_FORM);
-    setError("");
+    setError('');
     setIsDialogOpen(true);
   };
 
   const handleOpenEdit = (banco: Banco) => {
     setForm(banco);
-    setError("");
+    setError('');
     setIsDialogOpen(true);
   };
 
   const handleSave = async () => {
     const validation = bancoSchema.safeParse(form);
     if (!validation.success) {
-      setError(validation.error.issues[0]?.message ?? "Error de validación");
+      setError(validation.error.issues[0]?.message ?? 'Error de validación');
       return;
     }
     setIsSaving(true);
-    setError("");
+    setError('');
     try {
       const url = form.id
         ? API_ENDPOINTS.CONFIGURACION.BANCOS.UPDATE(form.id)
         : API_ENDPOINTS.CONFIGURACION.BANCOS.CREATE;
       const res = await apiFetch(url, {
-        method: form.id ? "PUT" : "POST",
+        method: form.id ? 'PUT' : 'POST',
         body: JSON.stringify(form),
       });
       const data = await res.json();
@@ -92,7 +92,7 @@ export function BancosSection() {
         setError(data.message);
       }
     } catch {
-      setError("Error al guardar banco");
+      setError('Error al guardar banco');
     } finally {
       setIsSaving(false);
     }
@@ -103,7 +103,7 @@ export function BancosSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.BANCOS.DELETE(deleteTarget.id),
-        { method: "DELETE" },
+        { method: 'DELETE' },
       );
       const data = await res.json();
       if (data.success) {
@@ -111,7 +111,7 @@ export function BancosSection() {
         await fetchBancos();
       }
     } catch {
-      toast.error("Error al eliminar banco");
+      toast.error('Error al eliminar banco');
     } finally {
       setDeleteTarget(null);
     }
@@ -176,12 +176,12 @@ export function BancosSection() {
           <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
             <DialogHeader className="p-0 border-0">
               <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
-                {form.id ? "Editar Banco" : "Nuevo Banco"}
+                {form.id ? 'Editar Banco' : 'Nuevo Banco'}
               </DialogTitle>
               <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
                 {form.id
-                  ? "Modifica los detalles de este banco"
-                  : "Agrega un nuevo banco al sistema"}
+                  ? 'Modifica los detalles de este banco'
+                  : 'Agrega un nuevo banco al sistema'}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -232,7 +232,7 @@ export function BancosSection() {
                 disabled={isSaving || !form.nombre}
                 className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all"
               >
-                {isSaving ? "Guardando..." : "Guardar"}
+                {isSaving ? 'Guardando...' : 'Guardar'}
               </Button>
             </DialogFooter>
           </div>
@@ -241,7 +241,7 @@ export function BancosSection() {
 
       <DeleteDialog
         open={!!deleteTarget}
-        nombre={deleteTarget?.nombre ?? ""}
+        nombre={deleteTarget?.nombre ?? ''}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />

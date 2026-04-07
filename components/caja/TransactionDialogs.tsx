@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -11,14 +11,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import type {
   Transaction,
   Categoria,
   Subcategoria,
   SelectOption,
-} from "@/lib/types";
-import { selectClasses, labelClasses, inputClasses } from "@/lib/dialog-styles";
+} from '@/lib/types';
+import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles';
 import {
   Lightbulb,
   CheckCircle2,
@@ -26,10 +26,10 @@ import {
   X,
   FileText,
   Download,
-} from "lucide-react";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { formatInputMonto } from "@/lib/formatters";
+} from 'lucide-react';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { formatInputMonto } from '@/lib/formatters';
 
 // =============================================
 // Dialog de Detalles (edición de movimiento)
@@ -73,7 +73,7 @@ interface DetailsDialogProps {
   canEditInfo?: boolean;
   canEditComment?: boolean;
   movimientoId?: number;
-  cajaTipo?: "efectivo" | "banco";
+  cajaTipo?: 'efectivo' | 'banco';
 }
 
 export function DetailsDialog({
@@ -92,7 +92,7 @@ export function DetailsDialog({
   canEditInfo = true,
   canEditComment = true,
   movimientoId,
-  cajaTipo = "efectivo",
+  cajaTipo = 'efectivo',
 }: DetailsDialogProps) {
   const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -113,7 +113,7 @@ export function DetailsDialog({
     try {
       setIsLoadingDocs(true);
       const endpoint =
-        cajaTipo === "banco"
+        cajaTipo === 'banco'
           ? API_ENDPOINTS.CAJA_BANCO.GET_DOCUMENTOS(movimientoId)
           : API_ENDPOINTS.MOVIMIENTOS.GET_DOCUMENTOS(movimientoId);
 
@@ -124,7 +124,7 @@ export function DetailsDialog({
         setDocumentos(data.data || []);
       }
     } catch (error) {
-      console.error("Error al cargar documentos:", error);
+      console.error('Error al cargar documentos:', error);
     } finally {
       setIsLoadingDocs(false);
     }
@@ -134,16 +134,16 @@ export function DetailsDialog({
     const files = Array.from(e.target.files || []);
     const validFiles = files.filter((file) => {
       const isValidType =
-        file.type === "application/pdf" ||
-        file.type === "image/jpeg" ||
-        file.type === "image/jpg";
+        file.type === 'application/pdf' ||
+        file.type === 'image/jpeg' ||
+        file.type === 'image/jpg';
       const isValidSize = file.size <= 10 * 1024 * 1024;
       return isValidType && isValidSize;
     });
 
     setSelectedFiles((prev) => [...prev, ...validFiles]);
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value = '';
     }
   };
 
@@ -157,16 +157,16 @@ export function DetailsDialog({
     try {
       setIsUploadingDocs(true);
       const endpoint =
-        cajaTipo === "banco"
+        cajaTipo === 'banco'
           ? API_ENDPOINTS.CAJA_BANCO.UPLOAD_DOCUMENTO(movimientoId)
           : API_ENDPOINTS.MOVIMIENTOS.UPLOAD_DOCUMENTO(movimientoId);
 
       for (const file of selectedFiles) {
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append('file', file);
 
         await apiFetch(endpoint, {
-          method: "POST",
+          method: 'POST',
           body: formData,
           headers: {},
         });
@@ -175,7 +175,7 @@ export function DetailsDialog({
       setSelectedFiles([]);
       await fetchDocumentos();
     } catch (error) {
-      console.error("Error al subir documentos:", error);
+      console.error('Error al subir documentos:', error);
     } finally {
       setIsUploadingDocs(false);
     }
@@ -186,14 +186,14 @@ export function DetailsDialog({
 
     try {
       const endpoint =
-        cajaTipo === "banco"
+        cajaTipo === 'banco'
           ? API_ENDPOINTS.CAJA_BANCO.DELETE_DOCUMENTO(movimientoId, docId)
           : API_ENDPOINTS.MOVIMIENTOS.DELETE_DOCUMENTO(movimientoId, docId);
 
-      await apiFetch(endpoint, { method: "DELETE" });
+      await apiFetch(endpoint, { method: 'DELETE' });
       await fetchDocumentos();
     } catch (error) {
-      console.error("Error al eliminar documento:", error);
+      console.error('Error al eliminar documento:', error);
     }
   };
 
@@ -201,11 +201,11 @@ export function DetailsDialog({
     if (!movimientoId) return;
 
     const endpoint =
-      cajaTipo === "banco"
+      cajaTipo === 'banco'
         ? API_ENDPOINTS.CAJA_BANCO.DOWNLOAD_DOCUMENTO(movimientoId, docId)
         : API_ENDPOINTS.MOVIMIENTOS.DOWNLOAD_DOCUMENTO(movimientoId, docId);
 
-    window.open(endpoint, "_blank");
+    window.open(endpoint, '_blank');
   };
 
   return (
@@ -215,12 +215,12 @@ export function DetailsDialog({
         <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0] flex-shrink-0">
           <DialogHeader className="p-0 border-0">
             <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
-              {isReadOnly ? "Ver movimiento" : "Editar movimiento"}
+              {isReadOnly ? 'Ver movimiento' : 'Editar movimiento'}
             </DialogTitle>
             <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
               {isReadOnly
-                ? "Sucursal inactiva — solo visualización"
-                : "Modifica los datos del movimiento de caja"}
+                ? 'Sucursal inactiva — solo visualización'
+                : 'Modifica los datos del movimiento de caja'}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -246,7 +246,7 @@ export function DetailsDialog({
                   value={formData.fecha}
                   onChange={onInputChange}
                   disabled={!canEditInfo}
-                  className={`${inputClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`${inputClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
               </div>
               <div className="space-y-1.5">
@@ -259,7 +259,7 @@ export function DetailsDialog({
                   value={formData.tipo}
                   onChange={onInputChange}
                   disabled={!canEditInfo}
-                  className={`${selectClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`}
+                  className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
                 >
                   <option value="ingreso">Ingreso</option>
                   <option value="egreso">Egreso</option>
@@ -278,7 +278,7 @@ export function DetailsDialog({
                 value={formData.concepto}
                 onChange={onInputChange}
                 disabled={!canEditInfo}
-                className={`${inputClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`${inputClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
             </div>
 
@@ -293,7 +293,7 @@ export function DetailsDialog({
                 value={formData.descripcion}
                 onChange={onInputChange}
                 disabled={!canEditComment && !canEditInfo}
-                className={`${inputClasses} ${(!canEditComment && !canEditInfo) ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`${inputClasses} ${!canEditComment && !canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
             </div>
           </section>
@@ -326,7 +326,7 @@ export function DetailsDialog({
                     value={formatInputMonto(formData.monto)}
                     onChange={onInputChange}
                     disabled={!canEditInfo}
-                    className={`${inputClasses} pl-8 ${!canEditInfo ? "opacity-50 cursor-not-allowed" : ""}`}
+                    className={`${inputClasses} pl-8 ${!canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                 </div>
               </div>
@@ -341,7 +341,7 @@ export function DetailsDialog({
                   value={formData.comprobante}
                   onChange={onInputChange}
                   disabled={!canEditInfo}
-                  className={`${inputClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`${inputClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
               </div>
             </div>
@@ -359,7 +359,7 @@ export function DetailsDialog({
                       value={formData.banco_id}
                       onChange={onInputChange}
                       disabled={!canEditInfo}
-                      className={`${selectClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`}
+                      className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
                     >
                       <option value="">Seleccione un banco</option>
                       {bancos.map((b) => (
@@ -379,7 +379,7 @@ export function DetailsDialog({
                       value={formData.medio_pago_id}
                       onChange={onInputChange}
                       disabled={!canEditInfo}
-                      className={`${selectClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`}
+                      className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
                     >
                       <option value="">Seleccione medio de pago</option>
                       {mediosPago.map((m) => (
@@ -408,7 +408,7 @@ export function DetailsDialog({
                         value={formData.numero_cheque}
                         onChange={onInputChange}
                         disabled={!canEditInfo}
-                        className={`${inputClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed" : ""}`}
+                        className={`${inputClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
                       />
                     </div>
                   ) : null;
@@ -426,7 +426,7 @@ export function DetailsDialog({
                 value={formData.prioridad}
                 onChange={onInputChange}
                 disabled={!canEditInfo}
-                className={`${selectClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`}
+                className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
               >
                 <option value="baja">Baja</option>
                 <option value="media">Media</option>
@@ -456,7 +456,7 @@ export function DetailsDialog({
                   value={formData.categoria_id}
                   onChange={onInputChange}
                   disabled={!canEditInfo}
-                  className={`${selectClasses} ${!canEditInfo ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`}
+                  className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
                 >
                   <option value="">Seleccione categoría</option>
                   {categorias
@@ -493,7 +493,7 @@ export function DetailsDialog({
         </div>
 
         {/* ─── Sección de Comprobantes ─── */}
-        {(!isReadOnly || (canEditInfo || canEditComment)) && movimientoId && (
+        {(!isReadOnly || canEditInfo || canEditComment) && movimientoId && (
           <div className="px-8 py-4 border-t border-dashed border-[#E8E8E8] flex-shrink-0">
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
@@ -528,7 +528,7 @@ export function DetailsDialog({
                               size="sm"
                               onClick={() => {
                                 const endpoint =
-                                  cajaTipo === "banco"
+                                  cajaTipo === 'banco'
                                     ? API_ENDPOINTS.CAJA_BANCO.DOWNLOAD_DOCUMENTO(
                                         movimientoId,
                                         doc.id,
@@ -537,7 +537,7 @@ export function DetailsDialog({
                                         movimientoId,
                                         doc.id,
                                       );
-                                window.open(endpoint, "_blank");
+                                window.open(endpoint, '_blank');
                               }}
                               className="h-6 w-6 p-0 hover:bg-green-50 hover:text-green-600 cursor-pointer"
                               title="Ver documento"
@@ -641,8 +641,8 @@ export function DetailsDialog({
                         className="w-full h-9 bg-[#002868] hover:bg-[#003d8f] text-white text-sm cursor-pointer"
                       >
                         {isUploadingDocs
-                          ? "Subiendo..."
-                          : "Subir archivos seleccionados"}
+                          ? 'Subiendo...'
+                          : 'Subir archivos seleccionados'}
                       </Button>
                     </div>
                   )}
@@ -661,7 +661,9 @@ export function DetailsDialog({
               disabled={isSaving}
               className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] hover:border-[#C0C0C0] transition-all cursor-pointer"
             >
-              {isReadOnly && !canEditInfo && !canEditComment ? "Cerrar" : "Cancelar"}
+              {isReadOnly && !canEditInfo && !canEditComment
+                ? 'Cerrar'
+                : 'Cancelar'}
             </Button>
             {(!isReadOnly || canEditInfo || canEditComment) && (
               <Button
@@ -675,7 +677,7 @@ export function DetailsDialog({
                     Guardando…
                   </span>
                 ) : (
-                  "Guardar cambios"
+                  'Guardar cambios'
                 )}
               </Button>
             )}
@@ -766,7 +768,7 @@ export function StateDialog({
             disabled={isSaving}
             className="bg-[#002868] text-white hover:bg-[#003d8f] cursor-pointer"
           >
-            {isSaving ? "Guardando..." : "Cambiar Estado"}
+            {isSaving ? 'Guardando...' : 'Cambiar Estado'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -798,13 +800,13 @@ export function DeudaDialog({
   isSaving,
 }: DeudaDialogProps) {
   const [localFecha, setLocalFecha] = useState(
-    transaction?.fecha ? transaction.fecha.split("T")[0] : "",
+    transaction?.fecha ? transaction.fecha.split('T')[0] : '',
   );
 
   // Reset localFecha when dialog opens with a new transaction
   useEffect(() => {
     if (open) {
-      setLocalFecha(transaction?.fecha ? transaction.fecha.split("T")[0] : "");
+      setLocalFecha(transaction?.fecha ? transaction.fecha.split('T')[0] : '');
     }
   }, [open, transaction]);
 
@@ -815,12 +817,12 @@ export function DeudaDialog({
       <DialogContent className="sm:max-w-[420px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
         {/* Header */}
         <div
-          className={`px-8 pt-8 pb-5 border-b ${esDeudaActiva ? "border-orange-100 bg-orange-50/40" : "border-[#F0F0F0]"}`}
+          className={`px-8 pt-8 pb-5 border-b ${esDeudaActiva ? 'border-orange-100 bg-orange-50/40' : 'border-[#F0F0F0]'}`}
         >
           <DialogHeader className="p-0 border-0">
             <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight flex items-center gap-3">
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center ${esDeudaActiva ? "bg-orange-100" : "bg-[#002868]/10"}`}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center ${esDeudaActiva ? 'bg-orange-100' : 'bg-[#002868]/10'}`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -828,7 +830,7 @@ export function DeudaDialog({
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className={`w-5 h-5 ${esDeudaActiva ? "text-orange-600" : "text-[#002868]"}`}
+                  className={`w-5 h-5 ${esDeudaActiva ? 'text-orange-600' : 'text-[#002868]'}`}
                 >
                   <path
                     strokeLinecap="round"
@@ -837,12 +839,12 @@ export function DeudaDialog({
                   />
                 </svg>
               </div>
-              {esDeudaActiva ? "Deuda Activa" : "Marcar como Deuda"}
+              {esDeudaActiva ? 'Deuda Activa' : 'Marcar como Deuda'}
             </DialogTitle>
             <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
               {esDeudaActiva
-                ? "Este movimiento está en deuda y no contabiliza en el saldo necesario."
-                : "Al activar la deuda, este movimiento no contabilizará en el saldo necesario hasta que se libere."}
+                ? 'Este movimiento está en deuda y no contabiliza en el saldo necesario.'
+                : 'Al activar la deuda, este movimiento no contabilizará en el saldo necesario hasta que se libere.'}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -870,12 +872,12 @@ export function DeudaDialog({
               </p>
               {transaction?.fecha_original_vencimiento && (
                 <p className="text-xs text-orange-600">
-                  Fecha original de vencimiento:{" "}
+                  Fecha original de vencimiento:{' '}
                   <span className="font-bold">
                     {(() => {
                       const partes = transaction
-                        .fecha_original_vencimiento!.split("T")[0]
-                        .split("-");
+                        .fecha_original_vencimiento!.split('T')[0]
+                        .split('-');
                       return partes.length === 3
                         ? `${partes[2]}/${partes[1]}/${partes[0]}`
                         : transaction.fecha_original_vencimiento;
@@ -892,7 +894,7 @@ export function DeudaDialog({
             <div className="space-y-3">
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
                 <p className="text-xs text-amber-700">
-                  <Lightbulb className="w-3.5 h-3.5 inline mr-1 text-amber-600" />{" "}
+                  <Lightbulb className="w-3.5 h-3.5 inline mr-1 text-amber-600" />{' '}
                   Indicá la fecha original de vencimiento de este movimiento.
                   Quedará guardada para cuando se libere la deuda.
                 </p>
@@ -952,7 +954,7 @@ export function DeudaDialog({
                     Procesando…
                   </span>
                 ) : (
-                  "Activar Deuda"
+                  'Activar Deuda'
                 )}
               </Button>
             )}
@@ -1009,7 +1011,7 @@ export function DeleteDialog({
           <DialogDescription className="text-[#666666] mt-2">
             {isBulk ? (
               <>
-                ¿Estás seguro de que deseas eliminar{" "}
+                ¿Estás seguro de que deseas eliminar{' '}
                 <span className="font-semibold text-rose-600">
                   {count} movimientos
                 </span>
@@ -1038,10 +1040,10 @@ export function DeleteDialog({
             className="bg-rose-500 text-white hover:bg-rose-600 cursor-pointer"
           >
             {isSaving
-              ? "Eliminando..."
+              ? 'Eliminando...'
               : isBulk
                 ? `Eliminar ${count}`
-                : "Eliminar"}
+                : 'Eliminar'}
           </Button>
         </DialogFooter>
       </DialogContent>

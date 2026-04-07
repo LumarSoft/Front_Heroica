@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { XCircle } from "lucide-react";
+import { XCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -8,10 +8,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface RechazarDialogProps {
   open: boolean;
@@ -79,7 +79,7 @@ export function RechazarDialog({
             disabled={isSaving || !motivoRechazo.trim()}
             className="h-11 px-8 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 shadow-lg shadow-rose-600/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:shadow-none"
           >
-            {isSaving ? "Rechazando..." : "Confirmar Rechazo"}
+            {isSaving ? 'Rechazando...' : 'Confirmar Rechazo'}
           </Button>
         </DialogFooter>
       </DialogContent>

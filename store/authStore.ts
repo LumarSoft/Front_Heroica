@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import { ROLES } from "@/lib/constants";
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { ROLES } from '@/lib/constants';
 
 interface User {
   id: number;
@@ -65,24 +65,24 @@ export const useAuthStore = create<AuthState>()(
         return user.permisos?.includes(clave) ?? false;
       },
 
-      canVerConfiguracion: () => get().hasPermiso("ver_configuracion"),
-      canGestionarUsuarios: () => get().hasPermiso("gestionar_usuarios"),
-      canGestionarRoles: () => get().hasPermiso("gestionar_roles"),
-      canVerMovimientos: () => get().hasPermiso("ver_movimientos"),
-      canCrearMovimientos: () => get().hasPermiso("crear_movimientos"),
-      canEditarMovimientos: () => get().hasPermiso("editar_movimientos"),
-      canEliminarMovimientos: () => get().hasPermiso("eliminar_movimientos"),
-      canComentarMovimientos: () => get().hasPermiso("agregar_comentarios"),
-      canAprobarMovimientos: () => get().hasPermiso("aprobar_movimientos"),
-      canVerPendientes: () => get().hasPermiso("ver_pendientes"),
-      canCargarPendientes: () => get().hasPermiso("cargar_pendientes"),
-      canAprobarPendientes: () => get().hasPermiso("aprobar_pendientes"),
-      canVerReportes: () => get().hasPermiso("ver_reportes"),
-      canVerSucursales: () => get().hasPermiso("ver_sucursales"),
-      canGestionarSucursales: () => get().hasPermiso("gestionar_sucursales"),
+      canVerConfiguracion: () => get().hasPermiso('ver_configuracion'),
+      canGestionarUsuarios: () => get().hasPermiso('gestionar_usuarios'),
+      canGestionarRoles: () => get().hasPermiso('gestionar_roles'),
+      canVerMovimientos: () => get().hasPermiso('ver_movimientos'),
+      canCrearMovimientos: () => get().hasPermiso('crear_movimientos'),
+      canEditarMovimientos: () => get().hasPermiso('editar_movimientos'),
+      canEliminarMovimientos: () => get().hasPermiso('eliminar_movimientos'),
+      canComentarMovimientos: () => get().hasPermiso('agregar_comentarios'),
+      canAprobarMovimientos: () => get().hasPermiso('aprobar_movimientos'),
+      canVerPendientes: () => get().hasPermiso('ver_pendientes'),
+      canCargarPendientes: () => get().hasPermiso('cargar_pendientes'),
+      canAprobarPendientes: () => get().hasPermiso('aprobar_pendientes'),
+      canVerReportes: () => get().hasPermiso('ver_reportes'),
+      canVerSucursales: () => get().hasPermiso('ver_sucursales'),
+      canGestionarSucursales: () => get().hasPermiso('gestionar_sucursales'),
     }),
     {
-      name: "auth-storage",
+      name: 'auth-storage',
       /**
        * Almacenamiento del token en localStorage.
        * Riesgo XSS: si un atacante inyecta script, podría leer el token.

@@ -1,6 +1,6 @@
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
-import { formatMonto } from "@/lib/formatters";
-import type { ReportDeuda } from "./types";
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { formatMonto } from '@/lib/formatters';
+import type { ReportDeuda } from './types';
 
 // =============================================
 // Calcula la antigüedad de una deuda y su color
@@ -19,26 +19,26 @@ function getAntiguedad(fechaStr: string): {
 
   if (dias <= 7)
     return {
-      label: "Esta semana",
-      colorClass: "text-emerald-600 bg-emerald-50 border-emerald-200",
-      dotClass: "bg-emerald-400",
+      label: 'Esta semana',
+      colorClass: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+      dotClass: 'bg-emerald-400',
     };
   if (dias <= 30)
     return {
       label: `Hace ${dias}d`,
-      colorClass: "text-amber-600 bg-amber-50 border-amber-200",
-      dotClass: "bg-amber-400",
+      colorClass: 'text-amber-600 bg-amber-50 border-amber-200',
+      dotClass: 'bg-amber-400',
     };
   if (dias <= 90)
     return {
       label: `Hace ${dias}d`,
-      colorClass: "text-orange-600 bg-orange-50 border-orange-200",
-      dotClass: "bg-orange-400",
+      colorClass: 'text-orange-600 bg-orange-50 border-orange-200',
+      dotClass: 'bg-orange-400',
     };
   return {
     label: `Hace ${dias}d`,
-    colorClass: "text-rose-600 bg-rose-50 border-rose-200",
-    dotClass: "bg-rose-400",
+    colorClass: 'text-rose-600 bg-rose-50 border-rose-200',
+    dotClass: 'bg-rose-400',
   };
 }
 
@@ -48,10 +48,10 @@ function getAntiguedad(fechaStr: string): {
 
 interface DeudaPanelProps {
   deudas: ReportDeuda[];
-  moneda?: "ARS" | "USD";
+  moneda?: 'ARS' | 'USD';
 }
 
-export function DeudaPanel({ deudas, moneda = "ARS" }: DeudaPanelProps) {
+export function DeudaPanel({ deudas, moneda = 'ARS' }: DeudaPanelProps) {
   const total = deudas.reduce((acc, d) => acc + Math.abs(d.monto), 0);
 
   if (deudas.length === 0) {
@@ -83,8 +83,8 @@ export function DeudaPanel({ deudas, moneda = "ARS" }: DeudaPanelProps) {
         </div>
         <div className="text-right">
           <p className="text-xs text-orange-500 font-medium">
-            {deudas.length} deuda{deudas.length !== 1 ? "s" : ""} pendiente
-            {deudas.length !== 1 ? "s" : ""}
+            {deudas.length} deuda{deudas.length !== 1 ? 's' : ''} pendiente
+            {deudas.length !== 1 ? 's' : ''}
           </p>
           <div className="flex items-center gap-2 mt-1.5 justify-end flex-wrap">
             <span className="flex items-center gap-1 text-xs text-emerald-600">
@@ -121,14 +121,14 @@ export function DeudaPanel({ deudas, moneda = "ARS" }: DeudaPanelProps) {
               />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-slate-800 truncate">
-                  {deuda.concepto || "Sin concepto"}
+                  {deuda.concepto || 'Sin concepto'}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                   <span className="text-xs text-slate-400">
-                    {new Date(deuda.fecha).toLocaleDateString("es-AR", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
+                    {new Date(deuda.fecha).toLocaleDateString('es-AR', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
                     })}
                   </span>
                   {deuda.categoria_nombre && (

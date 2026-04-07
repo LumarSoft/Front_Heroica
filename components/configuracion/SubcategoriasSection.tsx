@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { subcategoriaSchema } from "@/lib/schemas";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { subcategoriaSchema } from '@/lib/schemas';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -14,18 +14,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
+} from '@/components/ui/select';
+import { DeleteDialog } from '@/components/ui/delete-dialog';
 
 interface Categoria {
   id: number;
@@ -51,8 +51,8 @@ interface SubcategoriaForm {
 const DEFAULT_FORM: SubcategoriaForm = {
   id: 0,
   categoria_id: 0,
-  nombre: "",
-  descripcion: "",
+  nombre: '',
+  descripcion: '',
 };
 
 export function SubcategoriasSection() {
@@ -61,12 +61,12 @@ export function SubcategoriasSection() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [form, setForm] = useState<SubcategoriaForm>(DEFAULT_FORM);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{
     id: number;
     nombre: string;
   } | null>(null);
-  const [filtroCategoria, setFiltroCategoria] = useState<string>("todas");
+  const [filtroCategoria, setFiltroCategoria] = useState<string>('todas');
 
   useEffect(() => {
     fetchSubcategorias();
@@ -89,7 +89,7 @@ export function SubcategoriasSection() {
 
   const handleOpenNew = () => {
     setForm(DEFAULT_FORM);
-    setError("");
+    setError('');
     setIsDialogOpen(true);
   };
 
@@ -98,26 +98,26 @@ export function SubcategoriasSection() {
       id: sub.id,
       categoria_id: sub.categoria_id,
       nombre: sub.nombre,
-      descripcion: sub.descripcion || "",
+      descripcion: sub.descripcion || '',
     });
-    setError("");
+    setError('');
     setIsDialogOpen(true);
   };
 
   const handleSave = async () => {
     const validation = subcategoriaSchema.safeParse(form);
     if (!validation.success) {
-      setError(validation.error.issues[0]?.message ?? "Error de validación");
+      setError(validation.error.issues[0]?.message ?? 'Error de validación');
       return;
     }
     setIsSaving(true);
-    setError("");
+    setError('');
     try {
       const url = form.id
         ? API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.UPDATE(form.id)
         : API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.CREATE;
       const res = await apiFetch(url, {
-        method: form.id ? "PUT" : "POST",
+        method: form.id ? 'PUT' : 'POST',
         body: JSON.stringify(form),
       });
       const data = await res.json();
@@ -129,7 +129,7 @@ export function SubcategoriasSection() {
         setError(data.message);
       }
     } catch {
-      setError("Error al guardar subcategoría");
+      setError('Error al guardar subcategoría');
     } finally {
       setIsSaving(false);
     }
@@ -140,7 +140,7 @@ export function SubcategoriasSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.DELETE(deleteTarget.id),
-        { method: "DELETE" },
+        { method: 'DELETE' },
       );
       const data = await res.json();
       if (data.success) {
@@ -148,14 +148,14 @@ export function SubcategoriasSection() {
         await fetchSubcategorias();
       }
     } catch {
-      toast.error("Error al eliminar subcategoría");
+      toast.error('Error al eliminar subcategoría');
     } finally {
       setDeleteTarget(null);
     }
   };
 
   const subcategoriasFiltradas =
-    filtroCategoria === "todas"
+    filtroCategoria === 'todas'
       ? subcategorias
       : subcategorias.filter(
           (sub) => sub.categoria_id.toString() === filtroCategoria,
@@ -244,12 +244,12 @@ export function SubcategoriasSection() {
           <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
             <DialogHeader className="p-0 border-0">
               <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
-                {form.id ? "Editar Subcategoría" : "Nueva Subcategoría"}
+                {form.id ? 'Editar Subcategoría' : 'Nueva Subcategoría'}
               </DialogTitle>
               <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
                 {form.id
-                  ? "Modifica los detalles de esta subcategoría"
-                  : "Agrega una nueva subcategoría a una categoría existente"}
+                  ? 'Modifica los detalles de esta subcategoría'
+                  : 'Agrega una nueva subcategoría a una categoría existente'}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -262,7 +262,7 @@ export function SubcategoriasSection() {
                 Categoría *
               </Label>
               <Select
-                value={form.categoria_id ? form.categoria_id.toString() : ""}
+                value={form.categoria_id ? form.categoria_id.toString() : ''}
                 onValueChange={(value) =>
                   setForm({ ...form, categoria_id: parseInt(value) })
                 }
@@ -303,7 +303,7 @@ export function SubcategoriasSection() {
               </Label>
               <Textarea
                 id="subcat-desc"
-                value={form.descripcion || ""}
+                value={form.descripcion || ''}
                 onChange={(e) =>
                   setForm({ ...form, descripcion: e.target.value })
                 }
@@ -327,7 +327,7 @@ export function SubcategoriasSection() {
                 disabled={isSaving || !form.nombre || !form.categoria_id}
                 className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all"
               >
-                {isSaving ? "Guardando..." : "Guardar"}
+                {isSaving ? 'Guardando...' : 'Guardar'}
               </Button>
             </DialogFooter>
           </div>
@@ -336,7 +336,7 @@ export function SubcategoriasSection() {
 
       <DeleteDialog
         open={!!deleteTarget}
-        nombre={deleteTarget?.nombre ?? ""}
+        nombre={deleteTarget?.nombre ?? ''}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />

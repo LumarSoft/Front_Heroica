@@ -168,28 +168,28 @@
 ## React Button Component with Variants
 
 ```tsx
-import { useState } from "react";
+import { useState } from 'react';
 
 function Button({
-  variant = "primary",
-  size = "md",
+  variant = 'primary',
+  size = 'md',
   children,
 }: {
-  variant?: "primary" | "secondary";
-  size?: "sm" | "md" | "lg";
+  variant?: 'primary' | 'secondary';
+  size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
 }) {
-  const baseClasses = "font-semibold rounded transition";
+  const baseClasses = 'font-semibold rounded transition';
 
   const variantClasses = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700",
-    secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300",
+    primary: 'bg-blue-600 text-white hover:bg-blue-700',
+    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300',
   };
 
   const sizeClasses = {
-    sm: "px-3 py-1 text-sm",
-    md: "px-4 py-2 text-base",
-    lg: "px-6 py-3 text-lg",
+    sm: 'px-3 py-1 text-sm',
+    md: 'px-4 py-2 text-base',
+    lg: 'px-6 py-3 text-lg',
   };
 
   return (

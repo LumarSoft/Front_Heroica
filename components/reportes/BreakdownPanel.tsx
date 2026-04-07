@@ -4,24 +4,24 @@ import {
   Cell,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
-} from "recharts";
-import { formatMonto } from "@/lib/formatters";
-import type { ReportBreakdownItem, PieTooltipProps } from "./types";
+} from 'recharts';
+import { formatMonto } from '@/lib/formatters';
+import type { ReportBreakdownItem, PieTooltipProps } from './types';
 
 // =============================================
 // Tooltip personalizado para gráficos de torta
 // =============================================
 
 const COLORS = [
-  "#0088FE",
-  "#00C49F",
-  "#FFBB28",
-  "#FF8042",
-  "#8884d8",
-  "#82ca9d",
-  "#ffc658",
-  "#d0ed57",
-  "#a4de6c",
+  '#0088FE',
+  '#00C49F',
+  '#FFBB28',
+  '#FF8042',
+  '#8884d8',
+  '#82ca9d',
+  '#ffc658',
+  '#d0ed57',
+  '#a4de6c',
 ];
 
 function CustomPieTooltip({ active, payload }: PieTooltipProps) {
@@ -60,13 +60,13 @@ function DistributionRow({
   isClickable: boolean;
   isBack?: boolean;
   onClick?: () => void;
-  moneda?: "ARS" | "USD";
+  moneda?: 'ARS' | 'USD';
 }) {
   const pct = total > 0 ? (item.value / total) * 100 : 0;
 
   return (
     <div
-      className={`group rounded-lg p-3 transition-all duration-150 print:break-inside-avoid ${isClickable ? "cursor-pointer hover:bg-slate-100 active:scale-[0.99]" : ""}`}
+      className={`group rounded-lg p-3 transition-all duration-150 print:break-inside-avoid ${isClickable ? 'cursor-pointer hover:bg-slate-100 active:scale-[0.99]' : ''}`}
       onClick={isClickable ? onClick : undefined}
     >
       <div className="flex items-center justify-between mb-1.5">
@@ -76,7 +76,7 @@ function DistributionRow({
             style={{ backgroundColor: color }}
           />
           <span
-            className={`text-sm font-medium text-slate-700 truncate ${isClickable ? "group-hover:text-slate-900" : ""}`}
+            className={`text-sm font-medium text-slate-700 truncate ${isClickable ? 'group-hover:text-slate-900' : ''}`}
           >
             {item.name}
             {isClickable && !isBack && (
@@ -156,7 +156,7 @@ interface BreakdownPanelProps {
   valueColorClass: string;
   drillDownRoot?: string;
   drillDownColorClass?: string;
-  moneda?: "ARS" | "USD";
+  moneda?: 'ARS' | 'USD';
 }
 
 export function BreakdownPanel({
@@ -169,9 +169,9 @@ export function BreakdownPanel({
   colorOffset,
   emptyMessage,
   valueColorClass,
-  drillDownRoot = "Todas las categorías",
-  drillDownColorClass = "text-slate-600 hover:text-slate-700",
-  moneda = "ARS",
+  drillDownRoot = 'Todas las categorías',
+  drillDownColorClass = 'text-slate-600 hover:text-slate-700',
+  moneda = 'ARS',
 }: BreakdownPanelProps) {
   // Agregar moneda a los datos para que el tooltip la pueda leer
   const chartData = breakdownData.map((d) => ({ ...d, moneda }));
@@ -206,12 +206,12 @@ export function BreakdownPanel({
                     return (
                       <Cell
                         key={`cell-${index}`}
-                        fill={isDimmed ? "#E5E7EB" : color}
-                        stroke={isSelected ? "#1e293b" : "transparent"}
+                        fill={isDimmed ? '#E5E7EB' : color}
+                        stroke={isSelected ? '#1e293b' : 'transparent'}
                         strokeWidth={isSelected ? 2 : 0}
                         style={{
-                          cursor: hasSubs ? "pointer" : "default",
-                          transition: "opacity 0.2s",
+                          cursor: hasSubs ? 'pointer' : 'default',
+                          transition: 'opacity 0.2s',
                           opacity: isDimmed ? 0.5 : 1,
                         }}
                         onClick={() => hasSubs && onSliceClick(entry.name)}
@@ -232,7 +232,7 @@ export function BreakdownPanel({
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
             {selectedCategory
               ? `Subcategorías de "${selectedCategory}"`
-              : "Por categoría — clic para desglosar ▸"}
+              : 'Por categoría — clic para desglosar ▸'}
           </p>
           <div className="space-y-1 overflow-auto max-h-64 print:overflow-visible print:max-h-none pr-1">
             {currentData.map((item, i) => {

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { capitalize } from "@/lib/formatters";
+import { capitalize } from '@/lib/formatters';
 
 interface StatusBadgeProps {
   value: string;
@@ -12,7 +12,7 @@ interface StatusBadgeProps {
  * Recibe el valor y un mapa de colores (valor → clases CSS).
  */
 export function StatusBadge({ value, colorMap }: StatusBadgeProps) {
-  const color = colorMap[value] || "bg-gray-100 text-gray-800";
+  const color = colorMap[value] || 'bg-gray-100 text-gray-800';
 
   return (
     <span

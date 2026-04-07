@@ -24,7 +24,7 @@ Custom React hooks that encapsulate stateful logic, data fetching, and side effe
   fetch(endpoint, {
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
   });
   ```

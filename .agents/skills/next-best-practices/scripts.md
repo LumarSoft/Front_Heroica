@@ -11,7 +11,7 @@ Always use `next/script` instead of native `<script>` tags for better performanc
 <script src="https://example.com/script.js"></script>;
 
 // Good: Next.js Script component
-import Script from "next/script";
+import Script from 'next/script';
 
 <Script src="https://example.com/script.js" />;
 ```
@@ -100,7 +100,7 @@ export default function Layout({ children }) {
 ## Google Tag Manager
 
 ```tsx
-import { GoogleTagManager } from "@next/third-parties/google";
+import { GoogleTagManager } from '@next/third-parties/google';
 
 export default function Layout({ children }) {
   return (
@@ -116,12 +116,12 @@ export default function Layout({ children }) {
 
 ```tsx
 // YouTube embed
-import { YouTubeEmbed } from "@next/third-parties/google";
+import { YouTubeEmbed } from '@next/third-parties/google';
 
 <YouTubeEmbed videoid="dQw4w9WgXcQ" />;
 
 // Google Maps
-import { GoogleMapsEmbed } from "@next/third-parties/google";
+import { GoogleMapsEmbed } from '@next/third-parties/google';
 
 <GoogleMapsEmbed
   apiKey="YOUR_API_KEY"

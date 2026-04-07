@@ -1,25 +1,25 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import {
   CalendarDays,
   ChevronDown,
   FilterX,
   Landmark,
   Search,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import type { SelectOption } from "@/lib/types";
-import { DateRange } from "react-day-picker";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/popover';
+import type { SelectOption } from '@/lib/types';
+import { DateRange } from 'react-day-picker';
+import { cn } from '@/lib/utils';
 
 interface EndDateFilterProps {
   dateRange: DateRange | undefined;
@@ -41,7 +41,7 @@ export function EndDateFilter({
   bancos,
   bancosSeleccionados = [],
   onBancosChange,
-  searchText = "",
+  searchText = '',
   onSearchTextChange,
 }: EndDateFilterProps) {
   const showBancoFilter = Boolean(bancos?.length && onBancosChange);
@@ -75,8 +75,8 @@ export function EndDateFilter({
       )
         setIsOpen(false);
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
   const toggleBanco = (id: string) => {
@@ -89,16 +89,16 @@ export function EndDateFilter({
 
   const bancosLabel = useMemo(() => {
     if (!bancos?.length || bancosSeleccionadosSet.size === 0)
-      return "Todos los bancos";
+      return 'Todos los bancos';
     const names = bancos
       .filter((b) => bancosSeleccionadosSet.has(b.id.toString()))
       .map((b) => b.nombre);
-    if (names.length <= 2) return names.join(", ");
+    if (names.length <= 2) return names.join(', ');
     return `${names.length} seleccionados`;
   }, [bancos, bancosSeleccionadosSet]);
 
   const triggerClass = cn(
-    "h-9 min-w-[150px] justify-start text-left font-normal rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] px-3 text-sm flex items-center gap-2 transition-all hover:bg-white hover:border-[#002868]/60 hover:shadow-sm cursor-pointer",
+    'h-9 min-w-[150px] justify-start text-left font-normal rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] px-3 text-sm flex items-center gap-2 transition-all hover:bg-white hover:border-[#002868]/60 hover:shadow-sm cursor-pointer',
   );
 
   return (
@@ -115,13 +115,13 @@ export function EndDateFilter({
               <span
                 className={
                   dateRange?.from
-                    ? "text-[#1A1A1A] font-medium"
-                    : "text-[#9AA0AC]"
+                    ? 'text-[#1A1A1A] font-medium'
+                    : 'text-[#9AA0AC]'
                 }
               >
                 {dateRange?.from
-                  ? format(dateRange.from, "d MMM yyyy", { locale: es })
-                  : "dd/mm/aaaa"}
+                  ? format(dateRange.from, 'd MMM yyyy', { locale: es })
+                  : 'dd/mm/aaaa'}
               </span>
             </button>
           </PopoverTrigger>
@@ -152,13 +152,13 @@ export function EndDateFilter({
               <span
                 className={
                   dateRange?.to
-                    ? "text-[#1A1A1A] font-medium"
-                    : "text-[#9AA0AC]"
+                    ? 'text-[#1A1A1A] font-medium'
+                    : 'text-[#9AA0AC]'
                 }
               >
                 {dateRange?.to
-                  ? format(dateRange.to, "d MMM yyyy", { locale: es })
-                  : "dd/mm/aaaa"}
+                  ? format(dateRange.to, 'd MMM yyyy', { locale: es })
+                  : 'dd/mm/aaaa'}
               </span>
             </button>
           </PopoverTrigger>
@@ -194,7 +194,7 @@ export function EndDateFilter({
           >
             <span className="truncate">{bancosLabel}</span>
             <ChevronDown
-              className={`w-4 h-4 text-[#5A6070] flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
+              className={`w-4 h-4 text-[#5A6070] flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
             />
           </button>
           {isOpen && (

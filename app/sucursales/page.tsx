@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
 import {
   PageLoadingSpinner,
   LoadingSpinner,
-} from "@/components/ui/loading-spinner";
-import { ErrorBanner } from "@/components/ui/error-banner";
+} from '@/components/ui/loading-spinner';
+import { ErrorBanner } from '@/components/ui/error-banner';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -24,31 +24,33 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Navbar from "@/components/Navbar";
-import { useAuthGuard } from "@/hooks/use-auth-guard";
-import { useAuthStore } from "@/store/authStore";
-import type { Sucursal } from "@/lib/types";
-import { sucursalSchema } from "@/lib/schemas";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import Navbar from '@/components/Navbar';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
+import { useAuthStore } from '@/store/authStore';
+import type { Sucursal } from '@/lib/types';
+import { sucursalSchema } from '@/lib/schemas';
 
 export default function SucursalesPage() {
   const router = useRouter();
   const { user, isGuardLoading, handleLogout } = useAuthGuard();
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const canGestionarSucursales = useAuthStore((state) => state.canGestionarSucursales());
+  const [error, setError] = useState('');
+  const canGestionarSucursales = useAuthStore((state) =>
+    state.canGestionarSucursales(),
+  );
 
   // Estados para el modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
-    nombre: "",
-    razon_social: "",
-    cuit: "",
-    direccion: "",
+    nombre: '',
+    razon_social: '',
+    cuit: '',
+    direccion: '',
   });
 
   useEffect(() => {
@@ -61,13 +63,13 @@ export default function SucursalesPage() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || "Error al cargar sucursales");
+          throw new Error(data.message || 'Error al cargar sucursales');
         }
 
         setSucursales(data.data);
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : "Error al cargar sucursales";
+          err instanceof Error ? err.message : 'Error al cargar sucursales';
         setError(message);
       } finally {
         setIsLoading(false);
@@ -80,8 +82,8 @@ export default function SucursalesPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let { name, value } = e.target;
 
-    if (name === "cuit") {
-      const digits = value.replace(/\D/g, "");
+    if (name === 'cuit') {
+      const digits = value.replace(/\D/g, '');
       if (digits.length <= 11) {
         if (digits.length > 2 && digits.length <= 10) {
           value = `${digits.substring(0, 2)}-${digits.substring(2)}`;
@@ -107,11 +109,11 @@ export default function SucursalesPage() {
       const response = await apiFetch(
         API_ENDPOINTS.SUCURSALES.UPDATE(sucursal.id),
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({ ...sucursal, activo: !sucursal.activo }),
         },
       );
-      if (!response.ok) throw new Error("Error al actualizar estado");
+      if (!response.ok) throw new Error('Error al actualizar estado');
 
       setSucursales((prev) =>
         prev.map((s) =>
@@ -119,7 +121,7 @@ export default function SucursalesPage() {
         ),
       );
     } catch {
-      setError("Error al cambiar estado de sucursal");
+      setError('Error al cambiar estado de sucursal');
     }
   };
 
@@ -128,31 +130,31 @@ export default function SucursalesPage() {
 
     const validation = sucursalSchema.safeParse(formData);
     if (!validation.success) {
-      setError(validation.error.issues[0]?.message ?? "Error de validación");
+      setError(validation.error.issues[0]?.message ?? 'Error de validación');
       return;
     }
 
     setIsCreating(true);
-    setError("");
+    setError('');
 
     try {
       const response = await apiFetch(API_ENDPOINTS.SUCURSALES.CREATE, {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Error al crear sucursal");
+        throw new Error(data.message || 'Error al crear sucursal');
       }
 
       setSucursales((prev) => [...prev, { ...data.data, activo: true }]);
       setIsModalOpen(false);
-      setFormData({ nombre: "", razon_social: "", cuit: "", direccion: "" });
+      setFormData({ nombre: '', razon_social: '', cuit: '', direccion: '' });
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Error al crear sucursal";
+        err instanceof Error ? err.message : 'Error al crear sucursal';
       setError(message);
     } finally {
       setIsCreating(false);
@@ -176,18 +178,18 @@ export default function SucursalesPage() {
     if (!sucursalToDelete) return;
 
     setIsDeleting(true);
-    setError("");
+    setError('');
 
     try {
       const response = await apiFetch(
         API_ENDPOINTS.SUCURSALES.DELETE(sucursalToDelete.id),
-        { method: "DELETE" },
+        { method: 'DELETE' },
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Error al eliminar sucursal");
+        throw new Error(data.message || 'Error al eliminar sucursal');
       }
 
       setSucursales((prev) => prev.filter((s) => s.id !== sucursalToDelete.id));
@@ -195,7 +197,7 @@ export default function SucursalesPage() {
       setSucursalToDelete(null);
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Error al eliminar sucursal";
+        err instanceof Error ? err.message : 'Error al eliminar sucursal';
       setError(message);
     } finally {
       setIsDeleting(false);
@@ -239,8 +241,8 @@ export default function SucursalesPage() {
                 key={sucursal.id}
                 className={`group border-[#E0E0E0] bg-white shadow-md transition-all duration-300 relative overflow-hidden cursor-pointer ${
                   sucursal.activo
-                    ? "hover:border-[#002868] hover:shadow-xl"
-                    : "opacity-60 grayscale"
+                    ? 'hover:border-[#002868] hover:shadow-xl'
+                    : 'opacity-60 grayscale'
                 }`}
                 onClick={() => handleSucursalClick(sucursal.id)}
               >
@@ -317,25 +319,29 @@ export default function SucursalesPage() {
                     <span
                       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
                         sucursal.activo
-                          ? "bg-green-50 text-green-700 border border-green-200"
-                          : "bg-red-50 text-red-700 border border-red-200"
+                          ? 'bg-green-50 text-green-700 border border-green-200'
+                          : 'bg-red-50 text-red-700 border border-red-200'
                       }`}
                     >
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${
-                          sucursal.activo ? "bg-green-500" : "bg-red-500"
+                          sucursal.activo ? 'bg-green-500' : 'bg-red-500'
                         }`}
                       ></span>
-                      {sucursal.activo ? "Activa" : "Inactiva"}
+                      {sucursal.activo ? 'Activa' : 'Inactiva'}
                     </span>
                     {canGestionarSucursales && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={(e) => handleToggleActivo(e, sucursal)}
-                        className={sucursal.activo ? "text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300" : "text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 hover:border-green-300"}
+                        className={
+                          sucursal.activo
+                            ? 'text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300'
+                            : 'text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 hover:border-green-300'
+                        }
                       >
-                        {sucursal.activo ? "Desactivar" : "Activar"}
+                        {sucursal.activo ? 'Desactivar' : 'Activar'}
                       </Button>
                     )}
                   </div>
@@ -397,7 +403,7 @@ export default function SucursalesPage() {
 
       {/* Footer */}
       <footer className="w-full py-6 mt-auto border-t border-[#E0E0E0] text-center text-[#666666] text-sm">
-        Developed with ❤️ by{" "}
+        Developed with ❤️ by{' '}
         <a
           href="https://lumarsoft.com"
           target="_blank"
@@ -537,7 +543,7 @@ export default function SucursalesPage() {
                     <span>Creando...</span>
                   </div>
                 ) : (
-                  "Crear Sucursal"
+                  'Crear Sucursal'
                 )}
               </Button>
             </DialogFooter>
@@ -596,7 +602,7 @@ export default function SucursalesPage() {
                   <span>Eliminando...</span>
                 </div>
               ) : (
-                "Eliminar Sucursal"
+                'Eliminar Sucursal'
               )}
             </Button>
           </DialogFooter>

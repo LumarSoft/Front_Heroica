@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowRightLeft } from "lucide-react";
-import { DeudasInterSucursalDialog } from "./DeudasInterSucursalDialog";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { ArrowRightLeft } from 'lucide-react';
+import { DeudasInterSucursalDialog } from './DeudasInterSucursalDialog';
 
 interface PageHeaderProps {
   title: string;

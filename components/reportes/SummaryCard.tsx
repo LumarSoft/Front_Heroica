@@ -1,15 +1,15 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 // =============================================
 // Tarjeta de resumen con acento de color
 // =============================================
 
 const accentMap: Record<string, { border: string; text: string }> = {
-  emerald: { border: "border-l-emerald-500", text: "text-emerald-600" },
-  rose: { border: "border-l-rose-500", text: "text-rose-600" },
-  blue: { border: "border-l-blue-500", text: "text-blue-600" },
-  red: { border: "border-l-red-600", text: "text-red-700" },
-  orange: { border: "border-l-orange-500", text: "text-orange-600" },
+  emerald: { border: 'border-l-emerald-500', text: 'text-emerald-600' },
+  rose: { border: 'border-l-rose-500', text: 'text-rose-600' },
+  blue: { border: 'border-l-blue-500', text: 'text-blue-600' },
+  red: { border: 'border-l-red-600', text: 'text-red-700' },
+  orange: { border: 'border-l-orange-500', text: 'text-orange-600' },
 };
 
 interface SummaryCardProps {

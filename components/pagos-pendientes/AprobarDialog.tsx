@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { CheckCircle2, Banknote, Building2 } from "lucide-react";
+import { CheckCircle2, Banknote, Building2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { formatMonto } from "@/lib/formatters";
-import type { PagoPendiente } from "@/lib/types";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { formatMonto } from '@/lib/formatters';
+import type { PagoPendiente } from '@/lib/types';
 
 interface AprobarDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedPago: PagoPendiente | null;
-  onSelectCaja: (caja: "efectivo" | "banco") => void;
+  onSelectCaja: (caja: 'efectivo' | 'banco') => void;
 }
 
 export function AprobarDialog({
@@ -42,7 +42,7 @@ export function AprobarDialog({
             Seleccioná la caja en la que se registrará el egreso.
             {selectedPago && (
               <span className="block mt-1 font-semibold text-[#1A1A1A]">
-                {selectedPago.concepto} ·{" "}
+                {selectedPago.concepto} ·{' '}
                 {formatMonto(
                   Math.abs(parseFloat(selectedPago.monto.toString())),
                 )}
@@ -53,7 +53,7 @@ export function AprobarDialog({
 
         <div className="p-6 grid grid-cols-2 gap-4">
           <button
-            onClick={() => onSelectCaja("efectivo")}
+            onClick={() => onSelectCaja('efectivo')}
             className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:bg-[#002868]/5 transition-all cursor-pointer group"
           >
             <div className="w-14 h-14 rounded-2xl bg-[#002868]/10 flex items-center justify-center group-hover:bg-[#002868]/20 transition-colors">
@@ -68,7 +68,7 @@ export function AprobarDialog({
           </button>
 
           <button
-            onClick={() => onSelectCaja("banco")}
+            onClick={() => onSelectCaja('banco')}
             className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:bg-[#002868]/5 transition-all cursor-pointer group"
           >
             <div className="w-14 h-14 rounded-2xl bg-[#002868]/10 flex items-center justify-center group-hover:bg-[#002868]/20 transition-colors">

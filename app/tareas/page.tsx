@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from 'react';
 import {
   Bug,
   Sparkles,
@@ -21,12 +21,12 @@ import {
   User,
   RefreshCw,
   FlaskConical,
-} from "lucide-react";
-import { toast } from "sonner";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { PageLoadingSpinner } from "@/components/ui/loading-spinner";
-import { Button } from "@/components/ui/button";
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { PageLoadingSpinner } from '@/components/ui/loading-spinner';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -34,25 +34,25 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import Navbar from "@/components/Navbar";
-import { useAuthGuard } from "@/hooks/use-auth-guard";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/select';
+import Navbar from '@/components/Navbar';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
+import { cn } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tipo = "bug" | "mejora" | "implementacion" | "otro";
-type Prioridad = "alta" | "media" | "baja";
-type Estado = "pendiente" | "en_progreso" | "en_pruebas" | "completado";
+type Tipo = 'bug' | 'mejora' | 'implementacion' | 'otro';
+type Prioridad = 'alta' | 'media' | 'baja';
+type Estado = 'pendiente' | 'en_progreso' | 'en_pruebas' | 'completado';
 
 interface Tarea {
   id: number;
@@ -77,28 +77,28 @@ const TIPO_CONFIG: Record<
   { label: string; icon: React.ReactNode; color: string; bg: string }
 > = {
   bug: {
-    label: "Bug",
+    label: 'Bug',
     icon: <Bug className="w-3 h-3" />,
-    color: "text-red-700",
-    bg: "bg-red-50 border-red-200",
+    color: 'text-red-700',
+    bg: 'bg-red-50 border-red-200',
   },
   mejora: {
-    label: "Mejora",
+    label: 'Mejora',
     icon: <Sparkles className="w-3 h-3" />,
-    color: "text-blue-700",
-    bg: "bg-blue-50 border-blue-200",
+    color: 'text-blue-700',
+    bg: 'bg-blue-50 border-blue-200',
   },
   implementacion: {
-    label: "Implementación",
+    label: 'Implementación',
     icon: <Rocket className="w-3 h-3" />,
-    color: "text-purple-700",
-    bg: "bg-purple-50 border-purple-200",
+    color: 'text-purple-700',
+    bg: 'bg-purple-50 border-purple-200',
   },
   otro: {
-    label: "Otro",
+    label: 'Otro',
     icon: <Circle className="w-3 h-3" />,
-    color: "text-gray-600",
-    bg: "bg-gray-100 border-gray-200",
+    color: 'text-gray-600',
+    bg: 'bg-gray-100 border-gray-200',
   },
 };
 
@@ -107,22 +107,22 @@ const PRIORIDAD_CONFIG: Record<
   { label: string; border: string; dot: string; badge: string }
 > = {
   alta: {
-    label: "Alta",
-    border: "border-l-red-500",
-    dot: "bg-red-500",
-    badge: "bg-red-50 text-red-700 border-red-200",
+    label: 'Alta',
+    border: 'border-l-red-500',
+    dot: 'bg-red-500',
+    badge: 'bg-red-50 text-red-700 border-red-200',
   },
   media: {
-    label: "Media",
-    border: "border-l-amber-400",
-    dot: "bg-amber-400",
-    badge: "bg-amber-50 text-amber-700 border-amber-200",
+    label: 'Media',
+    border: 'border-l-amber-400',
+    dot: 'bg-amber-400',
+    badge: 'bg-amber-50 text-amber-700 border-amber-200',
   },
   baja: {
-    label: "Baja",
-    border: "border-l-green-500",
-    dot: "bg-green-500",
-    badge: "bg-green-50 text-green-700 border-green-200",
+    label: 'Baja',
+    border: 'border-l-green-500',
+    dot: 'bg-green-500',
+    badge: 'bg-green-50 text-green-700 border-green-200',
   },
 };
 
@@ -131,57 +131,57 @@ const ESTADO_CONFIG: Record<
   { label: string; header: string; icon: React.ReactNode; count_bg: string }
 > = {
   pendiente: {
-    label: "Pendiente",
-    header: "bg-gray-50 border-gray-200",
+    label: 'Pendiente',
+    header: 'bg-gray-50 border-gray-200',
     icon: <Clock className="w-4 h-4 text-gray-500" />,
-    count_bg: "bg-gray-200 text-gray-700",
+    count_bg: 'bg-gray-200 text-gray-700',
   },
   en_progreso: {
-    label: "En Progreso",
-    header: "bg-blue-50 border-blue-200",
+    label: 'En Progreso',
+    header: 'bg-blue-50 border-blue-200',
     icon: <Loader2 className="w-4 h-4 text-blue-500" />,
-    count_bg: "bg-blue-100 text-blue-700",
+    count_bg: 'bg-blue-100 text-blue-700',
   },
   en_pruebas: {
-    label: "En Pruebas",
-    header: "bg-purple-50 border-purple-200",
+    label: 'En Pruebas',
+    header: 'bg-purple-50 border-purple-200',
     icon: <FlaskConical className="w-4 h-4 text-purple-500" />,
-    count_bg: "bg-purple-100 text-purple-700",
+    count_bg: 'bg-purple-100 text-purple-700',
   },
   completado: {
-    label: "Completado",
-    header: "bg-green-50 border-green-200",
+    label: 'Completado',
+    header: 'bg-green-50 border-green-200',
     icon: <CheckCheck className="w-4 h-4 text-green-600" />,
-    count_bg: "bg-green-100 text-green-700",
+    count_bg: 'bg-green-100 text-green-700',
   },
 };
 
 const COLUMNAS: Estado[] = [
-  "pendiente",
-  "en_progreso",
-  "en_pruebas",
-  "completado",
+  'pendiente',
+  'en_progreso',
+  'en_pruebas',
+  'completado',
 ];
 
 const ESTADO_SIGUIENTE: Partial<Record<Estado, Estado>> = {
-  pendiente: "en_progreso",
-  en_progreso: "en_pruebas",
-  en_pruebas: "completado",
+  pendiente: 'en_progreso',
+  en_progreso: 'en_pruebas',
+  en_pruebas: 'completado',
 };
 
 const ESTADO_ANTERIOR: Partial<Record<Estado, Estado>> = {
-  en_progreso: "pendiente",
-  en_pruebas: "en_progreso",
-  completado: "en_pruebas",
+  en_progreso: 'pendiente',
+  en_pruebas: 'en_progreso',
+  completado: 'en_pruebas',
 };
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("es-AR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
+  return new Date(iso).toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
   });
 }
 
@@ -201,8 +201,8 @@ interface TaskCardProps {
 function highlightText(text: string, query: string) {
   if (!query.trim()) return <>{text}</>;
   const regex = new RegExp(
-    `(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
-    "gi",
+    `(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
+    'gi',
   );
   const parts = text.split(regex);
   return (
@@ -237,15 +237,15 @@ function TaskCard({
   const prio = PRIORIDAD_CONFIG[tarea.prioridad];
   const canGoForward = !!ESTADO_SIGUIENTE[tarea.estado];
   const canGoBack = !!ESTADO_ANTERIOR[tarea.estado];
-  const isDone = tarea.estado === "completado";
+  const isDone = tarea.estado === 'completado';
 
   return (
     <div
       onClick={() => onViewDetail(tarea)}
       className={cn(
-        "bg-white rounded-lg border border-[#E0E0E0] shadow-sm border-l-4 p-4 flex flex-col gap-3 transition-all hover:shadow-md cursor-pointer group",
+        'bg-white rounded-lg border border-[#E0E0E0] shadow-sm border-l-4 p-4 flex flex-col gap-3 transition-all hover:shadow-md cursor-pointer group',
         prio.border,
-        isDone && "opacity-70",
+        isDone && 'opacity-70',
       )}
     >
       {/* Badges row */}
@@ -260,7 +260,7 @@ function TaskCard({
         )}
         <span
           className={cn(
-            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border",
+            'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border',
             tipo.bg,
             tipo.color,
           )}
@@ -270,11 +270,11 @@ function TaskCard({
         </span>
         <span
           className={cn(
-            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border",
+            'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border',
             prio.badge,
           )}
         >
-          <span className={cn("w-1.5 h-1.5 rounded-full", prio.dot)} />
+          <span className={cn('w-1.5 h-1.5 rounded-full', prio.dot)} />
           {prio.label}
         </span>
       </div>
@@ -298,7 +298,7 @@ function TaskCard({
         </span>
         {tarea.creado_por_nombre && (
           <span className="text-[10px] text-[#999]">
-            {tarea.creado_por_nombre.split(" ")[0]}
+            {tarea.creado_por_nombre.split(' ')[0]}
           </span>
         )}
       </div>
@@ -399,19 +399,19 @@ function TareaDialog({
   saving,
   initial,
 }: TareaDialogProps) {
-  const [titulo, setTitulo] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [version, setVersion] = useState("");
-  const [tipo, setTipo] = useState<Tipo>("otro");
-  const [prioridad, setPrioridad] = useState<Prioridad>("media");
+  const [titulo, setTitulo] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [version, setVersion] = useState('');
+  const [tipo, setTipo] = useState<Tipo>('otro');
+  const [prioridad, setPrioridad] = useState<Prioridad>('media');
 
   useEffect(() => {
     if (open) {
-      setTitulo(initial?.titulo ?? "");
-      setDescripcion(initial?.descripcion ?? "");
-      setVersion(initial?.version ?? "");
-      setTipo(initial?.tipo ?? "otro");
-      setPrioridad(initial?.prioridad ?? "media");
+      setTitulo(initial?.titulo ?? '');
+      setDescripcion(initial?.descripcion ?? '');
+      setVersion(initial?.version ?? '');
+      setTipo(initial?.tipo ?? 'otro');
+      setPrioridad(initial?.prioridad ?? 'media');
     }
   }, [open, initial]);
 
@@ -432,12 +432,12 @@ function TareaDialog({
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-[#002868]">
-            {initial ? "Editar Tarea" : "Nueva Tarea"}
+            {initial ? 'Editar Tarea' : 'Nueva Tarea'}
           </DialogTitle>
           <DialogDescription className="text-[#666666]">
             {initial
-              ? "Modificá los datos de la tarea."
-              : "Describí la mejora, bug o implementación que quieras reportar."}
+              ? 'Modificá los datos de la tarea.'
+              : 'Describí la mejora, bug o implementación que quieras reportar.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -446,7 +446,10 @@ function TareaDialog({
             {/* Título */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="titulo" className="text-[#002868] font-semibold">
+                <Label
+                  htmlFor="titulo"
+                  className="text-[#002868] font-semibold"
+                >
                   Título *
                 </Label>
                 <Input
@@ -459,7 +462,10 @@ function TareaDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="version" className="text-[#002868] font-semibold">
+                <Label
+                  htmlFor="version"
+                  className="text-[#002868] font-semibold"
+                >
                   Versión
                 </Label>
                 <Input
@@ -551,9 +557,9 @@ function TareaDialog({
                   Guardando...
                 </span>
               ) : initial ? (
-                "Guardar Cambios"
+                'Guardar Cambios'
               ) : (
-                "Crear Tarea"
+                'Crear Tarea'
               )}
             </Button>
           </DialogFooter>
@@ -623,7 +629,7 @@ function DeleteDialog({
                 Eliminando...
               </span>
             ) : (
-              "Eliminar"
+              'Eliminar'
             )}
           </Button>
         </DialogFooter>
@@ -658,7 +664,7 @@ function DetailDialog({
   const estado = ESTADO_CONFIG[tarea.estado];
   const canGoForward = !!ESTADO_SIGUIENTE[tarea.estado];
   const canGoBack = !!ESTADO_ANTERIOR[tarea.estado];
-  const isDone = tarea.estado === "completado";
+  const isDone = tarea.estado === 'completado';
 
   return (
     <Dialog open={!!tarea} onOpenChange={(v) => !v && onClose()}>
@@ -666,10 +672,10 @@ function DetailDialog({
         {/* Colored top bar based on priority */}
         <div
           className={cn(
-            "h-1.5 w-full",
-            tarea.prioridad === "alta" && "bg-red-500",
-            tarea.prioridad === "media" && "bg-amber-400",
-            tarea.prioridad === "baja" && "bg-green-500",
+            'h-1.5 w-full',
+            tarea.prioridad === 'alta' && 'bg-red-500',
+            tarea.prioridad === 'media' && 'bg-amber-400',
+            tarea.prioridad === 'baja' && 'bg-green-500',
           )}
         />
 
@@ -687,7 +693,7 @@ function DetailDialog({
               )}
               <span
                 className={cn(
-                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border",
+                  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border',
                   tipo.bg,
                   tipo.color,
                 )}
@@ -697,16 +703,16 @@ function DetailDialog({
               </span>
               <span
                 className={cn(
-                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border",
+                  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border',
                   prio.badge,
                 )}
               >
-                <span className={cn("w-1.5 h-1.5 rounded-full", prio.dot)} />
+                <span className={cn('w-1.5 h-1.5 rounded-full', prio.dot)} />
                 {prio.label}
               </span>
               <span
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border",
+                  'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border',
                   estado.header,
                 )}
               >
@@ -851,10 +857,10 @@ export default function TareasPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Filters
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterTipo, setFilterTipo] = useState<"all" | Tipo>("all");
-  const [filterPrioridad, setFilterPrioridad] = useState<"all" | Prioridad>(
-    "all",
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterTipo, setFilterTipo] = useState<'all' | Tipo>('all');
+  const [filterPrioridad, setFilterPrioridad] = useState<'all' | Prioridad>(
+    'all',
   );
 
   // Detail view
@@ -884,7 +890,7 @@ export default function TareasPage() {
       if (!res.ok) throw new Error(data.message);
       setTareas(data.data);
     } catch {
-      toast.error("Error al cargar las tareas");
+      toast.error('Error al cargar las tareas');
     } finally {
       setIsLoading(false);
     }
@@ -903,7 +909,7 @@ export default function TareasPage() {
     try {
       if (editTarget) {
         const res = await apiFetch(API_ENDPOINTS.TAREAS.UPDATE(editTarget.id), {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify(formData),
         });
         const data = await res.json();
@@ -911,21 +917,21 @@ export default function TareasPage() {
         setTareas((prev) =>
           prev.map((t) => (t.id === editTarget.id ? data.data : t)),
         );
-        toast.success("Tarea actualizada");
+        toast.success('Tarea actualizada');
       } else {
         const res = await apiFetch(API_ENDPOINTS.TAREAS.CREATE, {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify({ ...formData, creado_por: user?.id ?? null }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);
         setTareas((prev) => [data.data, ...prev]);
-        toast.success("Tarea creada");
+        toast.success('Tarea creada');
       }
       setDialogOpen(false);
       setEditTarget(null);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Error al guardar");
+      toast.error(err instanceof Error ? err.message : 'Error al guardar');
     } finally {
       setSaving(false);
     }
@@ -938,15 +944,15 @@ export default function TareasPage() {
     setDeleting(true);
     try {
       const res = await apiFetch(API_ENDPOINTS.TAREAS.DELETE(deleteTarget.id), {
-        method: "DELETE",
+        method: 'DELETE',
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       setTareas((prev) => prev.filter((t) => t.id !== deleteTarget.id));
-      toast.success("Tarea eliminada");
+      toast.success('Tarea eliminada');
       setDeleteTarget(null);
     } catch {
-      toast.error("Error al eliminar la tarea");
+      toast.error('Error al eliminar la tarea');
     } finally {
       setDeleting(false);
     }
@@ -958,7 +964,7 @@ export default function TareasPage() {
     setMovingId(tarea.id);
     try {
       const res = await apiFetch(API_ENDPOINTS.TAREAS.UPDATE_ESTADO(tarea.id), {
-        method: "PATCH",
+        method: 'PATCH',
         body: JSON.stringify({ estado: nuevoEstado }),
       });
       const data = await res.json();
@@ -966,7 +972,7 @@ export default function TareasPage() {
       setTareas((prev) => prev.map((t) => (t.id === tarea.id ? data.data : t)));
       toast.success(`Tarea movida a "${ESTADO_CONFIG[nuevoEstado].label}"`);
     } catch {
-      toast.error("Error al cambiar el estado");
+      toast.error('Error al cambiar el estado');
     } finally {
       setMovingId(null);
     }
@@ -977,8 +983,8 @@ export default function TareasPage() {
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     return tareas.filter((t) => {
-      if (filterTipo !== "all" && t.tipo !== filterTipo) return false;
-      if (filterPrioridad !== "all" && t.prioridad !== filterPrioridad)
+      if (filterTipo !== 'all' && t.tipo !== filterTipo) return false;
+      if (filterPrioridad !== 'all' && t.prioridad !== filterPrioridad)
         return false;
       if (q) {
         const inTitle = t.titulo.toLowerCase().includes(q);
@@ -1006,10 +1012,10 @@ export default function TareasPage() {
 
   const stats = useMemo(() => {
     const total = tareas.length;
-    const pendientes = tareas.filter((t) => t.estado === "pendiente").length;
-    const enProgreso = tareas.filter((t) => t.estado === "en_progreso").length;
-    const enPruebas = tareas.filter((t) => t.estado === "en_pruebas").length;
-    const completados = tareas.filter((t) => t.estado === "completado").length;
+    const pendientes = tareas.filter((t) => t.estado === 'pendiente').length;
+    const enProgreso = tareas.filter((t) => t.estado === 'en_progreso').length;
+    const enPruebas = tareas.filter((t) => t.estado === 'en_pruebas').length;
+    const completados = tareas.filter((t) => t.estado === 'completado').length;
     return { total, pendientes, enProgreso, enPruebas, completados };
   }, [tareas]);
 
@@ -1054,46 +1060,46 @@ export default function TareasPage() {
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
           {[
             {
-              label: "Total",
+              label: 'Total',
               value: stats.total,
-              color: "text-[#002868]",
-              bg: "bg-[#002868]/8",
+              color: 'text-[#002868]',
+              bg: 'bg-[#002868]/8',
             },
             {
-              label: "Pendientes",
+              label: 'Pendientes',
               value: stats.pendientes,
-              color: "text-gray-600",
-              bg: "bg-gray-100",
+              color: 'text-gray-600',
+              bg: 'bg-gray-100',
             },
             {
-              label: "En Progreso",
+              label: 'En Progreso',
               value: stats.enProgreso,
-              color: "text-blue-600",
-              bg: "bg-blue-50",
+              color: 'text-blue-600',
+              bg: 'bg-blue-50',
             },
             {
-              label: "En Pruebas",
+              label: 'En Pruebas',
               value: stats.enPruebas,
-              color: "text-purple-600",
-              bg: "bg-purple-50",
+              color: 'text-purple-600',
+              bg: 'bg-purple-50',
             },
             {
-              label: "Completadas",
+              label: 'Completadas',
               value: stats.completados,
-              color: "text-green-600",
-              bg: "bg-green-50",
+              color: 'text-green-600',
+              bg: 'bg-green-50',
             },
           ].map((s) => (
             <div
               key={s.label}
               className={cn(
-                "rounded-xl p-4 border border-[#E0E0E0] bg-white flex flex-col gap-1 shadow-sm",
+                'rounded-xl p-4 border border-[#E0E0E0] bg-white flex flex-col gap-1 shadow-sm',
               )}
             >
               <span className="text-xs font-semibold text-[#888] uppercase tracking-wider">
                 {s.label}
               </span>
-              <span className={cn("text-3xl font-bold", s.color)}>
+              <span className={cn('text-3xl font-bold', s.color)}>
                 {s.value}
               </span>
             </div>
@@ -1114,7 +1120,7 @@ export default function TareasPage() {
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery("")}
+                onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#AAAAAA] hover:text-[#555] cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
@@ -1133,19 +1139,19 @@ export default function TareasPage() {
               </span>
               <div className="flex items-center gap-1.5 flex-wrap">
                 {(
-                  ["all", "bug", "mejora", "implementacion", "otro"] as const
+                  ['all', 'bug', 'mejora', 'implementacion', 'otro'] as const
                 ).map((t) => (
                   <button
                     key={t}
                     onClick={() => setFilterTipo(t)}
                     className={cn(
-                      "px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer",
+                      'px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer',
                       filterTipo === t
-                        ? "bg-[#002868] text-white border-[#002868]"
-                        : "bg-[#F5F5F5] text-[#555] border-transparent hover:border-[#002868] hover:text-[#002868]",
+                        ? 'bg-[#002868] text-white border-[#002868]'
+                        : 'bg-[#F5F5F5] text-[#555] border-transparent hover:border-[#002868] hover:text-[#002868]',
                     )}
                   >
-                    {t === "all" ? "Todos" : TIPO_CONFIG[t as Tipo].label}
+                    {t === 'all' ? 'Todos' : TIPO_CONFIG[t as Tipo].label}
                   </button>
                 ))}
               </div>
@@ -1157,19 +1163,19 @@ export default function TareasPage() {
                 Prioridad
               </span>
               <div className="flex items-center gap-1.5 flex-wrap">
-                {(["all", "alta", "media", "baja"] as const).map((p) => (
+                {(['all', 'alta', 'media', 'baja'] as const).map((p) => (
                   <button
                     key={p}
                     onClick={() => setFilterPrioridad(p)}
                     className={cn(
-                      "px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer",
+                      'px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer',
                       filterPrioridad === p
-                        ? "bg-[#002868] text-white border-[#002868]"
-                        : "bg-[#F5F5F5] text-[#555] border-transparent hover:border-[#002868] hover:text-[#002868]",
+                        ? 'bg-[#002868] text-white border-[#002868]'
+                        : 'bg-[#F5F5F5] text-[#555] border-transparent hover:border-[#002868] hover:text-[#002868]',
                     )}
                   >
-                    {p === "all"
-                      ? "Todas"
+                    {p === 'all'
+                      ? 'Todas'
                       : PRIORIDAD_CONFIG[p as Prioridad].label}
                   </button>
                 ))}
@@ -1194,7 +1200,7 @@ export default function TareasPage() {
                   {/* Column Header */}
                   <div
                     className={cn(
-                      "flex items-center justify-between px-4 py-3 rounded-xl border font-semibold",
+                      'flex items-center justify-between px-4 py-3 rounded-xl border font-semibold',
                       cfg.header,
                     )}
                   >
@@ -1204,7 +1210,7 @@ export default function TareasPage() {
                     </div>
                     <span
                       className={cn(
-                        "text-xs font-bold px-2 py-0.5 rounded-full",
+                        'text-xs font-bold px-2 py-0.5 rounded-full',
                         cfg.count_bg,
                       )}
                     >
@@ -1254,7 +1260,7 @@ export default function TareasPage() {
 
       {/* Footer */}
       <footer className="w-full py-6 mt-auto border-t border-[#E0E0E0] text-center text-[#666666] text-sm">
-        Developed with ❤️ by{" "}
+        Developed with ❤️ by{' '}
         <a
           href="https://lumarsoft.com"
           target="_blank"

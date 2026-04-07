@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { toast } from "sonner";
-import { KeyRound, Eye, EyeOff, ShieldCheck } from "lucide-react";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { useAuthStore } from "@/store/authStore";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { KeyRound, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface PasswordForm {
   currentPassword: string;
@@ -18,47 +18,47 @@ interface PasswordForm {
 }
 
 const DEFAULT_FORM: PasswordForm = {
-  currentPassword: "",
-  newPassword: "",
-  confirmPassword: "",
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
 };
 
 export function CambiarPasswordSection() {
   const currentUser = useAuthStore((state) => state.user);
   const [form, setForm] = useState<PasswordForm>(DEFAULT_FORM);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const handleSubmit = async () => {
-    setError("");
+    setError('');
 
     if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
-      setError("Todos los campos son requeridos");
+      setError('Todos los campos son requeridos');
       return;
     }
 
     if (form.newPassword.length < 6) {
-      setError("La nueva contraseña debe tener al menos 6 caracteres");
+      setError('La nueva contraseña debe tener al menos 6 caracteres');
       return;
     }
 
     if (form.newPassword !== form.confirmPassword) {
-      setError("Las contraseñas no coinciden");
+      setError('Las contraseñas no coinciden');
       return;
     }
 
     if (form.currentPassword === form.newPassword) {
-      setError("La nueva contraseña debe ser diferente a la actual");
+      setError('La nueva contraseña debe ser diferente a la actual');
       return;
     }
 
     setIsSaving(true);
     try {
       const res = await apiFetch(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, {
-        method: "PUT",
+        method: 'PUT',
         body: JSON.stringify({
           currentPassword: form.currentPassword,
           newPassword: form.newPassword,
@@ -67,13 +67,13 @@ export function CambiarPasswordSection() {
       const data = await res.json();
 
       if (data.success) {
-        toast.success("Contraseña actualizada exitosamente");
+        toast.success('Contraseña actualizada exitosamente');
         setForm(DEFAULT_FORM);
       } else {
-        setError(data.message || "Error al cambiar la contraseña");
+        setError(data.message || 'Error al cambiar la contraseña');
       }
     } catch {
-      setError("Error de conexión. Intente nuevamente.");
+      setError('Error de conexión. Intente nuevamente.');
     } finally {
       setIsSaving(false);
     }
@@ -91,8 +91,22 @@ export function CambiarPasswordSection() {
     return s;
   })();
 
-  const strengthLabel = ["", "Muy débil", "Débil", "Aceptable", "Fuerte", "Muy fuerte"][strength];
-  const strengthColor = ["", "bg-red-500", "bg-orange-400", "bg-yellow-400", "bg-green-400", "bg-emerald-500"][strength];
+  const strengthLabel = [
+    '',
+    'Muy débil',
+    'Débil',
+    'Aceptable',
+    'Fuerte',
+    'Muy fuerte',
+  ][strength];
+  const strengthColor = [
+    '',
+    'bg-red-500',
+    'bg-orange-400',
+    'bg-yellow-400',
+    'bg-green-400',
+    'bg-emerald-500',
+  ][strength];
 
   return (
     <div className="space-y-6 max-w-lg">
@@ -104,7 +118,9 @@ export function CambiarPasswordSection() {
               <ShieldCheck className="w-6 h-6 text-[#002868]" />
             </div>
             <div>
-              <p className="font-semibold text-[#1A1A1A]">{currentUser?.nombre}</p>
+              <p className="font-semibold text-[#1A1A1A]">
+                {currentUser?.nombre}
+              </p>
               <p className="text-sm text-[#666666]">{currentUser?.email}</p>
             </div>
           </div>
@@ -132,9 +148,11 @@ export function CambiarPasswordSection() {
             <div className="relative">
               <Input
                 id="current-password"
-                type={showCurrent ? "text" : "password"}
+                type={showCurrent ? 'text' : 'password'}
                 value={form.currentPassword}
-                onChange={(e) => setForm({ ...form, currentPassword: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, currentPassword: e.target.value })
+                }
                 placeholder="Tu contraseña actual"
                 className="h-10 border-[#E0E0E0] text-[#1A1A1A] pr-10"
               />
@@ -143,7 +161,11 @@ export function CambiarPasswordSection() {
                 onClick={() => setShowCurrent(!showCurrent)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999] hover:text-[#555] transition-colors"
               >
-                {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showCurrent ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>
@@ -156,9 +178,11 @@ export function CambiarPasswordSection() {
             <div className="relative">
               <Input
                 id="new-password"
-                type={showNew ? "text" : "password"}
+                type={showNew ? 'text' : 'password'}
                 value={form.newPassword}
-                onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, newPassword: e.target.value })
+                }
                 placeholder="Mínimo 6 caracteres"
                 className="h-10 border-[#E0E0E0] text-[#1A1A1A] pr-10"
               />
@@ -167,7 +191,11 @@ export function CambiarPasswordSection() {
                 onClick={() => setShowNew(!showNew)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999] hover:text-[#555] transition-colors"
               >
-                {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showNew ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
 
@@ -179,13 +207,16 @@ export function CambiarPasswordSection() {
                     <div
                       key={i}
                       className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                        i <= strength ? strengthColor : "bg-[#E0E0E0]"
+                        i <= strength ? strengthColor : 'bg-[#E0E0E0]'
                       }`}
                     />
                   ))}
                 </div>
                 <p className="text-xs text-[#888]">
-                  Fortaleza: <span className="font-medium text-[#555]">{strengthLabel}</span>
+                  Fortaleza:{' '}
+                  <span className="font-medium text-[#555]">
+                    {strengthLabel}
+                  </span>
                 </p>
               </div>
             )}
@@ -199,14 +230,17 @@ export function CambiarPasswordSection() {
             <div className="relative">
               <Input
                 id="confirm-password"
-                type={showConfirm ? "text" : "password"}
+                type={showConfirm ? 'text' : 'password'}
                 value={form.confirmPassword}
-                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, confirmPassword: e.target.value })
+                }
                 placeholder="Repetí la nueva contraseña"
                 className={`h-10 border-[#E0E0E0] text-[#1A1A1A] pr-10 ${
-                  form.confirmPassword && form.newPassword !== form.confirmPassword
-                    ? "border-red-300 focus-visible:ring-red-200"
-                    : ""
+                  form.confirmPassword &&
+                  form.newPassword !== form.confirmPassword
+                    ? 'border-red-300 focus-visible:ring-red-200'
+                    : ''
                 }`}
               />
               <button
@@ -214,12 +248,19 @@ export function CambiarPasswordSection() {
                 onClick={() => setShowConfirm(!showConfirm)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#999] hover:text-[#555] transition-colors"
               >
-                {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showConfirm ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
-            {form.confirmPassword && form.newPassword !== form.confirmPassword && (
-              <p className="text-xs text-red-500 mt-1">Las contraseñas no coinciden</p>
-            )}
+            {form.confirmPassword &&
+              form.newPassword !== form.confirmPassword && (
+                <p className="text-xs text-red-500 mt-1">
+                  Las contraseñas no coinciden
+                </p>
+              )}
           </div>
 
           {/* Error general */}
@@ -234,7 +275,12 @@ export function CambiarPasswordSection() {
             <Button
               id="btn-cambiar-password"
               onClick={handleSubmit}
-              disabled={isSaving || !form.currentPassword || !form.newPassword || !form.confirmPassword}
+              disabled={
+                isSaving ||
+                !form.currentPassword ||
+                !form.newPassword ||
+                !form.confirmPassword
+              }
               className="w-full bg-[#002868] hover:bg-[#003d8f] text-white h-10 font-semibold transition-all"
             >
               {isSaving ? (
@@ -243,7 +289,7 @@ export function CambiarPasswordSection() {
                   Actualizando...
                 </span>
               ) : (
-                "Actualizar Contraseña"
+                'Actualizar Contraseña'
               )}
             </Button>
           </div>
@@ -251,7 +297,8 @@ export function CambiarPasswordSection() {
       </Card>
 
       <p className="text-xs text-[#999] text-center px-4">
-        Por seguridad, cerrá sesión en otros dispositivos después de cambiar tu contraseña.
+        Por seguridad, cerrá sesión en otros dispositivos después de cambiar tu
+        contraseña.
       </p>
     </div>
   );

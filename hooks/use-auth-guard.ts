@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/authStore';
 
 /**
  * Hook que centraliza la lógica de autenticación, hidratación y logout.
@@ -20,13 +20,13 @@ export function useAuthGuard() {
   useEffect(() => {
     if (!isHydrated) return;
     if (!isAuthenticated) {
-      router.push("/");
+      router.push('/');
     }
   }, [isAuthenticated, isHydrated, router]);
 
   const handleLogout = () => {
     logout();
-    router.push("/");
+    router.push('/');
   };
 
   return {

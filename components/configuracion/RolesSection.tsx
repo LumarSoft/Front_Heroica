@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Shield, ShieldCheck, Lock } from "lucide-react";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { Plus, Pencil, Trash2, Shield, ShieldCheck, Lock } from 'lucide-react';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -14,10 +14,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface Permiso {
   id: number;
@@ -41,17 +41,20 @@ interface RolForm {
   permiso_ids: number[];
 }
 
-const DEFAULT_FORM: RolForm = { nombre: "", descripcion: "", permiso_ids: [] };
+const DEFAULT_FORM: RolForm = { nombre: '', descripcion: '', permiso_ids: [] };
 
 const ROL_BADGE_COLORS: Record<string, string> = {
-  superadmin: "bg-purple-50 text-purple-700 border-purple-200",
-  admin: "bg-blue-50 text-blue-700 border-blue-200",
-  directivo: "bg-amber-50 text-amber-700 border-amber-200",
-  gerente: "bg-green-50 text-green-700 border-green-200",
+  superadmin: 'bg-purple-50 text-purple-700 border-purple-200',
+  admin: 'bg-blue-50 text-blue-700 border-blue-200',
+  directivo: 'bg-amber-50 text-amber-700 border-amber-200',
+  gerente: 'bg-green-50 text-green-700 border-green-200',
 };
 
 function getBadgeClass(nombre: string) {
-  return ROL_BADGE_COLORS[nombre.toLowerCase()] || "bg-gray-50 text-gray-700 border-gray-200";
+  return (
+    ROL_BADGE_COLORS[nombre.toLowerCase()] ||
+    'bg-gray-50 text-gray-700 border-gray-200'
+  );
 }
 
 export function RolesSection() {
@@ -64,7 +67,7 @@ export function RolesSection() {
   const [editingRol, setEditingRol] = useState<Rol | null>(null);
   const [form, setForm] = useState<RolForm>(DEFAULT_FORM);
   const [isSaving, setIsSaving] = useState(false);
-  const [formError, setFormError] = useState("");
+  const [formError, setFormError] = useState('');
 
   // Dialog eliminar
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -87,24 +90,27 @@ export function RolesSection() {
       if (dataRoles.success) setRoles(dataRoles.data);
       if (dataPermisos.success) setPermisos(dataPermisos.data);
     } catch {
-      toast.error("Error al cargar roles y permisos");
+      toast.error('Error al cargar roles y permisos');
     } finally {
       setIsLoading(false);
     }
   };
 
   // Agrupar permisos por categoría
-  const permisosAgrupados = permisos.reduce<Record<string, Permiso[]>>((acc, p) => {
-    const cat = p.categoria || "General";
-    if (!acc[cat]) acc[cat] = [];
-    acc[cat].push(p);
-    return acc;
-  }, {});
+  const permisosAgrupados = permisos.reduce<Record<string, Permiso[]>>(
+    (acc, p) => {
+      const cat = p.categoria || 'General';
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(p);
+      return acc;
+    },
+    {},
+  );
 
   const openCreate = () => {
     setEditingRol(null);
     setForm(DEFAULT_FORM);
-    setFormError("");
+    setFormError('');
     setDialogOpen(true);
   };
 
@@ -112,10 +118,10 @@ export function RolesSection() {
     setEditingRol(rol);
     setForm({
       nombre: rol.nombre,
-      descripcion: rol.descripcion || "",
+      descripcion: rol.descripcion || '',
       permiso_ids: [...rol.permisos_ids],
     });
-    setFormError("");
+    setFormError('');
     setDialogOpen(true);
   };
 
@@ -145,9 +151,9 @@ export function RolesSection() {
   };
 
   const handleSave = async () => {
-    setFormError("");
+    setFormError('');
     if (!form.nombre.trim()) {
-      setFormError("El nombre del rol es requerido");
+      setFormError('El nombre del rol es requerido');
       return;
     }
     setIsSaving(true);
@@ -158,7 +164,7 @@ export function RolesSection() {
         : API_ENDPOINTS.CONFIGURACION.ROLES.CREATE;
 
       const res = await apiFetch(url, {
-        method: isEdit ? "PUT" : "POST",
+        method: isEdit ? 'PUT' : 'POST',
         body: JSON.stringify({
           nombre: form.nombre.trim(),
           descripcion: form.descripcion.trim() || null,
@@ -167,14 +173,14 @@ export function RolesSection() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(isEdit ? "Rol actualizado" : "Rol creado");
+        toast.success(isEdit ? 'Rol actualizado' : 'Rol creado');
         setDialogOpen(false);
         await fetchData();
       } else {
-        setFormError(data.message || "Error al guardar rol");
+        setFormError(data.message || 'Error al guardar rol');
       }
     } catch {
-      setFormError("Error de conexión");
+      setFormError('Error de conexión');
     } finally {
       setIsSaving(false);
     }
@@ -191,19 +197,19 @@ export function RolesSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.ROLES.DELETE(rolToDelete.id),
-        { method: "DELETE" }
+        { method: 'DELETE' },
       );
       const data = await res.json();
       if (data.success) {
-        toast.success("Rol eliminado");
+        toast.success('Rol eliminado');
         setDeleteOpen(false);
         setRolToDelete(null);
         await fetchData();
       } else {
-        toast.error(data.message || "Error al eliminar rol");
+        toast.error(data.message || 'Error al eliminar rol');
       }
     } catch {
-      toast.error("Error al eliminar rol");
+      toast.error('Error al eliminar rol');
     } finally {
       setIsDeleting(false);
     }
@@ -241,7 +247,9 @@ export function RolesSection() {
 
         <CardContent className="p-0">
           {roles.length === 0 ? (
-            <p className="text-center text-[#666666] py-10">No hay roles registrados</p>
+            <p className="text-center text-[#666666] py-10">
+              No hay roles registrados
+            </p>
           ) : (
             <div className="divide-y divide-[#F0F0F0]">
               {roles.map((rol) => (
@@ -272,7 +280,9 @@ export function RolesSection() {
                           )}
                         </div>
                         {rol.descripcion && (
-                          <p className="text-sm text-[#555] mt-1">{rol.descripcion}</p>
+                          <p className="text-sm text-[#555] mt-1">
+                            {rol.descripcion}
+                          </p>
                         )}
                         {/* Chips de permisos */}
                         {rol.permisos_claves.length > 0 && (
@@ -282,7 +292,7 @@ export function RolesSection() {
                                 key={c}
                                 className="text-xs bg-[#EEF2FF] text-[#3730A3] px-2 py-0.5 rounded-md"
                               >
-                                {c.replace(/_/g, " ")}
+                                {c.replace(/_/g, ' ')}
                               </span>
                             ))}
                             {rol.permisos_claves.length > 6 && (
@@ -293,7 +303,9 @@ export function RolesSection() {
                           </div>
                         )}
                         {rol.permisos_claves.length === 0 && (
-                          <p className="text-xs text-[#999] mt-1 italic">Sin permisos asignados</p>
+                          <p className="text-xs text-[#999] mt-1 italic">
+                            Sin permisos asignados
+                          </p>
                         )}
                       </div>
                     </div>
@@ -333,12 +345,12 @@ export function RolesSection() {
           <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0] flex-shrink-0">
             <DialogHeader className="p-0">
               <DialogTitle className="text-xl font-bold text-[#1A1A1A]">
-                {editingRol ? "Editar Rol" : "Nuevo Rol"}
+                {editingRol ? 'Editar Rol' : 'Nuevo Rol'}
               </DialogTitle>
               <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
                 {editingRol
-                  ? "Modificá el nombre, descripción y permisos del rol"
-                  : "Creá un nuevo rol y asignale los permisos correspondientes"}
+                  ? 'Modificá el nombre, descripción y permisos del rol'
+                  : 'Creá un nuevo rol y asignale los permisos correspondientes'}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -359,7 +371,8 @@ export function RolesSection() {
               />
               {editingRol?.es_sistema && (
                 <p className="text-xs text-[#999] flex items-center gap-1">
-                  <Lock className="w-3 h-3" /> El nombre de un rol del sistema no se puede cambiar
+                  <Lock className="w-3 h-3" /> El nombre de un rol del sistema
+                  no se puede cambiar
                 </p>
               )}
             </div>
@@ -372,7 +385,9 @@ export function RolesSection() {
               <Input
                 id="rol-descripcion"
                 value={form.descripcion}
-                onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, descripcion: e.target.value })
+                }
                 placeholder="Descripción breve del rol"
                 className="h-10 border-[#E0E0E0] text-[#1A1A1A]"
               />
@@ -384,67 +399,87 @@ export function RolesSection() {
                 Permisos
               </Label>
               <div className="border border-[#E0E0E0] rounded-xl overflow-hidden">
-                {Object.entries(permisosAgrupados).map(([categoria, permsCategoria], idx) => {
-                  const catIds = permsCategoria.map((p) => p.id);
-                  const allSelected = catIds.every((id) => form.permiso_ids.includes(id));
-                  const someSelected = catIds.some((id) => form.permiso_ids.includes(id));
+                {Object.entries(permisosAgrupados).map(
+                  ([categoria, permsCategoria], idx) => {
+                    const catIds = permsCategoria.map((p) => p.id);
+                    const allSelected = catIds.every((id) =>
+                      form.permiso_ids.includes(id),
+                    );
+                    const someSelected = catIds.some((id) =>
+                      form.permiso_ids.includes(id),
+                    );
 
-                  return (
-                    <div
-                      key={categoria}
-                      className={idx > 0 ? "border-t border-[#F0F0F0]" : ""}
-                    >
-                      {/* Cabecera de categoría */}
+                    return (
                       <div
-                        className="flex items-center gap-2.5 px-4 py-2.5 bg-[#F8F9FA] cursor-pointer hover:bg-[#F0F2F5] transition-colors"
-                        onClick={() => toggleCategoria(categoria)}
+                        key={categoria}
+                        className={idx > 0 ? 'border-t border-[#F0F0F0]' : ''}
                       >
-                        <Checkbox
-                          id={`cat-${categoria}`}
-                          checked={allSelected}
-                          data-state={someSelected && !allSelected ? "indeterminate" : undefined}
-                          className={`border-[#C0C0C0] data-[state=checked]:bg-[#002868] data-[state=checked]:border-[#002868] ${
-                            someSelected && !allSelected ? "opacity-60" : ""
-                          }`}
-                          onCheckedChange={() => toggleCategoria(categoria)}
-                        />
-                        <span className="text-xs font-bold text-[#333] uppercase tracking-wide">
-                          {categoria}
-                        </span>
-                        <span className="text-xs text-[#999] ml-auto">
-                          {catIds.filter((id) => form.permiso_ids.includes(id)).length}/{catIds.length}
-                        </span>
-                      </div>
+                        {/* Cabecera de categoría */}
+                        <div
+                          className="flex items-center gap-2.5 px-4 py-2.5 bg-[#F8F9FA] cursor-pointer hover:bg-[#F0F2F5] transition-colors"
+                          onClick={() => toggleCategoria(categoria)}
+                        >
+                          <Checkbox
+                            id={`cat-${categoria}`}
+                            checked={allSelected}
+                            data-state={
+                              someSelected && !allSelected
+                                ? 'indeterminate'
+                                : undefined
+                            }
+                            className={`border-[#C0C0C0] data-[state=checked]:bg-[#002868] data-[state=checked]:border-[#002868] ${
+                              someSelected && !allSelected ? 'opacity-60' : ''
+                            }`}
+                            onCheckedChange={() => toggleCategoria(categoria)}
+                          />
+                          <span className="text-xs font-bold text-[#333] uppercase tracking-wide">
+                            {categoria}
+                          </span>
+                          <span className="text-xs text-[#999] ml-auto">
+                            {
+                              catIds.filter((id) =>
+                                form.permiso_ids.includes(id),
+                              ).length
+                            }
+                            /{catIds.length}
+                          </span>
+                        </div>
 
-                      {/* Permisos de la categoría */}
-                      <div className="px-4 py-2 space-y-1.5 bg-white">
-                        {permsCategoria.map((permiso) => (
-                          <div
-                            key={permiso.id}
-                            className="flex items-center gap-2.5 py-1 cursor-pointer group"
-                            onClick={() => togglePermiso(permiso.id)}
-                          >
-                            <Checkbox
-                              id={`perm-${permiso.id}`}
-                              checked={form.permiso_ids.includes(permiso.id)}
-                              className="border-[#C0C0C0] data-[state=checked]:bg-[#002868] data-[state=checked]:border-[#002868]"
-                              onCheckedChange={() => togglePermiso(permiso.id)}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm text-[#1A1A1A] group-hover:text-[#002868] transition-colors">
-                                {permiso.descripcion}
-                              </p>
-                              <p className="text-xs text-[#999] font-mono">{permiso.clave}</p>
+                        {/* Permisos de la categoría */}
+                        <div className="px-4 py-2 space-y-1.5 bg-white">
+                          {permsCategoria.map((permiso) => (
+                            <div
+                              key={permiso.id}
+                              className="flex items-center gap-2.5 py-1 cursor-pointer group"
+                              onClick={() => togglePermiso(permiso.id)}
+                            >
+                              <Checkbox
+                                id={`perm-${permiso.id}`}
+                                checked={form.permiso_ids.includes(permiso.id)}
+                                className="border-[#C0C0C0] data-[state=checked]:bg-[#002868] data-[state=checked]:border-[#002868]"
+                                onCheckedChange={() =>
+                                  togglePermiso(permiso.id)
+                                }
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-[#1A1A1A] group-hover:text-[#002868] transition-colors">
+                                  {permiso.descripcion}
+                                </p>
+                                <p className="text-xs text-[#999] font-mono">
+                                  {permiso.clave}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  },
+                )}
               </div>
               <p className="text-xs text-[#999]">
-                {form.permiso_ids.length} de {permisos.length} permisos seleccionados
+                {form.permiso_ids.length} de {permisos.length} permisos
+                seleccionados
               </p>
             </div>
 
@@ -477,9 +512,9 @@ export function RolesSection() {
                     Guardando...
                   </span>
                 ) : editingRol ? (
-                  "Guardar Cambios"
+                  'Guardar Cambios'
                 ) : (
-                  "Crear Rol"
+                  'Crear Rol'
                 )}
               </Button>
             </DialogFooter>
@@ -491,7 +526,9 @@ export function RolesSection() {
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-red-600">Eliminar Rol</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-red-600">
+              Eliminar Rol
+            </DialogTitle>
             <DialogDescription className="text-[#666666]">
               Esta acción no se puede deshacer. ¿Estás seguro?
             </DialogDescription>
@@ -499,9 +536,13 @@ export function RolesSection() {
           {rolToDelete && (
             <div className="py-3">
               <div className="p-4 bg-[#F5F5F5] rounded-lg border border-[#E0E0E0]">
-                <p className="font-semibold text-[#1A1A1A]">{rolToDelete.nombre}</p>
+                <p className="font-semibold text-[#1A1A1A]">
+                  {rolToDelete.nombre}
+                </p>
                 {rolToDelete.descripcion && (
-                  <p className="text-sm text-[#666666] mt-0.5">{rolToDelete.descripcion}</p>
+                  <p className="text-sm text-[#666666] mt-0.5">
+                    {rolToDelete.descripcion}
+                  </p>
                 )}
               </div>
             </div>
@@ -521,7 +562,7 @@ export function RolesSection() {
               disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
-              {isDeleting ? "Eliminando..." : "Eliminar Rol"}
+              {isDeleting ? 'Eliminando...' : 'Eliminar Rol'}
             </Button>
           </DialogFooter>
         </DialogContent>

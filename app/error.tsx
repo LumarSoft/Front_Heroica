@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -34,7 +34,7 @@ export default function GlobalError({ error, reset }: ErrorPageProps) {
         <div className="flex gap-3 justify-center">
           <Button
             variant="outline"
-            onClick={() => (window.location.href = "/")}
+            onClick={() => (window.location.href = '/')}
             className="border-slate-300 text-slate-600 hover:bg-slate-100"
           >
             <Home className="w-4 h-4 mr-2" />

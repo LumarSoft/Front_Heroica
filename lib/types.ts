@@ -3,10 +3,10 @@
 // =============================================
 
 export type TransactionEstado =
-  | "pendiente"
-  | "aprobado"
-  | "rechazado"
-  | "completado";
+  | 'pendiente'
+  | 'aprobado'
+  | 'rechazado'
+  | 'completado';
 
 export interface Transaction {
   id: number;
@@ -15,8 +15,8 @@ export interface Transaction {
   concepto: string;
   monto: number;
   descripcion?: string;
-  prioridad: "baja" | "media" | "alta";
-  tipo: "ingreso" | "egreso";
+  prioridad: 'baja' | 'media' | 'alta';
+  tipo: 'ingreso' | 'egreso';
   tipo_movimiento: string;
   estado: TransactionEstado;
   categoria_id?: number;
@@ -33,7 +33,7 @@ export interface Transaction {
   cuenta?: string;
   cbu?: string;
   tipo_operacion?: string;
-  moneda?: "ARS" | "USD";
+  moneda?: 'ARS' | 'USD';
   tipo_cambio?: number;
 }
 
@@ -50,8 +50,8 @@ export interface PagoPendiente {
   concepto: string;
   monto: number;
   descripcion?: string;
-  estado: "pendiente" | "aprobado" | "rechazado";
-  prioridad: "baja" | "media" | "alta";
+  estado: 'pendiente' | 'aprobado' | 'rechazado';
+  prioridad: 'baja' | 'media' | 'alta';
   tipo?: string;
   motivo_rechazo?: string;
   usuario_creador_nombre?: string;
@@ -62,7 +62,7 @@ export interface PagoPendiente {
 export interface Categoria {
   id: number;
   nombre: string;
-  tipo?: "ingreso" | "egreso";
+  tipo?: 'ingreso' | 'egreso';
 }
 
 export interface Subcategoria {

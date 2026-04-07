@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Dialog,
@@ -6,8 +6,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface DeleteDialogProps {
   open: boolean;
@@ -36,7 +36,7 @@ export function DeleteDialog({
           </DialogTitle>
         </DialogHeader>
         <p className="text-[#666666] text-sm py-2">
-          ¿Estás seguro de eliminar{" "}
+          ¿Estás seguro de eliminar{' '}
           <span className="font-semibold text-[#1A1A1A]">
             &quot;{nombre}&quot;
           </span>

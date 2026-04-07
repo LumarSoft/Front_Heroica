@@ -1,48 +1,48 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import Navbar from "@/components/Navbar";
-import NuevoMovimientoDialog from "@/components/NuevoMovimientoDialog";
-import { useAuthGuard } from "@/hooks/use-auth-guard";
-import { useCajaData } from "@/hooks/use-caja-data";
-import { formatMonto, calcularTotal } from "@/lib/formatters";
+import { useEffect, useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import Navbar from '@/components/Navbar';
+import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
+import { useCajaData } from '@/hooks/use-caja-data';
+import { formatMonto, calcularTotal } from '@/lib/formatters';
 import {
   PageLoadingSpinner,
   ContentLoadingSpinner,
-} from "@/components/ui/loading-spinner";
-import { ErrorBanner } from "@/components/ui/error-banner";
-import { AccessDenied } from "@/components/ui/access-denied";
-import { useAuthStore } from "@/store/authStore";
-import { BancoParcial } from "@/lib/types";
+} from '@/components/ui/loading-spinner';
+import { ErrorBanner } from '@/components/ui/error-banner';
+import { AccessDenied } from '@/components/ui/access-denied';
+import { useAuthStore } from '@/store/authStore';
+import { BancoParcial } from '@/lib/types';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { PageHeader } from "@/components/caja/PageHeader";
-import { CajaTabs, TabsContent } from "@/components/caja/CajaTabs";
+} from '@/components/ui/dialog';
+import { PageHeader } from '@/components/caja/PageHeader';
+import { CajaTabs, TabsContent } from '@/components/caja/CajaTabs';
 import {
   TransactionTable,
   getBancoColumns,
-} from "@/components/caja/TransactionTable";
+} from '@/components/caja/TransactionTable';
 import {
   DetailsDialog,
   StateDialog,
   DeleteDialog,
   DeudaDialog,
-} from "@/components/caja/TransactionDialogs";
-import { MoverMovimientoDialog } from "@/components/caja/MoverMovimientoDialog";
-import { BulkMoverDialog } from "@/components/caja/BulkMoverDialog";
-import { EndDateFilter } from "@/components/caja/EndDateFilter";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
+} from '@/components/caja/TransactionDialogs';
+import { MoverMovimientoDialog } from '@/components/caja/MoverMovimientoDialog';
+import { BulkMoverDialog } from '@/components/caja/BulkMoverDialog';
+import { EndDateFilter } from '@/components/caja/EndDateFilter';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 const columns = getBancoColumns();
 
@@ -50,13 +50,13 @@ export default function CajaBancoPage() {
   const params = useParams();
   const { user, isGuardLoading, handleLogout } = useAuthGuard();
   const searchParams = useSearchParams();
-  const moneda = (searchParams.get("moneda") as "ARS" | "USD") || "ARS";
-  const caja = useCajaData("banco", moneda);
+  const moneda = (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS';
+  const caja = useCajaData('banco', moneda);
   const [selectedBanco, setSelectedBanco] = useState<BancoParcial | null>(null);
   const [isBancoDialogOpen, setIsBancoDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("real");
+  const [activeTab, setActiveTab] = useState('real');
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null);
-  const [sucursalNombre, setSucursalNombre] = useState("");
+  const [sucursalNombre, setSucursalNombre] = useState('');
   const [isBulkMoverDialogOpen, setIsBulkMoverDialogOpen] = useState(false);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [bulkSelectedIds, setBulkSelectedIds] = useState<number[]>([]);
@@ -71,7 +71,7 @@ export default function CajaBancoPage() {
     setIsBulkDeleting(true);
     try {
       const res = await apiFetch(API_ENDPOINTS.CAJA_BANCO.BULK_DELETE, {
-        method: "DELETE",
+        method: 'DELETE',
         body: JSON.stringify({ ids: bulkSelectedIds }),
       });
       const data = await res.json();
@@ -80,10 +80,10 @@ export default function CajaBancoPage() {
         caja.fetchMovimientos();
         setIsBulkDeleteDialogOpen(false);
       } else {
-        toast.error(data.message || "Error al eliminar.");
+        toast.error(data.message || 'Error al eliminar.');
       }
     } catch {
-      toast.error("Error de red al eliminar.");
+      toast.error('Error de red al eliminar.');
     } finally {
       setIsBulkDeleting(false);
     }
@@ -101,27 +101,28 @@ export default function CajaBancoPage() {
       .then((r) => r.json())
       .then((d) => {
         setSucursalActiva(Boolean(d.data?.activo));
-        setSucursalNombre(d.data?.nombre || "");
+        setSucursalNombre(d.data?.nombre || '');
       })
       .catch(() => setSucursalActiva(true));
   }, [params.id]);
 
   const { hasPermiso } = useAuthStore();
   const isGlobalReadOnly = sucursalActiva === false;
-  
-  const canCrear = !isGlobalReadOnly && hasPermiso("crear_movimientos");
-  const canEditInfo = !isGlobalReadOnly && hasPermiso("editar_movimientos");
-  const canAddComment = !isGlobalReadOnly && hasPermiso("agregar_comentarios");
-  const canDelete = !isGlobalReadOnly && hasPermiso("eliminar_movimientos");
-  const canChangeState = !isGlobalReadOnly && hasPermiso("aprobar_movimientos");
+
+  const canCrear = !isGlobalReadOnly && hasPermiso('crear_movimientos');
+  const canEditInfo = !isGlobalReadOnly && hasPermiso('editar_movimientos');
+  const canAddComment = !isGlobalReadOnly && hasPermiso('agregar_comentarios');
+  const canDelete = !isGlobalReadOnly && hasPermiso('eliminar_movimientos');
+  const canChangeState = !isGlobalReadOnly && hasPermiso('aprobar_movimientos');
   const canToggleDeuda = canCrear; // because creating mirror debt acts as "crear"
 
-  const isStrictlyReadOnly = isGlobalReadOnly || (!canEditInfo && !canAddComment);
+  const isStrictlyReadOnly =
+    isGlobalReadOnly || (!canEditInfo && !canAddComment);
 
   const { initialize } = caja;
   useEffect(() => {
     if (!isGuardLoading) {
-      if (user?.rol === "empleado") return;
+      if (user?.rol === 'empleado') return;
       initialize();
     }
   }, [isGuardLoading, user?.rol, initialize]);
@@ -140,11 +141,11 @@ export default function CajaBancoPage() {
         onLogout={handleLogout}
         showBackButton={true}
         backUrl={`/sucursales/${params.id}?moneda=${moneda}`}
-        sucursalNombre={sucursalNombre ? `${sucursalNombre} — ${moneda}` : ""}
+        sucursalNombre={sucursalNombre ? `${sucursalNombre} — ${moneda}` : ''}
       />
 
       <main className="container mx-auto px-6 py-8 flex flex-col h-full">
-        {user?.rol === "empleado" ? (
+        {user?.rol === 'empleado' ? (
           <AccessDenied
             resource="la caja de bancos"
             backUrl={`/sucursales/${params.id}`}
@@ -196,7 +197,7 @@ export default function CajaBancoPage() {
                     <div className="flex flex-wrap gap-2 lg:flex-nowrap lg:overflow-x-auto pb-2">
                       {caja.parciales.map((p) => (
                         <Card
-                          key={p.banco_id || "otros"}
+                          key={p.banco_id || 'otros'}
                           className="border-[#E0E0E0] shadow-sm hover:shadow-lg hover:border-[#002868]/40 transition-all cursor-pointer min-w-[140px] flex-1 group"
                           onClick={() => {
                             setSelectedBanco(p);
@@ -206,9 +207,9 @@ export default function CajaBancoPage() {
                           <CardContent className="p-4 flex items-center justify-center">
                             <span
                               className="text-sm font-bold text-[#002868] group-hover:text-[#003d8f] transition-colors truncate"
-                              title={p.banco_nombre || "OTROS"}
+                              title={p.banco_nombre || 'OTROS'}
                             >
-                              {p.banco_nombre || "OTROS"}
+                              {p.banco_nombre || 'OTROS'}
                             </span>
                           </CardContent>
                         </Card>
@@ -245,7 +246,9 @@ export default function CajaBancoPage() {
                       transactions={caja.saldoRealFiltrado}
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
-                      onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
+                      onChangeState={
+                        canChangeState ? caja.handleOpenStateChange : undefined
+                      }
                       onDelete={canDelete ? caja.handleOpenDelete : undefined}
                       onMove={canCrear ? caja.handleOpenMover : undefined}
                       onBulkDelete={canDelete ? handleBulkDelete : undefined}
@@ -267,9 +270,13 @@ export default function CajaBancoPage() {
                       }
                       columns={columns}
                       onViewDetails={caja.handleOpenDetails}
-                      onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
+                      onChangeState={
+                        canChangeState ? caja.handleOpenStateChange : undefined
+                      }
                       onDelete={canDelete ? caja.handleOpenDelete : undefined}
-                      onToggleDeuda={canToggleDeuda ? caja.handleOpenDeuda : undefined}
+                      onToggleDeuda={
+                        canToggleDeuda ? caja.handleOpenDeuda : undefined
+                      }
                       onMove={canCrear ? caja.handleOpenMover : undefined}
                       onBulkDelete={canDelete ? handleBulkDelete : undefined}
                       onBulkMove={canCrear ? handleBulkMove : undefined}
@@ -374,7 +381,7 @@ export default function CajaBancoPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-[#002868] text-xl">
-              {selectedBanco?.banco_nombre || "OTROS"}
+              {selectedBanco?.banco_nombre || 'OTROS'}
             </DialogTitle>
             <DialogDescription>Detalle de saldos del banco</DialogDescription>
           </DialogHeader>
@@ -385,7 +392,7 @@ export default function CajaBancoPage() {
                 Saldo Real
               </span>
               <span
-                className={`text-lg font-bold ${Number(selectedBanco?.total_real) >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                className={`text-lg font-bold ${Number(selectedBanco?.total_real) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
               >
                 {formatMonto(selectedBanco?.total_real ?? 0)}
               </span>
@@ -396,20 +403,20 @@ export default function CajaBancoPage() {
                 Compromisos pendientes
               </span>
               <span
-                className={`text-sm font-semibold ${Number(selectedBanco?.total_necesario) >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                className={`text-sm font-semibold ${Number(selectedBanco?.total_necesario) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
               >
                 {formatMonto(selectedBanco?.total_necesario ?? 0)}
               </span>
             </div>
             {/* Saldo proyectado = real + necesario (ya negativos los egresos) */}
             <div
-              className={`flex items-center justify-between p-4 rounded-xl border-2 ${bancoNeto >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200"}`}
+              className={`flex items-center justify-between p-4 rounded-xl border-2 ${bancoNeto >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}
             >
               <span className="text-sm font-bold text-[#333] uppercase tracking-wide">
                 Saldo Necesario
               </span>
               <span
-                className={`text-lg font-bold ${bancoNeto >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+                className={`text-lg font-bold ${bancoNeto >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}
               >
                 {formatMonto(bancoNeto)}
               </span>

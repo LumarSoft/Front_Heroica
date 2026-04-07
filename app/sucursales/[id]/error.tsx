@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react";
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, ArrowLeft, RefreshCw } from 'lucide-react';
 
 interface ErrorPageProps {
   error: Error & { digest?: string };

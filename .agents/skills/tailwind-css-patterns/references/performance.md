@@ -8,9 +8,9 @@ Configure content sources for optimal purging:
 // tailwind.config.js
 export default {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx,vue,svelte}",
-    "./node_modules/@mycompany/ui-lib/**/*.{js,ts,jsx,tsx}",
+    './index.html',
+    './src/**/*.{js,ts,jsx,tsx,vue,svelte}',
+    './node_modules/@mycompany/ui-lib/**/*.{js,ts,jsx,tsx}',
   ],
   // Enable JIT for faster builds
   jit: true,
@@ -52,12 +52,12 @@ export default {
 
 ```css
 /* Enable CSS-first configuration in v4.1 */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* Define once, use everywhere */
   --color-brand: #3b82f6;
-  --font-mono: "Fira Code", monospace;
+  --font-mono: 'Fira Code', monospace;
 }
 
 /* Critical CSS for above-the-fold content */
@@ -78,12 +78,12 @@ export default {
 // tailwind.config.js
 module.exports = {
   purge: {
-    enabled: process.env.NODE_ENV === "production",
-    content: ["./src/**/*.html", "./src/**/*.jsx", "./src/**/*.tsx"],
+    enabled: process.env.NODE_ENV === 'production',
+    content: ['./src/**/*.html', './src/**/*.jsx', './src/**/*.tsx'],
     options: {
       safelist: [
-        "bg-red-500",
-        "text-center",
+        'bg-red-500',
+        'text-center',
         // Classes that shouldn't be purged
       ],
     },

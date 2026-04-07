@@ -4,7 +4,7 @@ description: Optimize for search engine visibility and ranking. Use when asked t
 license: MIT
 metadata:
   author: web-quality-skills
-  version: "1.0"
+  version: '1.0'
 ---
 
 # SEO optimization

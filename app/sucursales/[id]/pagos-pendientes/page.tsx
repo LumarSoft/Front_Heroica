@@ -1,37 +1,37 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { AlertTriangle, Plus } from "lucide-react";
-import { PageLoadingSpinner } from "@/components/ui/loading-spinner";
-import { ErrorBanner } from "@/components/ui/error-banner";
-import { Button } from "@/components/ui/button";
-import Navbar from "@/components/Navbar";
-import NuevoMovimientoDialog from "@/components/NuevoMovimientoDialog";
-import { useAuthGuard } from "@/hooks/use-auth-guard";
-import { calcularTotal } from "@/lib/formatters";
-import { PagosPendientesTable } from "@/components/pagos-pendientes/PagosPendientesTable";
-import { AprobarDialog } from "@/components/pagos-pendientes/AprobarDialog";
-import { RechazarDialog } from "@/components/pagos-pendientes/RechazarDialog";
-import { HistorialFiltros } from "@/components/pagos-pendientes/HistorialFiltros";
-import type { PagoPendiente } from "@/lib/types";
+import { useEffect, useState, useCallback } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { AlertTriangle, Plus } from 'lucide-react';
+import { PageLoadingSpinner } from '@/components/ui/loading-spinner';
+import { ErrorBanner } from '@/components/ui/error-banner';
+import { Button } from '@/components/ui/button';
+import Navbar from '@/components/Navbar';
+import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
+import { calcularTotal } from '@/lib/formatters';
+import { PagosPendientesTable } from '@/components/pagos-pendientes/PagosPendientesTable';
+import { AprobarDialog } from '@/components/pagos-pendientes/AprobarDialog';
+import { RechazarDialog } from '@/components/pagos-pendientes/RechazarDialog';
+import { HistorialFiltros } from '@/components/pagos-pendientes/HistorialFiltros';
+import type { PagoPendiente } from '@/lib/types';
 
 export default function PagosPendientesPage() {
   const params = useParams();
   const { user, isGuardLoading, handleLogout } = useAuthGuard();
   const searchParams = useSearchParams();
-  const moneda = (searchParams.get("moneda") as "ARS" | "USD") || "ARS";
+  const moneda = (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS';
 
   const [isLoading, setIsLoading] = useState(true);
   const [pagosPendientes, setPagosPendientes] = useState<PagoPendiente[]>([]);
   const [historial, setHistorial] = useState<PagoPendiente[]>([]);
-  const [activeTab, setActiveTab] = useState<"pendientes" | "historial">(
-    "pendientes",
+  const [activeTab, setActiveTab] = useState<'pendientes' | 'historial'>(
+    'pendientes',
   );
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   const [isAprobarDialogOpen, setIsAprobarDialogOpen] = useState(false);
   const [isRechazarDialogOpen, setIsRechazarDialogOpen] = useState(false);
@@ -39,15 +39,15 @@ export default function PagosPendientesPage() {
     useState(false);
   const [selectedPago, setSelectedPago] = useState<PagoPendiente | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [tipoCaja, setTipoCaja] = useState<"efectivo" | "banco">("efectivo");
-  const [motivoRechazo, setMotivoRechazo] = useState("");
+  const [tipoCaja, setTipoCaja] = useState<'efectivo' | 'banco'>('efectivo');
+  const [motivoRechazo, setMotivoRechazo] = useState('');
   const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] =
     useState(false);
 
   const [filtroEstado, setFiltroEstado] = useState<
-    "todos" | "aprobado" | "rechazado"
-  >("todos");
-  const [filtroUsuario, setFiltroUsuario] = useState<string>("");
+    'todos' | 'aprobado' | 'rechazado'
+  >('todos');
+  const [filtroUsuario, setFiltroUsuario] = useState<string>('');
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -63,17 +63,17 @@ export default function PagosPendientesPage() {
   const fetchPagosPendientes = useCallback(async () => {
     try {
       setIsLoading(true);
-      setError("");
+      setError('');
       const response = await apiFetch(
         `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(Number(params.id))}?moneda=${moneda}`,
       );
       const data = await response.json();
       if (!response.ok)
-        throw new Error(data.message || "Error al cargar pagos pendientes");
+        throw new Error(data.message || 'Error al cargar pagos pendientes');
       setPagosPendientes(data.data || []);
     } catch (err: unknown) {
       setError(
-        err instanceof Error ? err.message : "Error al cargar pagos pendientes",
+        err instanceof Error ? err.message : 'Error al cargar pagos pendientes',
       );
     } finally {
       setIsLoading(false);
@@ -84,17 +84,17 @@ export default function PagosPendientesPage() {
     if (!user) return;
     try {
       setIsLoading(true);
-      setError("");
+      setError('');
       const response = await apiFetch(
         `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(user.id)}?sucursal_id=${params.id}&moneda=${moneda}`,
       );
       const data = await response.json();
       if (!response.ok)
-        throw new Error(data.message || "Error al cargar historial");
+        throw new Error(data.message || 'Error al cargar historial');
       setHistorial(data.data || []);
     } catch (err: unknown) {
       setError(
-        err instanceof Error ? err.message : "Error al cargar historial",
+        err instanceof Error ? err.message : 'Error al cargar historial',
       );
     } finally {
       setIsLoading(false);
@@ -103,18 +103,18 @@ export default function PagosPendientesPage() {
 
   useEffect(() => {
     if (!isGuardLoading) {
-      if (activeTab === "pendientes") fetchPagosPendientes();
+      if (activeTab === 'pendientes') fetchPagosPendientes();
       else fetchHistorial();
     }
   }, [isGuardLoading, activeTab, fetchPagosPendientes, fetchHistorial]);
 
   const handleOpenAprobar = (pago: PagoPendiente) => {
     setSelectedPago(pago);
-    setTipoCaja("efectivo");
+    setTipoCaja('efectivo');
     setIsAprobarDialogOpen(true);
   };
 
-  const handleSelectCajaYContinuar = (caja: "efectivo" | "banco") => {
+  const handleSelectCajaYContinuar = (caja: 'efectivo' | 'banco') => {
     setTipoCaja(caja);
     setIsAprobarDialogOpen(false);
     setIsAprobacionMovimientoOpen(true);
@@ -122,23 +122,23 @@ export default function PagosPendientesPage() {
 
   const handleOpenRechazar = (pago: PagoPendiente) => {
     setSelectedPago(pago);
-    setMotivoRechazo("");
+    setMotivoRechazo('');
     setIsRechazarDialogOpen(true);
   };
 
   const handleRechazar = async () => {
     if (!selectedPago || !user || !motivoRechazo.trim()) {
-      setError("Debe proporcionar un motivo de rechazo");
-      setTimeout(() => setError(""), 3000);
+      setError('Debe proporcionar un motivo de rechazo');
+      setTimeout(() => setError(''), 3000);
       return;
     }
     try {
       setIsSaving(true);
-      setError("");
+      setError('');
       const response = await apiFetch(
         API_ENDPOINTS.PAGOS_PENDIENTES.RECHAZAR(selectedPago.id),
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({
             usuario_revisor_id: user.id,
             motivo_rechazo: motivoRechazo,
@@ -147,15 +147,15 @@ export default function PagosPendientesPage() {
       );
       const data = await response.json();
       if (!response.ok)
-        throw new Error(data.message || "Error al rechazar pago");
-      toast.success("Pago rechazado exitosamente");
+        throw new Error(data.message || 'Error al rechazar pago');
+      toast.success('Pago rechazado exitosamente');
       setIsRechazarDialogOpen(false);
       fetchPagosPendientes();
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Error al rechazar pago";
+        err instanceof Error ? err.message : 'Error al rechazar pago';
       setError(message);
-      setTimeout(() => setError(""), 3000);
+      setTimeout(() => setError(''), 3000);
     } finally {
       setIsSaving(false);
     }
@@ -164,8 +164,8 @@ export default function PagosPendientesPage() {
   if (isGuardLoading) return <PageLoadingSpinner />;
 
   const total = calcularTotal(pagosPendientes);
-  const isEmployee = user?.rol === "empleado";
-  const isAdmin = user?.rol === "admin" || user?.rol === "superadmin";
+  const isEmployee = user?.rol === 'empleado';
+  const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin';
 
   const usuariosRevisores = Array.from(
     new Set(
@@ -176,15 +176,15 @@ export default function PagosPendientesPage() {
   ).sort();
 
   const historialFiltrado = historial.filter((p) => {
-    if (filtroEstado !== "todos" && p.estado !== filtroEstado) return false;
+    if (filtroEstado !== 'todos' && p.estado !== filtroEstado) return false;
     if (filtroUsuario && p.usuario_revisor_nombre !== filtroUsuario)
       return false;
     return true;
   });
 
-  const hayFiltrosActivos = filtroEstado !== "todos" || filtroUsuario !== "";
+  const hayFiltrosActivos = filtroEstado !== 'todos' || filtroUsuario !== '';
   const displayData =
-    activeTab === "pendientes"
+    activeTab === 'pendientes'
       ? pagosPendientes
       : isAdmin
         ? historialFiltrado
@@ -239,31 +239,31 @@ export default function PagosPendientesPage() {
         <div className="flex mb-4 bg-white/50 p-1 rounded-xl border border-[#E0E0E0] w-fit">
           <button
             onClick={() => {
-              setActiveTab("pendientes");
-              setFiltroEstado("todos");
-              setFiltroUsuario("");
+              setActiveTab('pendientes');
+              setFiltroEstado('todos');
+              setFiltroUsuario('');
             }}
             className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
-              activeTab === "pendientes"
-                ? "bg-[#002868] text-white shadow-md"
-                : "text-[#666666] hover:bg-[#F0F0F0]"
+              activeTab === 'pendientes'
+                ? 'bg-[#002868] text-white shadow-md'
+                : 'text-[#666666] hover:bg-[#F0F0F0]'
             }`}
           >
-            {isEmployee ? "Mis Pendientes" : "Pendientes"}
+            {isEmployee ? 'Mis Pendientes' : 'Pendientes'}
           </button>
           <button
-            onClick={() => setActiveTab("historial")}
+            onClick={() => setActiveTab('historial')}
             className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
-              activeTab === "historial"
-                ? "bg-[#002868] text-white shadow-md"
-                : "text-[#666666] hover:bg-[#F0F0F0]"
+              activeTab === 'historial'
+                ? 'bg-[#002868] text-white shadow-md'
+                : 'text-[#666666] hover:bg-[#F0F0F0]'
             }`}
           >
-            {isEmployee ? "Mi Historial" : "Historial General"}
+            {isEmployee ? 'Mi Historial' : 'Historial General'}
           </button>
         </div>
 
-        {activeTab === "historial" && isAdmin && (
+        {activeTab === 'historial' && isAdmin && (
           <HistorialFiltros
             filtroEstado={filtroEstado}
             onFiltroEstadoChange={setFiltroEstado}
@@ -309,8 +309,8 @@ export default function PagosPendientesPage() {
         sucursalId={Number(params.id)}
         isPagoPendiente={true}
         onSuccess={() => {
-          toast.success("Solicitud de movimiento creada correctamente");
-          if (activeTab === "pendientes") fetchPagosPendientes();
+          toast.success('Solicitud de movimiento creada correctamente');
+          if (activeTab === 'pendientes') fetchPagosPendientes();
           else fetchHistorial();
         }}
       />
@@ -331,21 +331,21 @@ export default function PagosPendientesPage() {
             monto: Math.abs(
               parseFloat(selectedPago.monto.toString()),
             ).toString(),
-            descripcion: selectedPago.descripcion ?? "",
+            descripcion: selectedPago.descripcion ?? '',
             fecha: selectedPago.fecha
-              ? selectedPago.fecha.includes("T")
-                ? selectedPago.fecha.split("T")[0]
+              ? selectedPago.fecha.includes('T')
+                ? selectedPago.fecha.split('T')[0]
                 : selectedPago.fecha.substring(0, 10)
               : undefined,
             prioridad: selectedPago.prioridad as
-              | "baja"
-              | "media"
-              | "alta"
+              | 'baja'
+              | 'media'
+              | 'alta'
               | undefined,
           }}
           onSuccess={() => {
             toast.success(
-              "Pago aprobado y movimiento registrado correctamente",
+              'Pago aprobado y movimiento registrado correctamente',
             );
             setIsAprobacionMovimientoOpen(false);
             setSelectedPago(null);

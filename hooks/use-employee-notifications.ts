@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { toast } from "sonner";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { formatFecha } from "@/lib/formatters";
-import type { PagoPendiente } from "@/lib/types";
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { toast } from 'sonner';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { formatFecha } from '@/lib/formatters';
+import type { PagoPendiente } from '@/lib/types';
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
 export interface TrackedPago {
@@ -16,14 +16,14 @@ export interface TrackedPago {
 }
 
 // ── Helpers de localStorage ────────────────────────────────────────────────
-function storageKey(userId: number, type: "tracked" | "seen" | "initialized") {
+function storageKey(userId: number, type: 'tracked' | 'seen' | 'initialized') {
   return `heroica_pp_${type}_${userId}`;
 }
 
 function getTracked(userId: number): TrackedPago[] {
   try {
     return JSON.parse(
-      localStorage.getItem(storageKey(userId, "tracked")) ?? "[]",
+      localStorage.getItem(storageKey(userId, 'tracked')) ?? '[]',
     );
   } catch {
     return [];
@@ -32,7 +32,7 @@ function getTracked(userId: number): TrackedPago[] {
 
 function getSeen(userId: number): number[] {
   try {
-    return JSON.parse(localStorage.getItem(storageKey(userId, "seen")) ?? "[]");
+    return JSON.parse(localStorage.getItem(storageKey(userId, 'seen')) ?? '[]');
   } catch {
     return [];
   }
@@ -41,7 +41,7 @@ function getSeen(userId: number): number[] {
 function isInitialized(userId: number, sucursalId: number): boolean {
   try {
     const data = JSON.parse(
-      localStorage.getItem(storageKey(userId, "initialized")) ?? "{}",
+      localStorage.getItem(storageKey(userId, 'initialized')) ?? '{}',
     );
     return Boolean(data[sucursalId]);
   } catch {
@@ -52,11 +52,11 @@ function isInitialized(userId: number, sucursalId: number): boolean {
 function markInitialized(userId: number, sucursalId: number) {
   try {
     const data = JSON.parse(
-      localStorage.getItem(storageKey(userId, "initialized")) ?? "{}",
+      localStorage.getItem(storageKey(userId, 'initialized')) ?? '{}',
     );
     data[sucursalId] = true;
     localStorage.setItem(
-      storageKey(userId, "initialized"),
+      storageKey(userId, 'initialized'),
       JSON.stringify(data),
     );
   } catch {}
@@ -76,7 +76,7 @@ export function trackCreatedPago(
     if (!tracked.find((t) => t.id === pago.id)) {
       tracked.push(pago);
       localStorage.setItem(
-        storageKey(userId, "tracked"),
+        storageKey(userId, 'tracked'),
         JSON.stringify(tracked),
       );
     }
@@ -101,8 +101,8 @@ export function useEmployeeNotifications(
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const normalizeDate = (fecha: string): string => {
-    if (!fecha) return "";
-    return fecha.includes("T") ? fecha.split("T")[0] : fecha.substring(0, 10);
+    if (!fecha) return '';
+    return fecha.includes('T') ? fecha.split('T')[0] : fecha.substring(0, 10);
   };
 
   const checkNotifications = useCallback(async () => {
@@ -120,12 +120,12 @@ export function useEmployeeNotifications(
       // ── Primera ejecución: marcar todo como ya visto sin mostrar toasts ──
       if (!isInitialized(userId, sucursalId)) {
         const processed = historial
-          .filter((p) => p.estado === "aprobado" || p.estado === "rechazado")
+          .filter((p) => p.estado === 'aprobado' || p.estado === 'rechazado')
           .map((p) => p.id);
         const existing = getSeen(userId);
         const merged = Array.from(new Set([...existing, ...processed]));
         localStorage.setItem(
-          storageKey(userId, "seen"),
+          storageKey(userId, 'seen'),
           JSON.stringify(merged),
         );
         markInitialized(userId, sucursalId);
@@ -139,17 +139,17 @@ export function useEmployeeNotifications(
 
       for (const item of historial) {
         const estado: string = item.estado;
-        if (estado !== "aprobado" && estado !== "rechazado") continue;
+        if (estado !== 'aprobado' && estado !== 'rechazado') continue;
         if (seen.has(item.id)) continue;
 
         // Detectar cambio de fecha
         const trackedItem = tracked.find((t) => t.id === item.id);
         const fechaOriginal = trackedItem?.fecha_original;
-        const fechaActual = normalizeDate(item.fecha ?? "");
+        const fechaActual = normalizeDate(item.fecha ?? '');
         const fechaCambio = fechaOriginal && fechaOriginal !== fechaActual;
 
         // ── Toast según estado ──
-        if (estado === "aprobado") {
+        if (estado === 'aprobado') {
           if (fechaCambio) {
             toast.success(`Tu pago "${item.concepto}" fue aprobado`, {
               description: `La fecha fue cambiada del ${formatFecha(fechaOriginal!)} al ${formatFecha(fechaActual)}.`,
@@ -167,7 +167,7 @@ export function useEmployeeNotifications(
           toast.error(`Tu pago "${item.concepto}" fue rechazado.`, {
             description: item.motivo_rechazo
               ? `Motivo: ${item.motivo_rechazo}`
-              : "Sin motivo especificado.",
+              : 'Sin motivo especificado.',
             duration: 9000,
           });
         }
@@ -179,7 +179,7 @@ export function useEmployeeNotifications(
       if (newCount > 0) {
         const merged = Array.from(new Set([...Array.from(seen), ...newIds]));
         localStorage.setItem(
-          storageKey(userId, "seen"),
+          storageKey(userId, 'seen'),
           JSON.stringify(merged),
         );
         setUnseenCount((prev) => prev + newCount);

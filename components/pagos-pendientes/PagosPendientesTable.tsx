@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { Check, X, Inbox, Megaphone, User } from "lucide-react";
-import { ContentLoadingSpinner } from "@/components/ui/loading-spinner";
+import { Check, X, Inbox, Megaphone, User } from 'lucide-react';
+import { ContentLoadingSpinner } from '@/components/ui/loading-spinner';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -17,20 +17,20 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { StatusBadge } from "@/components/caja/StatusBadge";
+} from '@/components/ui/table';
+import { StatusBadge } from '@/components/caja/StatusBadge';
 import {
   formatFecha,
   formatMonto,
   ESTADO_COLOR_MAP,
   PRIORIDAD_COLOR_MAP,
   truncarTexto,
-} from "@/lib/formatters";
-import type { PagoPendiente } from "@/lib/types";
+} from '@/lib/formatters';
+import type { PagoPendiente } from '@/lib/types';
 
 interface PagosPendientesTableProps {
   displayData: PagoPendiente[];
-  activeTab: "pendientes" | "historial";
+  activeTab: 'pendientes' | 'historial';
   userRole?: string;
   isReadOnly: boolean;
   total: number;
@@ -49,9 +49,9 @@ export function PagosPendientesTable({
   onAprobar,
   onRechazar,
 }: PagosPendientesTableProps) {
-  const showAcciones = activeTab === "pendientes" && userRole === "superadmin";
+  const showAcciones = activeTab === 'pendientes' && userRole === 'superadmin';
   const colSpan =
-    7 + (activeTab === "historial" ? 1 : 0) + (showAcciones ? 1 : 0);
+    7 + (activeTab === 'historial' ? 1 : 0) + (showAcciones ? 1 : 0);
 
   if (isLoading) return <ContentLoadingSpinner />;
 
@@ -61,17 +61,17 @@ export function PagosPendientesTable({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-xl font-bold text-[#002868]">
-              {activeTab === "pendientes"
-                ? "Pendientes de Autorización"
-                : "Historial de Solicitudes"}
+              {activeTab === 'pendientes'
+                ? 'Pendientes de Autorización'
+                : 'Historial de Solicitudes'}
             </CardTitle>
             <CardDescription className="text-[#666666]">
-              {activeTab === "pendientes"
-                ? "Movimientos esperando revisión de un administrador"
-                : "Registro de movimientos procesados y su estado final"}
+              {activeTab === 'pendientes'
+                ? 'Movimientos esperando revisión de un administrador'
+                : 'Registro de movimientos procesados y su estado final'}
             </CardDescription>
           </div>
-          {activeTab === "pendientes" && (
+          {activeTab === 'pendientes' && (
             <div className="text-right">
               <p className="text-xs text-[#666666] font-bold uppercase tracking-wider mb-1">
                 Total Pendiente
@@ -79,13 +79,13 @@ export function PagosPendientesTable({
               <div
                 className={`inline-flex items-center justify-center px-4 py-1.5 rounded-lg ${
                   total >= 0
-                    ? "bg-emerald-50 border border-emerald-200"
-                    : "bg-rose-50 border border-rose-200"
+                    ? 'bg-emerald-50 border border-emerald-200'
+                    : 'bg-rose-50 border border-rose-200'
                 }`}
               >
                 <p
                   className={`text-xl font-black ${
-                    total >= 0 ? "text-emerald-700" : "text-rose-700"
+                    total >= 0 ? 'text-emerald-700' : 'text-rose-700'
                   }`}
                 >
                   {formatMonto(Math.abs(total))}
@@ -121,7 +121,7 @@ export function PagosPendientesTable({
                 <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">
                   Estado
                 </TableHead>
-                {activeTab === "historial" && (
+                {activeTab === 'historial' && (
                   <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">
                     Resolución
                   </TableHead>
@@ -165,20 +165,20 @@ export function PagosPendientesTable({
                           {pago.concepto}
                         </span>
                         {pago.descripcion &&
-                        pago.descripcion.includes("[Nota del sistema:") ? (
+                        pago.descripcion.includes('[Nota del sistema:') ? (
                           <div className="flex flex-col gap-1.5 mt-1">
                             {pago.descripcion
-                              .split("[Nota del sistema:")[0]
+                              .split('[Nota del sistema:')[0]
                               .trim() && (
                               <span
                                 className="text-xs text-[#666666] inline-block"
                                 title={pago.descripcion
-                                  .split("[Nota del sistema:")[0]
+                                  .split('[Nota del sistema:')[0]
                                   .trim()}
                               >
                                 {truncarTexto(
                                   pago.descripcion
-                                    .split("[Nota del sistema:")[0]
+                                    .split('[Nota del sistema:')[0]
                                     .trim(),
                                 )}
                               </span>
@@ -188,8 +188,8 @@ export function PagosPendientesTable({
                               <span className="font-medium whitespace-normal break-words leading-snug">
                                 {truncarTexto(
                                   pago.descripcion
-                                    .split("[Nota del sistema:")[1]
-                                    .split("]")[0]
+                                    .split('[Nota del sistema:')[1]
+                                    .split(']')[0]
                                     .trim(),
                                 )}
                               </span>
@@ -198,7 +198,7 @@ export function PagosPendientesTable({
                         ) : (
                           <span
                             className="text-xs text-[#666666]"
-                            title={pago.descripcion || ""}
+                            title={pago.descripcion || ''}
                           >
                             {truncarTexto(pago.descripcion)}
                           </span>
@@ -215,7 +215,7 @@ export function PagosPendientesTable({
                             className="text-sm font-medium text-[#1A1A1A] truncate max-w-[120px]"
                             title={pago.usuario_creador_nombre}
                           >
-                            {pago.usuario_creador_nombre.split(" ")[0]}
+                            {pago.usuario_creador_nombre.split(' ')[0]}
                           </span>
                         </div>
                       ) : (
@@ -225,8 +225,8 @@ export function PagosPendientesTable({
                     <TableCell
                       className={`text-right font-black text-sm ${
                         parseFloat(pago.monto.toString()) >= 0
-                          ? "text-emerald-700"
-                          : "text-rose-700"
+                          ? 'text-emerald-700'
+                          : 'text-rose-700'
                       }`}
                     >
                       {formatMonto(Math.abs(parseFloat(pago.monto.toString())))}
@@ -234,14 +234,14 @@ export function PagosPendientesTable({
                     <TableCell className="text-center">
                       <StatusBadge
                         value={
-                          pago.tipo === "egreso" ||
+                          pago.tipo === 'egreso' ||
                           (!pago.tipo && Number(pago.monto) < 0)
-                            ? "egreso"
-                            : "ingreso"
+                            ? 'egreso'
+                            : 'ingreso'
                         }
                         colorMap={{
-                          egreso: "bg-rose-100 text-rose-800",
-                          ingreso: "bg-emerald-100 text-emerald-800",
+                          egreso: 'bg-rose-100 text-rose-800',
+                          ingreso: 'bg-emerald-100 text-emerald-800',
                         }}
                       />
                     </TableCell>
@@ -257,30 +257,30 @@ export function PagosPendientesTable({
                         colorMap={ESTADO_COLOR_MAP}
                       />
                     </TableCell>
-                    {activeTab === "historial" && (
+                    {activeTab === 'historial' && (
                       <TableCell>
                         <div className="flex flex-col gap-0.5">
-                          {pago.estado === "aprobado" && (
+                          {pago.estado === 'aprobado' && (
                             <span className="text-xs font-medium text-emerald-600">
-                              Aprobado por{" "}
-                              {pago.usuario_revisor_nombre || "Admin"}
+                              Aprobado por{' '}
+                              {pago.usuario_revisor_nombre || 'Admin'}
                             </span>
                           )}
-                          {pago.estado === "rechazado" && (
+                          {pago.estado === 'rechazado' && (
                             <>
                               <span className="text-xs font-bold text-rose-600">
-                                Rechazado por{" "}
-                                {pago.usuario_revisor_nombre || "Admin"}
+                                Rechazado por{' '}
+                                {pago.usuario_revisor_nombre || 'Admin'}
                               </span>
                               <span className="text-[11px] text-[#666666] italic leading-tight">
                                 &quot;
                                 {pago.motivo_rechazo ||
-                                  "Sin motivo especificado"}
+                                  'Sin motivo especificado'}
                                 &quot;
                               </span>
                             </>
                           )}
-                          {pago.estado === "pendiente" && (
+                          {pago.estado === 'pendiente' && (
                             <span className="text-xs text-[#8A8F9C]">
                               En revisión...
                             </span>
@@ -291,7 +291,7 @@ export function PagosPendientesTable({
                     {showAcciones && (
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          {pago.estado === "pendiente" && (
+                          {pago.estado === 'pendiente' && (
                             <>
                               <Button
                                 size="sm"
@@ -299,8 +299,8 @@ export function PagosPendientesTable({
                                 disabled={isReadOnly}
                                 title={
                                   isReadOnly
-                                    ? "Sucursal inactiva"
-                                    : "Aprobar pago"
+                                    ? 'Sucursal inactiva'
+                                    : 'Aprobar pago'
                                 }
                                 className="bg-emerald-500 hover:bg-emerald-600 text-white border-none shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                               >
@@ -312,8 +312,8 @@ export function PagosPendientesTable({
                                 disabled={isReadOnly}
                                 title={
                                   isReadOnly
-                                    ? "Sucursal inactiva"
-                                    : "Rechazar pago"
+                                    ? 'Sucursal inactiva'
+                                    : 'Rechazar pago'
                                 }
                                 className="bg-rose-500 hover:bg-rose-600 text-white border-none shadow-sm hover:shadow-md transition-all h-8 w-8 p-0 flex items-center justify-center rounded-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                               >

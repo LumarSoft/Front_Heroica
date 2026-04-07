@@ -1,6 +1,6 @@
 // Configuración de la API
 export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // Endpoints
 export const API_ENDPOINTS = {
@@ -31,9 +31,9 @@ export const API_ENDPOINTS = {
       `${API_URL}/api/sucursales/${sucursalId}/documentos/${docId}`,
   },
   MOVIMIENTOS: {
-    GET_BY_SUCURSAL: (sucursalId: number, moneda: string = "ARS") =>
+    GET_BY_SUCURSAL: (sucursalId: number, moneda: string = 'ARS') =>
       `${API_URL}/api/movimientos/${sucursalId}?moneda=${moneda}`,
-    GET_TOTALES: (sucursalId: number, moneda: string = "ARS") =>
+    GET_TOTALES: (sucursalId: number, moneda: string = 'ARS') =>
       `${API_URL}/api/movimientos/${sucursalId}/totales?moneda=${moneda}`,
     GET_DEUDAS: (
       sucursalId: number,
@@ -41,14 +41,15 @@ export const API_ENDPOINTS = {
       fechaFin?: string,
     ) => {
       const params = new URLSearchParams({ sucursalId: String(sucursalId) });
-      if (fechaInicio) params.append("fechaInicio", fechaInicio);
-      if (fechaFin) params.append("fechaFin", fechaFin);
+      if (fechaInicio) params.append('fechaInicio', fechaInicio);
+      if (fechaFin) params.append('fechaFin', fechaFin);
       return `${API_URL}/api/movimientos/deudas?${params.toString()}`;
     },
     CREATE_EFECTIVO: `${API_URL}/api/movimientos/efectivo`,
     COMPRA_VENTA_DIVISAS: `${API_URL}/api/movimientos/compra-venta-divisas`,
     UPDATE: (id: number) => `${API_URL}/api/movimientos/${id}`,
-    PATCH_COMENTARIO: (id: number) => `${API_URL}/api/movimientos/${id}/comentario`,
+    PATCH_COMENTARIO: (id: number) =>
+      `${API_URL}/api/movimientos/${id}/comentario`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/movimientos/${id}/estado`,
     TOGGLE_DEUDA: (id: number) => `${API_URL}/api/movimientos/${id}/deuda`,
     DELETE: (id: number) => `${API_URL}/api/movimientos/${id}`,
@@ -75,13 +76,14 @@ export const API_ENDPOINTS = {
       `${API_URL}/api/pagos-pendientes/historial/${userId}`,
   },
   CAJA_BANCO: {
-    GET_BY_SUCURSAL: (sucursalId: number, moneda: string = "ARS") =>
+    GET_BY_SUCURSAL: (sucursalId: number, moneda: string = 'ARS') =>
       `${API_URL}/api/caja-banco/${sucursalId}?moneda=${moneda}`,
-    GET_TOTALES: (sucursalId: number, moneda: string = "ARS") =>
+    GET_TOTALES: (sucursalId: number, moneda: string = 'ARS') =>
       `${API_URL}/api/caja-banco/${sucursalId}/totales?moneda=${moneda}`,
     CREATE: `${API_URL}/api/caja-banco`,
     UPDATE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
-    PATCH_COMENTARIO: (id: number) => `${API_URL}/api/caja-banco/${id}/comentario`,
+    PATCH_COMENTARIO: (id: number) =>
+      `${API_URL}/api/caja-banco/${id}/comentario`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/caja-banco/${id}/estado`,
     TOGGLE_DEUDA: (id: number) => `${API_URL}/api/caja-banco/${id}/deuda`,
     DELETE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
@@ -140,8 +142,10 @@ export const API_ENDPOINTS = {
       TOGGLE_ACTIVO: (id: number) =>
         `${API_URL}/api/configuracion/usuarios/${id}/toggle-activo`,
       DELETE: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}`,
-      GET_SUCURSALES: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
-      UPDATE_SUCURSALES: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
+      GET_SUCURSALES: (id: number) =>
+        `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
+      UPDATE_SUCURSALES: (id: number) =>
+        `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
     },
     // Roles
     ROLES: {
@@ -160,7 +164,7 @@ export const API_ENDPOINTS = {
       sucursalId: number | string,
       startDate: string,
       endDate: string,
-      moneda: string = "ARS",
+      moneda: string = 'ARS',
     ) =>
       `${API_URL}/api/reportes/${sucursalId}?startDate=${startDate}T00:00:00&endDate=${endDate}T23:59:59&moneda=${moneda}`,
   },

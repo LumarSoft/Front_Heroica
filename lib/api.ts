@@ -1,4 +1,4 @@
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from '@/store/authStore';
 
 /**
  * Wrapper over the native fetch that automatically attaches the JWT Bearer
@@ -18,11 +18,11 @@ export function apiFetch(
   const defaultHeaders: Record<string, string> = {};
 
   if (!(options.body instanceof FormData)) {
-    defaultHeaders["Content-Type"] = "application/json";
+    defaultHeaders['Content-Type'] = 'application/json';
   }
 
   if (token) {
-    defaultHeaders["Authorization"] = `Bearer ${token}`;
+    defaultHeaders['Authorization'] = `Bearer ${token}`;
   }
 
   return fetch(url, {

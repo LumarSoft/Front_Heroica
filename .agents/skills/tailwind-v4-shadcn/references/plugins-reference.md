@@ -28,7 +28,7 @@ bun add -d @tailwindcss/typography
 
 ```css
 /* src/index.css */
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 ```
 
@@ -63,7 +63,7 @@ bun add -d @tailwindcss/forms
 
 ```css
 /* src/index.css */
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/forms";
 ```
 
@@ -88,7 +88,7 @@ These errors happen when using v3 syntax in v4 projects:
 ```js
 // tailwind.config.js
 module.exports = {
-  plugins: [require("@tailwindcss/typography")],
+  plugins: [require('@tailwindcss/typography')],
 };
 ```
 
@@ -98,7 +98,7 @@ module.exports = {
 
 ```css
 /* src/index.css */
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 ```
 
@@ -109,7 +109,7 @@ module.exports = {
 **❌ WRONG (@import instead of @plugin):**
 
 ```css
-@import "@tailwindcss/typography"; /* Doesn't work */
+@import '@tailwindcss/typography'; /* Doesn't work */
 ```
 
 **Why it fails**: Plugins must be loaded with `@plugin`, not `@import`.
@@ -117,7 +117,7 @@ module.exports = {
 **✅ CORRECT:**
 
 ```css
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 @plugin "@tailwindcss/forms";
 ```
@@ -130,7 +130,7 @@ Load multiple plugins by adding multiple `@plugin` directives:
 
 ```css
 /* src/index.css */
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 @plugin "@tailwindcss/forms";
 ```

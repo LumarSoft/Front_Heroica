@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { Trash2, Building2, ChevronDown, ChevronUp } from "lucide-react";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { useAuthStore } from "@/store/authStore";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { Trash2, Building2, ChevronDown, ChevronUp } from 'lucide-react';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -15,18 +15,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface Usuario {
   id: number;
@@ -55,52 +55,57 @@ interface UsuarioForm {
   email: string;
   password: string;
   nombre: string;
-  rol_id: number | "";
+  rol_id: number | '';
   sucursal_ids: number[];
   must_change_password: boolean;
 }
 
 const DEFAULT_FORM: UsuarioForm = {
-  email: "",
-  password: "",
-  nombre: "",
-  rol_id: "",
+  email: '',
+  password: '',
+  nombre: '',
+  rol_id: '',
   sucursal_ids: [],
   must_change_password: true,
 };
 
 function getInitials(nombre: string) {
   return nombre
-    .split(" ")
+    .split(' ')
     .map((n) => n[0])
     .slice(0, 2)
-    .join("")
+    .join('')
     .toUpperCase();
 }
 
 const ROL_BADGE_COLORS: Record<string, string> = {
-  superadmin: "bg-purple-50 text-purple-700 border border-purple-200",
-  admin: "bg-blue-50 text-blue-700 border border-blue-200",
-  directivo: "bg-amber-50 text-amber-700 border border-amber-200",
-  gerente: "bg-green-50 text-green-700 border border-green-200",
+  superadmin: 'bg-purple-50 text-purple-700 border border-purple-200',
+  admin: 'bg-blue-50 text-blue-700 border border-blue-200',
+  directivo: 'bg-amber-50 text-amber-700 border border-amber-200',
+  gerente: 'bg-green-50 text-green-700 border border-green-200',
 };
 
 function getRolBadgeClass(rolNombre: string) {
-  return ROL_BADGE_COLORS[rolNombre?.toLowerCase()] || "bg-gray-50 text-gray-700 border border-gray-200";
+  return (
+    ROL_BADGE_COLORS[rolNombre?.toLowerCase()] ||
+    'bg-gray-50 text-gray-700 border border-gray-200'
+  );
 }
 
 function getRolLabel(rolNombre: string) {
   const labels: Record<string, string> = {
-    superadmin: "Super Admin",
-    admin: "Administrador",
-    directivo: "Directivo",
-    gerente: "Gerente",
+    superadmin: 'Super Admin',
+    admin: 'Administrador',
+    directivo: 'Directivo',
+    gerente: 'Gerente',
   };
   return labels[rolNombre?.toLowerCase()] || rolNombre;
 }
 
 export function UsuariosSection() {
-  const canGestionarUsuarios = useAuthStore((state) => state.canGestionarUsuarios());
+  const canGestionarUsuarios = useAuthStore((state) =>
+    state.canGestionarUsuarios(),
+  );
   const currentUser = useAuthStore((state) => state.user);
 
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -112,13 +117,16 @@ export function UsuariosSection() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [form, setForm] = useState<UsuarioForm>(DEFAULT_FORM);
   const [isSaving, setIsSaving] = useState(false);
-  const [formError, setFormError] = useState("");
+  const [formError, setFormError] = useState('');
   const [showSucursales, setShowSucursales] = useState(false);
 
   // Sucursales dialog (editar sucursales de usuario existente)
   const [sucursalesDialogOpen, setSucursalesDialogOpen] = useState(false);
-  const [editingSucursalesUser, setEditingSucursalesUser] = useState<Usuario | null>(null);
-  const [sucursalesSeleccionadas, setSucursalesSeleccionadas] = useState<number[]>([]);
+  const [editingSucursalesUser, setEditingSucursalesUser] =
+    useState<Usuario | null>(null);
+  const [sucursalesSeleccionadas, setSucursalesSeleccionadas] = useState<
+    number[]
+  >([]);
   const [isSavingSucursales, setIsSavingSucursales] = useState(false);
 
   // Delete dialog
@@ -152,7 +160,7 @@ export function UsuariosSection() {
       if (dataR.success) setRoles(dataR.data);
       if (dataS.success) setSucursales(dataS.data);
     } catch {
-      toast.error("Error al cargar datos");
+      toast.error('Error al cargar datos');
     } finally {
       setIsLoading(false);
     }
@@ -160,18 +168,18 @@ export function UsuariosSection() {
 
   const handleSave = async () => {
     if (!form.email || !form.password || !form.nombre || !form.rol_id) {
-      setFormError("Todos los campos obligatorios son requeridos");
+      setFormError('Todos los campos obligatorios son requeridos');
       return;
     }
     if (form.password.length < 6) {
-      setFormError("La contraseña debe tener al menos 6 caracteres");
+      setFormError('La contraseña debe tener al menos 6 caracteres');
       return;
     }
     setIsSaving(true);
-    setFormError("");
+    setFormError('');
     try {
       const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.USUARIOS.CREATE, {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({
           email: form.email,
           password: form.password,
@@ -191,7 +199,7 @@ export function UsuariosSection() {
         setFormError(data.message);
       }
     } catch {
-      setFormError("Error al crear usuario");
+      setFormError('Error al crear usuario');
     } finally {
       setIsSaving(false);
     }
@@ -201,17 +209,17 @@ export function UsuariosSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.USUARIOS.UPDATE_ROL(userId),
-        { method: "PUT", body: JSON.stringify({ rol_id: nuevoRolId }) },
+        { method: 'PUT', body: JSON.stringify({ rol_id: nuevoRolId }) },
       );
       const data = await res.json();
       if (data.success) {
-        toast.success(data.message || "Rol actualizado");
+        toast.success(data.message || 'Rol actualizado');
         await fetchAll();
       } else {
-        toast.error(data.message || "Error al actualizar rol");
+        toast.error(data.message || 'Error al actualizar rol');
       }
     } catch {
-      toast.error("Error al actualizar rol del usuario");
+      toast.error('Error al actualizar rol del usuario');
     }
   };
 
@@ -219,17 +227,17 @@ export function UsuariosSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.USUARIOS.TOGGLE_ACTIVO(userId),
-        { method: "PUT" },
+        { method: 'PUT' },
       );
       const data = await res.json();
       if (data.success) {
         toast.success(data.message);
         await fetchAll();
       } else {
-        toast.error(data.message || "Error al cambiar estado");
+        toast.error(data.message || 'Error al cambiar estado');
       }
     } catch {
-      toast.error("Error al cambiar estado del usuario");
+      toast.error('Error al cambiar estado del usuario');
     }
   };
 
@@ -244,19 +252,19 @@ export function UsuariosSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.USUARIOS.DELETE(usuarioToDelete.id),
-        { method: "DELETE" },
+        { method: 'DELETE' },
       );
       const data = await res.json();
       if (data.success) {
-        toast.success("Usuario eliminado correctamente");
+        toast.success('Usuario eliminado correctamente');
         setUsuarios((prev) => prev.filter((u) => u.id !== usuarioToDelete.id));
         setDeleteDialogOpen(false);
         setUsuarioToDelete(null);
       } else {
-        toast.error(data.message || "Error al eliminar usuario");
+        toast.error(data.message || 'Error al eliminar usuario');
       }
     } catch {
-      toast.error("Error al eliminar usuario");
+      toast.error('Error al eliminar usuario');
     } finally {
       setIsDeleting(false);
     }
@@ -266,7 +274,7 @@ export function UsuariosSection() {
     setEditingSucursalesUser(usuario);
     try {
       const res = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.USUARIOS.GET_SUCURSALES(usuario.id)
+        API_ENDPOINTS.CONFIGURACION.USUARIOS.GET_SUCURSALES(usuario.id),
       );
       const data = await res.json();
       if (data.success) {
@@ -283,21 +291,23 @@ export function UsuariosSection() {
     setIsSavingSucursales(true);
     try {
       const res = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.USUARIOS.UPDATE_SUCURSALES(editingSucursalesUser.id),
+        API_ENDPOINTS.CONFIGURACION.USUARIOS.UPDATE_SUCURSALES(
+          editingSucursalesUser.id,
+        ),
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify({ sucursal_ids: sucursalesSeleccionadas }),
-        }
+        },
       );
       const data = await res.json();
       if (data.success) {
-        toast.success("Sucursales actualizadas");
+        toast.success('Sucursales actualizadas');
         setSucursalesDialogOpen(false);
       } else {
-        toast.error(data.message || "Error al actualizar sucursales");
+        toast.error(data.message || 'Error al actualizar sucursales');
       }
     } catch {
-      toast.error("Error al actualizar sucursales");
+      toast.error('Error al actualizar sucursales');
     } finally {
       setIsSavingSucursales(false);
     }
@@ -314,7 +324,7 @@ export function UsuariosSection() {
 
   const toggleSucursalEdit = (id: number) => {
     setSucursalesSeleccionadas((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
     );
   };
 
@@ -328,7 +338,7 @@ export function UsuariosSection() {
     setIsResetting(true);
     try {
       const res = await apiFetch(API_ENDPOINTS.AUTH.RESET_2FA, {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({ userId: usuarioToReset.id }),
       });
       const data = await res.json();
@@ -338,16 +348,16 @@ export function UsuariosSection() {
         setUsuarioToReset(null);
         await fetchAll();
       } else {
-        toast.error(data.message || "Error al resetear 2FA");
+        toast.error(data.message || 'Error al resetear 2FA');
       }
     } catch {
-      toast.error("Error al resetear 2FA");
+      toast.error('Error al resetear 2FA');
     } finally {
       setIsResetting(false);
     }
   };
 
-  const isMainAdmin = (email: string) => email === "admin@heroica.com";
+  const isMainAdmin = (email: string) => email === 'admin@heroica.com';
 
   if (isLoading) {
     return (
@@ -366,14 +376,19 @@ export function UsuariosSection() {
           <div>
             <CardTitle className="text-[#002868]">Usuarios y Roles</CardTitle>
             <p className="text-sm text-[#666666] mt-0.5">
-              {usuarios.length} usuario{usuarios.length !== 1 ? "s" : ""}{" "}
-              registrado{usuarios.length !== 1 ? "s" : ""}
+              {usuarios.length} usuario{usuarios.length !== 1 ? 's' : ''}{' '}
+              registrado{usuarios.length !== 1 ? 's' : ''}
             </p>
           </div>
           {canGestionarUsuarios && (
             <Button
               id="btn-nuevo-usuario"
-              onClick={() => { setForm(DEFAULT_FORM); setFormError(""); setShowSucursales(false); setIsCreateOpen(true); }}
+              onClick={() => {
+                setForm(DEFAULT_FORM);
+                setFormError('');
+                setShowSucursales(false);
+                setIsCreateOpen(true);
+              }}
               className="bg-[#002868] hover:bg-[#003d8f] text-white"
             >
               + Nuevo Usuario
@@ -396,12 +411,14 @@ export function UsuariosSection() {
                 return (
                   <div
                     key={usuario.id}
-                    className={`flex items-center gap-4 px-6 py-4 transition-colors ${usuario.activo ? "hover:bg-gray-50/80" : "bg-gray-50/50"}`}
+                    className={`flex items-center gap-4 px-6 py-4 transition-colors ${usuario.activo ? 'hover:bg-gray-50/80' : 'bg-gray-50/50'}`}
                   >
                     {/* Avatar */}
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 select-none ${
-                        usuario.activo ? "bg-[#002868]/10 text-[#002868]" : "bg-gray-200 text-gray-400"
+                        usuario.activo
+                          ? 'bg-[#002868]/10 text-[#002868]'
+                          : 'bg-gray-200 text-gray-400'
                       }`}
                     >
                       {getInitials(usuario.nombre)}
@@ -410,8 +427,12 @@ export function UsuariosSection() {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-[#1A1A1A] truncate">{usuario.nombre}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
+                        <span className="font-semibold text-[#1A1A1A] truncate">
+                          {usuario.nombre}
+                        </span>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}
+                        >
                           {badgeLabel}
                         </span>
                         {usuario.two_factor_enabled && (
@@ -432,8 +453,16 @@ export function UsuariosSection() {
                         )}
                         {usuario.two_factor_enabled && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-200 flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                            <svg
+                              className="w-3 h-3"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                clipRule="evenodd"
+                              />
                             </svg>
                             2FA
                           </span>
@@ -466,9 +495,13 @@ export function UsuariosSection() {
                           No editable
                         </span>
                       ) : isSelf ? (
-                        <span className="text-xs text-[#999999] italic px-2">Sesión actual</span>
+                        <span className="text-xs text-[#999999] italic px-2">
+                          Sesión actual
+                        </span>
                       ) : !canGestionarUsuarios ? (
-                        <span className="text-xs text-[#999999] italic px-2">Solo lectura</span>
+                        <span className="text-xs text-[#999999] italic px-2">
+                          Solo lectura
+                        </span>
                       ) : (
                         <>
                           {/* Selector de rol dinámico */}
@@ -483,7 +516,10 @@ export function UsuariosSection() {
                             </SelectTrigger>
                             <SelectContent>
                               {roles.map((rol) => (
-                                <SelectItem key={rol.id} value={rol.id.toString()}>
+                                <SelectItem
+                                  key={rol.id}
+                                  value={rol.id.toString()}
+                                >
                                   {getRolLabel(rol.nombre)}
                                 </SelectItem>
                               ))}
@@ -514,7 +550,7 @@ export function UsuariosSection() {
                               htmlFor={`activo-${usuario.id}`}
                               className="text-xs text-[#666666] cursor-pointer w-12 select-none"
                             >
-                              {usuario.activo ? "Activo" : "Inactivo"}
+                              {usuario.activo ? 'Activo' : 'Inactivo'}
                             </Label>
                           </div>
 
@@ -553,7 +589,9 @@ export function UsuariosSection() {
         <DialogContent className="sm:max-w-[500px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden max-h-[90vh] flex flex-col">
           <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0] flex-shrink-0">
             <DialogHeader className="p-0">
-              <DialogTitle className="text-xl font-bold text-[#1A1A1A]">Nuevo Usuario</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-[#1A1A1A]">
+                Nuevo Usuario
+              </DialogTitle>
               <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
                 Creá un nuevo usuario y asignale un rol y sucursales
               </DialogDescription>
@@ -624,7 +662,9 @@ export function UsuariosSection() {
                     <SelectItem key={rol.id} value={rol.id.toString()}>
                       {getRolLabel(rol.nombre)}
                       {rol.descripcion && (
-                        <span className="text-xs text-[#999] ml-2">— {rol.descripcion}</span>
+                        <span className="text-xs text-[#999] ml-2">
+                          — {rol.descripcion}
+                        </span>
                       )}
                     </SelectItem>
                   ))}
@@ -643,7 +683,10 @@ export function UsuariosSection() {
                 className="border-[#C0C0C0] data-[state=checked]:bg-[#002868] data-[state=checked]:border-[#002868]"
               />
               <div>
-                <Label htmlFor="must-change-password" className="text-sm font-medium text-[#333] cursor-pointer">
+                <Label
+                  htmlFor="must-change-password"
+                  className="text-sm font-medium text-[#333] cursor-pointer"
+                >
                   Forzar cambio de contraseña
                 </Label>
                 <p className="text-xs text-[#999] mt-0.5">
@@ -663,8 +706,14 @@ export function UsuariosSection() {
                   Sucursales asignadas
                 </Label>
                 <span className="text-xs text-[#002868] ml-auto flex items-center gap-1 font-medium">
-                  {form.sucursal_ids.length > 0 ? `${form.sucursal_ids.length} seleccionada${form.sucursal_ids.length !== 1 ? "s" : ""}` : "Todas"}
-                  {showSucursales ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  {form.sucursal_ids.length > 0
+                    ? `${form.sucursal_ids.length} seleccionada${form.sucursal_ids.length !== 1 ? 's' : ''}`
+                    : 'Todas'}
+                  {showSucursales ? (
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  )}
                 </span>
               </button>
 
@@ -672,7 +721,8 @@ export function UsuariosSection() {
                 <div className="mt-2 border border-[#E0E0E0] rounded-lg overflow-hidden">
                   <div className="p-2 bg-[#F8F9FA] border-b border-[#E8E8E8]">
                     <p className="text-xs text-[#777]">
-                      Sin selección = acceso a todas. Seleccioná para restringir.
+                      Sin selección = acceso a todas. Seleccioná para
+                      restringir.
                     </p>
                   </div>
                   <div className="max-h-36 overflow-y-auto divide-y divide-[#F5F5F5]">
@@ -688,7 +738,9 @@ export function UsuariosSection() {
                           onCheckedChange={() => toggleSucursalForm(s.id)}
                           className="border-[#C0C0C0] data-[state=checked]:bg-[#002868] data-[state=checked]:border-[#002868]"
                         />
-                        <span className="text-sm text-[#1A1A1A]">{s.nombre}</span>
+                        <span className="text-sm text-[#1A1A1A]">
+                          {s.nombre}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -712,10 +764,16 @@ export function UsuariosSection() {
               <Button
                 id="btn-crear-usuario"
                 onClick={handleSave}
-                disabled={isSaving || !form.email || !form.password || !form.nombre || !form.rol_id}
+                disabled={
+                  isSaving ||
+                  !form.email ||
+                  !form.password ||
+                  !form.nombre ||
+                  !form.rol_id
+                }
                 className="bg-[#002868] hover:bg-[#003d8f] text-white"
               >
-                {isSaving ? "Creando..." : "Crear Usuario"}
+                {isSaving ? 'Creando...' : 'Crear Usuario'}
               </Button>
             </DialogFooter>
           </div>
@@ -723,7 +781,10 @@ export function UsuariosSection() {
       </Dialog>
 
       {/* Dialog: Gestionar sucursales de usuario existente */}
-      <Dialog open={sucursalesDialogOpen} onOpenChange={setSucursalesDialogOpen}>
+      <Dialog
+        open={sucursalesDialogOpen}
+        onOpenChange={setSucursalesDialogOpen}
+      >
         <DialogContent className="sm:max-w-[440px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
           <div className="px-7 pt-7 pb-4 border-b border-[#F0F0F0]">
             <DialogHeader className="p-0">
@@ -731,7 +792,8 @@ export function UsuariosSection() {
                 Sucursales de {editingSucursalesUser?.nombre}
               </DialogTitle>
               <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
-                Seleccioná las sucursales a las que puede acceder. Sin selección = acceso a todas.
+                Seleccioná las sucursales a las que puede acceder. Sin selección
+                = acceso a todas.
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -756,8 +818,8 @@ export function UsuariosSection() {
             </div>
             <p className="text-xs text-[#999] mt-2 text-center">
               {sucursalesSeleccionadas.length > 0
-                ? `${sucursalesSeleccionadas.length} sucursal${sucursalesSeleccionadas.length !== 1 ? "es" : ""} seleccionada${sucursalesSeleccionadas.length !== 1 ? "s" : ""}`
-                : "Acceso a todas las sucursales"}
+                ? `${sucursalesSeleccionadas.length} sucursal${sucursalesSeleccionadas.length !== 1 ? 'es' : ''} seleccionada${sucursalesSeleccionadas.length !== 1 ? 's' : ''}`
+                : 'Acceso a todas las sucursales'}
             </p>
           </div>
 
@@ -777,7 +839,7 @@ export function UsuariosSection() {
                 disabled={isSavingSucursales}
                 className="bg-[#002868] hover:bg-[#003d8f] text-white"
               >
-                {isSavingSucursales ? "Guardando..." : "Guardar"}
+                {isSavingSucursales ? 'Guardando...' : 'Guardar'}
               </Button>
             </DialogFooter>
           </div>
@@ -788,7 +850,9 @@ export function UsuariosSection() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-red-600">Eliminar Usuario</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-red-600">
+              Eliminar Usuario
+            </DialogTitle>
             <DialogDescription className="text-[#666666]">
               Esta acción no se puede deshacer. ¿Estás seguro?
             </DialogDescription>
@@ -833,7 +897,7 @@ export function UsuariosSection() {
                   <span>Eliminando...</span>
                 </div>
               ) : (
-                "Eliminar Usuario"
+                'Eliminar Usuario'
               )}
             </Button>
           </DialogFooter>
@@ -891,7 +955,7 @@ export function UsuariosSection() {
                   <span>Reseteando...</span>
                 </div>
               ) : (
-                "Resetear 2FA"
+                'Resetear 2FA'
               )}
             </Button>
           </DialogFooter>

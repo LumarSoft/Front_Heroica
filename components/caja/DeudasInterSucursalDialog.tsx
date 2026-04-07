@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { formatFecha, formatMonto } from "@/lib/formatters";
+} from '@/components/ui/dialog';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { formatFecha, formatMonto } from '@/lib/formatters';
 
 function extraerSucursalRelacionada(descripcion?: string): string {
-  if (!descripcion) return "-";
+  if (!descripcion) return '-';
 
   const patrones = [
     /hacia (.+)$/i,
@@ -30,7 +30,7 @@ function extraerSucursalRelacionada(descripcion?: string): string {
     if (match) return match[1].trim();
   }
 
-  return "-";
+  return '-';
 }
 
 interface DeudaRow {
@@ -41,10 +41,10 @@ interface DeudaRow {
   concepto: string;
   monto: number;
   descripcion?: string;
-  tipo: "ingreso" | "egreso";
+  tipo: 'ingreso' | 'egreso';
   tipo_movimiento: string;
   estado: string;
-  moneda?: "ARS" | "USD";
+  moneda?: 'ARS' | 'USD';
 }
 
 interface DeudasInterSucursalDialogProps {
@@ -58,10 +58,10 @@ export function DeudasInterSucursalDialog({
   onOpenChange,
   sucursalId,
 }: DeudasInterSucursalDialogProps) {
-  const hoy = new Date().toISOString().split("T")[0];
+  const hoy = new Date().toISOString().split('T')[0];
   const haceTreintaDias = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     .toISOString()
-    .split("T")[0];
+    .split('T')[0];
 
   const [fechaInicio, setFechaInicio] = useState(haceTreintaDias);
   const [fechaFin, setFechaFin] = useState(hoy);
@@ -82,7 +82,7 @@ export function DeudasInterSucursalDialog({
         setDeudas(data.data ?? []);
       }
     } catch (err) {
-      console.error("Error al cargar deudas:", err);
+      console.error('Error al cargar deudas:', err);
     } finally {
       setIsLoading(false);
     }
@@ -93,11 +93,11 @@ export function DeudasInterSucursalDialog({
   }, [open, fetchDeudas]);
 
   const totalAFavor = deudas
-    .filter((d) => d.tipo === "ingreso")
+    .filter((d) => d.tipo === 'ingreso')
     .reduce((sum, d) => sum + Math.abs(d.monto), 0);
 
   const totalEnContra = deudas
-    .filter((d) => d.tipo === "egreso")
+    .filter((d) => d.tipo === 'egreso')
     .reduce((sum, d) => sum + Math.abs(d.monto), 0);
 
   const balance = totalAFavor - totalEnContra;
@@ -163,7 +163,7 @@ export function DeudasInterSucursalDialog({
               disabled={isLoading}
               className="h-9 px-5 bg-[#002868] hover:bg-[#003d8f] text-white text-sm font-medium cursor-pointer"
             >
-              {isLoading ? "Cargando..." : "Filtrar"}
+              {isLoading ? 'Cargando...' : 'Filtrar'}
             </Button>
           </div>
         </div>
@@ -240,24 +240,24 @@ export function DeudasInterSucursalDialog({
                     <td className="py-2.5 px-3">
                       <span
                         className={`inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          deuda.tipo === "ingreso"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-rose-100 text-rose-700"
+                          deuda.tipo === 'ingreso'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-rose-100 text-rose-700'
                         }`}
                       >
-                        {deuda.tipo === "ingreso" ? "A cobrar" : "A pagar"}
+                        {deuda.tipo === 'ingreso' ? 'A cobrar' : 'A pagar'}
                       </span>
                     </td>
                     <td
                       className={`py-2.5 px-3 text-right font-semibold whitespace-nowrap ${
-                        deuda.tipo === "ingreso"
-                          ? "text-emerald-600"
-                          : "text-rose-600"
+                        deuda.tipo === 'ingreso'
+                          ? 'text-emerald-600'
+                          : 'text-rose-600'
                       }`}
                     >
                       {formatMonto(
                         Math.abs(deuda.monto),
-                        deuda.moneda ?? "ARS",
+                        deuda.moneda ?? 'ARS',
                       )}
                     </td>
                   </tr>
@@ -294,7 +294,7 @@ export function DeudasInterSucursalDialog({
                     Balance:
                   </span>
                   <span
-                    className={`text-sm font-bold ${balance >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                    className={`text-sm font-bold ${balance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
                   >
                     {formatMonto(balance)}
                   </span>

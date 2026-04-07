@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { categoriaSchema } from "@/lib/schemas";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { categoriaSchema } from '@/lib/schemas';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -14,39 +14,39 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
+} from '@/components/ui/select';
+import { DeleteDialog } from '@/components/ui/delete-dialog';
 
 interface Categoria {
   id: number;
   nombre: string;
   descripcion: string;
   activo: boolean;
-  tipo: "ingreso" | "egreso";
+  tipo: 'ingreso' | 'egreso';
 }
 
 interface CategoriaForm {
   id: number;
   nombre: string;
   descripcion: string;
-  tipo: "ingreso" | "egreso";
+  tipo: 'ingreso' | 'egreso';
 }
 
 const DEFAULT_FORM: CategoriaForm = {
   id: 0,
-  nombre: "",
-  descripcion: "",
-  tipo: "egreso",
+  nombre: '',
+  descripcion: '',
+  tipo: 'egreso',
 };
 
 export function CategoriasSection() {
@@ -54,7 +54,7 @@ export function CategoriasSection() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [form, setForm] = useState<CategoriaForm>(DEFAULT_FORM);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{
     id: number;
     nombre: string;
@@ -72,7 +72,7 @@ export function CategoriasSection() {
 
   const handleOpenNew = () => {
     setForm(DEFAULT_FORM);
-    setError("");
+    setError('');
     setIsDialogOpen(true);
   };
 
@@ -80,27 +80,27 @@ export function CategoriasSection() {
     setForm({
       id: cat.id,
       nombre: cat.nombre,
-      descripcion: cat.descripcion || "",
+      descripcion: cat.descripcion || '',
       tipo: cat.tipo,
     });
-    setError("");
+    setError('');
     setIsDialogOpen(true);
   };
 
   const handleSave = async () => {
     const validation = categoriaSchema.safeParse(form);
     if (!validation.success) {
-      setError(validation.error.issues[0]?.message ?? "Error de validación");
+      setError(validation.error.issues[0]?.message ?? 'Error de validación');
       return;
     }
     setIsSaving(true);
-    setError("");
+    setError('');
     try {
       const url = form.id
         ? API_ENDPOINTS.CONFIGURACION.CATEGORIAS.UPDATE(form.id)
         : API_ENDPOINTS.CONFIGURACION.CATEGORIAS.CREATE;
       const res = await apiFetch(url, {
-        method: form.id ? "PUT" : "POST",
+        method: form.id ? 'PUT' : 'POST',
         body: JSON.stringify(form),
       });
       const data = await res.json();
@@ -112,7 +112,7 @@ export function CategoriasSection() {
         setError(data.message);
       }
     } catch {
-      setError("Error al guardar categoría");
+      setError('Error al guardar categoría');
     } finally {
       setIsSaving(false);
     }
@@ -123,7 +123,7 @@ export function CategoriasSection() {
     try {
       const res = await apiFetch(
         API_ENDPOINTS.CONFIGURACION.CATEGORIAS.DELETE(deleteTarget.id),
-        { method: "DELETE" },
+        { method: 'DELETE' },
       );
       const data = await res.json();
       if (data.success) {
@@ -131,7 +131,7 @@ export function CategoriasSection() {
         await fetchCategorias();
       }
     } catch {
-      toast.error("Error al eliminar categoría");
+      toast.error('Error al eliminar categoría');
     } finally {
       setDeleteTarget(null);
     }
@@ -161,12 +161,12 @@ export function CategoriasSection() {
                     {cat.nombre}
                     <span
                       className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
-                        cat.tipo === "ingreso"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-rose-100 text-rose-800"
+                        cat.tipo === 'ingreso'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-rose-100 text-rose-800'
                       }`}
                     >
-                      {cat.tipo === "ingreso" ? "Ingreso" : "Egreso"}
+                      {cat.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}
                     </span>
                   </h3>
                   {cat.descripcion && (
@@ -203,12 +203,12 @@ export function CategoriasSection() {
           <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
             <DialogHeader className="p-0 border-0">
               <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
-                {form.id ? "Editar Categoría" : "Nueva Categoría"}
+                {form.id ? 'Editar Categoría' : 'Nueva Categoría'}
               </DialogTitle>
               <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
                 {form.id
-                  ? "Modifica los detalles de esta categoría"
-                  : "Agrega una nueva categoría al sistema"}
+                  ? 'Modifica los detalles de esta categoría'
+                  : 'Agrega una nueva categoría al sistema'}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -237,7 +237,7 @@ export function CategoriasSection() {
               </Label>
               <Textarea
                 id="cat-desc"
-                value={form.descripcion || ""}
+                value={form.descripcion || ''}
                 onChange={(e) =>
                   setForm({ ...form, descripcion: e.target.value })
                 }
@@ -253,8 +253,8 @@ export function CategoriasSection() {
                 Tipo *
               </Label>
               <Select
-                value={form.tipo || "egreso"}
-                onValueChange={(value: "ingreso" | "egreso") =>
+                value={form.tipo || 'egreso'}
+                onValueChange={(value: 'ingreso' | 'egreso') =>
                   setForm({ ...form, tipo: value })
                 }
               >
@@ -283,7 +283,7 @@ export function CategoriasSection() {
                 disabled={isSaving || !form.nombre}
                 className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all"
               >
-                {isSaving ? "Guardando..." : "Guardar"}
+                {isSaving ? 'Guardando...' : 'Guardar'}
               </Button>
             </DialogFooter>
           </div>
@@ -292,7 +292,7 @@ export function CategoriasSection() {
 
       <DeleteDialog
         open={!!deleteTarget}
-        nombre={deleteTarget?.nombre ?? ""}
+        nombre={deleteTarget?.nombre ?? ''}
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />

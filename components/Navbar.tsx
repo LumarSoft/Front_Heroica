@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Settings, LogOut, ClipboardList } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/store/authStore";
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Settings, LogOut, ClipboardList } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAuthStore } from '@/store/authStore';
 
 interface NavbarProps {
   userName?: string;
@@ -20,17 +20,19 @@ export default function Navbar({
   userRole,
   onLogout,
   showBackButton = false,
-  backUrl = "/sucursales",
+  backUrl = '/sucursales',
   sucursalNombre,
 }: NavbarProps) {
   const router = useRouter();
-  const canVerConfiguracion = useAuthStore((state) => state.canVerConfiguracion());
+  const canVerConfiguracion = useAuthStore((state) =>
+    state.canVerConfiguracion(),
+  );
 
   const greeting = (() => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Buenos días";
-    if (hour < 19) return "Buenas tardes";
-    return "Buenas noches";
+    if (hour < 12) return 'Buenos días';
+    if (hour < 19) return 'Buenas tardes';
+    return 'Buenas noches';
   })();
 
   return (
@@ -84,7 +86,7 @@ export default function Navbar({
               ) : userName ? (
                 <>
                   <p className="text-sm font-semibold text-[#002868]">
-                    {greeting}, {userName.split(" ")[0]}
+                    {greeting}, {userName.split(' ')[0]}
                   </p>
                   <p className="text-xs text-[#666666]">
                     Sistema de Contabilidad
@@ -119,7 +121,7 @@ export default function Navbar({
 
             {/* Tareas Button */}
             <Button
-              onClick={() => router.push("/tareas")}
+              onClick={() => router.push('/tareas')}
               variant="outline"
               className="border-[#002868] text-[#002868] hover:bg-[#002868] hover:text-white transition-all cursor-pointer"
             >
@@ -130,7 +132,7 @@ export default function Navbar({
             {/* Configuration Button */}
             {canVerConfiguracion && (
               <Button
-                onClick={() => router.push("/configuracion")}
+                onClick={() => router.push('/configuracion')}
                 variant="outline"
                 className="border-[#002868] text-[#002868] hover:bg-[#002868] hover:text-white transition-all cursor-pointer"
               >
@@ -169,7 +171,7 @@ export default function Navbar({
               ) : (
                 <>
                   <p className="text-sm font-semibold text-[#002868]">
-                    {greeting}, {userName?.split(" ")[0]}
+                    {greeting}, {userName?.split(' ')[0]}
                   </p>
                   <p className="text-xs text-[#666666] capitalize">
                     {userRole}

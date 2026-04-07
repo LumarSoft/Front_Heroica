@@ -6,7 +6,7 @@ Use the `@theme` directive for CSS-based configuration:
 
 ```css
 /* src/styles.css */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   /* Custom colors */
@@ -15,8 +15,8 @@ Use the `@theme` directive for CSS-based configuration:
   --color-brand-900: #1e3a8a;
 
   /* Custom fonts */
-  --font-display: "Inter", system-ui, sans-serif;
-  --font-mono: "Fira Code", monospace;
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-mono: 'Fira Code', monospace;
 
   /* Custom spacing */
   --spacing-128: 32rem;
@@ -51,21 +51,21 @@ Use the `@theme` directive for CSS-based configuration:
 ```javascript
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx,vue,svelte}"],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx,vue,svelte}'],
   theme: {
     extend: {
       colors: {
         primary: {
-          50: "#f0f9ff",
-          500: "#3b82f6",
-          900: "#1e3a8a",
+          50: '#f0f9ff',
+          500: '#3b82f6',
+          900: '#1e3a8a',
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       spacing: {
-        128: "32rem",
+        128: '32rem',
       },
     },
   },
@@ -79,8 +79,8 @@ export default {
 
 ```javascript
 // vite.config.ts
-import { defineConfig } from "vite";
-import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [tailwindcss()],
@@ -133,24 +133,24 @@ export default defineConfig({
 
 ```javascript
 // tailwind.config.js
-const plugin = require("tailwindcss/plugin");
+const plugin = require('tailwindcss/plugin');
 
 module.exports = {
   plugins: [
     plugin(function ({ addUtilities, addComponents, e, config }) {
       // Add custom utilities
       addUtilities({
-        ".content-auto": {
-          contentVisibility: "auto",
+        '.content-auto': {
+          contentVisibility: 'auto',
         },
       });
 
       // Add custom components
       addComponents({
-        ".btn": {
-          padding: ".5rem 1rem",
-          borderRadius: ".25rem",
-          fontWeight: "600",
+        '.btn': {
+          padding: '.5rem 1rem',
+          borderRadius: '.25rem',
+          fontWeight: '600',
         },
       });
     }),
@@ -171,14 +171,14 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          DEFAULT: "#3b82f6",
-          light: "#60a5fa",
-          dark: "#1d4ed8",
+          DEFAULT: '#3b82f6',
+          light: '#60a5fa',
+          dark: '#1d4ed8',
         },
       },
     },
   },
-  plugins: [require("@tailwindcss/forms"), require("@tailwindcss/typography")],
+  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')],
 };
 ```
 
@@ -187,6 +187,6 @@ module.exports = {
 ```javascript
 // tailwind.config.js
 module.exports = {
-  presets: [require("./tailwind-preset.js")],
+  presets: [require('./tailwind-preset.js')],
 };
 ```

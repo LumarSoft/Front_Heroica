@@ -1,25 +1,25 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useRef, useCallback } from "react";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { useAuthGuard } from "@/hooks/use-auth-guard";
-import { useEmployeeNotifications } from "@/hooks/use-employee-notifications";
-import { formatMonto } from "@/lib/formatters";
-import type { Sucursal, Documento, CuentaBancaria } from "@/lib/types";
+} from '@/components/ui/dialog';
+import { useAuthGuard } from '@/hooks/use-auth-guard';
+import { useEmployeeNotifications } from '@/hooks/use-employee-notifications';
+import { formatMonto } from '@/lib/formatters';
+import type { Sucursal, Documento, CuentaBancaria } from '@/lib/types';
 import {
   Mail,
   Paperclip,
@@ -27,10 +27,10 @@ import {
   Download,
   Trash2,
   AlertTriangle,
-} from "lucide-react";
-import { PageLoadingSpinner } from "@/components/ui/loading-spinner";
-import { ErrorBanner } from "@/components/ui/error-banner";
-import { useAuthStore } from "@/store/authStore";
+} from 'lucide-react';
+import { PageLoadingSpinner } from '@/components/ui/loading-spinner';
+import { ErrorBanner } from '@/components/ui/error-banner';
+import { useAuthStore } from '@/store/authStore';
 
 export default function SucursalDetailPage() {
   const router = useRouter();
@@ -39,41 +39,45 @@ export default function SucursalDetailPage() {
   const { user, isGuardLoading } = useAuthGuard();
 
   const canVerReportes = useAuthStore((state) => state.canVerReportes());
-  const canAprobarPendientes = useAuthStore((state) => state.canAprobarPendientes());
+  const canAprobarPendientes = useAuthStore((state) =>
+    state.canAprobarPendientes(),
+  );
   const canVerMovimientos = useAuthStore((state) => state.canVerMovimientos());
   const canVerPendientes = useAuthStore((state) => state.canVerPendientes());
-  const canGestionarSucursales = useAuthStore((state) => state.canGestionarSucursales());
+  const canGestionarSucursales = useAuthStore((state) =>
+    state.canGestionarSucursales(),
+  );
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const dateInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [pendingCount, setPendingCount] = useState(0);
   const searchParams = useSearchParams();
-  const [moneda, setMoneda] = useState<"ARS" | "USD">(
-    (searchParams.get("moneda") as "ARS" | "USD") || "ARS",
+  const [moneda, setMoneda] = useState<'ARS' | 'USD'>(
+    (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS',
   );
 
-  const handleMonedaChange = (newMoneda: "ARS" | "USD") => {
+  const handleMonedaChange = (newMoneda: 'ARS' | 'USD') => {
     setMoneda(newMoneda);
     router.replace(`/sucursales/${params.id}?moneda=${newMoneda}`);
   };
 
   // Notificaciones para empleados (aprobaciones / rechazos de pagos pendientes)
-  const isEmployee = user?.rol === "empleado";
+  const isEmployee = user?.rol === 'empleado';
   const { unseenCount: employeeUnseenCount, clearUnseenCount } =
     useEmployeeNotifications(user?.id, sucursalId, isEmployee);
 
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
   const [isUploadingDoc, setIsUploadingDoc] = useState(false);
 
   const [formData, setFormData] = useState({
-    nombre: "",
-    razon_social: "",
-    cuit: "",
-    direccion: "",
-    email_correspondencia: "",
+    nombre: '',
+    razon_social: '',
+    cuit: '',
+    direccion: '',
+    email_correspondencia: '',
   });
 
   // Estados para totales de cajas
@@ -106,10 +110,10 @@ export default function SucursalDetailPage() {
   );
   const [loadingCuentas, setLoadingCuentas] = useState(false);
   const [nuevaCuenta, setNuevaCuenta] = useState({
-    cbu: "",
-    alias: "",
-    tipo_cuenta: "",
-    banco: "",
+    cbu: '',
+    alias: '',
+    tipo_cuenta: '',
+    banco: '',
   });
   const [isAddingCuenta, setIsAddingCuenta] = useState(false);
   const [isSavingCuenta, setIsSavingCuenta] = useState(false);
@@ -177,7 +181,7 @@ export default function SucursalDetailPage() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || "Error al cargar sucursal");
+          throw new Error(data.message || 'Error al cargar sucursal');
         }
 
         setSucursal(data.data);
@@ -186,11 +190,11 @@ export default function SucursalDetailPage() {
           razon_social: data.data.razon_social,
           cuit: data.data.cuit,
           direccion: data.data.direccion,
-          email_correspondencia: data.data.email_correspondencia || "",
+          email_correspondencia: data.data.email_correspondencia || '',
         });
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : "Error al cargar sucursal";
+          err instanceof Error ? err.message : 'Error al cargar sucursal';
         setError(message);
       } finally {
         setIsLoading(false);
@@ -235,8 +239,8 @@ export default function SucursalDetailPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let { name, value } = e.target;
 
-    if (name === "cuit") {
-      const digits = value.replace(/\D/g, "");
+    if (name === 'cuit') {
+      const digits = value.replace(/\D/g, '');
       if (digits.length <= 11) {
         if (digits.length > 2 && digits.length <= 10) {
           value = `${digits.substring(0, 2)}-${digits.substring(2)}`;
@@ -259,13 +263,13 @@ export default function SucursalDetailPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    setError("");
+    setError('');
 
     try {
       const response = await apiFetch(
         API_ENDPOINTS.SUCURSALES.UPDATE(sucursalId),
         {
-          method: "PUT",
+          method: 'PUT',
           body: JSON.stringify(formData),
         },
       );
@@ -273,14 +277,14 @@ export default function SucursalDetailPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Error al actualizar sucursal");
+        throw new Error(data.message || 'Error al actualizar sucursal');
       }
 
       setSucursal(data.data);
-      toast.success("Sucursal actualizada exitosamente");
+      toast.success('Sucursal actualizada exitosamente');
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Error al actualizar sucursal";
+        err instanceof Error ? err.message : 'Error al actualizar sucursal';
       setError(message);
     } finally {
       setIsSaving(false);
@@ -293,18 +297,18 @@ export default function SucursalDetailPage() {
     file: File,
   ) => {
     setIsUploadingDoc(true);
-    setError("");
+    setError('');
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("tipo_documento", tipoDoc);
-      formData.append("fecha_vencimiento", fechaVenc);
+      formData.append('file', file);
+      formData.append('tipo_documento', tipoDoc);
+      formData.append('fecha_vencimiento', fechaVenc);
 
       const response = await apiFetch(
         API_ENDPOINTS.SUCURSALES.UPLOAD_DOCUMENTO(sucursalId),
         {
-          method: "POST",
+          method: 'POST',
           body: formData,
         },
       );
@@ -312,14 +316,14 @@ export default function SucursalDetailPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Error al subir documento");
+        throw new Error(data.message || 'Error al subir documento');
       }
 
-      toast.success("Documento subido exitosamente");
+      toast.success('Documento subido exitosamente');
       await fetchDocumentos();
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Error al subir documento";
+        err instanceof Error ? err.message : 'Error al subir documento';
       setError(message);
     } finally {
       setIsUploadingDoc(false);
@@ -328,7 +332,7 @@ export default function SucursalDetailPage() {
 
   const handleAddCuenta = async () => {
     if (!nuevaCuenta.cbu) {
-      setError("El CBU es obligatorio");
+      setError('El CBU es obligatorio');
       return;
     }
     if (nuevaCuenta.cbu.length !== 22) {
@@ -338,23 +342,23 @@ export default function SucursalDetailPage() {
       return;
     }
     setIsSavingCuenta(true);
-    setError("");
+    setError('');
     try {
       const response = await apiFetch(
         API_ENDPOINTS.CUENTAS_BANCARIAS.CREATE(sucursalId),
         {
-          method: "POST",
+          method: 'POST',
           body: JSON.stringify(nuevaCuenta),
         },
       );
-      if (!response.ok) throw new Error("Error al crear cuenta");
-      toast.success("Cuenta agregada exitosamente");
-      setNuevaCuenta({ cbu: "", alias: "", tipo_cuenta: "", banco: "" });
+      if (!response.ok) throw new Error('Error al crear cuenta');
+      toast.success('Cuenta agregada exitosamente');
+      setNuevaCuenta({ cbu: '', alias: '', tipo_cuenta: '', banco: '' });
       setIsAddingCuenta(false);
       await fetchCuentasBancarias();
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Error al agregar cuenta";
+        err instanceof Error ? err.message : 'Error al agregar cuenta';
       setError(message);
     } finally {
       setIsSavingCuenta(false);
@@ -370,13 +374,13 @@ export default function SucursalDetailPage() {
     try {
       const response = await apiFetch(
         API_ENDPOINTS.CUENTAS_BANCARIAS.DELETE(cuentaToDeleteId),
-        { method: "DELETE" },
+        { method: 'DELETE' },
       );
-      if (!response.ok) throw new Error("Error al eliminar cuenta");
-      toast.success("Cuenta eliminada");
+      if (!response.ok) throw new Error('Error al eliminar cuenta');
+      toast.success('Cuenta eliminada');
       await fetchCuentasBancarias();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Error al eliminar";
+      const message = err instanceof Error ? err.message : 'Error al eliminar';
       setError(message);
     } finally {
       setCuentaToDeleteId(null);
@@ -385,7 +389,7 @@ export default function SucursalDetailPage() {
 
   const handleDownloadDoc = (docId: number) => {
     const url = API_ENDPOINTS.SUCURSALES.DOWNLOAD_DOCUMENTO(sucursalId, docId);
-    window.open(url, "_blank");
+    window.open(url, '_blank');
   };
 
   const openDeleteDocDialog = (docId: number, nombreArchivo: string) => {
@@ -396,25 +400,25 @@ export default function SucursalDetailPage() {
   const handleDeleteDoc = async () => {
     if (!docToDelete) return;
 
-    setError("");
+    setError('');
 
     try {
       const response = await apiFetch(
         API_ENDPOINTS.SUCURSALES.DELETE_DOCUMENTO(sucursalId, docToDelete.id),
-        { method: "DELETE" },
+        { method: 'DELETE' },
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Error al eliminar documento");
+        throw new Error(data.message || 'Error al eliminar documento');
       }
 
-      toast.success("Documento eliminado exitosamente");
+      toast.success('Documento eliminado exitosamente');
       await fetchDocumentos();
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Error al eliminar documento";
+        err instanceof Error ? err.message : 'Error al eliminar documento';
       toast.error(message);
     } finally {
       setIsDeleteDocDialogOpen(false);
@@ -423,11 +427,11 @@ export default function SucursalDetailPage() {
   };
 
   const MANDATORY_DOC_TYPES = [
-    "Constancia de CUIT",
-    "Constancia de IIBB",
-    "Certificado MyPyme",
-    "Constancia de CBU",
-    "Habilitación del local",
+    'Constancia de CUIT',
+    'Constancia de IIBB',
+    'Certificado MyPyme',
+    'Constancia de CBU',
+    'Habilitación del local',
   ];
 
   const missingDocsCount = MANDATORY_DOC_TYPES.filter(
@@ -455,7 +459,7 @@ export default function SucursalDetailPage() {
         <div className="text-center">
           <p className="text-[#1A1A1A] text-xl mb-4">Sucursal no encontrada</p>
           <Button
-            onClick={() => router.push("/sucursales")}
+            onClick={() => router.push('/sucursales')}
             className="bg-[#002868] text-white hover:bg-[#003d8f]"
           >
             Volver a Sucursales
@@ -474,7 +478,7 @@ export default function SucursalDetailPage() {
             <div className="flex items-center gap-4">
               {/* Botón Volver */}
               <Button
-                onClick={() => router.push("/sucursales")}
+                onClick={() => router.push('/sucursales')}
                 variant="outline"
                 size="sm"
                 className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer"
@@ -557,33 +561,33 @@ export default function SucursalDetailPage() {
         {/* Título Destacado */}
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold text-[#002868] mb-3">
-            {canVerMovimientos ? "Gestión de Cajas" : "Gestión de Pagos"}
+            {canVerMovimientos ? 'Gestión de Cajas' : 'Gestión de Pagos'}
           </h2>
           <p className="text-lg text-[#666666] mb-6">
             {canVerMovimientos
-              ? "Selecciona la caja que deseas gestionar"
-              : "Gestiona tus solicitudes de pago"}
+              ? 'Selecciona la caja que deseas gestionar'
+              : 'Gestiona tus solicitudes de pago'}
           </p>
 
           {/* Selector de Moneda */}
           {canVerMovimientos && (
             <div className="flex justify-center gap-2">
               <button
-                onClick={() => handleMonedaChange("ARS")}
+                onClick={() => handleMonedaChange('ARS')}
                 className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                  moneda === "ARS"
-                    ? "bg-[#002868] text-white shadow-md"
-                    : "bg-white text-[#666666] border border-[#E0E0E0] hover:border-[#002868] hover:text-[#002868]"
+                  moneda === 'ARS'
+                    ? 'bg-[#002868] text-white shadow-md'
+                    : 'bg-white text-[#666666] border border-[#E0E0E0] hover:border-[#002868] hover:text-[#002868]'
                 }`}
               >
                 ARS
               </button>
               <button
-                onClick={() => handleMonedaChange("USD")}
+                onClick={() => handleMonedaChange('USD')}
                 className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                  moneda === "USD"
-                    ? "bg-[#002868] text-white shadow-md"
-                    : "bg-white text-[#666666] border border-[#E0E0E0] hover:border-[#002868] hover:text-[#002868]"
+                  moneda === 'USD'
+                    ? 'bg-[#002868] text-white shadow-md'
+                    : 'bg-white text-[#666666] border border-[#E0E0E0] hover:border-[#002868] hover:text-[#002868]'
                 }`}
               >
                 USD
@@ -592,7 +596,7 @@ export default function SucursalDetailPage() {
           )}
         </div>
 
-          {canVerMovimientos ? (
+        {canVerMovimientos ? (
           /* Las 3 Cajas - MUY GRANDES Y PROTAGONISTAS */
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Caja en Efectivo */}
@@ -642,23 +646,23 @@ export default function SucursalDetailPage() {
                     <p
                       className={`text-2xl font-bold ${
                         totalesEfectivo.total_real >= 0
-                          ? "text-emerald-600"
-                          : "text-rose-600"
+                          ? 'text-emerald-600'
+                          : 'text-rose-600'
                       }`}
                     >
                       {formatMonto(totalesEfectivo.total_real, moneda)}
                     </p>
                     {totalesEfectivo.ultima_actualizacion && (
                       <p className="text-xs text-slate-400 mt-1">
-                        Última act:{" "}
+                        Última act:{' '}
                         {new Date(
                           totalesEfectivo.ultima_actualizacion,
-                        ).toLocaleString("es-AR", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
+                        ).toLocaleString('es-AR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
                         })}
                       </p>
                     )}
@@ -738,23 +742,23 @@ export default function SucursalDetailPage() {
                     <p
                       className={`text-2xl font-bold ${
                         totalesBanco.total_real >= 0
-                          ? "text-emerald-600"
-                          : "text-rose-600"
+                          ? 'text-emerald-600'
+                          : 'text-rose-600'
                       }`}
                     >
                       {formatMonto(totalesBanco.total_real, moneda)}
                     </p>
                     {totalesBanco.ultima_actualizacion && (
                       <p className="text-xs text-slate-400 mt-1">
-                        Última act:{" "}
+                        Última act:{' '}
                         {new Date(
                           totalesBanco.ultima_actualizacion,
-                        ).toLocaleString("es-AR", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
+                        ).toLocaleString('es-AR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
                         })}
                       </p>
                     )}
@@ -821,13 +825,13 @@ export default function SucursalDetailPage() {
                   Pagos Pendientes
                   {canAprobarPendientes && pendingCount > 0 && (
                     <span className="absolute -top-3 -right-6 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white ring-2 ring-white shadow-lg animate-bounce">
-                      {pendingCount > 9 ? "9+" : pendingCount}
+                      {pendingCount > 9 ? '9+' : pendingCount}
                     </span>
                   )}
                   {/* Badge empleado: nuevas aprobaciones/rechazos */}
                   {isEmployee && employeeUnseenCount > 0 && (
                     <span className="absolute -top-3 -right-6 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white ring-2 ring-white shadow-lg animate-bounce">
-                      {employeeUnseenCount > 9 ? "9+" : employeeUnseenCount}
+                      {employeeUnseenCount > 9 ? '9+' : employeeUnseenCount}
                     </span>
                   )}
                 </h3>
@@ -894,7 +898,7 @@ export default function SucursalDetailPage() {
                   {/* Badge empleado: nuevas aprobaciones/rechazos */}
                   {isEmployee && employeeUnseenCount > 0 && (
                     <span className="absolute -top-3 -right-6 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white ring-2 ring-white shadow-lg animate-bounce">
-                      {employeeUnseenCount > 9 ? "9+" : employeeUnseenCount}
+                      {employeeUnseenCount > 9 ? '9+' : employeeUnseenCount}
                     </span>
                   )}
                 </h3>
@@ -958,7 +962,7 @@ export default function SucursalDetailPage() {
                 <div>
                   <p className="text-sm text-red-700 font-semibold">
                     {missingDocsCount === 1
-                      ? "Falta 1 documento obligatorio por subir"
+                      ? 'Falta 1 documento obligatorio por subir'
                       : `Faltan ${missingDocsCount} documentos obligatorios por subir`}
                   </p>
                   <p className="text-xs text-red-600 mt-0.5">
@@ -981,8 +985,8 @@ export default function SucursalDetailPage() {
                   </p>
                   <p className="text-xs text-orange-600 mt-0.5">
                     {expiredDocsCount > 1
-                      ? expiredDocs.map((d) => d.tipo_documento).join(", ")
-                      : "Actualizá el documento para mantener la documentación al día."}
+                      ? expiredDocs.map((d) => d.tipo_documento).join(', ')
+                      : 'Actualizá el documento para mantener la documentación al día.'}
                   </p>
                 </div>
               </div>
@@ -1114,8 +1118,8 @@ export default function SucursalDetailPage() {
                           key={tipoDoc}
                           className={`p-4 rounded-lg border ${
                             isExpired
-                              ? "bg-orange-50 border-orange-300"
-                              : "bg-gray-50 border-gray-200"
+                              ? 'bg-orange-50 border-orange-300'
+                              : 'bg-gray-50 border-gray-200'
                           }`}
                         >
                           <div className="flex justify-between items-center mb-2">
@@ -1150,8 +1154,8 @@ export default function SucursalDetailPage() {
                                   stroke="currentColor"
                                   className={`w-5 h-5 flex-shrink-0 ${
                                     isExpired
-                                      ? "text-orange-500"
-                                      : "text-green-600"
+                                      ? 'text-orange-500'
+                                      : 'text-green-600'
                                   }`}
                                 >
                                   <path
@@ -1170,19 +1174,19 @@ export default function SucursalDetailPage() {
                                   <p
                                     className={`text-xs font-medium ${
                                       isExpired
-                                        ? "text-red-600"
-                                        : "text-gray-500"
+                                        ? 'text-red-600'
+                                        : 'text-gray-500'
                                     }`}
                                   >
-                                    Vence:{" "}
+                                    Vence:{' '}
                                     {docSubido.fecha_vencimiento
                                       ? new Date(
                                           docSubido.fecha_vencimiento,
-                                        ).toLocaleDateString("es-AR", {
-                                          timeZone: "UTC",
+                                        ).toLocaleDateString('es-AR', {
+                                          timeZone: 'UTC',
                                         })
-                                      : "N/A"}
-                                    {isExpired && " — VENCIDO"}
+                                      : 'N/A'}
+                                    {isExpired && ' — VENCIDO'}
                                   </p>
                                 </div>
                               </div>
@@ -1254,7 +1258,7 @@ export default function SucursalDetailPage() {
                                       !dateInput?.value
                                     ) {
                                       toast.error(
-                                        "Selecciona archivo y fecha de vencimiento",
+                                        'Selecciona archivo y fecha de vencimiento',
                                       );
                                       return;
                                     }
@@ -1309,7 +1313,7 @@ export default function SucursalDetailPage() {
                       onClick={() => setIsAddingCuenta(!isAddingCuenta)}
                       className="text-[#002868] border-[#002868]"
                     >
-                      {isAddingCuenta ? "Cancelar" : "+ Agregar Cuenta"}
+                      {isAddingCuenta ? 'Cancelar' : '+ Agregar Cuenta'}
                     </Button>
                   )}
                 </div>
@@ -1373,7 +1377,7 @@ export default function SucursalDetailPage() {
                           value={nuevaCuenta.cbu}
                           onChange={(e) => {
                             const onlyDigits = e.target.value
-                              .replace(/\D/g, "")
+                              .replace(/\D/g, '')
                               .slice(0, 22);
                             setNuevaCuenta({ ...nuevaCuenta, cbu: onlyDigits });
                           }}
@@ -1382,20 +1386,20 @@ export default function SucursalDetailPage() {
                           className={`h-8 text-sm ${
                             nuevaCuenta.cbu.length > 0 &&
                             nuevaCuenta.cbu.length !== 22
-                              ? "border-red-400 focus-visible:ring-red-400"
+                              ? 'border-red-400 focus-visible:ring-red-400'
                               : nuevaCuenta.cbu.length === 22
-                                ? "border-green-400 focus-visible:ring-green-400"
-                                : ""
+                                ? 'border-green-400 focus-visible:ring-green-400'
+                                : ''
                           }`}
                           placeholder="22 dígitos"
                         />
                         <p
                           className={`text-xs text-right ${
                             nuevaCuenta.cbu.length === 22
-                              ? "text-green-600"
+                              ? 'text-green-600'
                               : nuevaCuenta.cbu.length > 0
-                                ? "text-red-500"
-                                : "text-gray-400"
+                                ? 'text-red-500'
+                                : 'text-gray-400'
                           }`}
                         >
                           {nuevaCuenta.cbu.length}/22
@@ -1447,7 +1451,7 @@ export default function SucursalDetailPage() {
                             CBU: {cuenta.cbu}
                           </p>
                           <p className="text-xs text-gray-500">
-                            Alias: {cuenta.alias || "-"}
+                            Alias: {cuenta.alias || '-'}
                           </p>
                         </div>
                         {sucursal?.activo && canGestionarSucursales && (
@@ -1475,7 +1479,9 @@ export default function SucursalDetailPage() {
               <div className="flex gap-3 pt-4">
                 <Button
                   type="submit"
-                  disabled={isSaving || !sucursal?.activo || !canGestionarSucursales}
+                  disabled={
+                    isSaving || !sucursal?.activo || !canGestionarSucursales
+                  }
                   className="flex-1 bg-[#002868] hover:bg-[#003d8f] text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? (
@@ -1484,7 +1490,7 @@ export default function SucursalDetailPage() {
                       <span>Guardando...</span>
                     </div>
                   ) : (
-                    "Guardar Cambios"
+                    'Guardar Cambios'
                   )}
                 </Button>
                 <Button
@@ -1548,7 +1554,7 @@ export default function SucursalDetailPage() {
               Confirmar Eliminación
             </DialogTitle>
             <DialogDescription className="text-[#666666]">
-              ¿Estás seguro de que deseas eliminar el archivo{" "}
+              ¿Estás seguro de que deseas eliminar el archivo{' '}
               <span className="font-semibold text-[#1A1A1A]">
                 "{docToDelete?.nombre}"
               </span>

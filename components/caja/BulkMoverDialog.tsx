@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,16 +8,16 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { selectClasses, labelClasses, inputClasses } from "@/lib/dialog-styles";
-import { API_ENDPOINTS } from "@/lib/config";
-import { apiFetch } from "@/lib/api";
-import type { SelectOption } from "@/lib/types";
-import { ArrowRightLeft } from "lucide-react";
-import { toast } from "sonner";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles';
+import { API_ENDPOINTS } from '@/lib/config';
+import { apiFetch } from '@/lib/api';
+import type { SelectOption } from '@/lib/types';
+import { ArrowRightLeft } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Sucursal {
   id: number;
@@ -30,7 +30,7 @@ interface BulkMoverDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedIds: number[];
   currentSucursalId: number;
-  cajaTipo: "efectivo" | "banco";
+  cajaTipo: 'efectivo' | 'banco';
   onSuccess: () => void;
   bancosExternos?: SelectOption[];
   mediosPagoExternos?: SelectOption[];
@@ -52,10 +52,10 @@ export function BulkMoverDialog({
   const [formData, setFormData] = useState({
     destino_sucursal_id: String(currentSucursalId),
     destino_tipo_movimiento: cajaTipo,
-    destino_saldo: "saldo_necesario",
-    banco_id: "",
-    medio_pago_id: "",
-    numero_cheque: "",
+    destino_saldo: 'saldo_necesario',
+    banco_id: '',
+    medio_pago_id: '',
+    numero_cheque: '',
   });
 
   useEffect(() => {
@@ -72,10 +72,10 @@ export function BulkMoverDialog({
       setFormData({
         destino_sucursal_id: String(currentSucursalId),
         destino_tipo_movimiento: cajaTipo,
-        destino_saldo: "saldo_necesario",
-        banco_id: "",
-        medio_pago_id: "",
-        numero_cheque: "",
+        destino_saldo: 'saldo_necesario',
+        banco_id: '',
+        medio_pago_id: '',
+        numero_cheque: '',
       });
     }
   }, [open, currentSucursalId, cajaTipo]);
@@ -86,7 +86,7 @@ export function BulkMoverDialog({
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const isDestinoBanco = formData.destino_tipo_movimiento === "banco";
+  const isDestinoBanco = formData.destino_tipo_movimiento === 'banco';
 
   const selectedMedio = mediosPagoExternos.find(
     (m) => m.id.toString() === formData.medio_pago_id,
@@ -95,20 +95,20 @@ export function BulkMoverDialog({
 
   const handleSave = async () => {
     if (!formData.destino_sucursal_id) {
-      toast.error("Seleccioná una sucursal destino.");
+      toast.error('Seleccioná una sucursal destino.');
       return;
     }
     if (isDestinoBanco && !formData.banco_id) {
-      toast.error("Seleccioná un banco destino.");
+      toast.error('Seleccioná un banco destino.');
       return;
     }
     if (isDestinoBanco && !formData.medio_pago_id) {
-      toast.error("Seleccioná un medio de pago.");
+      toast.error('Seleccioná un medio de pago.');
       return;
     }
 
     const endpoint =
-      cajaTipo === "banco"
+      cajaTipo === 'banco'
         ? API_ENDPOINTS.CAJA_BANCO.BULK_MOVER
         : API_ENDPOINTS.MOVIMIENTOS.BULK_MOVER;
 
@@ -130,7 +130,7 @@ export function BulkMoverDialog({
     setIsSaving(true);
     try {
       const res = await apiFetch(endpoint, {
-        method: "PUT",
+        method: 'PUT',
         body: JSON.stringify(body),
       });
       const data = await res.json();
@@ -139,10 +139,10 @@ export function BulkMoverDialog({
         onSuccess();
         onOpenChange(false);
       } else {
-        toast.error(data.message || "Error al mover.");
+        toast.error(data.message || 'Error al mover.');
       }
     } catch {
-      toast.error("Error de red al mover.");
+      toast.error('Error de red al mover.');
     } finally {
       setIsSaving(false);
     }
@@ -158,7 +158,7 @@ export function BulkMoverDialog({
                 <ArrowRightLeft className="w-5 h-5 text-indigo-600" />
               </div>
               Mover {selectedIds.length} movimiento
-              {selectedIds.length !== 1 ? "s" : ""}
+              {selectedIds.length !== 1 ? 's' : ''}
             </DialogTitle>
             <DialogDescription className="text-sm text-[#8A8F9C] mt-2">
               Todos los seleccionados se moverán al mismo destino.
@@ -282,7 +282,7 @@ export function BulkMoverDialog({
               disabled={isSaving || selectedIds.length === 0}
               className="h-10 px-6 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all cursor-pointer disabled:opacity-50"
             >
-              {isSaving ? "Moviendo..." : `Mover ${selectedIds.length}`}
+              {isSaving ? 'Moviendo...' : `Mover ${selectedIds.length}`}
             </Button>
           </DialogFooter>
         </div>

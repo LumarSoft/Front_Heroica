@@ -11,7 +11,7 @@ interface SectionHeadingProps {
 export function SectionHeading({
   number,
   title,
-  className = "",
+  className = '',
 }: SectionHeadingProps) {
   return (
     <h2
