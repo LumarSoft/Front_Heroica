@@ -331,7 +331,7 @@ export default function PagosPendientesPage() {
             monto: Math.abs(
               parseFloat(selectedPago.monto.toString()),
             ).toString(),
-            descripcion: selectedPago.descripcion ?? '',
+            comentarios: selectedPago.comentarios ?? '',
             fecha: selectedPago.fecha
               ? selectedPago.fecha.includes('T')
                 ? selectedPago.fecha.split('T')[0]

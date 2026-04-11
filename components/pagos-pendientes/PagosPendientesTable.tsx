@@ -164,20 +164,20 @@ export function PagosPendientesTable({
                         <span className="font-semibold text-[#1A1A1A]">
                           {pago.concepto}
                         </span>
-                        {pago.descripcion &&
-                        pago.descripcion.includes('[Nota del sistema:') ? (
+                        {pago.comentarios &&
+                        pago.comentarios.includes('[Nota del sistema:') ? (
                           <div className="flex flex-col gap-1.5 mt-1">
-                            {pago.descripcion
+                            {pago.comentarios
                               .split('[Nota del sistema:')[0]
                               .trim() && (
                               <span
                                 className="text-xs text-[#666666] inline-block"
-                                title={pago.descripcion
+                                title={pago.comentarios
                                   .split('[Nota del sistema:')[0]
                                   .trim()}
                               >
                                 {truncarTexto(
-                                  pago.descripcion
+                                  pago.comentarios
                                     .split('[Nota del sistema:')[0]
                                     .trim(),
                                 )}
@@ -187,7 +187,7 @@ export function PagosPendientesTable({
                               <Megaphone className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
                               <span className="font-medium whitespace-normal break-words leading-snug">
                                 {truncarTexto(
-                                  pago.descripcion
+                                  pago.comentarios
                                     .split('[Nota del sistema:')[1]
                                     .split(']')[0]
                                     .trim(),
@@ -198,9 +198,9 @@ export function PagosPendientesTable({
                         ) : (
                           <span
                             className="text-xs text-[#666666]"
-                            title={pago.descripcion || ''}
+                            title={pago.comentarios || ''}
                           >
-                            {truncarTexto(pago.descripcion)}
+                            {truncarTexto(pago.comentarios)}
                           </span>
                         )}
                       </div>

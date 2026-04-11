@@ -14,6 +14,7 @@ export interface ReportResumen {
   resultado: number;
   resultado_banco?: number;
   deudas?: number;
+  creditos?: number;
 }
 
 export interface ReportDeuda {
@@ -43,6 +44,7 @@ export interface ReportData {
     ingresos: ReportMovimiento[];
     egresos: ReportMovimiento[];
     deudas: ReportDeuda[];
+    creditos: ReportDeuda[];
   };
 }
 

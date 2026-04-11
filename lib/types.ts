@@ -14,7 +14,11 @@ export interface Transaction {
   fecha: string;
   concepto: string;
   monto: number;
-  descripcion?: string;
+  comentarios?: string;
+  descripcion_id?: number;
+  proveedor_id?: number;
+  descripcion_nombre?: string;
+  proveedor_nombre?: string;
   prioridad: 'baja' | 'media' | 'alta';
   tipo: 'ingreso' | 'egreso';
   tipo_movimiento: string;
@@ -49,7 +53,11 @@ export interface PagoPendiente {
   fecha: string;
   concepto: string;
   monto: number;
-  descripcion?: string;
+  comentarios?: string;
+  descripcion_id?: number;
+  proveedor_id?: number;
+  descripcion_nombre?: string;
+  proveedor_nombre?: string;
   estado: 'pendiente' | 'aprobado' | 'rechazado';
   prioridad: 'baja' | 'media' | 'alta';
   tipo?: string;

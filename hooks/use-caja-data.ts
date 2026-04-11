@@ -24,7 +24,9 @@ interface TransactionFormData {
   fecha: string;
   concepto: string;
   monto: string;
-  descripcion: string;
+  comentarios: string;
+  descripcion_id: string;
+  proveedor_id: string;
   prioridad: 'baja' | 'media' | 'alta';
   tipo: string;
   categoria_id: string;
@@ -39,7 +41,9 @@ const INITIAL_FORM: TransactionFormData = {
   fecha: '',
   concepto: '',
   monto: '',
-  descripcion: '',
+  comentarios: '',
+  descripcion_id: '',
+  proveedor_id: '',
   prioridad: 'media',
   tipo: 'ingreso',
   categoria_id: '',
@@ -157,6 +161,8 @@ export function useCajaData(
   const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
   const [bancos, setBancos] = useState<SelectOption[]>([]);
   const [mediosPago, setMediosPago] = useState<SelectOption[]>([]);
+  const [descripciones, setDescripciones] = useState<SelectOption[]>([]);
+  const [proveedores, setProveedores] = useState<SelectOption[]>([]);
 
   // --- Estado de dialogs ---
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
@@ -285,6 +291,30 @@ export function useCajaData(
     }
   }, []);
 
+  const fetchDescripciones = useCallback(async () => {
+    try {
+      const response = await apiFetch(
+        API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ALL,
+      );
+      const data = await response.json();
+      if (response.ok) setDescripciones(data.data || []);
+    } catch {
+      // Non-critical
+    }
+  }, []);
+
+  const fetchProveedores = useCallback(async () => {
+    try {
+      const response = await apiFetch(
+        API_ENDPOINTS.CONFIGURACION.PROVEEDORES.GET_ALL,
+      );
+      const data = await response.json();
+      if (response.ok) setProveedores(data.data || []);
+    } catch {
+      // Non-critical
+    }
+  }, []);
+
   // --- Carga subcategorías cuando cambia la categoría seleccionada ---
   useEffect(() => {
     if (formData.categoria_id) {
@@ -304,17 +334,15 @@ export function useCajaData(
       fecha: transaction.fecha ? transaction.fecha.split('T')[0] : '',
       concepto: transaction.concepto,
       monto: transaction.monto.toString(),
-      descripcion: transaction.descripcion || '',
+      comentarios: transaction.comentarios || '',
       prioridad: transaction.prioridad || 'media',
       tipo:
         transaction.tipo ||
         (Number(transaction.monto) < 0 ? 'egreso' : 'ingreso'),
-      categoria_id: transaction.categoria_id
-        ? transaction.categoria_id.toString()
-        : '',
-      subcategoria_id: transaction.subcategoria_id
-        ? transaction.subcategoria_id.toString()
-        : '',
+      categoria_id: transaction.categoria_id ? transaction.categoria_id.toString() : '',
+      subcategoria_id: transaction.subcategoria_id ? transaction.subcategoria_id.toString() : '',
+      descripcion_id: transaction.descripcion_id ? transaction.descripcion_id.toString() : '',
+      proveedor_id: transaction.proveedor_id ? transaction.proveedor_id.toString() : '',
       comprobante: transaction.comprobante || '',
       banco_id: transaction.banco_id ? transaction.banco_id.toString() : '',
       medio_pago_id: transaction.medio_pago_id
@@ -377,7 +405,7 @@ export function useCajaData(
           {
             method: 'PATCH',
             body: JSON.stringify({
-              descripcion: formData.descripcion,
+              comentarios: formData.comentarios,
             }),
           },
         );
@@ -396,20 +424,16 @@ export function useCajaData(
               fecha: formData.fecha,
               concepto: formData.concepto,
               monto: parseFloat(formData.monto),
-              descripcion: formData.descripcion,
+              comentarios: formData.comentarios,
               prioridad: formData.prioridad,
               tipo: formData.tipo,
-              categoria_id: formData.categoria_id
-                ? Number(formData.categoria_id)
-                : null,
-              subcategoria_id: formData.subcategoria_id
-                ? Number(formData.subcategoria_id)
-                : null,
+              categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
+              subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
+              descripcion_id: formData.descripcion_id ? Number(formData.descripcion_id) : null,
+              proveedor_id: formData.proveedor_id ? Number(formData.proveedor_id) : null,
               comprobante: formData.comprobante,
               banco_id: formData.banco_id ? Number(formData.banco_id) : null,
-              medio_pago_id: formData.medio_pago_id
-                ? Number(formData.medio_pago_id)
-                : null,
+              medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
               numero_cheque: formData.numero_cheque || null,
             }),
           },
@@ -567,7 +591,9 @@ export function useCajaData(
     fetchCategorias();
     fetchBancos();
     fetchMediosPago();
-  }, [fetchMovimientos, fetchCategorias, fetchBancos, fetchMediosPago]);
+    fetchDescripciones();
+    fetchProveedores();
+  }, [fetchMovimientos, fetchCategorias, fetchBancos, fetchMediosPago, fetchDescripciones, fetchProveedores]);
 
   // =============================================
   // Filtro por fechas (client-side)
@@ -583,7 +609,7 @@ export function useCajaData(
     const lower = q.toLowerCase();
     return (
       (m.concepto?.toLowerCase().includes(lower) ?? false) ||
-      (m.descripcion?.toLowerCase().includes(lower) ?? false) ||
+      (m.comentarios?.toLowerCase().includes(lower) ?? false) ||
       (m.numero_cheque?.toLowerCase().includes(lower) ?? false) ||
       (m.comprobante?.toLowerCase().includes(lower) ?? false)
     );
@@ -700,6 +726,8 @@ export function useCajaData(
     parciales,
     categorias,
     subcategorias,
+    descripciones,
+    proveedores,
     bancos,
     mediosPago,
 

@@ -133,6 +133,20 @@ export const API_ENDPOINTS = {
       UPDATE: (id: number) => `${API_URL}/api/configuracion/medios-pago/${id}`,
       DELETE: (id: number) => `${API_URL}/api/configuracion/medios-pago/${id}`,
     },
+    // Descripciones
+    DESCRIPCIONES: {
+      GET_ALL: `${API_URL}/api/configuracion/descripciones`,
+      CREATE: `${API_URL}/api/configuracion/descripciones`,
+      UPDATE: (id: number) => `${API_URL}/api/configuracion/descripciones/${id}`,
+      DELETE: (id: number) => `${API_URL}/api/configuracion/descripciones/${id}`,
+    },
+    // Proveedores
+    PROVEEDORES: {
+      GET_ALL: `${API_URL}/api/configuracion/proveedores`,
+      CREATE: `${API_URL}/api/configuracion/proveedores`,
+      UPDATE: (id: number) => `${API_URL}/api/configuracion/proveedores/${id}`,
+      DELETE: (id: number) => `${API_URL}/api/configuracion/proveedores/${id}`,
+    },
     // Usuarios
     USUARIOS: {
       GET_ALL: `${API_URL}/api/configuracion/usuarios`,

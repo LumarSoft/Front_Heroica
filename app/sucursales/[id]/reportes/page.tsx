@@ -22,6 +22,7 @@ import { SectionHeading } from '@/components/reportes/SectionHeading';
 import { SummaryCard } from '@/components/reportes/SummaryCard';
 import { BreakdownPanel } from '@/components/reportes/BreakdownPanel';
 import { DeudaPanel } from '@/components/reportes/DeudaPanel';
+import { CreditoPanel } from '@/components/reportes/CreditoPanel';
 import type { ReportData } from '@/components/reportes/types';
 
 export default function ReportesPage() {
@@ -277,7 +278,7 @@ export default function ReportesPage() {
             {/* ── 1 · Resumen General ──────────────────────────────────────── */}
             <section>
               <SectionHeading number="1" title="Resumen General del Período" />
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
                 <SummaryCard
                   label="Ingresos Totales"
                   value={formatMonto(reportData.resumen.ingresos, moneda)}
@@ -310,11 +311,18 @@ export default function ReportesPage() {
                   }
                 />
                 <SummaryCard
-                  label="Deudas Activas"
+                  label="Deudas (A Pagar)"
                   value={formatMonto(reportData.resumen.deudas || 0, moneda)}
                   accent="orange"
                   icon={<AlertTriangle className="w-5 h-5" />}
                   sub="Histórico total"
+                />
+                <SummaryCard
+                  label="Créditos (A Cobrar)"
+                  value={formatMonto(reportData.resumen.creditos || 0, moneda)}
+                  accent="indigo"
+                  icon={<TrendingUp className="w-5 h-5" />}
+                  sub="A favor nuestro"
                 />
               </div>
             </section>
@@ -365,15 +373,28 @@ export default function ReportesPage() {
               />
             </section>
 
-            {/* ── 4 · Deudas ──────────────────────────────────────── */}
+            {/* ── 4 · Deudas (A Pagar) ──────────────────────────────────────── */}
             <section className="mt-8 page-break-before">
               <SectionHeading
                 number="4"
-                title="Listado de Deudas"
+                title="Listado de Deudas (A Pagar)"
                 className="mt-4"
               />
               <DeudaPanel
                 deudas={reportData.detalles?.deudas || []}
+                moneda={moneda}
+              />
+            </section>
+
+            {/* ── 5 · Créditos (A Cobrar) ──────────────────────────────────────── */}
+            <section className="mt-8 page-break-before">
+              <SectionHeading
+                number="5"
+                title="Listado de Créditos (A Cobrar)"
+                className="mt-4"
+              />
+              <CreditoPanel
+                creditos={reportData.detalles?.creditos || []}
                 moneda={moneda}
               />
             </section>

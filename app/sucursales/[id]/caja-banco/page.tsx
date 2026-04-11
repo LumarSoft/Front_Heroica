@@ -302,6 +302,8 @@ export default function CajaBancoPage() {
         subcategorias={caja.subcategorias}
         bancos={caja.bancos}
         mediosPago={caja.mediosPago}
+        descripciones={caja.descripciones}
+        proveedores={caja.proveedores}
         showBancoFields={true}
         isReadOnly={isStrictlyReadOnly}
         canEditInfo={canEditInfo}
@@ -352,6 +354,8 @@ export default function CajaBancoPage() {
         categoriasExternas={caja.categorias}
         bancosExternos={caja.bancos}
         mediosPagoExternos={caja.mediosPago}
+        descripcionesExternas={caja.descripciones}
+        proveedoresExternas={caja.proveedores}
         parcialesBancos={caja.parciales}
       />
 

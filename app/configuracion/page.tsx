@@ -23,10 +23,15 @@ import { MediosPagoSection } from '@/components/configuracion/MediosPagoSection'
 import { UsuariosSection } from '@/components/configuracion/UsuariosSection';
 import { RolesSection } from '@/components/configuracion/RolesSection';
 import { CambiarPasswordSection } from '@/components/configuracion/CambiarPasswordSection';
+import { DescripcionesSection } from '@/components/configuracion/DescripcionesSection';
+import { ProveedoresSection } from '@/components/configuracion/ProveedoresSection';
+import { Truck, FileText } from 'lucide-react';
 
 type ActiveTab =
   | 'categorias'
   | 'subcategorias'
+  | 'descripciones'
+  | 'proveedores'
   | 'bancos'
   | 'medios'
   | 'usuarios'
@@ -91,6 +96,18 @@ export default function ConfiguracionPage() {
       id: 'subcategorias',
       label: 'Subcategorías',
       Icon: FolderOpen,
+      visible: isSuperAdmin,
+    },
+    {
+      id: 'descripciones',
+      label: 'Descripciones',
+      Icon: FileText,
+      visible: isSuperAdmin,
+    },
+    {
+      id: 'proveedores',
+      label: 'Proveedores',
+      Icon: Truck,
       visible: isSuperAdmin,
     },
     { id: 'bancos', label: 'Bancos', Icon: Building2, visible: isSuperAdmin },
@@ -167,6 +184,8 @@ export default function ConfiguracionPage() {
         <div className="max-w-5xl w-full mx-auto">
           {activeTab === 'categorias' && <CategoriasSection />}
           {activeTab === 'subcategorias' && <SubcategoriasSection />}
+          {activeTab === 'descripciones' && <DescripcionesSection />}
+          {activeTab === 'proveedores' && <ProveedoresSection />}
           {activeTab === 'bancos' && <BancosSection />}
           {activeTab === 'medios' && <MediosPagoSection />}
           {activeTab === 'usuarios' && <UsuariosSection />}
