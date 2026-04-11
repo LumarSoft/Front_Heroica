@@ -266,6 +266,12 @@ export function PagosPendientesTable({
                               {pago.usuario_revisor_nombre || 'Admin'}
                             </span>
                           )}
+                          {pago.estado === 'completado' && (
+                            <span className="text-xs font-medium text-emerald-600">
+                              Pagado en caja · autorizó{' '}
+                              {pago.usuario_revisor_nombre || 'Admin'}
+                            </span>
+                          )}
                           {pago.estado === 'rechazado' && (
                             <>
                               <span className="text-xs font-bold text-rose-600">

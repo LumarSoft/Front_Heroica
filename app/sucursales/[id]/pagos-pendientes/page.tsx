@@ -176,7 +176,13 @@ export default function PagosPendientesPage() {
   ).sort();
 
   const historialFiltrado = historial.filter((p) => {
-    if (filtroEstado !== 'todos' && p.estado !== filtroEstado) return false;
+    if (filtroEstado !== 'todos') {
+      if (filtroEstado === 'aprobado') {
+        if (p.estado !== 'aprobado' && p.estado !== 'completado') return false;
+      } else if (p.estado !== filtroEstado) {
+        return false;
+      }
+    }
     if (filtroUsuario && p.usuario_revisor_nombre !== filtroUsuario)
       return false;
     return true;
@@ -307,6 +313,7 @@ export default function PagosPendientesPage() {
         isOpen={isNuevoMovimientoDialogOpen}
         onClose={() => setIsNuevoMovimientoDialogOpen(false)}
         sucursalId={Number(params.id)}
+        moneda={moneda}
         isPagoPendiente={true}
         onSuccess={() => {
           toast.success('Solicitud de movimiento creada correctamente');
@@ -323,6 +330,7 @@ export default function PagosPendientesPage() {
             setSelectedPago(null);
           }}
           sucursalId={Number(params.id)}
+          moneda={moneda}
           cajaTipo={tipoCaja}
           pagoIdToApprove={selectedPago.id}
           usuarioRevisorId={user?.id}

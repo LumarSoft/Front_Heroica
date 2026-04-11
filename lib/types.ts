@@ -58,7 +58,7 @@ export interface PagoPendiente {
   proveedor_id?: number;
   descripcion_nombre?: string;
   proveedor_nombre?: string;
-  estado: 'pendiente' | 'aprobado' | 'rechazado';
+  estado: 'pendiente' | 'aprobado' | 'rechazado' | 'completado';
   prioridad: 'baja' | 'media' | 'alta';
   tipo?: string;
   motivo_rechazo?: string;

@@ -605,6 +605,11 @@ export default function NuevoMovimientoDialog({
               ? Number(formData.medio_pago_id)
               : null,
             numero_cheque: formData.numero_cheque || null,
+            moneda,
+            tipo_cambio:
+              moneda === 'USD' && formData.tipo_cambio
+                ? parseFloat(formData.tipo_cambio)
+                : null,
           }
         : {
             sucursal_id: sucursalId,

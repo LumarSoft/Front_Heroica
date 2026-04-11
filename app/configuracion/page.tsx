@@ -59,17 +59,14 @@ export default function ConfiguracionPage() {
 
   useEffect(() => {
     if (!isHydrated) return;
-    // Si no está autenticado, redirigir al login
     if (!isAuthenticated) {
       router.push('/');
       return;
     }
-    // Si no tiene ningún permiso de configuración, redirigir
     if (!canVerConfiguracion) {
       router.push('/sucursales');
       return;
     }
-    // Si tiene acceso, elegir primer tab disponible
     if (isSuperAdmin) {
       setActiveTab('categorias');
     } else {
@@ -163,7 +160,7 @@ export default function ConfiguracionPage() {
       </header>
 
       <div className="container mx-auto px-6 py-6 flex flex-col items-center">
-        <div className="flex justify-center w-full max-w-5xl gap-1 mb-6 border-b border-gray-200 overflow-x-auto">
+        <div className="flex justify-start w-full max-w-5xl gap-1 mb-6 border-b border-gray-200 overflow-x-auto overflow-y-hidden">
           {TABS.map(({ id, label, Icon }) => (
             <button
               key={id}

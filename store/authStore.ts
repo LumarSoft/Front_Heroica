@@ -54,14 +54,14 @@ export const useAuthStore = create<AuthState>()(
       // Superadmin siempre tiene acceso total (bypass de permisos)
       isSuperAdmin: () => {
         const { user } = get();
-        return user?.rol_id === ROLES.SUPERADMIN.id;
+        return Number(user?.rol_id) === ROLES.SUPERADMIN.id;
       },
 
       // Verifica un permiso específico. Superadmin siempre retorna true.
       hasPermiso: (clave: string) => {
         const { user } = get();
         if (!user) return false;
-        if (user.rol_id === ROLES.SUPERADMIN.id) return true;
+        if (Number(user.rol_id) === ROLES.SUPERADMIN.id) return true;
         return user.permisos?.includes(clave) ?? false;
       },
 
