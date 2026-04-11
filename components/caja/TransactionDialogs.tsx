@@ -49,7 +49,9 @@ interface DetailsDialogProps {
     fecha: string;
     concepto: string;
     monto: string;
-    descripcion: string;
+    comentarios: string;
+    descripcion_id: string;
+    proveedor_id: string;
     prioridad: string;
     tipo: string;
     categoria_id: string;
@@ -68,6 +70,8 @@ interface DetailsDialogProps {
   subcategorias: Subcategoria[];
   bancos: SelectOption[];
   mediosPago: SelectOption[];
+  descripciones: SelectOption[];
+  proveedores: SelectOption[];
   showBancoFields?: boolean;
   isReadOnly?: boolean;
   canEditInfo?: boolean;
@@ -87,6 +91,8 @@ export function DetailsDialog({
   subcategorias,
   bancos,
   mediosPago,
+  descripciones,
+  proveedores,
   showBancoFields = false,
   isReadOnly = false,
   canEditInfo = true,
@@ -283,14 +289,14 @@ export function DetailsDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="descripcion" className={labelClasses}>
-                Descripción
+              <Label htmlFor="comentarios" className={labelClasses}>
+                Comentarios
               </Label>
               <Input
-                id="descripcion"
-                name="descripcion"
-                placeholder="Detalle adicional del movimiento"
-                value={formData.descripcion}
+                id="comentarios"
+                name="comentarios"
+                placeholder="Comentarios adicionales del movimiento"
+                value={formData.comentarios}
                 onChange={onInputChange}
                 disabled={!canEditComment && !canEditInfo}
                 className={`${inputClasses} ${!canEditComment && !canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -442,8 +448,51 @@ export function DetailsDialog({
           <section className="space-y-4">
             <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
               <span className="w-1 h-4 bg-[#002868] rounded-full" />
-              Categorización
+              Clasificación y Categorización
             </h4>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="descripcion_id" className={labelClasses}>
+                  Descripción (Clasificación)
+                </Label>
+                <select
+                  id="descripcion_id"
+                  name="descripcion_id"
+                  value={formData.descripcion_id}
+                  onChange={onInputChange}
+                  disabled={!canEditInfo}
+                  className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+                >
+                  <option value="">Seleccione descripción</option>
+                  {descripciones.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="proveedor_id" className={labelClasses}>
+                  Proveedor
+                </Label>
+                <select
+                  id="proveedor_id"
+                  name="proveedor_id"
+                  value={formData.proveedor_id}
+                  onChange={onInputChange}
+                  disabled={!canEditInfo}
+                  className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+                >
+                  <option value="">Seleccione proveedor</option>
+                  {proveedores.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">

@@ -31,11 +31,13 @@ import { parseInputMonto, formatInputMonto } from '@/lib/formatters';
 interface InitialValues {
   concepto?: string;
   monto?: string;
-  descripcion?: string;
+  comentarios?: string;
   fecha?: string;
   prioridad?: 'baja' | 'media' | 'alta';
   categoria_id?: string;
   subcategoria_id?: string;
+  descripcion_id?: string;
+  proveedor_id?: string;
 }
 
 interface NuevoMovimientoDialogProps {
@@ -53,6 +55,8 @@ interface NuevoMovimientoDialogProps {
   categoriasExternas?: Categoria[];
   bancosExternos?: SelectOption[];
   mediosPagoExternos?: SelectOption[];
+  descripcionesExternas?: SelectOption[];
+  proveedoresExternas?: SelectOption[];
   moneda?: 'ARS' | 'USD';
   /** Parciales de saldo real por banco (para validar transferencias internas) */
   parcialesBancos?: BancoParcial[];
@@ -71,6 +75,8 @@ export default function NuevoMovimientoDialog({
   categoriasExternas,
   bancosExternos,
   mediosPagoExternos,
+  descripcionesExternas,
+  proveedoresExternas,
   moneda = 'ARS',
   parcialesBancos = [],
 }: NuevoMovimientoDialogProps) {
@@ -101,7 +107,7 @@ export default function NuevoMovimientoDialog({
     })(),
     concepto: '',
     monto: '',
-    descripcion: '',
+    comentarios: '',
     prioridad: 'media' as 'baja' | 'media' | 'alta',
     estado: (isPagoPendiente ? 'pendiente' : 'aprobado') as
       | 'pendiente'
@@ -112,6 +118,8 @@ export default function NuevoMovimientoDialog({
     tipo_movimiento: cajaTipo as 'efectivo' | 'banco',
     categoria_id: '',
     subcategoria_id: '',
+    descripcion_id: '',
+    proveedor_id: '',
     comprobante: '',
     banco_id: '',
     medio_pago_id: '',
@@ -125,6 +133,12 @@ export default function NuevoMovimientoDialog({
   const [mediosPagoInternos, setMediosPagoInternos] = useState<SelectOption[]>(
     [],
   );
+  const [descripcionesInternas, setDescripcionesInternas] = useState<
+    SelectOption[]
+  >([]);
+  const [proveedoresInternos, setProveedoresInternos] = useState<SelectOption[]>(
+    [],
+  );
 
   // Usa los catálogos externos si se proveen, si no usa los internos (fetched)
   const categorias = categoriasExternas?.length
@@ -134,6 +148,12 @@ export default function NuevoMovimientoDialog({
   const mediosPago = mediosPagoExternos?.length
     ? mediosPagoExternos
     : mediosPagoInternos;
+  const descripciones = descripcionesExternas?.length
+    ? descripcionesExternas
+    : descripcionesInternas;
+  const proveedores = proveedoresExternas?.length
+    ? proveedoresExternas
+    : proveedoresInternos;
 
   const fetchCategorias = useCallback(async () => {
     if (categoriasExternas?.length) return;
@@ -174,6 +194,32 @@ export default function NuevoMovimientoDialog({
     }
   }, [mediosPagoExternos]);
 
+  const fetchDescripciones = useCallback(async () => {
+    if (descripcionesExternas?.length) return;
+    try {
+      const response = await apiFetch(
+        API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ALL,
+      );
+      const data = await response.json();
+      if (response.ok) setDescripcionesInternas(data.data || []);
+    } catch {
+      // Non-critical
+    }
+  }, [descripcionesExternas]);
+
+  const fetchProveedores = useCallback(async () => {
+    if (proveedoresExternas?.length) return;
+    try {
+      const response = await apiFetch(
+        API_ENDPOINTS.CONFIGURACION.PROVEEDORES.GET_ALL,
+      );
+      const data = await response.json();
+      if (response.ok) setProveedoresInternos(data.data || []);
+    } catch {
+      // Non-critical
+    }
+  }, [proveedoresExternas]);
+
   // Usamos ref para capturar initialValues e isApprovalMode sin hacerlos deps del effect.
   // El effect solo debe correr cuando el dialog se ABRE (isOpen cambia a true).
   const initialValuesRef = useRef(initialValues);
@@ -188,6 +234,8 @@ export default function NuevoMovimientoDialog({
     if (!isOpen) return;
 
     fetchCategorias();
+    fetchDescripciones();
+    fetchProveedores();
     if (cajaTipo === 'banco') {
       fetchBancos();
       fetchMediosPago();
@@ -202,15 +250,17 @@ export default function NuevoMovimientoDialog({
         fecha: iv.fecha ?? todayStr,
         concepto: iv.concepto ?? '',
         monto: iv.monto ?? '',
-        descripcion: iv.descripcion ?? '',
+        comentarios: iv.comentarios ?? '',
         prioridad: iv.prioridad ?? 'media',
         categoria_id: iv.categoria_id ?? '',
         subcategoria_id: iv.subcategoria_id ?? '',
+        descripcion_id: iv.descripcion_id ?? '',
+        proveedor_id: iv.proveedor_id ?? '',
         tipo: 'egreso',
         estado: 'aprobado',
       }));
     }
-  }, [isOpen, cajaTipo, fetchCategorias, fetchBancos, fetchMediosPago]);
+  }, [isOpen, cajaTipo, fetchCategorias, fetchBancos, fetchMediosPago, fetchDescripciones, fetchProveedores]);
 
   // Cargar bancos/mediosPago cuando el usuario elige "banco" en tipo_movimiento
   useEffect(() => {
@@ -279,13 +329,15 @@ export default function NuevoMovimientoDialog({
       })(),
       concepto: '',
       monto: '',
-      descripcion: '',
+      comentarios: '',
       prioridad: 'media',
       estado: isPagoPendiente ? 'pendiente' : 'aprobado',
       tipo: isPagoPendiente ? 'egreso' : 'ingreso',
       tipo_movimiento: cajaTipo,
       categoria_id: '',
       subcategoria_id: '',
+      descripcion_id: '',
+      proveedor_id: '',
       comprobante: '',
       banco_id: '',
       medio_pago_id: '',
@@ -450,7 +502,9 @@ export default function NuevoMovimientoDialog({
       concepto: formData.concepto,
       monto: formData.monto,
       categoria_id: formData.categoria_id,
-      descripcion: formData.descripcion,
+      descripcion_id: formData.descripcion_id,
+      proveedor_id: formData.proveedor_id,
+      comentarios: formData.comentarios,
       prioridad: formData.prioridad,
       ...(isBanco && {
         banco_id: formData.banco_id,
@@ -478,7 +532,7 @@ export default function NuevoMovimientoDialog({
               tipo_caja: cajaTipo,
               fecha: formData.fecha,
               concepto: formData.concepto,
-              descripcion: formData.descripcion,
+              comentarios: formData.comentarios,
               monto: parseFloat(formData.monto),
               prioridad: formData.prioridad,
               categoria_id: formData.categoria_id
@@ -486,6 +540,12 @@ export default function NuevoMovimientoDialog({
                 : null,
               subcategoria_id: formData.subcategoria_id
                 ? Number(formData.subcategoria_id)
+                : null,
+              descripcion_id: formData.descripcion_id
+                ? Number(formData.descripcion_id)
+                : null,
+              proveedor_id: formData.proveedor_id
+                ? Number(formData.proveedor_id)
                 : null,
               comprobante: formData.comprobante || null,
               banco_id: formData.banco_id ? Number(formData.banco_id) : null,
@@ -523,7 +583,7 @@ export default function NuevoMovimientoDialog({
             user_id: user?.id,
             fecha: formData.fecha,
             concepto: formData.concepto,
-            descripcion: formData.descripcion,
+            comentarios: formData.comentarios,
             monto: parseFloat(formData.monto),
             tipo_movimiento: formData.tipo_movimiento,
             prioridad: formData.prioridad,
@@ -533,6 +593,12 @@ export default function NuevoMovimientoDialog({
               : null,
             subcategoria_id: formData.subcategoria_id
               ? Number(formData.subcategoria_id)
+              : null,
+            descripcion_id: formData.descripcion_id
+              ? Number(formData.descripcion_id)
+              : null,
+            proveedor_id: formData.proveedor_id
+              ? Number(formData.proveedor_id)
               : null,
             banco_id: formData.banco_id ? Number(formData.banco_id) : null,
             medio_pago_id: formData.medio_pago_id
@@ -546,7 +612,7 @@ export default function NuevoMovimientoDialog({
             fecha: formData.fecha,
             concepto: formData.concepto,
             monto: parseFloat(formData.monto),
-            descripcion: formData.descripcion,
+            comentarios: formData.comentarios,
             prioridad: formData.prioridad,
             estado: formData.estado,
             tipo: formData.tipo,
@@ -555,6 +621,12 @@ export default function NuevoMovimientoDialog({
               : null,
             subcategoria_id: formData.subcategoria_id
               ? Number(formData.subcategoria_id)
+              : null,
+            descripcion_id: formData.descripcion_id
+              ? Number(formData.descripcion_id)
+              : null,
+            proveedor_id: formData.proveedor_id
+              ? Number(formData.proveedor_id)
               : null,
             comprobante: formData.comprobante,
             banco_id: formData.banco_id ? Number(formData.banco_id) : null,
@@ -986,14 +1058,14 @@ export default function NuevoMovimientoDialog({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="descripcion" className={labelClasses}>
-                    Descripción
+                  <Label htmlFor="comentarios" className={labelClasses}>
+                    Comentarios
                   </Label>
                   <Input
-                    id="descripcion"
-                    name="descripcion"
-                    placeholder="Detalles adicionales (opcional)"
-                    value={formData.descripcion}
+                    id="comentarios"
+                    name="comentarios"
+                    placeholder="Comentarios adicionales (opcional)"
+                    value={formData.comentarios}
                     onChange={handleInputChange}
                     className={inputClasses}
                   />
@@ -1169,8 +1241,49 @@ export default function NuevoMovimientoDialog({
               <section className="space-y-4">
                 <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
                   <span className="w-1 h-4 bg-[#002868] rounded-full" />
-                  Categorización y estado
+                  Clasificación y Categorización
                 </h4>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="descripcion_id" className={labelClasses}>
+                      Descripción (Clasificación) *
+                    </Label>
+                    <select
+                      id="descripcion_id"
+                      name="descripcion_id"
+                      value={formData.descripcion_id}
+                      onChange={handleInputChange}
+                      className={selectClasses}
+                    >
+                      <option value="">Seleccione descripción</option>
+                      {descripciones.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="proveedor_id" className={labelClasses}>
+                      Proveedor *
+                    </Label>
+                    <select
+                      id="proveedor_id"
+                      name="proveedor_id"
+                      value={formData.proveedor_id}
+                      onChange={handleInputChange}
+                      className={selectClasses}
+                    >
+                      <option value="">Seleccione proveedor</option>
+                      {proveedores.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">

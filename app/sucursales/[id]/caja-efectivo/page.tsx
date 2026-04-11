@@ -245,6 +245,8 @@ export default function CajaEfectivoPage() {
         subcategorias={caja.subcategorias}
         bancos={caja.bancos}
         mediosPago={caja.mediosPago}
+        descripciones={caja.descripciones}
+        proveedores={caja.proveedores}
         showBancoFields={false}
         isReadOnly={isStrictlyReadOnly}
         canEditInfo={canEditInfo}
@@ -293,6 +295,8 @@ export default function CajaEfectivoPage() {
         cajaTipo="efectivo"
         moneda={moneda}
         categoriasExternas={caja.categorias}
+        descripcionesExternas={caja.descripciones}
+        proveedoresExternas={caja.proveedores}
         bancosExternos={caja.bancos}
         mediosPagoExternos={caja.mediosPago}
       />

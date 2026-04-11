@@ -77,6 +77,22 @@ const BASE_COLUMNS: ColumnDef[] = [
       </div>
     ),
   },
+  {
+    key: 'descripcion_config',
+    label: 'Clasificación',
+    hideBelow: 'md',
+    render: (t) => (
+      <span className="text-[#666666]">{t.descripcion_nombre || '-'}</span>
+    ),
+  },
+  {
+    key: 'proveedor',
+    label: 'Proveedor',
+    hideBelow: 'md',
+    render: (t) => (
+      <span className="text-[#666666]">{t.proveedor_nombre || '-'}</span>
+    ),
+  },
 ];
 
 /** Columnas extra para caja banco */
@@ -112,12 +128,12 @@ const BANCO_COLUMNS: ColumnDef[] = [
 /** Columnas extra para caja efectivo */
 const EFECTIVO_COLUMNS: ColumnDef[] = [
   {
-    key: 'descripcion',
-    label: 'Descripción',
+    key: 'comentarios',
+    label: 'Comentarios',
     hideBelow: 'md',
     render: (t) => (
-      <span className="text-[#666666]" title={t.descripcion || ''}>
-        {truncarTexto(t.descripcion)}
+      <span className="text-[#666666]" title={t.comentarios || ''}>
+        {truncarTexto(t.comentarios)}
       </span>
     ),
   },
