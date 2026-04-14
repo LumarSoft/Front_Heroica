@@ -22,7 +22,7 @@ export type SucursalFormValues = z.infer<typeof sucursalSchema>;
 // ── Movimiento ─────────────────────────────────────────────────────────────
 export const movimientoBaseSchema = z.object({
   fecha: z.string().min(1, 'La fecha es obligatoria'),
-  concepto: z.string().min(1, 'El concepto es obligatorio'),
+  concepto: z.string().optional(),
   monto: z
     .string()
     .min(1, 'El monto es obligatorio')
