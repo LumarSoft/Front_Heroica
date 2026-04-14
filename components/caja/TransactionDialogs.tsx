@@ -274,18 +274,24 @@ export function DetailsDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="concepto" className={labelClasses}>
-                Concepto
+              <Label htmlFor="descripcion_id" className={labelClasses}>
+                Descripción (Clasificación)
               </Label>
-              <Input
-                id="concepto"
-                name="concepto"
-                placeholder="Ej: Transferencia recibida"
-                value={formData.concepto}
+              <select
+                id="descripcion_id"
+                name="descripcion_id"
+                value={formData.descripcion_id}
                 onChange={onInputChange}
                 disabled={!canEditInfo}
-                className={`${inputClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
-              />
+                className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+              >
+                <option value="">Seleccione descripción</option>
+                {descripciones.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.nombre}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-1.5">
@@ -451,47 +457,25 @@ export function DetailsDialog({
               Clasificación y Categorización
             </h4>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="descripcion_id" className={labelClasses}>
-                  Descripción (Clasificación)
-                </Label>
-                <select
-                  id="descripcion_id"
-                  name="descripcion_id"
-                  value={formData.descripcion_id}
-                  onChange={onInputChange}
-                  disabled={!canEditInfo}
-                  className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
-                >
-                  <option value="">Seleccione descripción</option>
-                  {descripciones.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="proveedor_id" className={labelClasses}>
-                  Proveedor
-                </Label>
-                <select
-                  id="proveedor_id"
-                  name="proveedor_id"
-                  value={formData.proveedor_id}
-                  onChange={onInputChange}
-                  disabled={!canEditInfo}
-                  className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
-                >
-                  <option value="">Seleccione proveedor</option>
-                  {proveedores.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="proveedor_id" className={labelClasses}>
+                Proveedor
+              </Label>
+              <select
+                id="proveedor_id"
+                name="proveedor_id"
+                value={formData.proveedor_id}
+                onChange={onInputChange}
+                disabled={!canEditInfo}
+                className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+              >
+                <option value="">Seleccione proveedor</option>
+                {proveedores.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

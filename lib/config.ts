@@ -136,6 +136,7 @@ export const API_ENDPOINTS = {
     // Descripciones
     DESCRIPCIONES: {
       GET_ALL: `${API_URL}/api/configuracion/descripciones`,
+      GET_ACTIVE: `${API_URL}/api/configuracion/descripciones?activo=true`,
       CREATE: `${API_URL}/api/configuracion/descripciones`,
       UPDATE: (id: number) => `${API_URL}/api/configuracion/descripciones/${id}`,
       DELETE: (id: number) => `${API_URL}/api/configuracion/descripciones/${id}`,

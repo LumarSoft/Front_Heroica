@@ -198,7 +198,7 @@ export default function NuevoMovimientoDialog({
     if (descripcionesExternas?.length) return;
     try {
       const response = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ALL,
+        API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ACTIVE,
       );
       const data = await response.json();
       if (response.ok) setDescripcionesInternas(data.data || []);
@@ -1049,17 +1049,23 @@ export default function NuevoMovimientoDialog({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="concepto" className={labelClasses}>
-                    Concepto *
+                  <Label htmlFor="descripcion_id" className={labelClasses}>
+                    Descripción (Clasificación) *
                   </Label>
-                  <Input
-                    id="concepto"
-                    name="concepto"
-                    placeholder="Ej: Venta de contado"
-                    value={formData.concepto}
+                  <select
+                    id="descripcion_id"
+                    name="descripcion_id"
+                    value={formData.descripcion_id}
                     onChange={handleInputChange}
-                    className={inputClasses}
-                  />
+                    className={selectClasses}
+                  >
+                    <option value="">Seleccione descripción</option>
+                    {descripciones.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.nombre}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="space-y-1.5">
@@ -1249,45 +1255,24 @@ export default function NuevoMovimientoDialog({
                   Clasificación y Categorización
                 </h4>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="descripcion_id" className={labelClasses}>
-                      Descripción (Clasificación) *
-                    </Label>
-                    <select
-                      id="descripcion_id"
-                      name="descripcion_id"
-                      value={formData.descripcion_id}
-                      onChange={handleInputChange}
-                      className={selectClasses}
-                    >
-                      <option value="">Seleccione descripción</option>
-                      {descripciones.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="proveedor_id" className={labelClasses}>
-                      Proveedor *
-                    </Label>
-                    <select
-                      id="proveedor_id"
-                      name="proveedor_id"
-                      value={formData.proveedor_id}
-                      onChange={handleInputChange}
-                      className={selectClasses}
-                    >
-                      <option value="">Seleccione proveedor</option>
-                      {proveedores.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="proveedor_id" className={labelClasses}>
+                    Proveedor *
+                  </Label>
+                  <select
+                    id="proveedor_id"
+                    name="proveedor_id"
+                    value={formData.proveedor_id}
+                    onChange={handleInputChange}
+                    className={selectClasses}
+                  >
+                    <option value="">Seleccione proveedor</option>
+                    {proveedores.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

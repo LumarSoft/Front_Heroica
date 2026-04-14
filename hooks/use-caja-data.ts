@@ -294,7 +294,7 @@ export function useCajaData(
   const fetchDescripciones = useCallback(async () => {
     try {
       const response = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ALL,
+        API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ACTIVE,
       );
       const data = await response.json();
       if (response.ok) setDescripciones(data.data || []);

@@ -48,11 +48,16 @@ const BASE_COLUMNS: ColumnDef[] = [
     ),
   },
   {
-    key: 'concepto',
-    label: 'Concepto',
+    key: 'descripcion_config',
+    label: 'Descripción',
     render: (t) => (
-      <div className="flex flex-col gap-1">
-        <span className="text-[#1A1A1A]">{t.concepto}</span>
+      <div className="flex flex-col gap-1 max-w-[160px] sm:max-w-[200px] md:max-w-[250px] lg:max-w-[350px]">
+        <span 
+          className="text-[#1A1A1A] font-medium truncate" 
+          title={t.descripcion_nombre || ''}
+        >
+          {t.descripcion_nombre || '-'}
+        </span>
         {t.numero_cheque && (
           <div className="flex items-center">
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold tracking-tight uppercase">
@@ -75,14 +80,6 @@ const BASE_COLUMNS: ColumnDef[] = [
           </div>
         )}
       </div>
-    ),
-  },
-  {
-    key: 'descripcion_config',
-    label: 'Clasificación',
-    hideBelow: 'md',
-    render: (t) => (
-      <span className="text-[#666666]">{t.descripcion_nombre || '-'}</span>
     ),
   },
   {

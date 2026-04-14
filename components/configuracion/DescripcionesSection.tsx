@@ -51,7 +51,7 @@ export function DescripcionesSection() {
 
   const fetchItems = async () => {
     try {
-      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ALL);
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ACTIVE);
       const data = await res.json();
       if (data.success) setItems(data.data);
     } catch {
