@@ -23,7 +23,11 @@ import { SummaryCard } from '@/components/reportes/SummaryCard';
 import { BreakdownPanel } from '@/components/reportes/BreakdownPanel';
 import { DeudaPanel } from '@/components/reportes/DeudaPanel';
 import { CreditoPanel } from '@/components/reportes/CreditoPanel';
+import { MonthlyLineChart } from '@/components/reportes/MonthlyLineChart';
+import { MonthlyCategoryBarChart } from '@/components/reportes/MonthlyCategoryBarChart';
 import type { ReportData } from '@/components/reportes/types';
+import type { MonthlyDataPoint } from '@/components/reportes/MonthlyLineChart';
+import type { CategoryDataPoint } from '@/components/reportes/MonthlyCategoryBarChart';
 
 export default function ReportesPage() {
   const router = useRouter();
@@ -34,6 +38,8 @@ export default function ReportesPage() {
 
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
   const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [monthlyData, setMonthlyData] = useState<MonthlyDataPoint[]>([]);
+  const [categoryData, setCategoryData] = useState<CategoryDataPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedIngresoCategory, setSelectedIngresoCategory] = useState<
@@ -84,6 +90,28 @@ export default function ReportesPage() {
     }
   }, [params.id]);
 
+  const fetchMonthlyData = useCallback(async () => {
+    try {
+      const rawId = Array.isArray(params.id) ? params.id[0] : params.id;
+      const safeId = rawId != null ? encodeURIComponent(String(rawId)) : '';
+      if (!safeId) return;
+      const url = API_ENDPOINTS.REPORTES.GET_ANUAL(safeId, moneda);
+      const response = await apiFetch(url);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      const today = new Date();
+      const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+      setMonthlyData(
+        (data.data.mensual as MonthlyDataPoint[]).filter((d) => d.mes <= currentMonth),
+      );
+      setCategoryData(
+        (data.data.porCategoria as CategoryDataPoint[]).filter((d) => d.mes <= currentMonth),
+      );
+    } catch {
+      // silencioso: el gráfico simplemente no muestra datos
+    }
+  }, [params.id, moneda]);
+
   const fetchReportData = useCallback(async () => {
     setIsLoading(true);
     setSelectedIngresoCategory(null);
@@ -115,7 +143,8 @@ export default function ReportesPage() {
     if (isGuardLoading) return;
     fetchSucursal();
     fetchReportData();
-  }, [isGuardLoading, fetchSucursal, fetchReportData]);
+    fetchMonthlyData();
+  }, [isGuardLoading, fetchSucursal, fetchReportData, fetchMonthlyData]);
 
   // ── Computed data ────────────────────────────────────────────────────────────
   const currentIngresosData = useMemo(() => {
@@ -161,6 +190,29 @@ export default function ReportesPage() {
     }
     return reportData.resumen.egresos;
   }, [reportData, selectedEgresoCategory]);
+
+  // ── Deltas vs mes anterior ────────────────────────────────────────────────
+  const monthlyDeltas = useMemo(() => {
+    const calcDelta = (curr: number, prev: number): number | null => {
+      if (prev === 0) return null;
+      return ((curr - prev) / prev) * 100;
+    };
+
+    const currentEntry = monthlyData.find((d) => d.mes === debouncedMonth);
+    if (!currentEntry) return null;
+
+    const [year, month] = debouncedMonth.split('-').map(Number);
+    const prevDate = new Date(year, month - 2, 1); // mes anterior
+    const prevMes = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+    const prevEntry = monthlyData.find((d) => d.mes === prevMes);
+    if (!prevEntry) return null;
+
+    return {
+      ingresos: calcDelta(currentEntry.ingresos, prevEntry.ingresos),
+      egresos: calcDelta(currentEntry.egresos, prevEntry.egresos),
+      resultado: calcDelta(currentEntry.resultado, prevEntry.resultado),
+    };
+  }, [monthlyData, debouncedMonth]);
 
   const handlePrint = () => window.print();
 
@@ -284,12 +336,15 @@ export default function ReportesPage() {
                   value={formatMonto(reportData.resumen.ingresos, moneda)}
                   accent="emerald"
                   icon={<TrendingUp className="w-5 h-5" />}
+                  delta={monthlyDeltas?.ingresos ?? null}
                 />
                 <SummaryCard
                   label="Egresos Totales"
                   value={formatMonto(reportData.resumen.egresos, moneda)}
                   accent="rose"
                   icon={<TrendingDown className="w-5 h-5" />}
+                  delta={monthlyDeltas?.egresos ?? null}
+                  invertDelta
                 />
                 <SummaryCard
                   label="Resultado Neto"
@@ -309,6 +364,7 @@ export default function ReportesPage() {
                         ? 'Pérdida'
                         : 'Equilibrio'
                   }
+                  delta={monthlyDeltas?.resultado ?? null}
                 />
                 <SummaryCard
                   label="Deudas (A Pagar)"
@@ -327,10 +383,33 @@ export default function ReportesPage() {
               </div>
             </section>
 
-            {/* ── 2 · Ingresos ─────────────────────────────────────────────── */}
-            <section className="page-break-before">
+            {/* ── 2 · Evolución Mensual ────────────────────────────────────── */}
+            <section className="page-break-before print:hidden">
               <SectionHeading
                 number="2"
+                title="Evolución Mensual (Histórico)"
+                className="mt-4"
+              />
+              <div className="flex flex-col gap-5">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                    Ingresos · Egresos · Resultado Neto
+                  </p>
+                  <MonthlyLineChart data={monthlyData} moneda={moneda} />
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                    Movimientos por Categoría
+                  </p>
+                  <MonthlyCategoryBarChart data={categoryData} moneda={moneda} />
+                </div>
+              </div>
+            </section>
+
+            {/* ── 3 · Ingresos ─────────────────────────────────────────────── */}
+            <section className="page-break-before">
+              <SectionHeading
+                number="3"
                 title="Discriminado de Ingresos"
                 className="mt-4"
               />
@@ -350,10 +429,10 @@ export default function ReportesPage() {
               />
             </section>
 
-            {/* ── 3 · Egresos ──────────────────────────────────────────────── */}
+            {/* ── 4 · Egresos ──────────────────────────────────────────────── */}
             <section className="page-break-before">
               <SectionHeading
-                number="3"
+                number="4"
                 title="Discriminado de Egresos"
                 className="mt-4"
               />
@@ -373,10 +452,10 @@ export default function ReportesPage() {
               />
             </section>
 
-            {/* ── 4 · Deudas (A Pagar) ──────────────────────────────────────── */}
+            {/* ── 5 · Deudas (A Pagar) ──────────────────────────────────────── */}
             <section className="mt-8 page-break-before">
               <SectionHeading
-                number="4"
+                number="5"
                 title="Listado de Deudas (A Pagar)"
                 className="mt-4"
               />
@@ -386,10 +465,10 @@ export default function ReportesPage() {
               />
             </section>
 
-            {/* ── 5 · Créditos (A Cobrar) ──────────────────────────────────────── */}
+            {/* ── 6 · Créditos (A Cobrar) ──────────────────────────────────────── */}
             <section className="mt-8 page-break-before">
               <SectionHeading
-                number="5"
+                number="6"
                 title="Listado de Créditos (A Cobrar)"
                 className="mt-4"
               />
