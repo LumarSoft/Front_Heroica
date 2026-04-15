@@ -65,9 +65,16 @@ interface Tarea {
   estado: Estado;
   creado_por: number | null;
   creado_por_nombre: string | null;
+  asignado_a: number | null;
+  asignado_a_nombre: string | null;
   created_at: string;
   updated_at: string;
   completed_at: string | null;
+}
+
+interface UsuarioBasico {
+  id: number;
+  nombre: string;
 }
 
 // ─── Static maps ──────────────────────────────────────────────────────────────
@@ -296,11 +303,19 @@ function TaskCard({
         <span className="text-[10px] text-[#999] font-medium">
           {formatDate(tarea.created_at)}
         </span>
-        {tarea.creado_por_nombre && (
-          <span className="text-[10px] text-[#999]">
-            {tarea.creado_por_nombre.split(' ')[0]}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {tarea.asignado_a_nombre && (
+            <span className="inline-flex items-center gap-1 text-[10px] text-[#002868] font-semibold bg-[#002868]/8 px-1.5 py-0.5 rounded-full">
+              <User className="w-2.5 h-2.5" />
+              {tarea.asignado_a_nombre.split(' ')[0]}
+            </span>
+          )}
+          {tarea.creado_por_nombre && (
+            <span className="text-[10px] text-[#999]">
+              {tarea.creado_por_nombre.split(' ')[0]}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Actions */}
@@ -387,9 +402,11 @@ interface TareaDialogProps {
     tipo: Tipo;
     prioridad: Prioridad;
     version: string;
+    asignado_a: number | null;
   }) => Promise<void>;
   saving: boolean;
   initial?: Tarea | null;
+  usuarios: UsuarioBasico[];
 }
 
 function TareaDialog({
@@ -398,12 +415,14 @@ function TareaDialog({
   onSave,
   saving,
   initial,
+  usuarios,
 }: TareaDialogProps) {
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [version, setVersion] = useState('');
   const [tipo, setTipo] = useState<Tipo>('otro');
   const [prioridad, setPrioridad] = useState<Prioridad>('media');
+  const [asignadoA, setAsignadoA] = useState<number | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -412,6 +431,7 @@ function TareaDialog({
       setVersion(initial?.version ?? '');
       setTipo(initial?.tipo ?? 'otro');
       setPrioridad(initial?.prioridad ?? 'media');
+      setAsignadoA(initial?.asignado_a ?? null);
     }
   }, [open, initial]);
 
@@ -424,6 +444,7 @@ function TareaDialog({
       version: version.trim(),
       tipo,
       prioridad,
+      asignado_a: asignadoA,
     });
   };
 
@@ -515,6 +536,29 @@ function TareaDialog({
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Asignar a */}
+            <div className="space-y-2">
+              <Label className="text-[#002868] font-semibold">Asignar a</Label>
+              <Select
+                value={asignadoA !== null ? String(asignadoA) : 'sin_asignar'}
+                onValueChange={(v) =>
+                  setAsignadoA(v === 'sin_asignar' ? null : Number(v))
+                }
+              >
+                <SelectTrigger className="border-[#E0E0E0] focus:border-[#002868]">
+                  <SelectValue placeholder="Sin asignar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sin_asignar">Sin asignar</SelectItem>
+                  {usuarios.map((u) => (
+                    <SelectItem key={u.id} value={String(u.id)}>
+                      {u.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Descripción */}
@@ -779,6 +823,20 @@ function DetailDialog({
               </div>
             )}
 
+            <div className="flex items-start gap-2">
+              <User className="w-3.5 h-3.5 text-[#002868] mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#999]">
+                  Asignada a
+                </p>
+                <p className="text-xs text-[#444] font-medium">
+                  {tarea.asignado_a_nombre ?? (
+                    <span className="text-[#AAAAAA] italic">Sin asignar</span>
+                  )}
+                </p>
+              </div>
+            </div>
+
             {tarea.completed_at && (
               <div className="flex items-start gap-2">
                 <CheckCheck className="w-3.5 h-3.5 text-green-500 mt-0.5 shrink-0" />
@@ -854,14 +912,14 @@ export default function TareasPage() {
   const { user, isGuardLoading, handleLogout } = useAuthGuard();
 
   const [tareas, setTareas] = useState<Tarea[]>([]);
+  const [usuarios, setUsuarios] = useState<UsuarioBasico[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTipo, setFilterTipo] = useState<'all' | Tipo>('all');
-  const [filterPrioridad, setFilterPrioridad] = useState<'all' | Prioridad>(
-    'all',
-  );
+  const [filterPrioridad, setFilterPrioridad] = useState<'all' | Prioridad>('all');
+  const [filterVersion, setFilterVersion] = useState<string>('all');
 
   // Detail view
   const [detailTarget, setDetailTarget] = useState<Tarea | null>(null);
@@ -881,6 +939,7 @@ export default function TareasPage() {
   useEffect(() => {
     if (isGuardLoading) return;
     fetchTareas();
+    fetchUsuarios();
   }, [isGuardLoading]);
 
   async function fetchTareas() {
@@ -896,6 +955,16 @@ export default function TareasPage() {
     }
   }
 
+  async function fetchUsuarios() {
+    try {
+      const res = await apiFetch(API_ENDPOINTS.TAREAS.GET_USUARIOS);
+      const data = await res.json();
+      if (res.ok) setUsuarios(data.data);
+    } catch {
+      // silencioso: no bloquea la carga principal
+    }
+  }
+
   // ─── Create / Update ────────────────────────────────────────────────────────
 
   async function handleSave(formData: {
@@ -904,6 +973,7 @@ export default function TareasPage() {
     tipo: Tipo;
     prioridad: Prioridad;
     version: string;
+    asignado_a: number | null;
   }) {
     setSaving(true);
     try {
@@ -980,12 +1050,26 @@ export default function TareasPage() {
 
   // ─── Filtered + grouped ──────────────────────────────────────────────────────
 
+  const versionesDisponibles = useMemo(() => {
+    const set = new Set<string>();
+    for (const t of tareas) {
+      if (t.version) set.add(t.version);
+    }
+    return Array.from(set).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+  }, [tareas]);
+
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     return tareas.filter((t) => {
       if (filterTipo !== 'all' && t.tipo !== filterTipo) return false;
-      if (filterPrioridad !== 'all' && t.prioridad !== filterPrioridad)
-        return false;
+      if (filterPrioridad !== 'all' && t.prioridad !== filterPrioridad) return false;
+      if (filterVersion !== 'all') {
+        if (filterVersion === 'sin_version') {
+          if (t.version) return false;
+        } else {
+          if (t.version !== filterVersion) return false;
+        }
+      }
       if (q) {
         const inTitle = t.titulo.toLowerCase().includes(q);
         const inDesc = t.descripcion?.toLowerCase().includes(q) ?? false;
@@ -993,7 +1077,7 @@ export default function TareasPage() {
       }
       return true;
     });
-  }, [tareas, filterTipo, filterPrioridad, searchQuery]);
+  }, [tareas, filterTipo, filterPrioridad, filterVersion, searchQuery]);
 
   const grouped = useMemo(() => {
     const map: Record<Estado, Tarea[]> = {
@@ -1130,7 +1214,7 @@ export default function TareasPage() {
 
           <div className="border-t border-[#F0F0F0]" />
 
-          {/* Tipo + Prioridad */}
+          {/* Tipo + Prioridad + Versión */}
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 sm:divide-x sm:divide-[#E0E0E0]">
             {/* Tipo */}
             <div className="flex flex-col gap-2 sm:pr-6">
@@ -1158,7 +1242,7 @@ export default function TareasPage() {
             </div>
 
             {/* Prioridad */}
-            <div className="flex flex-col gap-2 sm:pl-6">
+            <div className="flex flex-col gap-2 sm:px-6">
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#999]">
                 Prioridad
               </span>
@@ -1179,6 +1263,51 @@ export default function TareasPage() {
                       : PRIORIDAD_CONFIG[p as Prioridad].label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Versión */}
+            <div className="flex flex-col gap-2 sm:pl-6">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#999]">
+                Versión
+              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={() => setFilterVersion('all')}
+                  className={cn(
+                    'px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer',
+                    filterVersion === 'all'
+                      ? 'bg-[#002868] text-white border-[#002868]'
+                      : 'bg-[#F5F5F5] text-[#555] border-transparent hover:border-[#002868] hover:text-[#002868]',
+                  )}
+                >
+                  Todas
+                </button>
+                {versionesDisponibles.map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setFilterVersion(v)}
+                    className={cn(
+                      'px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer',
+                      filterVersion === v
+                        ? 'bg-[#002868] text-white border-[#002868]'
+                        : 'bg-[#F5F5F5] text-[#555] border-transparent hover:border-[#002868] hover:text-[#002868]',
+                    )}
+                  >
+                    v{v}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setFilterVersion('sin_version')}
+                  className={cn(
+                    'px-3 py-1 rounded-full text-xs font-semibold border transition-all cursor-pointer',
+                    filterVersion === 'sin_version'
+                      ? 'bg-[#002868] text-white border-[#002868]'
+                      : 'bg-[#F5F5F5] text-[#555] border-transparent hover:border-[#002868] hover:text-[#002868]',
+                  )}
+                >
+                  Sin versión
+                </button>
               </div>
             </div>
           </div>
@@ -1281,6 +1410,7 @@ export default function TareasPage() {
         onSave={handleSave}
         saving={saving}
         initial={editTarget}
+        usuarios={usuarios}
       />
 
       <DeleteDialog
