@@ -31,8 +31,9 @@ export const movimientoBaseSchema = z.object({
       'El monto debe ser diferente de cero',
     ),
   categoria_id: z.string().min(1, 'Debes seleccionar una categoría'),
-  descripcion_id: z.string().optional(),
-  proveedor_id: z.string().optional(),
+  subcategoria_id: z.string().min(1, 'Debes seleccionar una subcategoría'),
+  descripcion_id: z.string().min(1, 'Debes seleccionar una descripción'),
+  proveedor_id: z.string().min(1, 'Debes seleccionar un proveedor'),
   comentarios: z.string().optional(),
   prioridad: z.enum(['baja', 'media', 'alta']),
 });

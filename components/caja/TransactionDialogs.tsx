@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -62,7 +63,7 @@ interface DetailsDialogProps {
     numero_cheque: string;
   };
   onInputChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) => void;
   onSave: () => void;
   isSaving: boolean;
@@ -298,14 +299,14 @@ export function DetailsDialog({
               <Label htmlFor="comentarios" className={labelClasses}>
                 Comentarios
               </Label>
-              <Input
+              <Textarea
                 id="comentarios"
                 name="comentarios"
                 placeholder="Comentarios adicionales del movimiento"
                 value={formData.comentarios}
                 onChange={onInputChange}
                 disabled={!canEditComment && !canEditInfo}
-                className={`${inputClasses} ${!canEditComment && !canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`${inputClasses} min-h-[96px] resize-y ${!canEditComment && !canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
             </div>
           </section>

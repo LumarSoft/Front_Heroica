@@ -25,6 +25,8 @@ export interface Transaction {
   estado: TransactionEstado;
   categoria_id?: number;
   subcategoria_id?: number;
+  categoria_nombre?: string;
+  subcategoria_nombre?: string;
   comprobante?: string;
   banco_id?: number;
   medio_pago_id?: number;
