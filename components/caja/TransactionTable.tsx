@@ -68,19 +68,22 @@ const BASE_COLUMNS: ColumnDef[] = [
   },
 ];
 
-/** Columna de descripcion compartida */
+/** Columna de descripcion compartida — cae a concepto cuando no hay descripcion configurada */
 const DESCRIPCION_COLUMN: ColumnDef = {
   key: 'descripcion',
   label: 'Descripcion',
   widthClass: 'w-[150px]',
-  render: (t) => (
-    <span
-      className="block w-full text-[#666666] truncate"
-      title={t.descripcion_nombre || ''}
-    >
-      {truncarTexto(t.descripcion_nombre)}
-    </span>
-  ),
+  render: (t) => {
+    const text = t.descripcion_nombre || t.concepto || null;
+    return (
+      <span
+        className="block w-full text-[#666666] truncate"
+        title={text || ''}
+      >
+        {truncarTexto(text)}
+      </span>
+    );
+  },
 };
 
 /** Columna de comentario compartida */
