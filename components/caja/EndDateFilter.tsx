@@ -8,6 +8,7 @@ import {
   ChevronDown,
   FilterX,
   Landmark,
+  LayoutList,
   Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,8 @@ interface EndDateFilterProps {
   onBancosChange?: (ids: string[]) => void;
   searchText?: string;
   onSearchTextChange?: (text: string) => void;
+  viewMode?: 'tabla' | 'calendario';
+  onViewModeChange?: (mode: 'tabla' | 'calendario') => void;
 }
 
 export function EndDateFilter({
@@ -43,6 +46,8 @@ export function EndDateFilter({
   onBancosChange,
   searchText = '',
   onSearchTextChange,
+  viewMode = 'tabla',
+  onViewModeChange,
 }: EndDateFilterProps) {
   const showBancoFilter = Boolean(bancos?.length && onBancosChange);
   const [isOpen, setIsOpen] = useState(false);
@@ -238,6 +243,41 @@ export function EndDateFilter({
               placeholder="Buscar concepto, N° cheque..."
               className="h-9 pl-9 pr-3 rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] text-sm text-[#1A1A1A] placeholder:text-[#9AA0AC] outline-none focus:border-[#002868]/60 focus:bg-white transition-all min-w-[220px]"
             />
+          </div>
+        </>
+      )}
+
+      {/* Toggle Tabla / Calendario */}
+      {onViewModeChange && (
+        <>
+          <div className="hidden sm:block w-px h-7 bg-[#E0E0E0]" />
+          <div className="flex items-center gap-0.5 p-0.5 bg-[#F0F4FF] rounded-lg border border-[#002868]/15">
+            <button
+              type="button"
+              onClick={() => onViewModeChange('tabla')}
+              className={cn(
+                'flex items-center gap-1.5 h-7 px-3 rounded-md text-xs font-semibold transition-all',
+                viewMode === 'tabla'
+                  ? 'bg-[#002868] text-white shadow-sm'
+                  : 'text-[#5A6070] hover:text-[#002868] hover:bg-white/60',
+              )}
+            >
+              <LayoutList className="w-3.5 h-3.5" />
+              Tabla
+            </button>
+            <button
+              type="button"
+              onClick={() => onViewModeChange('calendario')}
+              className={cn(
+                'flex items-center gap-1.5 h-7 px-3 rounded-md text-xs font-semibold transition-all',
+                viewMode === 'calendario'
+                  ? 'bg-[#002868] text-white shadow-sm'
+                  : 'text-[#5A6070] hover:text-[#002868] hover:bg-white/60',
+              )}
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+              Calendario
+            </button>
           </div>
         </>
       )}

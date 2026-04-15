@@ -22,6 +22,7 @@ import {
   TransactionTable,
   getEfectivoColumns,
 } from '@/components/caja/TransactionTable';
+import { PaymentCalendar } from '@/components/caja/PaymentCalendar';
 import { EndDateFilter } from '@/components/caja/EndDateFilter';
 import {
   DetailsDialog,
@@ -45,6 +46,7 @@ export default function CajaEfectivoPage() {
   const moneda = (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS';
   const caja = useCajaData('efectivo', moneda);
   const [activeTab, setActiveTab] = useState('real');
+  const [viewMode, setViewMode] = useState<'tabla' | 'calendario'>('tabla');
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null);
   const [sucursalNombre, setSucursalNombre] = useState('');
   const [isCompraVentaDialogOpen, setIsCompraVentaDialogOpen] = useState(false);
@@ -173,6 +175,8 @@ export default function CajaEfectivoPage() {
                   hayFiltro={caja.hayFiltroActivo}
                   searchText={caja.searchText}
                   onSearchTextChange={caja.setSearchText}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
                 />
 
                 <CajaTabs
@@ -185,46 +189,83 @@ export default function CajaEfectivoPage() {
                     value="real"
                     className="mt-0 outline-none flex-grow"
                   >
-                    <TransactionTable
-                      title="Saldo Real"
-                      description="Movimientos de efectivo confirmados para el periodo actual."
-                      transactions={caja.saldoRealFiltrado}
-                      columns={columns}
-                      onViewDetails={caja.handleOpenDetails}
-                      onChangeState={caja.handleOpenStateChange}
-                      onDelete={canDelete ? caja.handleOpenDelete : undefined}
-                      onMove={canCrear ? caja.handleOpenMover : undefined}
-                      onBulkDelete={canDelete ? handleBulkDelete : undefined}
-                      onBulkMove={canCrear ? handleBulkMove : undefined}
-                      isReadOnly={isStrictlyReadOnly}
-                    />
+                    {viewMode === 'calendario' ? (
+                      <PaymentCalendar
+                        title="Saldo Real"
+                        description="Movimientos de efectivo confirmados."
+                        transactions={caja.saldoRealFiltrado}
+                        columns={columns}
+                        onViewDetails={caja.handleOpenDetails}
+                        onChangeState={caja.handleOpenStateChange}
+                        onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                        onMove={canCrear ? caja.handleOpenMover : undefined}
+                        onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                        onBulkMove={canCrear ? handleBulkMove : undefined}
+                        isReadOnly={isStrictlyReadOnly}
+                      />
+                    ) : (
+                      <TransactionTable
+                        title="Saldo Real"
+                        description="Movimientos de efectivo confirmados para el periodo actual."
+                        transactions={caja.saldoRealFiltrado}
+                        columns={columns}
+                        onViewDetails={caja.handleOpenDetails}
+                        onChangeState={caja.handleOpenStateChange}
+                        onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                        onMove={canCrear ? caja.handleOpenMover : undefined}
+                        onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                        onBulkMove={canCrear ? handleBulkMove : undefined}
+                        isReadOnly={isStrictlyReadOnly}
+                      />
+                    )}
                   </TabsContent>
                   <TabsContent
                     value="necesario"
                     className="mt-0 outline-none flex-grow"
                   >
-                    <TransactionTable
-                      title="Saldo Necesario"
-                      description="Pagos y compromisos en efectivo programados."
-                      transactions={caja.saldoNecesarioFiltrado}
-                      customTotal={
-                        calcularTotal(caja.saldoReal) +
-                        calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
-                      }
-                      columns={columns}
-                      onViewDetails={caja.handleOpenDetails}
-                      onChangeState={
-                        canChangeState ? caja.handleOpenStateChange : undefined
-                      }
-                      onDelete={canDelete ? caja.handleOpenDelete : undefined}
-                      onToggleDeuda={
-                        canToggleDeuda ? caja.handleOpenDeuda : undefined
-                      }
-                      onMove={canCrear ? caja.handleOpenMover : undefined}
-                      onBulkDelete={canDelete ? handleBulkDelete : undefined}
-                      onBulkMove={canCrear ? handleBulkMove : undefined}
-                      isReadOnly={isStrictlyReadOnly}
-                    />
+                    {viewMode === 'calendario' ? (
+                      <PaymentCalendar
+                        title="Saldo Necesario"
+                        description="Pagos y compromisos en efectivo programados."
+                        transactions={caja.saldoNecesarioFiltrado}
+                        columns={columns}
+                        onViewDetails={caja.handleOpenDetails}
+                        onChangeState={
+                          canChangeState ? caja.handleOpenStateChange : undefined
+                        }
+                        onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                        onToggleDeuda={
+                          canToggleDeuda ? caja.handleOpenDeuda : undefined
+                        }
+                        onMove={canCrear ? caja.handleOpenMover : undefined}
+                        onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                        onBulkMove={canCrear ? handleBulkMove : undefined}
+                        isReadOnly={isStrictlyReadOnly}
+                      />
+                    ) : (
+                      <TransactionTable
+                        title="Saldo Necesario"
+                        description="Pagos y compromisos en efectivo programados."
+                        transactions={caja.saldoNecesarioFiltrado}
+                        customTotal={
+                          calcularTotal(caja.saldoReal) +
+                          calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
+                        }
+                        columns={columns}
+                        onViewDetails={caja.handleOpenDetails}
+                        onChangeState={
+                          canChangeState ? caja.handleOpenStateChange : undefined
+                        }
+                        onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                        onToggleDeuda={
+                          canToggleDeuda ? caja.handleOpenDeuda : undefined
+                        }
+                        onMove={canCrear ? caja.handleOpenMover : undefined}
+                        onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                        onBulkMove={canCrear ? handleBulkMove : undefined}
+                        isReadOnly={isStrictlyReadOnly}
+                      />
+                    )}
                   </TabsContent>
                 </CajaTabs>
               </>
