@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,14 @@ export default function LoginPage() {
 
   const [needsSetup2FA, setNeedsSetup2FA] = useState(false);
   const [pendingUserId, setPendingUserId] = useState<number | null>(null);
+
+  const code2FAInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (requires2FA) {
+      code2FAInputRef.current?.focus();
+    }
+  }, [requires2FA]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -358,6 +366,7 @@ export default function LoginPage() {
                     </Label>
                     <Input
                       id="code2fa"
+                      ref={code2FAInputRef}
                       type="text"
                       placeholder="000000"
                       value={code2FA}

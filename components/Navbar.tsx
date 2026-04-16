@@ -2,9 +2,10 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Settings, LogOut, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Settings, LogOut, ClipboardList, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
+import { useCalculatorStore } from '@/store/calculatorStore';
 
 interface NavbarProps {
   userName?: string;
@@ -27,6 +28,7 @@ export default function Navbar({
   const canVerConfiguracion = useAuthStore((state) =>
     state.canVerConfiguracion(),
   );
+  const { toggleCalculator, isOpen: isCalculatorOpen } = useCalculatorStore();
 
   const greeting = (() => {
     const hour = new Date().getHours();
@@ -118,6 +120,17 @@ export default function Navbar({
                 </div>
               </div>
             )}
+
+            {/* Calculator Button */}
+            <Button
+              onClick={toggleCalculator}
+              variant="outline"
+              className={`border-[#002868] text-[#002868] hover:bg-[#002868] hover:text-white transition-all cursor-pointer ${isCalculatorOpen ? 'bg-[#002868] text-white' : ''}`}
+              aria-label="Calculadora"
+            >
+              <Calculator className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Calculadora</span>
+            </Button>
 
             {/* Tareas Button */}
             <Button
