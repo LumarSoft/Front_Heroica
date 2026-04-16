@@ -30,6 +30,8 @@ export interface ReportMovimiento {
   id?: number
   fecha: string
   concepto?: string
+  descripcion_nombre?: string
+  proveedor_nombre?: string
   monto: number
   tipo: 'ingreso' | 'egreso'
   categoria_nombre?: string

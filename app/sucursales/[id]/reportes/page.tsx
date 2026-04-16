@@ -19,6 +19,9 @@ import { DeudaPanel } from '@/components/reportes/DeudaPanel'
 import { CreditoPanel } from '@/components/reportes/CreditoPanel'
 import { MonthlyLineChart } from '@/components/reportes/MonthlyLineChart'
 import { MonthlyCategoryBarChart } from '@/components/reportes/MonthlyCategoryBarChart'
+import { TopConceptosPanel } from '@/components/reportes/TopConceptosPanel'
+import { SaludFinancieraPanel } from '@/components/reportes/SaludFinancieraPanel'
+import { ComparativoCategoriaPanel } from '@/components/reportes/ComparativoCategoriaPanel'
 import type { ReportData } from '@/components/reportes/types'
 import type { MonthlyDataPoint } from '@/components/reportes/MonthlyLineChart'
 import type { CategoryDataPoint } from '@/components/reportes/MonthlyCategoryBarChart'
@@ -260,30 +263,80 @@ export default function ReportesPage() {
           </div>
         ) : reportData ? (
           <div className="space-y-10 print:space-y-4">
-            {/* Print header */}
-            <div className="hidden print:flex flex-col mb-8 border-b-2 border-[#002868] pb-4">
-              <div className="flex justify-between items-end">
+            {/* ─── Print header ───────────────────────────────────────────────── */}
+            <div className="hidden print:block mb-6">
+              {/* Título y meta */}
+              <div className="flex justify-between items-start border-b-2 border-[#002868] pb-3 mb-4">
                 <div>
-                  <h2 className="text-3xl font-black text-[#002868] tracking-tight">Reporte de Resultados</h2>
-                  <p className="text-slate-600 font-medium text-lg mt-1">Sucursal: {sucursal?.nombre}</p>
+                  <h2 className="text-2xl font-black text-[#002868] tracking-tight">Reporte de Resultados</h2>
+                  <p className="text-slate-600 font-medium text-sm mt-0.5">Sucursal: {sucursal?.nombre}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-slate-800 capitalize">
+                  <p className="text-xl font-bold text-slate-800 capitalize">
                     {new Date(startDate + 'T12:00:00').toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}
                   </p>
-                  <p
-                    className={`text-sm font-bold mt-1 uppercase tracking-widest ${isClosedMonth ? 'text-blue-600' : 'text-emerald-600'}`}
-                  >
+                  <p className={`text-xs font-bold mt-0.5 uppercase tracking-widest ${isClosedMonth ? 'text-blue-600' : 'text-emerald-600'}`}>
                     {isClosedMonth ? 'Período Cerrado' : 'Mes en Curso (Parcial)'}
                   </p>
+                  <p className="text-xs text-slate-400 mt-0.5">Moneda: {moneda}</p>
                 </div>
               </div>
+
+              {/* Resumen ejecutivo en tabla compacta */}
+              <table className="print-table w-full" style={{ fontSize: '10pt' }}>
+                <thead>
+                  <tr>
+                    <th className="text-center">Ingresos Totales</th>
+                    <th className="text-center">Egresos Totales</th>
+                    <th className="text-center">Resultado Neto</th>
+                    <th className="text-center">Deudas (A Pagar)</th>
+                    <th className="text-center">Créditos (A Cobrar)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="text-center" style={{ fontWeight: 800, color: '#059669', fontSize: '12pt', fontVariantNumeric: 'tabular-nums' }}>
+                      {formatMonto(reportData.resumen.ingresos, moneda)}
+                    </td>
+                    <td className="text-center" style={{ fontWeight: 800, color: '#e11d48', fontSize: '12pt', fontVariantNumeric: 'tabular-nums' }}>
+                      {formatMonto(reportData.resumen.egresos, moneda)}
+                    </td>
+                    <td className="text-center" style={{ fontWeight: 800, fontSize: '12pt', fontVariantNumeric: 'tabular-nums', color: reportData.resumen.resultado >= 0 ? '#1d4ed8' : '#dc2626' }}>
+                      {formatMonto(reportData.resumen.resultado, moneda)}
+                      <div style={{ fontSize: '8pt', fontWeight: 600, marginTop: '2px', color: reportData.resumen.resultado > 0 ? '#059669' : reportData.resumen.resultado < 0 ? '#dc2626' : '#64748b' }}>
+                        {reportData.resumen.resultado > 0 ? 'Ganancia' : reportData.resumen.resultado < 0 ? 'Pérdida' : 'Equilibrio'}
+                      </div>
+                    </td>
+                    <td className="text-center" style={{ fontWeight: 800, color: '#d97706', fontSize: '12pt', fontVariantNumeric: 'tabular-nums' }}>
+                      {formatMonto(reportData.resumen.deudas || 0, moneda)}
+                    </td>
+                    <td className="text-center" style={{ fontWeight: 800, color: '#4f46e5', fontSize: '12pt', fontVariantNumeric: 'tabular-nums' }}>
+                      {formatMonto(reportData.resumen.creditos || 0, moneda)}
+                    </td>
+                  </tr>
+                  {monthlyDeltas && (
+                    <tr>
+                      <td className="text-center" style={{ fontSize: '8pt', color: (monthlyDeltas.ingresos ?? 0) >= 0 ? '#059669' : '#e11d48' }}>
+                        {monthlyDeltas.ingresos !== null ? `${(monthlyDeltas.ingresos ?? 0) > 0 ? '+' : ''}${(monthlyDeltas.ingresos ?? 0).toFixed(1)}% vs mes ant.` : '—'}
+                      </td>
+                      <td className="text-center" style={{ fontSize: '8pt', color: (monthlyDeltas.egresos ?? 0) <= 0 ? '#059669' : '#e11d48' }}>
+                        {monthlyDeltas.egresos !== null ? `${(monthlyDeltas.egresos ?? 0) > 0 ? '+' : ''}${(monthlyDeltas.egresos ?? 0).toFixed(1)}% vs mes ant.` : '—'}
+                      </td>
+                      <td className="text-center" style={{ fontSize: '8pt', color: (monthlyDeltas.resultado ?? 0) >= 0 ? '#059669' : '#e11d48' }}>
+                        {monthlyDeltas.resultado !== null ? `${(monthlyDeltas.resultado ?? 0) > 0 ? '+' : ''}${(monthlyDeltas.resultado ?? 0).toFixed(1)}% vs mes ant.` : '—'}
+                      </td>
+                      <td className="text-center" style={{ fontSize: '8pt', color: '#94a3b8' }}>Histórico total</td>
+                      <td className="text-center" style={{ fontSize: '8pt', color: '#94a3b8' }}>A favor nuestro</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
 
             {/* ── 1 · Resumen General ──────────────────────────────────────── */}
             <section>
               <SectionHeading number="1" title="Resumen General del Período" />
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-5 print-summary-grid">
                 <SummaryCard
                   label="Ingresos Totales"
                   value={formatMonto(reportData.resumen.ingresos, moneda)}
@@ -405,62 +458,166 @@ export default function ReportesPage() {
               <CreditoPanel creditos={reportData.detalles?.creditos || []} moneda={moneda} />
             </section>
 
-            {/* ── Print: Detalle extendido ──────────────────────────────────── */}
-            <div className="page-break-before mt-12 hidden print:block">
-              <h2 className="text-xl font-bold text-slate-800 mb-4 border-b-2 border-slate-200 pb-2">
-                Detalle de Movimientos Principales
-              </h2>
-              {(() => {
-                const allMovs = [
-                  ...(reportData.detalles?.ingresos ?? []),
-                  ...(reportData.detalles?.egresos ?? []),
-                ].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
-                if (allMovs.length === 0)
-                  return (
-                    <p className="text-center italic text-slate-500 mt-10 text-sm">
-                      No hay movimientos en este período.
-                    </p>
-                  )
+            {/* ── 7 · Top 10 Conceptos ─────────────────────────────────────── */}
+            <section className="mt-8 page-break-before">
+              <SectionHeading number="7" title="Top 10 Descripciones del Período" className="mt-4" />
+              <TopConceptosPanel
+                ingresos={reportData.detalles?.ingresos ?? []}
+                egresos={reportData.detalles?.egresos ?? []}
+                moneda={moneda}
+              />
+            </section>
 
-                return (
-                  <table className="w-full text-sm text-left border-collapse mt-4">
-                    <thead>
-                      <tr className="border-b-2 border-slate-300 text-slate-700">
-                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">Fecha</th>
-                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">Concepto</th>
-                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">
-                          Categoría / Subcategoría
-                        </th>
-                        <th className="py-2 px-2 text-right font-bold uppercase text-xs tracking-wider">Monto</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {allMovs.map((mov, i) => (
-                        <tr key={mov.id ?? i} className="print:break-inside-avoid">
-                          <td className="py-2 px-2 text-slate-500 whitespace-nowrap">
-                            {new Date(mov.fecha).toLocaleDateString('es-AR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                            })}
-                          </td>
-                          <td className="py-2 px-2 font-medium text-slate-800">{mov.concepto || 'Sin concepto'}</td>
-                          <td className="py-2 px-2 text-slate-500 text-xs">
-                            {mov.categoria_nombre || 'General'}
-                            {mov.subcategoria_nombre ? ` / ${mov.subcategoria_nombre}` : ''}
-                          </td>
-                          <td
-                            className={`py-2 px-2 text-right font-bold tabular-nums whitespace-nowrap ${mov.tipo === 'ingreso' ? 'text-emerald-600' : 'text-rose-600'}`}
-                          >
-                            {mov.tipo === 'ingreso' ? '+' : '-'}
-                            {formatMonto(Math.abs(mov.monto), moneda)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )
-              })()}
+            {/* ── 8 · Salud Financiera ─────────────────────────────────────── */}
+            <section className="mt-8 page-break-before">
+              <SectionHeading number="8" title="Indicadores de Salud Financiera" className="mt-4" />
+              <SaludFinancieraPanel
+                ingresosBreakdown={reportData.ingresosBreakdown}
+                egresosBreakdown={reportData.egresosBreakdown}
+                creditos={reportData.resumen.creditos ?? 0}
+                deudas={reportData.resumen.deudas ?? 0}
+                totalIngresos={reportData.resumen.ingresos}
+                totalEgresos={reportData.resumen.egresos}
+                moneda={moneda}
+              />
+            </section>
+
+            {/* ── 9 · Comparativo por Categoría ────────────────────────────── */}
+            <section className="mt-8 page-break-before">
+              <SectionHeading number="9" title="Comparativo por Categoría" className="mt-4" />
+              <ComparativoCategoriaPanel
+                categoryData={categoryData}
+                currentMonth={debouncedMonth}
+                moneda={moneda}
+              />
+            </section>
+
+            {/* ── Print: Detalle de movimientos por tipo ────────────────────── */}
+            <div className="page-break-before mt-8 hidden print:block">
+              <h2 className="text-lg font-bold text-slate-800 mb-4 pb-2" style={{ borderBottom: '2px solid #cbd5e1' }}>
+                Detalle de Movimientos del Período
+              </h2>
+
+              {((reportData.detalles?.ingresos?.length ?? 0) === 0 && (reportData.detalles?.egresos?.length ?? 0) === 0) ? (
+                <p className="text-center italic text-slate-500 mt-6 text-sm">
+                  No hay movimientos registrados en este período.
+                </p>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                  {/* Columna Ingresos */}
+                  <div>
+                    <p style={{ fontWeight: 700, color: '#059669', fontSize: '10pt', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #d1fae5' }}>
+                      Ingresos — {formatMonto(reportData.resumen.ingresos, moneda)}
+                    </p>
+                    {(reportData.detalles?.ingresos?.length ?? 0) === 0 ? (
+                      <p style={{ color: '#94a3b8', fontSize: '9pt', fontStyle: 'italic' }}>Sin ingresos en el período.</p>
+                    ) : (
+                      <table className="print-table w-full">
+                        <thead>
+                          <tr>
+                            <th className="text-left" style={{ width: '18%' }}>Fecha</th>
+                            <th className="text-left" style={{ width: '42%' }}>Concepto</th>
+                            <th className="text-left" style={{ width: '22%' }}>Categoría</th>
+                            <th className="text-right" style={{ width: '18%' }}>Monto</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[...(reportData.detalles?.ingresos ?? [])]
+                            .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+                            .map((mov, i) => (
+                              <tr key={mov.id ?? i}>
+                                <td style={{ color: '#64748b', whiteSpace: 'nowrap', fontSize: '8pt' }}>
+                                  {new Date(mov.fecha).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                                </td>
+                                <td style={{ color: '#1e293b', fontWeight: 500, fontSize: '9pt' }}>
+                                  {mov.concepto || '—'}
+                                </td>
+                                <td style={{ color: '#64748b', fontSize: '8pt' }}>
+                                  {mov.categoria_nombre || 'General'}
+                                  {mov.subcategoria_nombre ? ` / ${mov.subcategoria_nombre}` : ''}
+                                </td>
+                                <td style={{ textAlign: 'right', fontWeight: 700, color: '#059669', fontVariantNumeric: 'tabular-nums', fontSize: '9pt' }}>
+                                  +{formatMonto(Math.abs(mov.monto), moneda)}
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td colSpan={3} style={{ fontWeight: 700 }}>Subtotal ingresos</td>
+                            <td style={{ textAlign: 'right', fontWeight: 700, color: '#059669', fontVariantNumeric: 'tabular-nums' }}>
+                              {formatMonto(reportData.resumen.ingresos, moneda)}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    )}
+                  </div>
+
+                  {/* Columna Egresos */}
+                  <div>
+                    <p style={{ fontWeight: 700, color: '#e11d48', fontSize: '10pt', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #ffe4e6' }}>
+                      Egresos — {formatMonto(reportData.resumen.egresos, moneda)}
+                    </p>
+                    {(reportData.detalles?.egresos?.length ?? 0) === 0 ? (
+                      <p style={{ color: '#94a3b8', fontSize: '9pt', fontStyle: 'italic' }}>Sin egresos en el período.</p>
+                    ) : (
+                      <table className="print-table w-full">
+                        <thead>
+                          <tr>
+                            <th className="text-left" style={{ width: '18%' }}>Fecha</th>
+                            <th className="text-left" style={{ width: '42%' }}>Concepto</th>
+                            <th className="text-left" style={{ width: '22%' }}>Categoría</th>
+                            <th className="text-right" style={{ width: '18%' }}>Monto</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[...(reportData.detalles?.egresos ?? [])]
+                            .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+                            .map((mov, i) => (
+                              <tr key={mov.id ?? i}>
+                                <td style={{ color: '#64748b', whiteSpace: 'nowrap', fontSize: '8pt' }}>
+                                  {new Date(mov.fecha).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                                </td>
+                                <td style={{ color: '#1e293b', fontWeight: 500, fontSize: '9pt' }}>
+                                  {mov.concepto || '—'}
+                                </td>
+                                <td style={{ color: '#64748b', fontSize: '8pt' }}>
+                                  {mov.categoria_nombre || 'General'}
+                                  {mov.subcategoria_nombre ? ` / ${mov.subcategoria_nombre}` : ''}
+                                </td>
+                                <td style={{ textAlign: 'right', fontWeight: 700, color: '#e11d48', fontVariantNumeric: 'tabular-nums', fontSize: '9pt' }}>
+                                  -{formatMonto(Math.abs(mov.monto), moneda)}
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td colSpan={3} style={{ fontWeight: 700 }}>Subtotal egresos</td>
+                            <td style={{ textAlign: 'right', fontWeight: 700, color: '#e11d48', fontVariantNumeric: 'tabular-nums' }}>
+                              {formatMonto(reportData.resumen.egresos, moneda)}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Resultado neto al pie del detalle */}
+              <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '2px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem' }}>
+                <span style={{ fontSize: '10pt', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Resultado Neto del Período
+                </span>
+                <span style={{ fontSize: '14pt', fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: reportData.resumen.resultado >= 0 ? '#1d4ed8' : '#dc2626' }}>
+                  {formatMonto(reportData.resumen.resultado, moneda)}
+                </span>
+                <span style={{ fontSize: '9pt', fontWeight: 600, color: reportData.resumen.resultado > 0 ? '#059669' : reportData.resumen.resultado < 0 ? '#dc2626' : '#64748b' }}>
+                  ({reportData.resumen.resultado > 0 ? 'Ganancia' : reportData.resumen.resultado < 0 ? 'Pérdida' : 'Equilibrio'})
+                </span>
+              </div>
             </div>
           </div>
         ) : null}

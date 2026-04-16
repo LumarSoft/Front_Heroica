@@ -153,21 +153,22 @@
 
 @media print {
   @page {
-    margin: 1.5cm;
-    size: A4 portrait;
+    margin: 1.2cm 1.5cm;
+    size: A4 landscape;
   }
   body {
     background: white !important;
-    font-size: 11pt;
+    font-size: 10pt;
     color: #111827;
   }
   .page-break-before {
     page-break-before: always;
+    break-before: page;
   }
   .shadow-sm,
-  .shadow-md {
+  .shadow-md,
+  .shadow-lg {
     box-shadow: none !important;
-    border-color: #e5e7eb !important;
   }
   * {
     -webkit-print-color-adjust: exact !important;
@@ -178,6 +179,34 @@
     max-width: 100% !important;
   }
   .grid {
-    gap: 1rem !important;
+    gap: 0.75rem !important;
+  }
+  /* Forzar grid de 5 columnas para las summary cards en landscape */
+  .print-summary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 0.75rem !important;
+  }
+  /* Tablas de impresión */
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+  }
+  .print-table th,
+  .print-table td {
+    padding: 5px 8px;
+    border: 1px solid #e2e8f0;
+    vertical-align: top;
+  }
+  .print-table thead tr {
+    background-color: #f1f5f9 !important;
+  }
+  .print-table tbody tr:nth-child(even) {
+    background-color: #fafafa !important;
+  }
+  .print-table tfoot tr {
+    background-color: #f1f5f9 !important;
+    font-weight: 700;
   }
 }
