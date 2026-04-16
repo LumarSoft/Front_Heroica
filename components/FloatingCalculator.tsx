@@ -41,9 +41,14 @@ export default function FloatingCalculator() {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!dragging.current) return
+      const el = containerRef.current
+      const w = el ? el.offsetWidth : 256
+      const h = el ? el.offsetHeight : 400
+      const rawX = e.clientX - dragOffset.current.x
+      const rawY = e.clientY - dragOffset.current.y
       setPosition({
-        x: e.clientX - dragOffset.current.x,
-        y: e.clientY - dragOffset.current.y,
+        x: Math.min(Math.max(0, rawX), window.innerWidth - w),
+        y: Math.min(Math.max(0, rawY), window.innerHeight - h),
       })
     }
     const handleMouseUp = () => {
