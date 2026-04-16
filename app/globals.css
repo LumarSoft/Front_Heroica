@@ -125,6 +125,22 @@
   }
 }
 
+/* Animación de entrada para celdas del calendario de pagos */
+@keyframes calendarCellEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.calendar-cell-enter {
+  animation: calendarCellEnter 0.25s ease-out both;
+}
+
 /* Patrones decorativos para login (evitar estilos inline) */
 .login-pattern-primary {
   background-image: radial-gradient(circle, #002868 1px, transparent 1px);

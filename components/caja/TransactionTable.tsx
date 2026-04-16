@@ -35,6 +35,7 @@ export interface ColumnDef {
   label: string;
   align?: 'left' | 'center' | 'right';
   hideBelow?: 'md' | 'lg'; // responsive breakpoint
+  widthClass?: string;
   render: (t: Transaction) => React.ReactNode;
 }
 
@@ -43,79 +44,79 @@ const BASE_COLUMNS: ColumnDef[] = [
   {
     key: 'fecha',
     label: 'Fecha',
+    widthClass: 'w-[100px]',
     render: (t) => (
-      <span className="font-medium text-[#1A1A1A]">{formatFecha(t.fecha)}</span>
+      <span className="font-medium text-[#1A1A1A] whitespace-nowrap">
+        {formatFecha(t.fecha)}
+      </span>
     ),
   },
   {
-    key: 'descripcion_config',
-    label: 'Descripción',
+    key: 'categoria',
+    label: 'Categoria',
+    widthClass: 'w-[140px]',
     render: (t) => (
-      <div className="flex flex-col gap-1 max-w-[160px] sm:max-w-[200px] md:max-w-[250px] lg:max-w-[350px]">
-        <span 
-          className="text-[#1A1A1A] font-medium truncate" 
-          title={t.descripcion_nombre || ''}
+      <div className="w-full">
+        <span
+          className="block text-[#1A1A1A] font-medium truncate"
+          title={t.categoria_nombre || ''}
         >
-          {t.descripcion_nombre || '-'}
+          {t.categoria_nombre || '-'}
         </span>
-        {t.numero_cheque && (
-          <div className="flex items-center">
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold tracking-tight uppercase">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2.5}
-                stroke="currentColor"
-                className="w-3 h-3"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              CHQ: {t.numero_cheque}
-            </span>
-          </div>
-        )}
       </div>
-    ),
-  },
-  {
-    key: 'proveedor',
-    label: 'Proveedor',
-    hideBelow: 'md',
-    render: (t) => (
-      <span className="text-[#666666]">{t.proveedor_nombre || '-'}</span>
     ),
   },
 ];
 
+/** Columna de descripcion compartida — cae a concepto cuando no hay descripcion configurada */
+const DESCRIPCION_COLUMN: ColumnDef = {
+  key: 'descripcion',
+  label: 'Descripcion',
+  widthClass: 'w-[150px]',
+  render: (t) => {
+    const text = t.descripcion_nombre || t.concepto || null;
+    return (
+      <span
+        className="block w-full text-[#666666] truncate"
+        title={text || ''}
+      >
+        {truncarTexto(text)}
+      </span>
+    );
+  },
+};
+
+/** Columna de comentario compartida */
+const COMENTARIO_COLUMN: ColumnDef = {
+  key: 'comentarios',
+  label: 'Comentario',
+  widthClass: 'w-[150px]',
+  render: (t) => (
+    <span className="block w-full text-[#666666] truncate" title={t.comentarios || ''}>
+      {truncarTexto(t.comentarios)}
+    </span>
+  ),
+};
+
 /** Columnas extra para caja banco */
 const BANCO_COLUMNS: ColumnDef[] = [
   {
-    key: 'comprobante',
-    label: 'Comprobante',
-    hideBelow: 'md',
-    render: (t) => (
-      <span className="text-[#666666]">{t.comprobante || '-'}</span>
-    ),
-  },
-  {
     key: 'medio_pago',
     label: 'Medio Pago',
-    hideBelow: 'lg',
+    widthClass: 'w-[120px]',
     render: (t) => (
-      <span className="text-[#666666]">{t.medio_pago_nombre || '-'}</span>
+      <span className="block w-full text-[#666666] truncate" title={t.medio_pago_nombre || ''}>
+        {t.medio_pago_nombre || '-'}
+      </span>
     ),
   },
   {
     key: 'banco',
     label: 'Banco',
     align: 'center',
+    widthClass: 'w-[110px]',
     render: (t) => (
-      <span className="font-medium text-[#002868]">
+      <span className="block w-full font-medium text-[#002868] truncate" title={t.banco_nombre || ''}>
         {t.banco_nombre || '-'}
       </span>
     ),
@@ -123,27 +124,17 @@ const BANCO_COLUMNS: ColumnDef[] = [
 ];
 
 /** Columnas extra para caja efectivo */
-const EFECTIVO_COLUMNS: ColumnDef[] = [
-  {
-    key: 'comentarios',
-    label: 'Comentarios',
-    hideBelow: 'md',
-    render: (t) => (
-      <span className="text-[#666666]" title={t.comentarios || ''}>
-        {truncarTexto(t.comentarios)}
-      </span>
-    ),
-  },
-];
+const EFECTIVO_COLUMNS: ColumnDef[] = [];
 
 /** Columna de monto (siempre al final antes de acciones) */
 const MONTO_COLUMN: ColumnDef = {
   key: 'monto',
   label: 'Monto',
   align: 'right',
+  widthClass: 'w-[125px]',
   render: (t) => (
     <span
-      className={`font-bold text-base ${Number(t.monto) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}
+      className={`font-bold text-sm whitespace-nowrap ${Number(t.monto) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}
     >
       {formatMonto(t.monto)}
     </span>
@@ -155,6 +146,7 @@ const DEUDA_COLUMN: ColumnDef = {
   key: 'deuda',
   label: 'Deuda',
   align: 'center',
+  widthClass: 'w-[95px]',
   render: (t) =>
     t.es_deuda ? (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 border border-orange-300 text-orange-700 text-xs font-bold">
@@ -184,11 +176,25 @@ const DEUDA_COLUMN: ColumnDef = {
 // =============================================
 
 export function getBancoColumns(): ColumnDef[] {
-  return [...BASE_COLUMNS, ...BANCO_COLUMNS, DEUDA_COLUMN, MONTO_COLUMN];
+  return [
+    ...BASE_COLUMNS,
+    DESCRIPCION_COLUMN,
+    COMENTARIO_COLUMN,
+    MONTO_COLUMN,
+    ...BANCO_COLUMNS,
+    DEUDA_COLUMN,
+  ];
 }
 
 export function getEfectivoColumns(): ColumnDef[] {
-  return [...BASE_COLUMNS, ...EFECTIVO_COLUMNS, DEUDA_COLUMN, MONTO_COLUMN];
+  return [
+    ...BASE_COLUMNS,
+    DESCRIPCION_COLUMN,
+    COMENTARIO_COLUMN,
+    MONTO_COLUMN,
+    ...EFECTIVO_COLUMNS,
+    DEUDA_COLUMN,
+  ];
 }
 
 // =============================================
@@ -269,7 +275,7 @@ export function TransactionTable({
 
   return (
     <Card className="border-[#E0E0E0] bg-white shadow-lg">
-      <CardHeader className="border-b border-[#E0E0E0]">
+      <CardHeader className="border-b border-[#E0E0E0] px-3 py-3 sm:px-4">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-2xl font-bold text-[#002868]">
@@ -293,7 +299,7 @@ export function TransactionTable({
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-1 py-3 sm:px-2">
         {/* Barra de acciones masivas */}
         {showBulkActions && selectedIds.size > 0 && (
           <div className="flex items-center gap-3 p-3 mb-3 rounded-lg bg-indigo-50 border border-indigo-200">
@@ -330,8 +336,8 @@ export function TransactionTable({
             )}
           </div>
         )}
-        <div className="rounded-md border border-[#E0E0E0]">
-          <Table>
+        <div className="rounded-md border border-[#E0E0E0] overflow-x-auto">
+          <Table className="w-full table-fixed">
             <TableHeader>
               <TableRow className="bg-[#F8F9FA] hover:bg-[#F8F9FA] border-b-2 border-[#E0E0E0]">
                 {showBulkActions && (
@@ -351,24 +357,22 @@ export function TransactionTable({
                 {columns.map((col) => (
                   <TableHead
                     key={col.key}
-                    className={`font-bold text-[#002868] text-sm ${
-                      col.align === 'center'
-                        ? 'text-center'
-                        : col.align === 'right'
-                          ? 'text-right'
-                          : ''
-                    } ${
-                      col.hideBelow === 'md'
+                    className={`px-2 font-bold text-[#002868] text-sm ${col.align === 'center'
+                      ? 'text-center'
+                      : col.align === 'right'
+                        ? 'text-right'
+                        : ''
+                      } ${col.widthClass || ''} ${col.hideBelow === 'md'
                         ? 'hidden md:table-cell'
                         : col.hideBelow === 'lg'
                           ? 'hidden lg:table-cell'
                           : ''
-                    }`}
+                      }`}
                   >
                     {col.label}
                   </TableHead>
                 ))}
-                <TableHead className="font-bold text-[#002868] text-sm text-center">
+                <TableHead className="w-[172px] min-w-[172px] max-w-[172px] px-2 font-bold text-[#002868] text-sm text-center">
                   Acciones
                 </TableHead>
               </TableRow>
@@ -420,34 +424,37 @@ export function TransactionTable({
                     {columns.map((col) => (
                       <TableCell
                         key={col.key}
-                        className={`${
-                          col.align === 'center'
-                            ? 'text-center'
-                            : col.align === 'right'
-                              ? 'text-right'
-                              : ''
-                        } ${
-                          col.hideBelow === 'md'
+                        className={`px-2 ${col.align === 'center'
+                          ? 'text-center'
+                          : col.align === 'right'
+                            ? 'text-right'
+                            : ''
+                          } ${col.widthClass || ''} ${col.hideBelow === 'md'
                             ? 'hidden md:table-cell'
                             : col.hideBelow === 'lg'
                               ? 'hidden lg:table-cell'
                               : ''
-                        }`}
+                          }`}
                       >
                         {col.render(transaction)}
                       </TableCell>
                     ))}
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-2">
+                    <TableCell
+                      className={`w-[172px] min-w-[172px] max-w-[172px] px-2 text-center ${
+                        selectedIds.has(transaction.id)
+                          ? 'bg-indigo-50/60'
+                          : 'bg-white'
+                      }`}
+                    >
+                      <div className="flex flex-nowrap items-center justify-center gap-1">
                         {/* Ver detalles */}
                         <Button
                           size="sm"
                           onClick={() => onViewDetails(transaction)}
-                          className={`text-white border-none cursor-pointer shadow-sm transition-all flex items-center justify-center ${
-                            isReadOnly
-                              ? 'bg-gray-400 hover:bg-gray-500'
-                              : 'bg-[#002868] hover:bg-[#003d8f] hover:shadow-md'
-                          }`}
+                          className={`h-7 w-7 p-0 text-white border-none cursor-pointer shadow-sm transition-all flex items-center justify-center ${isReadOnly
+                            ? 'bg-gray-400 hover:bg-gray-500'
+                            : 'bg-[#002868] hover:bg-[#003d8f] hover:shadow-md'
+                            }`}
                           title={
                             isReadOnly
                               ? 'Ver detalles (solo lectura)'
@@ -482,7 +489,7 @@ export function TransactionTable({
                               !isReadOnly && onChangeState(transaction)
                             }
                             disabled={isReadOnly}
-                            className="bg-[#002868] hover:bg-[#003d8f] text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                            className="h-7 w-7 p-0 bg-[#002868] hover:bg-[#003d8f] text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                             title={
                               isReadOnly
                                 ? 'Sucursal inactiva'
@@ -513,11 +520,10 @@ export function TransactionTable({
                               !isReadOnly && onToggleDeuda(transaction)
                             }
                             disabled={isReadOnly}
-                            className={`border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none ${
-                              transaction.es_deuda
-                                ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                                : 'bg-orange-100 hover:bg-orange-200 text-orange-700'
-                            }`}
+                            className={`h-7 w-7 p-0 border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none ${transaction.es_deuda
+                              ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                              : 'bg-orange-100 hover:bg-orange-200 text-orange-700'
+                              }`}
                             title={
                               isReadOnly
                                 ? 'Sucursal inactiva'
@@ -535,7 +541,7 @@ export function TransactionTable({
                             size="sm"
                             onClick={() => !isReadOnly && onMove(transaction)}
                             disabled={isReadOnly}
-                            className="bg-indigo-500 hover:bg-indigo-600 text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                            className="h-7 w-7 p-0 bg-indigo-500 hover:bg-indigo-600 text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                             title={
                               isReadOnly
                                 ? 'Sucursal inactiva'
@@ -551,7 +557,7 @@ export function TransactionTable({
                             size="sm"
                             onClick={() => !isReadOnly && onDelete(transaction)}
                             disabled={isReadOnly}
-                            className="bg-rose-500 hover:bg-rose-600 text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                            className="h-7 w-7 p-0 bg-rose-500 hover:bg-rose-600 text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                             title={
                               isReadOnly
                                 ? 'Sucursal inactiva'

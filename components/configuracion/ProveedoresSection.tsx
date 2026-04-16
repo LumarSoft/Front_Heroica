@@ -21,17 +21,35 @@ import { DeleteDialog } from '@/components/ui/delete-dialog';
 interface ProveedorItem {
   id: number;
   nombre: string;
-  activo: boolean; // Just in case, although active might not be on table initially
+  razon_social?: string | null;
+  cuit?: string | null;
+  cbu_alias?: string | null;
+  telefono?: string | null;
+  email?: string | null;
+  direccion?: string | null;
+  activo: boolean;
 }
 
 interface ProveedorForm {
   id: number;
   nombre: string;
+  razon_social: string;
+  cuit: string;
+  cbu_alias: string;
+  telefono: string;
+  email: string;
+  direccion: string;
 }
 
 const DEFAULT_FORM: ProveedorForm = {
   id: 0,
   nombre: '',
+  razon_social: '',
+  cuit: '',
+  cbu_alias: '',
+  telefono: '',
+  email: '',
+  direccion: '',
 };
 
 export function ProveedoresSection() {
@@ -44,6 +62,7 @@ export function ProveedoresSection() {
     id: number;
     nombre: string;
   } | null>(null);
+  const [detailTarget, setDetailTarget] = useState<ProveedorItem | null>(null);
 
   useEffect(() => {
     fetchItems();
@@ -69,16 +88,51 @@ export function ProveedoresSection() {
     setForm({
       id: item.id,
       nombre: item.nombre,
+      razon_social: item.razon_social ?? '',
+      cuit: item.cuit ?? '',
+      cbu_alias: item.cbu_alias ?? '',
+      telefono: item.telefono ?? '',
+      email: item.email ?? '',
+      direccion: item.direccion ?? '',
     });
     setError('');
     setIsDialogOpen(true);
   };
 
   const handleSave = async () => {
-    if (!form.nombre.trim()) {
+    const nombreLimpio = form.nombre.trim();
+    const cuitLimpio = form.cuit.trim();
+    const telefonoLimpio = form.telefono.trim();
+    const emailLimpio = form.email.trim();
+
+    if (!nombreLimpio) {
       setError('El nombre es requerido');
       return;
     }
+    if (cuitLimpio && !/^\d+$/.test(cuitLimpio)) {
+      setError('El CUIT/CUIL debe contener solo números y sin guiones');
+      return;
+    }
+    if (telefonoLimpio && !/^\d+$/.test(telefonoLimpio)) {
+      setError('El teléfono debe contener solo números');
+      return;
+    }
+    if (emailLimpio && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpio)) {
+      setError('El email no tiene un formato válido');
+      return;
+    }
+
+    const payload = {
+      ...form,
+      nombre: nombreLimpio,
+      razon_social: form.razon_social.trim(),
+      cuit: cuitLimpio,
+      cbu_alias: form.cbu_alias.trim(),
+      telefono: telefonoLimpio,
+      email: emailLimpio,
+      direccion: form.direccion.trim(),
+    };
+
     setIsSaving(true);
     setError('');
     try {
@@ -87,7 +141,7 @@ export function ProveedoresSection() {
         : API_ENDPOINTS.CONFIGURACION.PROVEEDORES.CREATE;
       const res = await apiFetch(url, {
         method: form.id ? 'PUT' : 'POST',
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.success) {
@@ -149,6 +203,13 @@ export function ProveedoresSection() {
                 </div>
                 <div className="flex gap-2">
                   <Button
+                    onClick={() => setDetailTarget(item)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Ver más datos
+                  </Button>
+                  <Button
                     onClick={() => handleOpenEdit(item)}
                     variant="outline"
                     size="sm"
@@ -202,6 +263,107 @@ export function ProveedoresSection() {
                 className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
               />
             </div>
+            <div>
+              <Label
+                htmlFor="prov-razon-social"
+                className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block"
+              >
+                Razón social
+              </Label>
+              <Input
+                id="prov-razon-social"
+                value={form.razon_social}
+                onChange={(e) =>
+                  setForm({ ...form, razon_social: e.target.value })
+                }
+                placeholder="Ej: Distribuidora Oeste S.A."
+                className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label
+                  htmlFor="prov-cuit"
+                  className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block"
+                >
+                  CUIT
+                </Label>
+                <Input
+                  id="prov-cuit"
+                  value={form.cuit}
+                  onChange={(e) => setForm({ ...form, cuit: e.target.value })}
+                  placeholder="30123456789"
+                  className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+                />
+              </div>
+              <div>
+                <Label
+                  htmlFor="prov-cbu-alias"
+                  className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block"
+                >
+                  CBU / Alias
+                </Label>
+                <Input
+                  id="prov-cbu-alias"
+                  value={form.cbu_alias}
+                  onChange={(e) =>
+                    setForm({ ...form, cbu_alias: e.target.value })
+                  }
+                  placeholder="CBU o alias bancario"
+                  className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label
+                  htmlFor="prov-telefono"
+                  className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block"
+                >
+                  Teléfono
+                </Label>
+                <Input
+                  id="prov-telefono"
+                  value={form.telefono}
+                  onChange={(e) =>
+                    setForm({ ...form, telefono: e.target.value })
+                  }
+                  placeholder="Ej: 5491112345678"
+                  className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+                />
+              </div>
+              <div>
+                <Label
+                  htmlFor="prov-email"
+                  className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block"
+                >
+                  Email
+                </Label>
+                <Input
+                  id="prov-email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="contacto@proveedor.com"
+                  className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+                />
+              </div>
+            </div>
+            <div>
+              <Label
+                htmlFor="prov-direccion"
+                className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block"
+              >
+                Dirección
+              </Label>
+              <Input
+                id="prov-direccion"
+                value={form.direccion}
+                onChange={(e) => setForm({ ...form, direccion: e.target.value })}
+                placeholder="Dirección fiscal/comercial"
+                className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+              />
+            </div>
             {error && <p className="text-sm text-rose-600">{error}</p>}
           </div>
           <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
@@ -219,6 +381,41 @@ export function ProveedoresSection() {
                 className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all"
               >
                 {isSaving ? 'Guardando...' : 'Guardar'}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!detailTarget} onOpenChange={() => setDetailTarget(null)}>
+        <DialogContent className="sm:max-w-[540px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
+          <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
+            <DialogHeader className="p-0 border-0">
+              <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
+                Ver más datos
+              </DialogTitle>
+              <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
+                Datos ampliados del proveedor seleccionado
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          <div className="px-8 py-6 space-y-3 text-sm">
+            <div><span className="font-semibold text-[#1A1A1A]">Nombre:</span> {detailTarget?.nombre || '-'}</div>
+            <div><span className="font-semibold text-[#1A1A1A]">Razón social:</span> {detailTarget?.razon_social || '-'}</div>
+            <div><span className="font-semibold text-[#1A1A1A]">CUIT:</span> {detailTarget?.cuit || '-'}</div>
+            <div><span className="font-semibold text-[#1A1A1A]">CBU / Alias:</span> {detailTarget?.cbu_alias || '-'}</div>
+            <div><span className="font-semibold text-[#1A1A1A]">Teléfono:</span> {detailTarget?.telefono || '-'}</div>
+            <div><span className="font-semibold text-[#1A1A1A]">Email:</span> {detailTarget?.email || '-'}</div>
+            <div><span className="font-semibold text-[#1A1A1A]">Dirección:</span> {detailTarget?.direccion || '-'}</div>
+          </div>
+          <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
+            <DialogFooter className="sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setDetailTarget(null)}
+                className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] transition-all"
+              >
+                Cerrar
               </Button>
             </DialogFooter>
           </div>

@@ -502,6 +502,7 @@ export default function NuevoMovimientoDialog({
       concepto: formData.concepto,
       monto: formData.monto,
       categoria_id: formData.categoria_id,
+      subcategoria_id: formData.subcategoria_id,
       descripcion_id: formData.descripcion_id,
       proveedor_id: formData.proveedor_id,
       comentarios: formData.comentarios,
@@ -514,6 +515,11 @@ export default function NuevoMovimientoDialog({
 
     if (!validation.success) {
       setError(validation.error.issues[0]?.message ?? 'Error de validación');
+      return;
+    }
+
+    if (moneda === 'USD' && (!formData.tipo_cambio || Number(formData.tipo_cambio) <= 0)) {
+      setError('Debes ingresar un tipo de cambio válido');
       return;
     }
 

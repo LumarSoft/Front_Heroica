@@ -195,6 +195,7 @@ export const API_ENDPOINTS = {
   },
   TAREAS: {
     GET_ALL: `${API_URL}/api/tareas`,
+    GET_USUARIOS: `${API_URL}/api/tareas/usuarios`,
     CREATE: `${API_URL}/api/tareas`,
     UPDATE: (id: number) => `${API_URL}/api/tareas/${id}`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/tareas/${id}/estado`,

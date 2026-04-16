@@ -30,6 +30,7 @@ import {
   TransactionTable,
   getBancoColumns,
 } from '@/components/caja/TransactionTable';
+import { PaymentCalendar } from '@/components/caja/PaymentCalendar';
 import {
   DetailsDialog,
   StateDialog,
@@ -55,6 +56,7 @@ export default function CajaBancoPage() {
   const [selectedBanco, setSelectedBanco] = useState<BancoParcial | null>(null);
   const [isBancoDialogOpen, setIsBancoDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('real');
+  const [viewMode, setViewMode] = useState<'tabla' | 'calendario'>('tabla');
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null);
   const [sucursalNombre, setSucursalNombre] = useState('');
   const [isBulkMoverDialogOpen, setIsBulkMoverDialogOpen] = useState(false);
@@ -229,6 +231,8 @@ export default function CajaBancoPage() {
                   onBancosChange={caja.setBancosFiltro}
                   searchText={caja.searchText}
                   onSearchTextChange={caja.setSearchText}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
                 />
                 <CajaTabs
                   saldoReal={caja.saldoRealFiltrado}
@@ -240,48 +244,87 @@ export default function CajaBancoPage() {
                     value="real"
                     className="mt-0 outline-none flex-grow"
                   >
-                    <TransactionTable
-                      title="Saldo Real"
-                      description="Movimientos de banco confirmados para el periodo actual."
-                      transactions={caja.saldoRealFiltrado}
-                      columns={columns}
-                      onViewDetails={caja.handleOpenDetails}
-                      onChangeState={
-                        canChangeState ? caja.handleOpenStateChange : undefined
-                      }
-                      onDelete={canDelete ? caja.handleOpenDelete : undefined}
-                      onMove={canCrear ? caja.handleOpenMover : undefined}
-                      onBulkDelete={canDelete ? handleBulkDelete : undefined}
-                      onBulkMove={canCrear ? handleBulkMove : undefined}
-                      isReadOnly={isStrictlyReadOnly}
-                    />
+                    {viewMode === 'calendario' ? (
+                      <PaymentCalendar
+                        title="Saldo Real"
+                        description="Movimientos de banco confirmados."
+                        transactions={caja.saldoRealFiltrado}
+                        columns={columns}
+                        onViewDetails={caja.handleOpenDetails}
+                        onChangeState={
+                          canChangeState ? caja.handleOpenStateChange : undefined
+                        }
+                        onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                        onMove={canCrear ? caja.handleOpenMover : undefined}
+                        onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                        onBulkMove={canCrear ? handleBulkMove : undefined}
+                        isReadOnly={isStrictlyReadOnly}
+                      />
+                    ) : (
+                      <TransactionTable
+                        title="Saldo Real"
+                        description="Movimientos de banco confirmados para el periodo actual."
+                        transactions={caja.saldoRealFiltrado}
+                        columns={columns}
+                        onViewDetails={caja.handleOpenDetails}
+                        onChangeState={
+                          canChangeState ? caja.handleOpenStateChange : undefined
+                        }
+                        onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                        onMove={canCrear ? caja.handleOpenMover : undefined}
+                        onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                        onBulkMove={canCrear ? handleBulkMove : undefined}
+                        isReadOnly={isStrictlyReadOnly}
+                      />
+                    )}
                   </TabsContent>
                   <TabsContent
                     value="necesario"
                     className="mt-0 outline-none flex-grow"
                   >
-                    <TransactionTable
-                      title="Saldo Necesario"
-                      description="Pagos y compromisos programados que impactarán en bancos."
-                      transactions={caja.saldoNecesarioFiltrado}
-                      customTotal={
-                        calcularTotal(caja.saldoRealFiltrado) +
-                        calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
-                      }
-                      columns={columns}
-                      onViewDetails={caja.handleOpenDetails}
-                      onChangeState={
-                        canChangeState ? caja.handleOpenStateChange : undefined
-                      }
-                      onDelete={canDelete ? caja.handleOpenDelete : undefined}
-                      onToggleDeuda={
-                        canToggleDeuda ? caja.handleOpenDeuda : undefined
-                      }
-                      onMove={canCrear ? caja.handleOpenMover : undefined}
-                      onBulkDelete={canDelete ? handleBulkDelete : undefined}
-                      onBulkMove={canCrear ? handleBulkMove : undefined}
-                      isReadOnly={isStrictlyReadOnly}
-                    />
+                    {viewMode === 'calendario' ? (
+                      <PaymentCalendar
+                        title="Saldo Necesario"
+                        description="Pagos y compromisos programados que impactarán en bancos."
+                        transactions={caja.saldoNecesarioFiltrado}
+                        columns={columns}
+                        onViewDetails={caja.handleOpenDetails}
+                        onChangeState={
+                          canChangeState ? caja.handleOpenStateChange : undefined
+                        }
+                        onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                        onToggleDeuda={
+                          canToggleDeuda ? caja.handleOpenDeuda : undefined
+                        }
+                        onMove={canCrear ? caja.handleOpenMover : undefined}
+                        onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                        onBulkMove={canCrear ? handleBulkMove : undefined}
+                        isReadOnly={isStrictlyReadOnly}
+                      />
+                    ) : (
+                      <TransactionTable
+                        title="Saldo Necesario"
+                        description="Pagos y compromisos programados que impactarán en bancos."
+                        transactions={caja.saldoNecesarioFiltrado}
+                        customTotal={
+                          calcularTotal(caja.saldoRealFiltrado) +
+                          calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
+                        }
+                        columns={columns}
+                        onViewDetails={caja.handleOpenDetails}
+                        onChangeState={
+                          canChangeState ? caja.handleOpenStateChange : undefined
+                        }
+                        onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                        onToggleDeuda={
+                          canToggleDeuda ? caja.handleOpenDeuda : undefined
+                        }
+                        onMove={canCrear ? caja.handleOpenMover : undefined}
+                        onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                        onBulkMove={canCrear ? handleBulkMove : undefined}
+                        isReadOnly={isStrictlyReadOnly}
+                      />
+                    )}
                   </TabsContent>
                 </CajaTabs>
               </>
