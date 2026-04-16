@@ -1,12 +1,12 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { API_ENDPOINTS } from '@/lib/config';
-import { apiFetch } from '@/lib/api';
-import { bancoSchema } from '@/lib/schemas';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
+import { API_ENDPOINTS } from '@/lib/config'
+import { apiFetch } from '@/lib/api'
+import { bancoSchema } from '@/lib/schemas'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -14,150 +14,132 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { DeleteDialog } from '@/components/ui/delete-dialog';
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { DeleteDialog } from '@/components/ui/delete-dialog'
 
 interface Banco {
-  id: number;
-  nombre: string;
-  codigo: string;
-  activo: boolean;
+  id: number
+  nombre: string
+  codigo: string
+  activo: boolean
 }
 
 interface BancoForm {
-  id: number;
-  nombre: string;
-  codigo: string;
+  id: number
+  nombre: string
+  codigo: string
 }
 
-const DEFAULT_FORM: BancoForm = { id: 0, nombre: '', codigo: '' };
+const DEFAULT_FORM: BancoForm = { id: 0, nombre: '', codigo: '' }
 
 export function BancosSection() {
-  const [bancos, setBancos] = useState<Banco[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [form, setForm] = useState<BancoForm>(DEFAULT_FORM);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [bancos, setBancos] = useState<Banco[]>([])
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [form, setForm] = useState<BancoForm>(DEFAULT_FORM)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<{
-    id: number;
-    nombre: string;
-  } | null>(null);
+    id: number
+    nombre: string
+  } | null>(null)
 
   useEffect(() => {
-    fetchBancos();
-  }, []);
+    fetchBancos()
+  }, [])
 
   const fetchBancos = async () => {
-    const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL);
-    const data = await res.json();
-    if (data.success) setBancos(data.data);
-  };
+    const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL)
+    const data = await res.json()
+    if (data.success) setBancos(data.data)
+  }
 
   const handleOpenNew = () => {
-    setForm(DEFAULT_FORM);
-    setError('');
-    setIsDialogOpen(true);
-  };
+    setForm(DEFAULT_FORM)
+    setError('')
+    setIsDialogOpen(true)
+  }
 
   const handleOpenEdit = (banco: Banco) => {
-    setForm(banco);
-    setError('');
-    setIsDialogOpen(true);
-  };
+    setForm(banco)
+    setError('')
+    setIsDialogOpen(true)
+  }
 
   const handleSave = async () => {
-    const validation = bancoSchema.safeParse(form);
+    const validation = bancoSchema.safeParse(form)
     if (!validation.success) {
-      setError(validation.error.issues[0]?.message ?? 'Error de validación');
-      return;
+      setError(validation.error.issues[0]?.message ?? 'Error de validación')
+      return
     }
-    setIsSaving(true);
-    setError('');
+    setIsSaving(true)
+    setError('')
     try {
       const url = form.id
         ? API_ENDPOINTS.CONFIGURACION.BANCOS.UPDATE(form.id)
-        : API_ENDPOINTS.CONFIGURACION.BANCOS.CREATE;
+        : API_ENDPOINTS.CONFIGURACION.BANCOS.CREATE
       const res = await apiFetch(url, {
         method: form.id ? 'PUT' : 'POST',
         body: JSON.stringify(form),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (data.success) {
-        toast.success(data.message);
-        setIsDialogOpen(false);
-        await fetchBancos();
+        toast.success(data.message)
+        setIsDialogOpen(false)
+        await fetchBancos()
       } else {
-        setError(data.message);
+        setError(data.message)
       }
     } catch {
-      setError('Error al guardar banco');
+      setError('Error al guardar banco')
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   const handleConfirmDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) return
     try {
-      const res = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.BANCOS.DELETE(deleteTarget.id),
-        { method: 'DELETE' },
-      );
-      const data = await res.json();
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.BANCOS.DELETE(deleteTarget.id), { method: 'DELETE' })
+      const data = await res.json()
       if (data.success) {
-        toast.success(data.message);
-        await fetchBancos();
+        toast.success(data.message)
+        await fetchBancos()
       }
     } catch {
-      toast.error('Error al eliminar banco');
+      toast.error('Error al eliminar banco')
     } finally {
-      setDeleteTarget(null);
+      setDeleteTarget(null)
     }
-  };
+  }
 
   return (
     <>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Bancos</CardTitle>
-          <Button
-            onClick={handleOpenNew}
-            className="bg-[#002868] hover:bg-[#003d8f]"
-          >
+          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f]">
             + Nuevo Banco
           </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {bancos.map((banco) => (
+            {bancos.map(banco => (
               <div
                 key={banco.id}
                 className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
               >
                 <div>
-                  <h3 className="font-semibold text-[#002868]">
-                    {banco.nombre}
-                  </h3>
-                  {banco.codigo && (
-                    <p className="text-sm text-[#666666]">
-                      Código: {banco.codigo}
-                    </p>
-                  )}
+                  <h3 className="font-semibold text-[#002868]">{banco.nombre}</h3>
+                  {banco.codigo && <p className="text-sm text-[#666666]">Código: {banco.codigo}</p>}
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    onClick={() => handleOpenEdit(banco)}
-                    variant="outline"
-                    size="sm"
-                  >
+                  <Button onClick={() => handleOpenEdit(banco)} variant="outline" size="sm">
                     Editar
                   </Button>
                   <Button
-                    onClick={() =>
-                      setDeleteTarget({ id: banco.id, nombre: banco.nombre })
-                    }
+                    onClick={() => setDeleteTarget({ id: banco.id, nombre: banco.nombre })}
                     variant="outline"
                     size="sm"
                     className="text-rose-600 hover:bg-rose-50"
@@ -179,9 +161,7 @@ export function BancosSection() {
                 {form.id ? 'Editar Banco' : 'Nuevo Banco'}
               </DialogTitle>
               <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
-                {form.id
-                  ? 'Modifica los detalles de este banco'
-                  : 'Agrega un nuevo banco al sistema'}
+                {form.id ? 'Modifica los detalles de este banco' : 'Agrega un nuevo banco al sistema'}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -196,7 +176,7 @@ export function BancosSection() {
               <Input
                 id="banco-nombre"
                 value={form.nombre}
-                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                onChange={e => setForm({ ...form, nombre: e.target.value })}
                 placeholder="Ej: Banco Galicia"
                 className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
               />
@@ -211,7 +191,7 @@ export function BancosSection() {
               <Input
                 id="banco-codigo"
                 value={form.codigo}
-                onChange={(e) => setForm({ ...form, codigo: e.target.value })}
+                onChange={e => setForm({ ...form, codigo: e.target.value })}
                 placeholder="Ej: GALI"
                 className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
               />
@@ -246,5 +226,5 @@ export function BancosSection() {
         onCancel={() => setDeleteTarget(null)}
       />
     </>
-  );
+  )
 }

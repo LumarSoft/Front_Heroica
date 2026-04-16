@@ -1,6 +1,5 @@
 // Configuración de la API
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 // Endpoints
 export const API_ENDPOINTS = {
@@ -21,10 +20,8 @@ export const API_ENDPOINTS = {
     UPDATE: (id: number) => `${API_URL}/api/sucursales/${id}`,
     DELETE: (id: number) => `${API_URL}/api/sucursales/${id}`,
     // Documentos (múltiples)
-    GET_DOCUMENTOS: (id: number) =>
-      `${API_URL}/api/sucursales/${id}/documentos`,
-    UPLOAD_DOCUMENTO: (id: number) =>
-      `${API_URL}/api/sucursales/${id}/documentos`,
+    GET_DOCUMENTOS: (id: number) => `${API_URL}/api/sucursales/${id}/documentos`,
+    UPLOAD_DOCUMENTO: (id: number) => `${API_URL}/api/sucursales/${id}/documentos`,
     DOWNLOAD_DOCUMENTO: (sucursalId: number, docId: number) =>
       `${API_URL}/api/sucursales/${sucursalId}/documentos/${docId}/download`,
     DELETE_DOCUMENTO: (sucursalId: number, docId: number) =>
@@ -35,31 +32,24 @@ export const API_ENDPOINTS = {
       `${API_URL}/api/movimientos/${sucursalId}?moneda=${moneda}`,
     GET_TOTALES: (sucursalId: number, moneda: string = 'ARS') =>
       `${API_URL}/api/movimientos/${sucursalId}/totales?moneda=${moneda}`,
-    GET_DEUDAS: (
-      sucursalId: number,
-      fechaInicio?: string,
-      fechaFin?: string,
-    ) => {
-      const params = new URLSearchParams({ sucursalId: String(sucursalId) });
-      if (fechaInicio) params.append('fechaInicio', fechaInicio);
-      if (fechaFin) params.append('fechaFin', fechaFin);
-      return `${API_URL}/api/movimientos/deudas?${params.toString()}`;
+    GET_DEUDAS: (sucursalId: number, fechaInicio?: string, fechaFin?: string) => {
+      const params = new URLSearchParams({ sucursalId: String(sucursalId) })
+      if (fechaInicio) params.append('fechaInicio', fechaInicio)
+      if (fechaFin) params.append('fechaFin', fechaFin)
+      return `${API_URL}/api/movimientos/deudas?${params.toString()}`
     },
     CREATE_EFECTIVO: `${API_URL}/api/movimientos/efectivo`,
     COMPRA_VENTA_DIVISAS: `${API_URL}/api/movimientos/compra-venta-divisas`,
     UPDATE: (id: number) => `${API_URL}/api/movimientos/${id}`,
-    PATCH_COMENTARIO: (id: number) =>
-      `${API_URL}/api/movimientos/${id}/comentario`,
+    PATCH_COMENTARIO: (id: number) => `${API_URL}/api/movimientos/${id}/comentario`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/movimientos/${id}/estado`,
     TOGGLE_DEUDA: (id: number) => `${API_URL}/api/movimientos/${id}/deuda`,
     DELETE: (id: number) => `${API_URL}/api/movimientos/${id}`,
     BULK_DELETE: `${API_URL}/api/movimientos/bulk`,
     BULK_MOVER: `${API_URL}/api/movimientos/bulk/mover`,
     // Documentos
-    GET_DOCUMENTOS: (id: number) =>
-      `${API_URL}/api/movimientos/${id}/documentos`,
-    UPLOAD_DOCUMENTO: (id: number) =>
-      `${API_URL}/api/movimientos/${id}/documentos`,
+    GET_DOCUMENTOS: (id: number) => `${API_URL}/api/movimientos/${id}/documentos`,
+    UPLOAD_DOCUMENTO: (id: number) => `${API_URL}/api/movimientos/${id}/documentos`,
     DOWNLOAD_DOCUMENTO: (movimientoId: number, docId: number) =>
       `${API_URL}/api/movimientos/${movimientoId}/documentos/${docId}/download`,
     DELETE_DOCUMENTO: (movimientoId: number, docId: number) =>
@@ -67,13 +57,11 @@ export const API_ENDPOINTS = {
   },
   PAGOS_PENDIENTES: {
     GET_ALL: `${API_URL}/api/pagos-pendientes/all`,
-    GET_BY_SUCURSAL: (sucursalId: number) =>
-      `${API_URL}/api/pagos-pendientes/${sucursalId}`,
+    GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/pagos-pendientes/${sucursalId}`,
     CREATE: `${API_URL}/api/pagos-pendientes`,
     APROBAR: (id: number) => `${API_URL}/api/pagos-pendientes/${id}/aprobar`,
     RECHAZAR: (id: number) => `${API_URL}/api/pagos-pendientes/${id}/rechazar`,
-    GET_HISTORIAL: (userId: number) =>
-      `${API_URL}/api/pagos-pendientes/historial/${userId}`,
+    GET_HISTORIAL: (userId: number) => `${API_URL}/api/pagos-pendientes/historial/${userId}`,
   },
   CAJA_BANCO: {
     GET_BY_SUCURSAL: (sucursalId: number, moneda: string = 'ARS') =>
@@ -82,8 +70,7 @@ export const API_ENDPOINTS = {
       `${API_URL}/api/caja-banco/${sucursalId}/totales?moneda=${moneda}`,
     CREATE: `${API_URL}/api/caja-banco`,
     UPDATE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
-    PATCH_COMENTARIO: (id: number) =>
-      `${API_URL}/api/caja-banco/${id}/comentario`,
+    PATCH_COMENTARIO: (id: number) => `${API_URL}/api/caja-banco/${id}/comentario`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/caja-banco/${id}/estado`,
     TOGGLE_DEUDA: (id: number) => `${API_URL}/api/caja-banco/${id}/deuda`,
     DELETE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
@@ -91,10 +78,8 @@ export const API_ENDPOINTS = {
     BULK_MOVER: `${API_URL}/api/caja-banco/bulk/mover`,
     TRANSFERENCIA_INTERNA: `${API_URL}/api/caja-banco/transferencia-interna`,
     // Documentos
-    GET_DOCUMENTOS: (id: number) =>
-      `${API_URL}/api/caja-banco/${id}/documentos`,
-    UPLOAD_DOCUMENTO: (id: number) =>
-      `${API_URL}/api/caja-banco/${id}/documentos`,
+    GET_DOCUMENTOS: (id: number) => `${API_URL}/api/caja-banco/${id}/documentos`,
+    UPLOAD_DOCUMENTO: (id: number) => `${API_URL}/api/caja-banco/${id}/documentos`,
     DOWNLOAD_DOCUMENTO: (movimientoId: number, docId: number) =>
       `${API_URL}/api/caja-banco/${movimientoId}/documentos/${docId}/download`,
     DELETE_DOCUMENTO: (movimientoId: number, docId: number) =>
@@ -114,10 +99,8 @@ export const API_ENDPOINTS = {
       GET_BY_CATEGORIA: (categoriaId: number) =>
         `${API_URL}/api/configuracion/subcategorias?categoria_id=${categoriaId}`,
       CREATE: `${API_URL}/api/configuracion/subcategorias`,
-      UPDATE: (id: number) =>
-        `${API_URL}/api/configuracion/subcategorias/${id}`,
-      DELETE: (id: number) =>
-        `${API_URL}/api/configuracion/subcategorias/${id}`,
+      UPDATE: (id: number) => `${API_URL}/api/configuracion/subcategorias/${id}`,
+      DELETE: (id: number) => `${API_URL}/api/configuracion/subcategorias/${id}`,
     },
     // Bancos
     BANCOS: {
@@ -152,15 +135,11 @@ export const API_ENDPOINTS = {
     USUARIOS: {
       GET_ALL: `${API_URL}/api/configuracion/usuarios`,
       CREATE: `${API_URL}/api/configuracion/usuarios`,
-      UPDATE_ROL: (id: number) =>
-        `${API_URL}/api/configuracion/usuarios/${id}/rol`,
-      TOGGLE_ACTIVO: (id: number) =>
-        `${API_URL}/api/configuracion/usuarios/${id}/toggle-activo`,
+      UPDATE_ROL: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/rol`,
+      TOGGLE_ACTIVO: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/toggle-activo`,
       DELETE: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}`,
-      GET_SUCURSALES: (id: number) =>
-        `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
-      UPDATE_SUCURSALES: (id: number) =>
-        `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
+      GET_SUCURSALES: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
+      UPDATE_SUCURSALES: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
     },
     // Roles
     ROLES: {
@@ -175,21 +154,14 @@ export const API_ENDPOINTS = {
     },
   },
   REPORTES: {
-    GET_BY_SUCURSAL: (
-      sucursalId: number | string,
-      startDate: string,
-      endDate: string,
-      moneda: string = 'ARS',
-    ) =>
+    GET_BY_SUCURSAL: (sucursalId: number | string, startDate: string, endDate: string, moneda: string = 'ARS') =>
       `${API_URL}/api/reportes/${sucursalId}?startDate=${startDate}T00:00:00&endDate=${endDate}T23:59:59&moneda=${moneda}`,
     GET_ANUAL: (sucursalId: number | string, moneda: string = 'ARS') =>
       `${API_URL}/api/reportes/${sucursalId}/anual?moneda=${moneda}`,
   },
   CUENTAS_BANCARIAS: {
-    GET_BY_SUCURSAL: (sucursalId: number) =>
-      `${API_URL}/api/cuentas-bancarias/${sucursalId}`,
-    CREATE: (sucursalId: number) =>
-      `${API_URL}/api/cuentas-bancarias/${sucursalId}`,
+    GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/cuentas-bancarias/${sucursalId}`,
+    CREATE: (sucursalId: number) => `${API_URL}/api/cuentas-bancarias/${sucursalId}`,
     UPDATE: (id: number) => `${API_URL}/api/cuentas-bancarias/${id}`,
     DELETE: (id: number) => `${API_URL}/api/cuentas-bancarias/${id}`,
   },
@@ -201,4 +173,4 @@ export const API_ENDPOINTS = {
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/tareas/${id}/estado`,
     DELETE: (id: number) => `${API_URL}/api/tareas/${id}`,
   },
-};
+}

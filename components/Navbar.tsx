@@ -1,19 +1,19 @@
-'use client';
+'use client'
 
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Settings, LogOut, ClipboardList, Calculator } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuthStore } from '@/store/authStore';
-import { useCalculatorStore } from '@/store/calculatorStore';
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft, Settings, LogOut, ClipboardList, Calculator } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useAuthStore } from '@/store/authStore'
+import { useCalculatorStore } from '@/store/calculatorStore'
 
 interface NavbarProps {
-  userName?: string;
-  userRole?: string;
-  onLogout?: () => void;
-  showBackButton?: boolean;
-  backUrl?: string;
-  sucursalNombre?: string;
+  userName?: string
+  userRole?: string
+  onLogout?: () => void
+  showBackButton?: boolean
+  backUrl?: string
+  sucursalNombre?: string
 }
 
 export default function Navbar({
@@ -24,18 +24,16 @@ export default function Navbar({
   backUrl = '/sucursales',
   sucursalNombre,
 }: NavbarProps) {
-  const router = useRouter();
-  const canVerConfiguracion = useAuthStore((state) =>
-    state.canVerConfiguracion(),
-  );
-  const { toggleCalculator, isOpen: isCalculatorOpen } = useCalculatorStore();
+  const router = useRouter()
+  const canVerConfiguracion = useAuthStore(state => state.canVerConfiguracion())
+  const { toggleCalculator, isOpen: isCalculatorOpen } = useCalculatorStore()
 
   const greeting = (() => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Buenos días';
-    if (hour < 19) return 'Buenas tardes';
-    return 'Buenas noches';
-  })();
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Buenos días'
+    if (hour < 19) return 'Buenas tardes'
+    return 'Buenas noches'
+  })()
 
   return (
     <header className="bg-white border-b border-[#E0E0E0] shadow-sm sticky top-0 z-50">
@@ -62,14 +60,7 @@ export default function Navbar({
             {/* Logo */}
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Image
-                  src="/HEROICA.svg"
-                  alt="Heroica"
-                  width={80}
-                  height={32}
-                  className="h-8 w-auto"
-                  priority
-                />
+                <Image src="/HEROICA.svg" alt="Heroica" width={80} height={32} className="h-8 w-auto" priority />
               </div>
               <div className="h-8 w-px bg-[#E0E0E0] hidden sm:block"></div>
             </div>
@@ -78,26 +69,18 @@ export default function Navbar({
             <div className="hidden sm:flex flex-col">
               {sucursalNombre ? (
                 <>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#5A6070]">
-                    Sucursal
-                  </p>
-                  <p className="text-sm font-semibold text-[#002868]">
-                    {sucursalNombre}
-                  </p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#5A6070]">Sucursal</p>
+                  <p className="text-sm font-semibold text-[#002868]">{sucursalNombre}</p>
                 </>
               ) : userName ? (
                 <>
                   <p className="text-sm font-semibold text-[#002868]">
                     {greeting}, {userName.split(' ')[0]}
                   </p>
-                  <p className="text-xs text-[#666666]">
-                    Sistema de Contabilidad
-                  </p>
+                  <p className="text-xs text-[#666666]">Sistema de Contabilidad</p>
                 </>
               ) : (
-                <p className="text-sm text-[#666666]">
-                  Sistema de Contabilidad
-                </p>
+                <p className="text-sm text-[#666666]">Sistema de Contabilidad</p>
               )}
             </div>
           </div>
@@ -111,12 +94,8 @@ export default function Navbar({
                   {userName.charAt(0).toUpperCase()}
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-[#1A1A1A] leading-tight">
-                    {userName}
-                  </p>
-                  <p className="text-xs text-[#666666] capitalize leading-tight">
-                    {userRole}
-                  </p>
+                  <p className="text-sm font-semibold text-[#1A1A1A] leading-tight">{userName}</p>
+                  <p className="text-xs text-[#666666] capitalize leading-tight">{userRole}</p>
                 </div>
               </div>
             )}
@@ -174,21 +153,15 @@ export default function Navbar({
             <div>
               {sucursalNombre ? (
                 <>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#5A6070]">
-                    Sucursal
-                  </p>
-                  <p className="text-sm font-semibold text-[#002868]">
-                    {sucursalNombre}
-                  </p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#5A6070]">Sucursal</p>
+                  <p className="text-sm font-semibold text-[#002868]">{sucursalNombre}</p>
                 </>
               ) : (
                 <>
                   <p className="text-sm font-semibold text-[#002868]">
                     {greeting}, {userName?.split(' ')[0]}
                   </p>
-                  <p className="text-xs text-[#666666] capitalize">
-                    {userRole}
-                  </p>
+                  <p className="text-xs text-[#666666] capitalize">{userRole}</p>
                 </>
               )}
             </div>
@@ -196,5 +169,5 @@ export default function Navbar({
         )}
       </div>
     </header>
-  );
+  )
 }

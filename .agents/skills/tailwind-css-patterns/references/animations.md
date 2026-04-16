@@ -3,9 +3,7 @@
 ## Basic Transitions
 
 ```html
-<button class="bg-blue-500 hover:bg-blue-700 transition duration-300">
-  Smooth transition
-</button>
+<button class="bg-blue-500 hover:bg-blue-700 transition duration-300">Smooth transition</button>
 ```
 
 ### Transition Properties
@@ -28,17 +26,13 @@
 
 ```html
 <!-- Scale on hover -->
-<div class="transform hover:scale-110 transition duration-300">
-  Scale on hover
-</div>
+<div class="transform hover:scale-110 transition duration-300">Scale on hover</div>
 
 <!-- Rotate on hover -->
 <img class="transform hover:rotate-6 transition duration-300" />
 
 <!-- Multiple transforms -->
-<div class="transform hover:scale-105 hover:-translate-y-1 transition">
-  Scale up and move up
-</div>
+<div class="transform hover:scale-105 hover:-translate-y-1 transition">Scale up and move up</div>
 ```
 
 ---
@@ -56,20 +50,8 @@
 
 ```html
 <!-- Loading spinner -->
-<svg
-  class="animate-spin h-5 w-5 text-blue-500"
-  xmlns="http://www.w3.org/2000/svg"
-  fill="none"
-  viewBox="0 0 24 24"
->
-  <circle
-    class="opacity-25"
-    cx="12"
-    cy="12"
-    r="10"
-    stroke="currentColor"
-    stroke-width="4"
-  ></circle>
+<svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
   <path
     class="opacity-75"
     fill="currentColor"
@@ -85,9 +67,7 @@
 </div>
 
 <!-- Notification badge -->
-<span
-  class="absolute -top-1 -right-1 h-3 w-3 animate-ping rounded-full bg-red-400 opacity-75"
-></span>
+<span class="absolute -top-1 -right-1 h-3 w-3 animate-ping rounded-full bg-red-400 opacity-75"></span>
 <span class="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500"></span>
 ```
 
@@ -143,9 +123,7 @@ Respect user's motion preferences:
 </div>
 
 <!-- Only animate when motion is preferred -->
-<div class="animate-pulse motion-safe:hover:animate-spin">
-  Only animates when motion is preferred
-</div>
+<div class="animate-pulse motion-safe:hover:animate-spin">Only animates when motion is preferred</div>
 ```
 
 ### Global Reduced Motion Support

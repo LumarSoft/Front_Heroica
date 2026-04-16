@@ -70,7 +70,7 @@ export default {
     },
   },
   plugins: [],
-};
+}
 ```
 
 ---
@@ -79,12 +79,12 @@ export default {
 
 ```javascript
 // vite.config.ts
-import { defineConfig } from 'vite';
-import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [tailwindcss()],
-});
+})
 ```
 
 ---
@@ -94,23 +94,17 @@ export default defineConfig({
 ### Native CSS Custom Properties
 
 ```html
-<div class="bg-[var(--color-brand-500)] text-[var(--color-white)]">
-  Using CSS custom properties directly
-</div>
+<div class="bg-[var(--color-brand-500)] text-[var(--color-white)]">Using CSS custom properties directly</div>
 ```
 
 ### Enhanced Arbitrary Values
 
 ```html
 <!-- Complex grid with custom tracks -->
-<div class="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4">
-  Responsive grid without custom CSS
-</div>
+<div class="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4">Responsive grid without custom CSS</div>
 
 <!-- Custom animation timing -->
-<div class="animate-bounce ease-[cubic-bezier(0.68,-0.55,0.265,1.55)]">
-  Bounce with custom easing
-</div>
+<div class="animate-bounce ease-[cubic-bezier(0.68,-0.55,0.265,1.55)]">Bounce with custom easing</div>
 ```
 
 ### Custom Utilities
@@ -133,7 +127,7 @@ export default defineConfig({
 
 ```javascript
 // tailwind.config.js
-const plugin = require('tailwindcss/plugin');
+const plugin = require('tailwindcss/plugin')
 
 module.exports = {
   plugins: [
@@ -143,7 +137,7 @@ module.exports = {
         '.content-auto': {
           contentVisibility: 'auto',
         },
-      });
+      })
 
       // Add custom components
       addComponents({
@@ -152,10 +146,10 @@ module.exports = {
           borderRadius: '.25rem',
           fontWeight: '600',
         },
-      });
+      })
     }),
   ],
-};
+}
 ```
 
 ---
@@ -179,7 +173,7 @@ module.exports = {
     },
   },
   plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')],
-};
+}
 ```
 
 ### Using a Preset
@@ -188,5 +182,5 @@ module.exports = {
 // tailwind.config.js
 module.exports = {
   presets: [require('./tailwind-preset.js')],
-};
+}
 ```

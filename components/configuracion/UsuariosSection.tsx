@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { Trash2, Building2, ChevronDown, ChevronUp } from 'lucide-react';
-import { API_ENDPOINTS } from '@/lib/config';
-import { apiFetch } from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
+import { Trash2, Building2, ChevronDown, ChevronUp } from 'lucide-react'
+import { API_ENDPOINTS } from '@/lib/config'
+import { apiFetch } from '@/lib/api'
+import { useAuthStore } from '@/store/authStore'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -15,49 +15,43 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface Usuario {
-  id: number;
-  email: string;
-  nombre: string;
-  rol: string;
-  rol_id: number;
-  activo: boolean;
-  must_change_password?: boolean;
-  two_factor_enabled?: boolean;
+  id: number
+  email: string
+  nombre: string
+  rol: string
+  rol_id: number
+  activo: boolean
+  must_change_password?: boolean
+  two_factor_enabled?: boolean
 }
 
 interface Rol {
-  id: number;
-  nombre: string;
-  descripcion: string | null;
+  id: number
+  nombre: string
+  descripcion: string | null
 }
 
 interface Sucursal {
-  id: number;
-  nombre: string;
-  two_factor_enabled?: boolean;
+  id: number
+  nombre: string
+  two_factor_enabled?: boolean
 }
 
 interface UsuarioForm {
-  email: string;
-  password: string;
-  nombre: string;
-  rol_id: number | '';
-  sucursal_ids: number[];
-  must_change_password: boolean;
+  email: string
+  password: string
+  nombre: string
+  rol_id: number | ''
+  sucursal_ids: number[]
+  must_change_password: boolean
 }
 
 const DEFAULT_FORM: UsuarioForm = {
@@ -67,15 +61,15 @@ const DEFAULT_FORM: UsuarioForm = {
   rol_id: '',
   sucursal_ids: [],
   must_change_password: true,
-};
+}
 
 function getInitials(nombre: string) {
   return nombre
     .split(' ')
-    .map((n) => n[0])
+    .map(n => n[0])
     .slice(0, 2)
     .join('')
-    .toUpperCase();
+    .toUpperCase()
 }
 
 const ROL_BADGE_COLORS: Record<string, string> = {
@@ -83,13 +77,10 @@ const ROL_BADGE_COLORS: Record<string, string> = {
   admin: 'bg-blue-50 text-blue-700 border border-blue-200',
   directivo: 'bg-amber-50 text-amber-700 border border-amber-200',
   gerente: 'bg-green-50 text-green-700 border border-green-200',
-};
+}
 
 function getRolBadgeClass(rolNombre: string) {
-  return (
-    ROL_BADGE_COLORS[rolNombre?.toLowerCase()] ||
-    'bg-gray-50 text-gray-700 border border-gray-200'
-  );
+  return ROL_BADGE_COLORS[rolNombre?.toLowerCase()] || 'bg-gray-50 text-gray-700 border border-gray-200'
 }
 
 function getRolLabel(rolNombre: string) {
@@ -98,85 +89,76 @@ function getRolLabel(rolNombre: string) {
     admin: 'Administrador',
     directivo: 'Directivo',
     gerente: 'Gerente',
-  };
-  return labels[rolNombre?.toLowerCase()] || rolNombre;
+  }
+  return labels[rolNombre?.toLowerCase()] || rolNombre
 }
 
 export function UsuariosSection() {
-  const canGestionarUsuarios = useAuthStore((state) =>
-    state.canGestionarUsuarios(),
-  );
-  const currentUser = useAuthStore((state) => state.user);
+  const canGestionarUsuarios = useAuthStore(state => state.canGestionarUsuarios())
+  const currentUser = useAuthStore(state => state.user)
 
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [roles, setRoles] = useState<Rol[]>([]);
-  const [sucursales, setSucursales] = useState<Sucursal[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([])
+  const [roles, setRoles] = useState<Rol[]>([])
+  const [sucursales, setSucursales] = useState<Sucursal[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   // Create dialog
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [form, setForm] = useState<UsuarioForm>(DEFAULT_FORM);
-  const [isSaving, setIsSaving] = useState(false);
-  const [formError, setFormError] = useState('');
-  const [showSucursales, setShowSucursales] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [form, setForm] = useState<UsuarioForm>(DEFAULT_FORM)
+  const [isSaving, setIsSaving] = useState(false)
+  const [formError, setFormError] = useState('')
+  const [showSucursales, setShowSucursales] = useState(false)
 
   // Sucursales dialog (editar sucursales de usuario existente)
-  const [sucursalesDialogOpen, setSucursalesDialogOpen] = useState(false);
-  const [editingSucursalesUser, setEditingSucursalesUser] =
-    useState<Usuario | null>(null);
-  const [sucursalesSeleccionadas, setSucursalesSeleccionadas] = useState<
-    number[]
-  >([]);
-  const [isSavingSucursales, setIsSavingSucursales] = useState(false);
+  const [sucursalesDialogOpen, setSucursalesDialogOpen] = useState(false)
+  const [editingSucursalesUser, setEditingSucursalesUser] = useState<Usuario | null>(null)
+  const [sucursalesSeleccionadas, setSucursalesSeleccionadas] = useState<number[]>([])
+  const [isSavingSucursales, setIsSavingSucursales] = useState(false)
 
   // Delete dialog
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Reset 2FA dialog
-  const [resetDialogOpen, setResetDialogOpen] = useState(false);
-  const [usuarioToReset, setUsuarioToReset] = useState<Usuario | null>(null);
-  const [isResetting, setIsResetting] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false)
+  const [usuarioToReset, setUsuarioToReset] = useState<Usuario | null>(null)
+  const [isResetting, setIsResetting] = useState(false)
 
   useEffect(() => {
-    fetchAll();
-  }, []);
+    fetchAll()
+  }, [])
 
   const fetchAll = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       const [resUsuarios, resRoles, resSucursales] = await Promise.all([
         apiFetch(API_ENDPOINTS.CONFIGURACION.USUARIOS.GET_ALL),
         apiFetch(API_ENDPOINTS.CONFIGURACION.ROLES.GET_ALL),
         apiFetch(API_ENDPOINTS.SUCURSALES.GET_ALL),
-      ]);
-      const [dataU, dataR, dataS] = await Promise.all([
-        resUsuarios.json(),
-        resRoles.json(),
-        resSucursales.json(),
-      ]);
-      if (dataU.success) setUsuarios(dataU.data);
-      if (dataR.success) setRoles(dataR.data);
-      if (dataS.success) setSucursales(dataS.data);
+      ])
+      const [dataU, dataR, dataS] = await Promise.all([resUsuarios.json(), resRoles.json(), resSucursales.json()])
+      if (dataU.success) setUsuarios(dataU.data)
+      if (dataR.success) setRoles(dataR.data)
+      if (dataS.success) setSucursales(dataS.data)
     } catch {
-      toast.error('Error al cargar datos');
+      toast.error('Error al cargar datos')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleSave = async () => {
     if (!form.email || !form.password || !form.nombre || !form.rol_id) {
-      setFormError('Todos los campos obligatorios son requeridos');
-      return;
+      setFormError('Todos los campos obligatorios son requeridos')
+      return
     }
     if (form.password.length < 6) {
-      setFormError('La contraseña debe tener al menos 6 caracteres');
-      return;
+      setFormError('La contraseña debe tener al menos 6 caracteres')
+      return
     }
-    setIsSaving(true);
-    setFormError('');
+    setIsSaving(true)
+    setFormError('')
     try {
       const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.USUARIOS.CREATE, {
         method: 'POST',
@@ -188,176 +170,161 @@ export function UsuariosSection() {
           sucursal_ids: form.sucursal_ids,
           must_change_password: form.must_change_password,
         }),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (data.success) {
-        toast.success(data.message);
-        setIsCreateOpen(false);
-        setForm(DEFAULT_FORM);
-        await fetchAll();
+        toast.success(data.message)
+        setIsCreateOpen(false)
+        setForm(DEFAULT_FORM)
+        await fetchAll()
       } else {
-        setFormError(data.message);
+        setFormError(data.message)
       }
     } catch {
-      setFormError('Error al crear usuario');
+      setFormError('Error al crear usuario')
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   const handleChangeRol = async (userId: number, nuevoRolId: number) => {
     try {
-      const res = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.USUARIOS.UPDATE_ROL(userId),
-        { method: 'PUT', body: JSON.stringify({ rol_id: nuevoRolId }) },
-      );
-      const data = await res.json();
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.USUARIOS.UPDATE_ROL(userId), {
+        method: 'PUT',
+        body: JSON.stringify({ rol_id: nuevoRolId }),
+      })
+      const data = await res.json()
       if (data.success) {
-        toast.success(data.message || 'Rol actualizado');
-        await fetchAll();
+        toast.success(data.message || 'Rol actualizado')
+        await fetchAll()
       } else {
-        toast.error(data.message || 'Error al actualizar rol');
+        toast.error(data.message || 'Error al actualizar rol')
       }
     } catch {
-      toast.error('Error al actualizar rol del usuario');
+      toast.error('Error al actualizar rol del usuario')
     }
-  };
+  }
 
   const handleToggleActivo = async (userId: number) => {
     try {
-      const res = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.USUARIOS.TOGGLE_ACTIVO(userId),
-        { method: 'PUT' },
-      );
-      const data = await res.json();
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.USUARIOS.TOGGLE_ACTIVO(userId), { method: 'PUT' })
+      const data = await res.json()
       if (data.success) {
-        toast.success(data.message);
-        await fetchAll();
+        toast.success(data.message)
+        await fetchAll()
       } else {
-        toast.error(data.message || 'Error al cambiar estado');
+        toast.error(data.message || 'Error al cambiar estado')
       }
     } catch {
-      toast.error('Error al cambiar estado del usuario');
+      toast.error('Error al cambiar estado del usuario')
     }
-  };
+  }
 
   const handleDeleteClick = (usuario: Usuario) => {
-    setUsuarioToDelete(usuario);
-    setDeleteDialogOpen(true);
-  };
+    setUsuarioToDelete(usuario)
+    setDeleteDialogOpen(true)
+  }
 
   const handleConfirmDelete = async () => {
-    if (!usuarioToDelete) return;
-    setIsDeleting(true);
+    if (!usuarioToDelete) return
+    setIsDeleting(true)
     try {
-      const res = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.USUARIOS.DELETE(usuarioToDelete.id),
-        { method: 'DELETE' },
-      );
-      const data = await res.json();
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.USUARIOS.DELETE(usuarioToDelete.id), { method: 'DELETE' })
+      const data = await res.json()
       if (data.success) {
-        toast.success('Usuario eliminado correctamente');
-        setUsuarios((prev) => prev.filter((u) => u.id !== usuarioToDelete.id));
-        setDeleteDialogOpen(false);
-        setUsuarioToDelete(null);
+        toast.success('Usuario eliminado correctamente')
+        setUsuarios(prev => prev.filter(u => u.id !== usuarioToDelete.id))
+        setDeleteDialogOpen(false)
+        setUsuarioToDelete(null)
       } else {
-        toast.error(data.message || 'Error al eliminar usuario');
+        toast.error(data.message || 'Error al eliminar usuario')
       }
     } catch {
-      toast.error('Error al eliminar usuario');
+      toast.error('Error al eliminar usuario')
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
   const openSucursalesDialog = async (usuario: Usuario) => {
-    setEditingSucursalesUser(usuario);
+    setEditingSucursalesUser(usuario)
     try {
-      const res = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.USUARIOS.GET_SUCURSALES(usuario.id),
-      );
-      const data = await res.json();
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.USUARIOS.GET_SUCURSALES(usuario.id))
+      const data = await res.json()
       if (data.success) {
-        setSucursalesSeleccionadas(data.data.map((s: Sucursal) => s.id));
+        setSucursalesSeleccionadas(data.data.map((s: Sucursal) => s.id))
       }
     } catch {
-      setSucursalesSeleccionadas([]);
+      setSucursalesSeleccionadas([])
     }
-    setSucursalesDialogOpen(true);
-  };
+    setSucursalesDialogOpen(true)
+  }
 
   const handleSaveSucursales = async () => {
-    if (!editingSucursalesUser) return;
-    setIsSavingSucursales(true);
+    if (!editingSucursalesUser) return
+    setIsSavingSucursales(true)
     try {
-      const res = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.USUARIOS.UPDATE_SUCURSALES(
-          editingSucursalesUser.id,
-        ),
-        {
-          method: 'PUT',
-          body: JSON.stringify({ sucursal_ids: sucursalesSeleccionadas }),
-        },
-      );
-      const data = await res.json();
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.USUARIOS.UPDATE_SUCURSALES(editingSucursalesUser.id), {
+        method: 'PUT',
+        body: JSON.stringify({ sucursal_ids: sucursalesSeleccionadas }),
+      })
+      const data = await res.json()
       if (data.success) {
-        toast.success('Sucursales actualizadas');
-        setSucursalesDialogOpen(false);
+        toast.success('Sucursales actualizadas')
+        setSucursalesDialogOpen(false)
       } else {
-        toast.error(data.message || 'Error al actualizar sucursales');
+        toast.error(data.message || 'Error al actualizar sucursales')
       }
     } catch {
-      toast.error('Error al actualizar sucursales');
+      toast.error('Error al actualizar sucursales')
     } finally {
-      setIsSavingSucursales(false);
+      setIsSavingSucursales(false)
     }
-  };
+  }
 
   const toggleSucursalForm = (id: number) => {
-    setForm((prev) => ({
+    setForm(prev => ({
       ...prev,
       sucursal_ids: prev.sucursal_ids.includes(id)
-        ? prev.sucursal_ids.filter((s) => s !== id)
+        ? prev.sucursal_ids.filter(s => s !== id)
         : [...prev.sucursal_ids, id],
-    }));
-  };
+    }))
+  }
 
   const toggleSucursalEdit = (id: number) => {
-    setSucursalesSeleccionadas((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
-    );
-  };
+    setSucursalesSeleccionadas(prev => (prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]))
+  }
 
   const handleResetClick = (usuario: Usuario) => {
-    setUsuarioToReset(usuario);
-    setResetDialogOpen(true);
-  };
+    setUsuarioToReset(usuario)
+    setResetDialogOpen(true)
+  }
 
   const handleConfirmReset = async () => {
-    if (!usuarioToReset) return;
-    setIsResetting(true);
+    if (!usuarioToReset) return
+    setIsResetting(true)
     try {
       const res = await apiFetch(API_ENDPOINTS.AUTH.RESET_2FA, {
         method: 'POST',
         body: JSON.stringify({ userId: usuarioToReset.id }),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (data.success) {
-        toast.success(data.message);
-        setResetDialogOpen(false);
-        setUsuarioToReset(null);
-        await fetchAll();
+        toast.success(data.message)
+        setResetDialogOpen(false)
+        setUsuarioToReset(null)
+        await fetchAll()
       } else {
-        toast.error(data.message || 'Error al resetear 2FA');
+        toast.error(data.message || 'Error al resetear 2FA')
       }
     } catch {
-      toast.error('Error al resetear 2FA');
+      toast.error('Error al resetear 2FA')
     } finally {
-      setIsResetting(false);
+      setIsResetting(false)
     }
-  };
+  }
 
-  const isMainAdmin = (email: string) => email === 'admin@heroica.com';
+  const isMainAdmin = (email: string) => email === 'admin@heroica.com'
 
   if (isLoading) {
     return (
@@ -366,7 +333,7 @@ export function UsuariosSection() {
           <p className="text-center text-[#666666]">Cargando usuarios...</p>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -376,18 +343,17 @@ export function UsuariosSection() {
           <div>
             <CardTitle className="text-[#002868]">Usuarios y Roles</CardTitle>
             <p className="text-sm text-[#666666] mt-0.5">
-              {usuarios.length} usuario{usuarios.length !== 1 ? 's' : ''}{' '}
-              registrado{usuarios.length !== 1 ? 's' : ''}
+              {usuarios.length} usuario{usuarios.length !== 1 ? 's' : ''} registrado{usuarios.length !== 1 ? 's' : ''}
             </p>
           </div>
           {canGestionarUsuarios && (
             <Button
               id="btn-nuevo-usuario"
               onClick={() => {
-                setForm(DEFAULT_FORM);
-                setFormError('');
-                setShowSucursales(false);
-                setIsCreateOpen(true);
+                setForm(DEFAULT_FORM)
+                setFormError('')
+                setShowSucursales(false)
+                setIsCreateOpen(true)
               }}
               className="bg-[#002868] hover:bg-[#003d8f] text-white"
             >
@@ -398,16 +364,14 @@ export function UsuariosSection() {
 
         <CardContent className="p-0">
           {usuarios.length === 0 ? (
-            <p className="text-center text-[#666666] py-10">
-              No hay usuarios registrados
-            </p>
+            <p className="text-center text-[#666666] py-10">No hay usuarios registrados</p>
           ) : (
             <div className="divide-y divide-[#F0F0F0]">
-              {usuarios.map((usuario) => {
-                const isProtected = isMainAdmin(usuario.email);
-                const badgeClass = getRolBadgeClass(usuario.rol);
-                const badgeLabel = getRolLabel(usuario.rol);
-                const isSelf = currentUser?.id === usuario.id;
+              {usuarios.map(usuario => {
+                const isProtected = isMainAdmin(usuario.email)
+                const badgeClass = getRolBadgeClass(usuario.rol)
+                const badgeLabel = getRolLabel(usuario.rol)
+                const isSelf = currentUser?.id === usuario.id
                 return (
                   <div
                     key={usuario.id}
@@ -416,9 +380,7 @@ export function UsuariosSection() {
                     {/* Avatar */}
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 select-none ${
-                        usuario.activo
-                          ? 'bg-[#002868]/10 text-[#002868]'
-                          : 'bg-gray-200 text-gray-400'
+                        usuario.activo ? 'bg-[#002868]/10 text-[#002868]' : 'bg-gray-200 text-gray-400'
                       }`}
                     >
                       {getInitials(usuario.nombre)}
@@ -427,21 +389,13 @@ export function UsuariosSection() {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-[#1A1A1A] truncate">
-                          {usuario.nombre}
-                        </span>
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}
-                        >
+                        <span className="font-semibold text-[#1A1A1A] truncate">{usuario.nombre}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
                           {badgeLabel}
                         </span>
                         {usuario.two_factor_enabled && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-200 flex items-center gap-1">
-                            <svg
-                              className="w-3 h-3"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                               <path
                                 fillRule="evenodd"
                                 d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
@@ -453,11 +407,7 @@ export function UsuariosSection() {
                         )}
                         {usuario.two_factor_enabled && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-200 flex items-center gap-1">
-                            <svg
-                              className="w-3 h-3"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                               <path
                                 fillRule="evenodd"
                                 d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
@@ -483,43 +433,30 @@ export function UsuariosSection() {
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-[#666666] truncate mt-0.5">
-                        {usuario.email}
-                      </p>
+                      <p className="text-sm text-[#666666] truncate mt-0.5">{usuario.email}</p>
                     </div>
 
                     {/* Acciones */}
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {isProtected ? (
-                        <span className="text-xs text-[#999999] italic px-2">
-                          No editable
-                        </span>
+                        <span className="text-xs text-[#999999] italic px-2">No editable</span>
                       ) : isSelf ? (
-                        <span className="text-xs text-[#999999] italic px-2">
-                          Sesión actual
-                        </span>
+                        <span className="text-xs text-[#999999] italic px-2">Sesión actual</span>
                       ) : !canGestionarUsuarios ? (
-                        <span className="text-xs text-[#999999] italic px-2">
-                          Solo lectura
-                        </span>
+                        <span className="text-xs text-[#999999] italic px-2">Solo lectura</span>
                       ) : (
                         <>
                           {/* Selector de rol dinámico */}
                           <Select
                             value={usuario.rol_id.toString()}
-                            onValueChange={(value) =>
-                              handleChangeRol(usuario.id, parseInt(value))
-                            }
+                            onValueChange={value => handleChangeRol(usuario.id, parseInt(value))}
                           >
                             <SelectTrigger className="w-[160px] h-9 text-sm border-[#E0E0E0] bg-white text-[#1A1A1A]">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {roles.map((rol) => (
-                                <SelectItem
-                                  key={rol.id}
-                                  value={rol.id.toString()}
-                                >
+                              {roles.map(rol => (
+                                <SelectItem key={rol.id} value={rol.id.toString()}>
                                   {getRolLabel(rol.nombre)}
                                 </SelectItem>
                               ))}
@@ -541,9 +478,7 @@ export function UsuariosSection() {
                             <Switch
                               id={`activo-${usuario.id}`}
                               checked={usuario.activo}
-                              onCheckedChange={() =>
-                                handleToggleActivo(usuario.id)
-                              }
+                              onCheckedChange={() => handleToggleActivo(usuario.id)}
                               className="data-[state=checked]:bg-[#002868]"
                             />
                             <Label
@@ -577,7 +512,7 @@ export function UsuariosSection() {
                       )}
                     </div>
                   </div>
-                );
+                )
               })}
             </div>
           )}
@@ -589,9 +524,7 @@ export function UsuariosSection() {
         <DialogContent className="sm:max-w-[500px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden max-h-[90vh] flex flex-col">
           <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0] flex-shrink-0">
             <DialogHeader className="p-0">
-              <DialogTitle className="text-xl font-bold text-[#1A1A1A]">
-                Nuevo Usuario
-              </DialogTitle>
+              <DialogTitle className="text-xl font-bold text-[#1A1A1A]">Nuevo Usuario</DialogTitle>
               <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
                 Creá un nuevo usuario y asignale un rol y sucursales
               </DialogDescription>
@@ -607,7 +540,7 @@ export function UsuariosSection() {
               <Input
                 id="nuevo-usuario-nombre"
                 value={form.nombre}
-                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                onChange={e => setForm({ ...form, nombre: e.target.value })}
                 placeholder="Ej: Juan Pérez"
                 className="h-10 border-[#E0E0E0] text-[#1A1A1A]"
               />
@@ -622,7 +555,7 @@ export function UsuariosSection() {
                 id="nuevo-usuario-email"
                 type="email"
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onChange={e => setForm({ ...form, email: e.target.value })}
                 placeholder="ejemplo@correo.com"
                 className="h-10 border-[#E0E0E0] text-[#1A1A1A]"
               />
@@ -637,7 +570,7 @@ export function UsuariosSection() {
                 id="nuevo-usuario-password"
                 type="password"
                 value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                onChange={e => setForm({ ...form, password: e.target.value })}
                 placeholder="Mínimo 6 caracteres"
                 className="h-10 border-[#E0E0E0] text-[#1A1A1A]"
               />
@@ -645,27 +578,19 @@ export function UsuariosSection() {
 
             {/* Rol */}
             <div>
-              <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
-                Rol *
-              </Label>
+              <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Rol *</Label>
               <Select
                 value={form.rol_id.toString()}
-                onValueChange={(value) =>
-                  setForm({ ...form, rol_id: parseInt(value) })
-                }
+                onValueChange={value => setForm({ ...form, rol_id: parseInt(value) })}
               >
                 <SelectTrigger className="h-10 border-[#E0E0E0] text-[#1A1A1A]">
                   <SelectValue placeholder="Seleccioná un rol" />
                 </SelectTrigger>
                 <SelectContent>
-                  {roles.map((rol) => (
+                  {roles.map(rol => (
                     <SelectItem key={rol.id} value={rol.id.toString()}>
                       {getRolLabel(rol.nombre)}
-                      {rol.descripcion && (
-                        <span className="text-xs text-[#999] ml-2">
-                          — {rol.descripcion}
-                        </span>
-                      )}
+                      {rol.descripcion && <span className="text-xs text-[#999] ml-2">— {rol.descripcion}</span>}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -677,21 +602,14 @@ export function UsuariosSection() {
               <Checkbox
                 id="must-change-password"
                 checked={form.must_change_password}
-                onCheckedChange={(checked) =>
-                  setForm({ ...form, must_change_password: Boolean(checked) })
-                }
+                onCheckedChange={checked => setForm({ ...form, must_change_password: Boolean(checked) })}
                 className="border-[#C0C0C0] data-[state=checked]:bg-[#002868] data-[state=checked]:border-[#002868]"
               />
               <div>
-                <Label
-                  htmlFor="must-change-password"
-                  className="text-sm font-medium text-[#333] cursor-pointer"
-                >
+                <Label htmlFor="must-change-password" className="text-sm font-medium text-[#333] cursor-pointer">
                   Forzar cambio de contraseña
                 </Label>
-                <p className="text-xs text-[#999] mt-0.5">
-                  El usuario deberá cambiarla al ingresar por primera vez
-                </p>
+                <p className="text-xs text-[#999] mt-0.5">El usuario deberá cambiarla al ingresar por primera vez</p>
               </div>
             </div>
 
@@ -709,24 +627,17 @@ export function UsuariosSection() {
                   {form.sucursal_ids.length > 0
                     ? `${form.sucursal_ids.length} seleccionada${form.sucursal_ids.length !== 1 ? 's' : ''}`
                     : 'Todas'}
-                  {showSucursales ? (
-                    <ChevronUp className="w-3.5 h-3.5" />
-                  ) : (
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  )}
+                  {showSucursales ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                 </span>
               </button>
 
               {showSucursales && (
                 <div className="mt-2 border border-[#E0E0E0] rounded-lg overflow-hidden">
                   <div className="p-2 bg-[#F8F9FA] border-b border-[#E8E8E8]">
-                    <p className="text-xs text-[#777]">
-                      Sin selección = acceso a todas. Seleccioná para
-                      restringir.
-                    </p>
+                    <p className="text-xs text-[#777]">Sin selección = acceso a todas. Seleccioná para restringir.</p>
                   </div>
                   <div className="max-h-36 overflow-y-auto divide-y divide-[#F5F5F5]">
-                    {sucursales.map((s) => (
+                    {sucursales.map(s => (
                       <div
                         key={s.id}
                         className="flex items-center gap-2.5 px-3 py-2 hover:bg-[#F8F9FA] cursor-pointer"
@@ -738,9 +649,7 @@ export function UsuariosSection() {
                           onCheckedChange={() => toggleSucursalForm(s.id)}
                           className="border-[#C0C0C0] data-[state=checked]:bg-[#002868] data-[state=checked]:border-[#002868]"
                         />
-                        <span className="text-sm text-[#1A1A1A]">
-                          {s.nombre}
-                        </span>
+                        <span className="text-sm text-[#1A1A1A]">{s.nombre}</span>
                       </div>
                     ))}
                   </div>
@@ -764,13 +673,7 @@ export function UsuariosSection() {
               <Button
                 id="btn-crear-usuario"
                 onClick={handleSave}
-                disabled={
-                  isSaving ||
-                  !form.email ||
-                  !form.password ||
-                  !form.nombre ||
-                  !form.rol_id
-                }
+                disabled={isSaving || !form.email || !form.password || !form.nombre || !form.rol_id}
                 className="bg-[#002868] hover:bg-[#003d8f] text-white"
               >
                 {isSaving ? 'Creando...' : 'Crear Usuario'}
@@ -781,10 +684,7 @@ export function UsuariosSection() {
       </Dialog>
 
       {/* Dialog: Gestionar sucursales de usuario existente */}
-      <Dialog
-        open={sucursalesDialogOpen}
-        onOpenChange={setSucursalesDialogOpen}
-      >
+      <Dialog open={sucursalesDialogOpen} onOpenChange={setSucursalesDialogOpen}>
         <DialogContent className="sm:max-w-[440px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
           <div className="px-7 pt-7 pb-4 border-b border-[#F0F0F0]">
             <DialogHeader className="p-0">
@@ -792,15 +692,14 @@ export function UsuariosSection() {
                 Sucursales de {editingSucursalesUser?.nombre}
               </DialogTitle>
               <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
-                Seleccioná las sucursales a las que puede acceder. Sin selección
-                = acceso a todas.
+                Seleccioná las sucursales a las que puede acceder. Sin selección = acceso a todas.
               </DialogDescription>
             </DialogHeader>
           </div>
 
           <div className="px-7 py-5">
             <div className="border border-[#E0E0E0] rounded-lg overflow-hidden divide-y divide-[#F5F5F5]">
-              {sucursales.map((s) => (
+              {sucursales.map(s => (
                 <div
                   key={s.id}
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#F8F9FA] cursor-pointer transition-colors"
@@ -850,9 +749,7 @@ export function UsuariosSection() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-red-600">
-              Eliminar Usuario
-            </DialogTitle>
+            <DialogTitle className="text-xl font-bold text-red-600">Eliminar Usuario</DialogTitle>
             <DialogDescription className="text-[#666666]">
               Esta acción no se puede deshacer. ¿Estás seguro?
             </DialogDescription>
@@ -865,12 +762,8 @@ export function UsuariosSection() {
                   {getInitials(usuarioToDelete.nombre)}
                 </div>
                 <div>
-                  <p className="font-semibold text-[#1A1A1A]">
-                    {usuarioToDelete.nombre}
-                  </p>
-                  <p className="text-sm text-[#666666]">
-                    {usuarioToDelete.email}
-                  </p>
+                  <p className="font-semibold text-[#1A1A1A]">{usuarioToDelete.nombre}</p>
+                  <p className="text-sm text-[#666666]">{usuarioToDelete.email}</p>
                 </div>
               </div>
             </div>
@@ -908,12 +801,9 @@ export function UsuariosSection() {
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-orange-600">
-              Resetear Autenticación 2FA
-            </DialogTitle>
+            <DialogTitle className="text-xl font-bold text-orange-600">Resetear Autenticación 2FA</DialogTitle>
             <DialogDescription className="text-[#666666]">
-              El usuario deberá configurar nuevamente su 2FA en el próximo
-              inicio de sesión
+              El usuario deberá configurar nuevamente su 2FA en el próximo inicio de sesión
             </DialogDescription>
           </DialogHeader>
 
@@ -924,12 +814,8 @@ export function UsuariosSection() {
                   {getInitials(usuarioToReset.nombre)}
                 </div>
                 <div>
-                  <p className="font-semibold text-[#1A1A1A]">
-                    {usuarioToReset.nombre}
-                  </p>
-                  <p className="text-sm text-[#666666]">
-                    {usuarioToReset.email}
-                  </p>
+                  <p className="font-semibold text-[#1A1A1A]">{usuarioToReset.nombre}</p>
+                  <p className="text-sm text-[#666666]">{usuarioToReset.email}</p>
                 </div>
               </div>
             </div>
@@ -962,5 +848,5 @@ export function UsuariosSection() {
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }

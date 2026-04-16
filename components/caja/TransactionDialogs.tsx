@@ -1,10 +1,10 @@
-'use client';
+'use client'
 
-import { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useState, useEffect, useRef } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
@@ -12,73 +12,59 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import type {
-  Transaction,
-  Categoria,
-  Subcategoria,
-  SelectOption,
-} from '@/lib/types';
-import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles';
-import {
-  Lightbulb,
-  CheckCircle2,
-  Upload,
-  X,
-  FileText,
-  Download,
-} from 'lucide-react';
-import { API_ENDPOINTS } from '@/lib/config';
-import { apiFetch } from '@/lib/api';
-import { formatInputMonto } from '@/lib/formatters';
+} from '@/components/ui/dialog'
+import type { Transaction, Categoria, Subcategoria, SelectOption } from '@/lib/types'
+import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles'
+import { Lightbulb, CheckCircle2, Upload, X, FileText, Download } from 'lucide-react'
+import { API_ENDPOINTS } from '@/lib/config'
+import { apiFetch } from '@/lib/api'
+import { formatInputMonto } from '@/lib/formatters'
 
 // =============================================
 // Dialog de Detalles (edición de movimiento)
 // =============================================
 
 interface Documento {
-  id: number;
-  nombre_archivo: string;
-  tamano_bytes: number;
-  fecha_subida: string;
+  id: number
+  nombre_archivo: string
+  tamano_bytes: number
+  fecha_subida: string
 }
 
 interface DetailsDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
   formData: {
-    fecha: string;
-    concepto: string;
-    monto: string;
-    comentarios: string;
-    descripcion_id: string;
-    proveedor_id: string;
-    prioridad: string;
-    tipo: string;
-    categoria_id: string;
-    subcategoria_id: string;
-    comprobante: string;
-    banco_id: string;
-    medio_pago_id: string;
-    numero_cheque: string;
-  };
-  onInputChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
-  ) => void;
-  onSave: () => void;
-  isSaving: boolean;
-  categorias: Categoria[];
-  subcategorias: Subcategoria[];
-  bancos: SelectOption[];
-  mediosPago: SelectOption[];
-  descripciones: SelectOption[];
-  proveedores: SelectOption[];
-  showBancoFields?: boolean;
-  isReadOnly?: boolean;
-  canEditInfo?: boolean;
-  canEditComment?: boolean;
-  movimientoId?: number;
-  cajaTipo?: 'efectivo' | 'banco';
+    fecha: string
+    concepto: string
+    monto: string
+    comentarios: string
+    descripcion_id: string
+    proveedor_id: string
+    prioridad: string
+    tipo: string
+    categoria_id: string
+    subcategoria_id: string
+    comprobante: string
+    banco_id: string
+    medio_pago_id: string
+    numero_cheque: string
+  }
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void
+  onSave: () => void
+  isSaving: boolean
+  categorias: Categoria[]
+  subcategorias: Subcategoria[]
+  bancos: SelectOption[]
+  mediosPago: SelectOption[]
+  descripciones: SelectOption[]
+  proveedores: SelectOption[]
+  showBancoFields?: boolean
+  isReadOnly?: boolean
+  canEditInfo?: boolean
+  canEditComment?: boolean
+  movimientoId?: number
+  cajaTipo?: 'efectivo' | 'banco'
 }
 
 export function DetailsDialog({
@@ -101,119 +87,116 @@ export function DetailsDialog({
   movimientoId,
   cajaTipo = 'efectivo',
 }: DetailsDialogProps) {
-  const [documentos, setDocumentos] = useState<Documento[]>([]);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [isLoadingDocs, setIsLoadingDocs] = useState(false);
-  const [isUploadingDocs, setIsUploadingDocs] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [documentos, setDocumentos] = useState<Documento[]>([])
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [isLoadingDocs, setIsLoadingDocs] = useState(false)
+  const [isUploadingDocs, setIsUploadingDocs] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Cargar documentos cuando se abre el diálogo
   useEffect(() => {
     if (open && movimientoId) {
-      fetchDocumentos();
+      fetchDocumentos()
     }
-  }, [open, movimientoId]);
+  }, [open, movimientoId])
 
   const fetchDocumentos = async () => {
-    if (!movimientoId) return;
+    if (!movimientoId) return
 
     try {
-      setIsLoadingDocs(true);
+      setIsLoadingDocs(true)
       const endpoint =
         cajaTipo === 'banco'
           ? API_ENDPOINTS.CAJA_BANCO.GET_DOCUMENTOS(movimientoId)
-          : API_ENDPOINTS.MOVIMIENTOS.GET_DOCUMENTOS(movimientoId);
+          : API_ENDPOINTS.MOVIMIENTOS.GET_DOCUMENTOS(movimientoId)
 
-      const response = await apiFetch(endpoint);
-      const data = await response.json();
+      const response = await apiFetch(endpoint)
+      const data = await response.json()
 
       if (response.ok) {
-        setDocumentos(data.data || []);
+        setDocumentos(data.data || [])
       }
     } catch (error) {
-      console.error('Error al cargar documentos:', error);
+      console.error('Error al cargar documentos:', error)
     } finally {
-      setIsLoadingDocs(false);
+      setIsLoadingDocs(false)
     }
-  };
+  }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const validFiles = files.filter((file) => {
-      const isValidType =
-        file.type === 'application/pdf' ||
-        file.type === 'image/jpeg' ||
-        file.type === 'image/jpg';
-      const isValidSize = file.size <= 10 * 1024 * 1024;
-      return isValidType && isValidSize;
-    });
+    const files = Array.from(e.target.files || [])
+    const validFiles = files.filter(file => {
+      const isValidType = file.type === 'application/pdf' || file.type === 'image/jpeg' || file.type === 'image/jpg'
+      const isValidSize = file.size <= 10 * 1024 * 1024
+      return isValidType && isValidSize
+    })
 
-    setSelectedFiles((prev) => [...prev, ...validFiles]);
+    setSelectedFiles(prev => [...prev, ...validFiles])
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = ''
     }
-  };
+  }
 
   const handleRemoveFile = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-  };
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index))
+  }
 
   const handleUploadFiles = async () => {
-    if (!movimientoId || selectedFiles.length === 0) return;
+    if (!movimientoId || selectedFiles.length === 0) return
 
     try {
-      setIsUploadingDocs(true);
+      setIsUploadingDocs(true)
       const endpoint =
         cajaTipo === 'banco'
           ? API_ENDPOINTS.CAJA_BANCO.UPLOAD_DOCUMENTO(movimientoId)
-          : API_ENDPOINTS.MOVIMIENTOS.UPLOAD_DOCUMENTO(movimientoId);
+          : API_ENDPOINTS.MOVIMIENTOS.UPLOAD_DOCUMENTO(movimientoId)
 
       for (const file of selectedFiles) {
-        const formData = new FormData();
-        formData.append('file', file);
+        const formData = new FormData()
+        formData.append('file', file)
 
         await apiFetch(endpoint, {
           method: 'POST',
           body: formData,
           headers: {},
-        });
+        })
       }
 
-      setSelectedFiles([]);
-      await fetchDocumentos();
+      setSelectedFiles([])
+      await fetchDocumentos()
     } catch (error) {
-      console.error('Error al subir documentos:', error);
+      console.error('Error al subir documentos:', error)
     } finally {
-      setIsUploadingDocs(false);
+      setIsUploadingDocs(false)
     }
-  };
+  }
 
   const handleDeleteDocumento = async (docId: number) => {
-    if (!movimientoId) return;
+    if (!movimientoId) return
 
     try {
       const endpoint =
         cajaTipo === 'banco'
           ? API_ENDPOINTS.CAJA_BANCO.DELETE_DOCUMENTO(movimientoId, docId)
-          : API_ENDPOINTS.MOVIMIENTOS.DELETE_DOCUMENTO(movimientoId, docId);
+          : API_ENDPOINTS.MOVIMIENTOS.DELETE_DOCUMENTO(movimientoId, docId)
 
-      await apiFetch(endpoint, { method: 'DELETE' });
-      await fetchDocumentos();
+      await apiFetch(endpoint, { method: 'DELETE' })
+      await fetchDocumentos()
     } catch (error) {
-      console.error('Error al eliminar documento:', error);
+      console.error('Error al eliminar documento:', error)
     }
-  };
+  }
 
   const handleDownloadDocumento = (docId: number) => {
-    if (!movimientoId) return;
+    if (!movimientoId) return
 
     const endpoint =
       cajaTipo === 'banco'
         ? API_ENDPOINTS.CAJA_BANCO.DOWNLOAD_DOCUMENTO(movimientoId, docId)
-        : API_ENDPOINTS.MOVIMIENTOS.DOWNLOAD_DOCUMENTO(movimientoId, docId);
+        : API_ENDPOINTS.MOVIMIENTOS.DOWNLOAD_DOCUMENTO(movimientoId, docId)
 
-    window.open(endpoint, '_blank');
-  };
+    window.open(endpoint, '_blank')
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -225,9 +208,7 @@ export function DetailsDialog({
               {isReadOnly ? 'Ver movimiento' : 'Editar movimiento'}
             </DialogTitle>
             <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
-              {isReadOnly
-                ? 'Sucursal inactiva — solo visualización'
-                : 'Modifica los datos del movimiento de caja'}
+              {isReadOnly ? 'Sucursal inactiva — solo visualización' : 'Modifica los datos del movimiento de caja'}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -287,7 +268,7 @@ export function DetailsDialog({
                 className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
               >
                 <option value="">Seleccione descripción</option>
-                {descripciones.map((d) => (
+                {descripciones.map(d => (
                   <option key={d.id} value={d.id}>
                     {d.nombre}
                   </option>
@@ -375,7 +356,7 @@ export function DetailsDialog({
                       className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
                     >
                       <option value="">Seleccione un banco</option>
-                      {bancos.map((b) => (
+                      {bancos.map(b => (
                         <option key={b.id} value={b.id}>
                           {b.nombre}
                         </option>
@@ -395,7 +376,7 @@ export function DetailsDialog({
                       className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
                     >
                       <option value="">Seleccione medio de pago</option>
-                      {mediosPago.map((m) => (
+                      {mediosPago.map(m => (
                         <option key={m.id} value={m.id}>
                           {m.nombre}
                         </option>
@@ -404,11 +385,8 @@ export function DetailsDialog({
                   </div>
                 </div>
                 {(() => {
-                  const selectedMedio = mediosPago.find(
-                    (m) => m.id.toString() === formData.medio_pago_id,
-                  );
-                  const isCheque =
-                    selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre);
+                  const selectedMedio = mediosPago.find(m => m.id.toString() === formData.medio_pago_id)
+                  const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre)
                   return isCheque ? (
                     <div className="space-y-1.5">
                       <Label htmlFor="numero_cheque" className={labelClasses}>
@@ -424,7 +402,7 @@ export function DetailsDialog({
                         className={`${inputClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
                       />
                     </div>
-                  ) : null;
+                  ) : null
                 })()}
               </>
             )}
@@ -471,7 +449,7 @@ export function DetailsDialog({
                 className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
               >
                 <option value="">Seleccione proveedor</option>
-                {proveedores.map((p) => (
+                {proveedores.map(p => (
                   <option key={p.id} value={p.id}>
                     {p.nombre}
                   </option>
@@ -494,8 +472,8 @@ export function DetailsDialog({
                 >
                   <option value="">Seleccione categoría</option>
                   {categorias
-                    .filter((c) => c.tipo === formData.tipo)
-                    .map((c) => (
+                    .filter(c => c.tipo === formData.tipo)
+                    .map(c => (
                       <option key={c.id} value={c.id}>
                         {c.nombre}
                       </option>
@@ -515,7 +493,7 @@ export function DetailsDialog({
                   className={`${selectClasses} disabled:opacity-40 disabled:bg-[#FAFAFA] disabled:cursor-not-allowed`}
                 >
                   <option value="">Seleccione subcategoría</option>
-                  {subcategorias.map((s) => (
+                  {subcategorias.map(s => (
                     <option key={s.id} value={s.id}>
                       {s.nombre}
                     </option>
@@ -541,16 +519,14 @@ export function DetailsDialog({
                 <>
                   {documentos.length > 0 && (
                     <div className="space-y-2">
-                      {documentos.map((doc) => (
+                      {documentos.map(doc => (
                         <div
                           key={doc.id}
                           className="flex items-center justify-between p-2 rounded-lg bg-[#F8F9FA] border border-[#E0E0E0]"
                         >
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <FileText className="w-4 h-4 text-[#002868] flex-shrink-0" />
-                            <span className="text-sm text-[#1A1A1A] truncate">
-                              {doc.nombre_archivo}
-                            </span>
+                            <span className="text-sm text-[#1A1A1A] truncate">{doc.nombre_archivo}</span>
                             <span className="text-xs text-[#8A8F9C] flex-shrink-0">
                               ({(doc.tamano_bytes / 1024).toFixed(0)} KB)
                             </span>
@@ -563,15 +539,9 @@ export function DetailsDialog({
                               onClick={() => {
                                 const endpoint =
                                   cajaTipo === 'banco'
-                                    ? API_ENDPOINTS.CAJA_BANCO.DOWNLOAD_DOCUMENTO(
-                                        movimientoId,
-                                        doc.id,
-                                      )
-                                    : API_ENDPOINTS.MOVIMIENTOS.DOWNLOAD_DOCUMENTO(
-                                        movimientoId,
-                                        doc.id,
-                                      );
-                                window.open(endpoint, '_blank');
+                                    ? API_ENDPOINTS.CAJA_BANCO.DOWNLOAD_DOCUMENTO(movimientoId, doc.id)
+                                    : API_ENDPOINTS.MOVIMIENTOS.DOWNLOAD_DOCUMENTO(movimientoId, doc.id)
+                                window.open(endpoint, '_blank')
                               }}
                               className="h-6 w-6 p-0 hover:bg-green-50 hover:text-green-600 cursor-pointer"
                               title="Ver documento"
@@ -650,9 +620,7 @@ export function DetailsDialog({
                         >
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <FileText className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                            <span className="text-sm text-[#1A1A1A] truncate">
-                              {file.name}
-                            </span>
+                            <span className="text-sm text-[#1A1A1A] truncate">{file.name}</span>
                             <span className="text-xs text-[#8A8F9C] flex-shrink-0">
                               ({(file.size / 1024).toFixed(0)} KB)
                             </span>
@@ -674,9 +642,7 @@ export function DetailsDialog({
                         disabled={isUploadingDocs}
                         className="w-full h-9 bg-[#002868] hover:bg-[#003d8f] text-white text-sm cursor-pointer"
                       >
-                        {isUploadingDocs
-                          ? 'Subiendo...'
-                          : 'Subir archivos seleccionados'}
+                        {isUploadingDocs ? 'Subiendo...' : 'Subir archivos seleccionados'}
                       </Button>
                     </div>
                   )}
@@ -695,9 +661,7 @@ export function DetailsDialog({
               disabled={isSaving}
               className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] hover:border-[#C0C0C0] transition-all cursor-pointer"
             >
-              {isReadOnly && !canEditInfo && !canEditComment
-                ? 'Cerrar'
-                : 'Cancelar'}
+              {isReadOnly && !canEditInfo && !canEditComment ? 'Cerrar' : 'Cancelar'}
             </Button>
             {(!isReadOnly || canEditInfo || canEditComment) && (
               <Button
@@ -719,7 +683,7 @@ export function DetailsDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 // =============================================
@@ -727,22 +691,15 @@ export function DetailsDialog({
 // =============================================
 
 interface StateDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  nuevoEstado: string;
-  onEstadoChange: (value: string) => void;
-  onSave: () => void;
-  isSaving: boolean;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  nuevoEstado: string
+  onEstadoChange: (value: string) => void
+  onSave: () => void
+  isSaving: boolean
 }
 
-export function StateDialog({
-  open,
-  onOpenChange,
-  nuevoEstado,
-  onEstadoChange,
-  onSave,
-  isSaving,
-}: StateDialogProps) {
+export function StateDialog({ open, onOpenChange, nuevoEstado, onEstadoChange, onSave, isSaving }: StateDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px] bg-white border-[#E0E0E0] shadow-2xl">
@@ -778,7 +735,7 @@ export function StateDialog({
             <select
               id="estado"
               value={nuevoEstado}
-              onChange={(e) => onEstadoChange(e.target.value)}
+              onChange={e => onEstadoChange(e.target.value)}
               className="w-full rounded-md border border-[#E0E0E0] px-3 py-2 focus:border-[#002868] focus:outline-none focus:ring-1 focus:ring-[#002868]"
             >
               <option value="pendiente">Pendiente</option>
@@ -807,7 +764,7 @@ export function StateDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 // =============================================
@@ -815,36 +772,28 @@ export function StateDialog({
 // =============================================
 
 interface DeudaDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
   transaction: {
-    es_deuda?: boolean;
-    fecha?: string;
-    fecha_original_vencimiento?: string;
-  } | null;
-  onSave: (esDeuda: boolean, fechaOriginalVencimiento?: string) => void;
-  isSaving: boolean;
+    es_deuda?: boolean
+    fecha?: string
+    fecha_original_vencimiento?: string
+  } | null
+  onSave: (esDeuda: boolean, fechaOriginalVencimiento?: string) => void
+  isSaving: boolean
 }
 
-export function DeudaDialog({
-  open,
-  onOpenChange,
-  transaction,
-  onSave,
-  isSaving,
-}: DeudaDialogProps) {
-  const [localFecha, setLocalFecha] = useState(
-    transaction?.fecha ? transaction.fecha.split('T')[0] : '',
-  );
+export function DeudaDialog({ open, onOpenChange, transaction, onSave, isSaving }: DeudaDialogProps) {
+  const [localFecha, setLocalFecha] = useState(transaction?.fecha ? transaction.fecha.split('T')[0] : '')
 
   // Reset localFecha when dialog opens with a new transaction
   useEffect(() => {
     if (open) {
-      setLocalFecha(transaction?.fecha ? transaction.fecha.split('T')[0] : '');
+      setLocalFecha(transaction?.fecha ? transaction.fecha.split('T')[0] : '')
     }
-  }, [open, transaction]);
+  }, [open, transaction])
 
-  const esDeudaActiva = transaction?.es_deuda === true;
+  const esDeudaActiva = transaction?.es_deuda === true
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -909,28 +858,24 @@ export function DeudaDialog({
                   Fecha original de vencimiento:{' '}
                   <span className="font-bold">
                     {(() => {
-                      const partes = transaction
-                        .fecha_original_vencimiento!.split('T')[0]
-                        .split('-');
+                      const partes = transaction.fecha_original_vencimiento!.split('T')[0].split('-')
                       return partes.length === 3
                         ? `${partes[2]}/${partes[1]}/${partes[0]}`
-                        : transaction.fecha_original_vencimiento;
+                        : transaction.fecha_original_vencimiento
                     })()}
                   </span>
                 </p>
               )}
               <p className="text-xs text-orange-500 mt-1">
-                Al quitar la deuda, la fecha original quedará registrada en la
-                descripción del movimiento.
+                Al quitar la deuda, la fecha original quedará registrada en la descripción del movimiento.
               </p>
             </div>
           ) : (
             <div className="space-y-3">
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
                 <p className="text-xs text-amber-700">
-                  <Lightbulb className="w-3.5 h-3.5 inline mr-1 text-amber-600" />{' '}
-                  Indicá la fecha original de vencimiento de este movimiento.
-                  Quedará guardada para cuando se libere la deuda.
+                  <Lightbulb className="w-3.5 h-3.5 inline mr-1 text-amber-600" /> Indicá la fecha original de
+                  vencimiento de este movimiento. Quedará guardada para cuando se libere la deuda.
                 </p>
               </div>
               <div className="space-y-1.5">
@@ -940,7 +885,7 @@ export function DeudaDialog({
                 <Input
                   type="date"
                   value={localFecha}
-                  onChange={(e) => setLocalFecha(e.target.value)}
+                  onChange={e => setLocalFecha(e.target.value)}
                   className="h-10 rounded-lg border-[#E0E0E0] bg-white text-sm text-[#1A1A1A] hover:border-[#B0B0B0] focus:border-[#002868] focus:ring-[#002868]/20"
                 />
               </div>
@@ -996,7 +941,7 @@ export function DeudaDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 // =============================================
@@ -1004,21 +949,15 @@ export function DeudaDialog({
 // =============================================
 
 interface DeleteDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-  isSaving: boolean;
-  count?: number; // cuando se pasa (> 1) muestra texto de eliminación masiva
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onConfirm: () => void
+  isSaving: boolean
+  count?: number // cuando se pasa (> 1) muestra texto de eliminación masiva
 }
 
-export function DeleteDialog({
-  open,
-  onOpenChange,
-  onConfirm,
-  isSaving,
-  count,
-}: DeleteDialogProps) {
-  const isBulk = count !== undefined && count > 1;
+export function DeleteDialog({ open, onOpenChange, onConfirm, isSaving, count }: DeleteDialogProps) {
+  const isBulk = count !== undefined && count > 1
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px] bg-white border-rose-200 shadow-2xl">
@@ -1046,16 +985,11 @@ export function DeleteDialog({
             {isBulk ? (
               <>
                 ¿Estás seguro de que deseas eliminar{' '}
-                <span className="font-semibold text-rose-600">
-                  {count} movimientos
-                </span>
-                ? Esta acción no se puede deshacer.
+                <span className="font-semibold text-rose-600">{count} movimientos</span>? Esta acción no se puede
+                deshacer.
               </>
             ) : (
-              <>
-                ¿Estás seguro de que deseas eliminar este movimiento? Esta
-                acción no se puede deshacer.
-              </>
+              <>¿Estás seguro de que deseas eliminar este movimiento? Esta acción no se puede deshacer.</>
             )}
           </DialogDescription>
         </DialogHeader>
@@ -1073,14 +1007,10 @@ export function DeleteDialog({
             disabled={isSaving}
             className="bg-rose-500 text-white hover:bg-rose-600 cursor-pointer"
           >
-            {isSaving
-              ? 'Eliminando...'
-              : isBulk
-                ? `Eliminar ${count}`
-                : 'Eliminar'}
+            {isSaving ? 'Eliminando...' : isBulk ? `Eliminar ${count}` : 'Eliminar'}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

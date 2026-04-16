@@ -1,11 +1,11 @@
-'use client';
+'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuthStore } from '@/store/authStore';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useAuthStore } from '@/store/authStore'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -13,53 +13,48 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { API_ENDPOINTS } from '@/lib/config';
-import { apiFetch } from '@/lib/api';
-import { AlertTriangle, Upload, X, FileText, Download } from 'lucide-react';
-import { trackCreatedPago } from '@/hooks/use-employee-notifications';
-import type {
-  Categoria,
-  Subcategoria,
-  SelectOption,
-  BancoParcial,
-} from '@/lib/types';
-import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles';
-import { movimientoBaseSchema, movimientoBancoSchema } from '@/lib/schemas';
-import { parseInputMonto, formatInputMonto } from '@/lib/formatters';
+} from '@/components/ui/dialog'
+import { API_ENDPOINTS } from '@/lib/config'
+import { apiFetch } from '@/lib/api'
+import { AlertTriangle, Upload, X, FileText, Download } from 'lucide-react'
+import { trackCreatedPago } from '@/hooks/use-employee-notifications'
+import type { Categoria, Subcategoria, SelectOption, BancoParcial } from '@/lib/types'
+import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles'
+import { movimientoBaseSchema, movimientoBancoSchema } from '@/lib/schemas'
+import { parseInputMonto, formatInputMonto } from '@/lib/formatters'
 
 interface InitialValues {
-  concepto?: string;
-  monto?: string;
-  comentarios?: string;
-  fecha?: string;
-  prioridad?: 'baja' | 'media' | 'alta';
-  categoria_id?: string;
-  subcategoria_id?: string;
-  descripcion_id?: string;
-  proveedor_id?: string;
+  concepto?: string
+  monto?: string
+  comentarios?: string
+  fecha?: string
+  prioridad?: 'baja' | 'media' | 'alta'
+  categoria_id?: string
+  subcategoria_id?: string
+  descripcion_id?: string
+  proveedor_id?: string
 }
 
 interface NuevoMovimientoDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  sucursalId: number;
-  onSuccess: () => void;
-  cajaTipo?: 'efectivo' | 'banco';
-  isPagoPendiente?: boolean;
+  isOpen: boolean
+  onClose: () => void
+  sucursalId: number
+  onSuccess: () => void
+  cajaTipo?: 'efectivo' | 'banco'
+  isPagoPendiente?: boolean
   /** Cuando se provee, el dialog opera en modo "aprobar pago pendiente" */
-  pagoIdToApprove?: number;
-  usuarioRevisorId?: number;
-  initialValues?: InitialValues;
+  pagoIdToApprove?: number
+  usuarioRevisorId?: number
+  initialValues?: InitialValues
   /** Catálogos opcionales — si se proveen, el dialog no los re-fetchea */
-  categoriasExternas?: Categoria[];
-  bancosExternos?: SelectOption[];
-  mediosPagoExternos?: SelectOption[];
-  descripcionesExternas?: SelectOption[];
-  proveedoresExternas?: SelectOption[];
-  moneda?: 'ARS' | 'USD';
+  categoriasExternas?: Categoria[]
+  bancosExternos?: SelectOption[]
+  mediosPagoExternos?: SelectOption[]
+  descripcionesExternas?: SelectOption[]
+  proveedoresExternas?: SelectOption[]
+  moneda?: 'ARS' | 'USD'
   /** Parciales de saldo real por banco (para validar transferencias internas) */
-  parcialesBancos?: BancoParcial[];
+  parcialesBancos?: BancoParcial[]
 }
 
 export default function NuevoMovimientoDialog({
@@ -80,40 +75,36 @@ export default function NuevoMovimientoDialog({
   moneda = 'ARS',
   parcialesBancos = [],
 }: NuevoMovimientoDialogProps) {
-  const isApprovalMode = pagoIdToApprove !== undefined;
-  const { user } = useAuthStore();
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const isApprovalMode = pagoIdToApprove !== undefined
+  const { user } = useAuthStore()
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
   // --- Transferencia interna entre bancos ---
-  const [isTransferenciaInterna, setIsTransferenciaInterna] = useState(false);
+  const [isTransferenciaInterna, setIsTransferenciaInterna] = useState(false)
   const [transferenciaData, setTransferenciaData] = useState({
     fecha: (() => {
-      const d = new Date();
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const d = new Date()
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     })(),
     concepto: '',
     descripcion: '',
     monto: '',
     banco_origen_id: '',
     banco_destino_id: '',
-  });
+  })
   // ------------------------------------------
   const [formData, setFormData] = useState({
     fecha: (() => {
-      const d = new Date();
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const d = new Date()
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     })(),
     concepto: '',
     monto: '',
     comentarios: '',
     prioridad: 'media' as 'baja' | 'media' | 'alta',
-    estado: (isPagoPendiente ? 'pendiente' : 'aprobado') as
-      | 'pendiente'
-      | 'aprobado'
-      | 'rechazado'
-      | 'completado',
+    estado: (isPagoPendiente ? 'pendiente' : 'aprobado') as 'pendiente' | 'aprobado' | 'rechazado' | 'completado',
     tipo: isPagoPendiente ? 'egreso' : 'ingreso',
     tipo_movimiento: cajaTipo as 'efectivo' | 'banco',
     categoria_id: '',
@@ -125,127 +116,103 @@ export default function NuevoMovimientoDialog({
     medio_pago_id: '',
     numero_cheque: '',
     tipo_cambio: '',
-  });
+  })
 
-  const [categoriasInternas, setCategoriasInternas] = useState<Categoria[]>([]);
-  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
-  const [bancosInternos, setBancosInternos] = useState<SelectOption[]>([]);
-  const [mediosPagoInternos, setMediosPagoInternos] = useState<SelectOption[]>(
-    [],
-  );
-  const [descripcionesInternas, setDescripcionesInternas] = useState<
-    SelectOption[]
-  >([]);
-  const [proveedoresInternos, setProveedoresInternos] = useState<SelectOption[]>(
-    [],
-  );
+  const [categoriasInternas, setCategoriasInternas] = useState<Categoria[]>([])
+  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
+  const [bancosInternos, setBancosInternos] = useState<SelectOption[]>([])
+  const [mediosPagoInternos, setMediosPagoInternos] = useState<SelectOption[]>([])
+  const [descripcionesInternas, setDescripcionesInternas] = useState<SelectOption[]>([])
+  const [proveedoresInternos, setProveedoresInternos] = useState<SelectOption[]>([])
 
   // Usa los catálogos externos si se proveen, si no usa los internos (fetched)
-  const categorias = categoriasExternas?.length
-    ? categoriasExternas
-    : categoriasInternas;
-  const bancos = bancosExternos?.length ? bancosExternos : bancosInternos;
-  const mediosPago = mediosPagoExternos?.length
-    ? mediosPagoExternos
-    : mediosPagoInternos;
-  const descripciones = descripcionesExternas?.length
-    ? descripcionesExternas
-    : descripcionesInternas;
-  const proveedores = proveedoresExternas?.length
-    ? proveedoresExternas
-    : proveedoresInternos;
+  const categorias = categoriasExternas?.length ? categoriasExternas : categoriasInternas
+  const bancos = bancosExternos?.length ? bancosExternos : bancosInternos
+  const mediosPago = mediosPagoExternos?.length ? mediosPagoExternos : mediosPagoInternos
+  const descripciones = descripcionesExternas?.length ? descripcionesExternas : descripcionesInternas
+  const proveedores = proveedoresExternas?.length ? proveedoresExternas : proveedoresInternos
 
   const fetchCategorias = useCallback(async () => {
-    if (categoriasExternas?.length) return;
+    if (categoriasExternas?.length) return
     try {
-      const response = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL,
-      );
-      const data = await response.json();
-      if (response.ok) setCategoriasInternas(data.data || []);
+      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL)
+      const data = await response.json()
+      if (response.ok) setCategoriasInternas(data.data || [])
     } catch {
       // Non-critical
     }
-  }, [categoriasExternas]);
+  }, [categoriasExternas])
 
   const fetchBancos = useCallback(async () => {
-    if (bancosExternos?.length) return;
+    if (bancosExternos?.length) return
     try {
-      const response = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL,
-      );
-      const data = await response.json();
-      if (response.ok) setBancosInternos(data.data || []);
+      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL)
+      const data = await response.json()
+      if (response.ok) setBancosInternos(data.data || [])
     } catch {
       // Non-critical
     }
-  }, [bancosExternos]);
+  }, [bancosExternos])
 
   const fetchMediosPago = useCallback(async () => {
-    if (mediosPagoExternos?.length) return;
+    if (mediosPagoExternos?.length) return
     try {
-      const response = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL,
-      );
-      const data = await response.json();
-      if (response.ok) setMediosPagoInternos(data.data || []);
+      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL)
+      const data = await response.json()
+      if (response.ok) setMediosPagoInternos(data.data || [])
     } catch {
       // Non-critical
     }
-  }, [mediosPagoExternos]);
+  }, [mediosPagoExternos])
 
   const fetchDescripciones = useCallback(async () => {
-    if (descripcionesExternas?.length) return;
+    if (descripcionesExternas?.length) return
     try {
-      const response = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ACTIVE,
-      );
-      const data = await response.json();
-      if (response.ok) setDescripcionesInternas(data.data || []);
+      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ACTIVE)
+      const data = await response.json()
+      if (response.ok) setDescripcionesInternas(data.data || [])
     } catch {
       // Non-critical
     }
-  }, [descripcionesExternas]);
+  }, [descripcionesExternas])
 
   const fetchProveedores = useCallback(async () => {
-    if (proveedoresExternas?.length) return;
+    if (proveedoresExternas?.length) return
     try {
-      const response = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.PROVEEDORES.GET_ALL,
-      );
-      const data = await response.json();
-      if (response.ok) setProveedoresInternos(data.data || []);
+      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.PROVEEDORES.GET_ALL)
+      const data = await response.json()
+      if (response.ok) setProveedoresInternos(data.data || [])
     } catch {
       // Non-critical
     }
-  }, [proveedoresExternas]);
+  }, [proveedoresExternas])
 
   // Usamos ref para capturar initialValues e isApprovalMode sin hacerlos deps del effect.
   // El effect solo debe correr cuando el dialog se ABRE (isOpen cambia a true).
-  const initialValuesRef = useRef(initialValues);
-  const isApprovalModeRef = useRef(isApprovalMode);
+  const initialValuesRef = useRef(initialValues)
+  const isApprovalModeRef = useRef(isApprovalMode)
   useEffect(() => {
-    initialValuesRef.current = initialValues;
-    isApprovalModeRef.current = isApprovalMode;
-  });
+    initialValuesRef.current = initialValues
+    isApprovalModeRef.current = isApprovalMode
+  })
 
   // Cargar datos y pre-poblar cuando se abre el dialog
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return
 
-    fetchCategorias();
-    fetchDescripciones();
-    fetchProveedores();
+    fetchCategorias()
+    fetchDescripciones()
+    fetchProveedores()
     if (cajaTipo === 'banco') {
-      fetchBancos();
-      fetchMediosPago();
+      fetchBancos()
+      fetchMediosPago()
     }
 
     if (isApprovalModeRef.current && initialValuesRef.current) {
-      const iv = initialValuesRef.current;
-      const today = new Date();
-      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      setFormData((prev) => ({
+      const iv = initialValuesRef.current
+      const today = new Date()
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+      setFormData(prev => ({
         ...prev,
         fecha: iv.fecha ?? todayStr,
         concepto: iv.concepto ?? '',
@@ -258,74 +225,70 @@ export default function NuevoMovimientoDialog({
         proveedor_id: iv.proveedor_id ?? '',
         tipo: 'egreso',
         estado: 'aprobado',
-      }));
+      }))
     }
-  }, [isOpen, cajaTipo, fetchCategorias, fetchBancos, fetchMediosPago, fetchDescripciones, fetchProveedores]);
+  }, [isOpen, cajaTipo, fetchCategorias, fetchBancos, fetchMediosPago, fetchDescripciones, fetchProveedores])
 
   // Cargar bancos/mediosPago cuando el usuario elige "banco" en tipo_movimiento
   useEffect(() => {
     if (formData.tipo_movimiento === 'banco' && bancos.length === 0) {
-      fetchBancos();
-      fetchMediosPago();
+      fetchBancos()
+      fetchMediosPago()
     }
-  }, [formData.tipo_movimiento, bancos.length, fetchBancos, fetchMediosPago]);
+  }, [formData.tipo_movimiento, bancos.length, fetchBancos, fetchMediosPago])
 
   // Cargar subcategorías cuando cambia la categoría
   useEffect(() => {
     if (formData.categoria_id) {
-      fetchSubcategorias(Number(formData.categoria_id));
+      fetchSubcategorias(Number(formData.categoria_id))
     } else {
-      setSubcategorias([]);
+      setSubcategorias([])
     }
-  }, [formData.categoria_id]);
+  }, [formData.categoria_id])
 
   const fetchSubcategorias = async (categoriaId: number) => {
     try {
-      const response = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId),
-      );
-      const data = await response.json();
-      if (response.ok) setSubcategorias(data.data || []);
+      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId))
+      const data = await response.json()
+      if (response.ok) setSubcategorias(data.data || [])
     } catch {
       // Non-critical
     }
-  };
+  }
 
   // Manejar cambios en el formulario
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
     if (name === 'monto' || name === 'tipo_cambio') {
-      setFormData((prev) => ({ ...prev, [name]: parseInputMonto(value) }));
-      return;
+      setFormData(prev => ({ ...prev, [name]: parseInputMonto(value) }))
+      return
     }
     if (name === 'tipo') {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         [name]: value,
         categoria_id: '',
         subcategoria_id: '',
-      }));
+      }))
     } else if (name === 'tipo_movimiento') {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         tipo_movimiento: value as 'efectivo' | 'banco',
         banco_id: '',
         medio_pago_id: '',
         comprobante: '',
-      }));
+      }))
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      setFormData(prev => ({ ...prev, [name]: value }))
     }
-  };
+  }
 
   // Resetear formulario
   const resetForm = () => {
     setFormData({
       fecha: (() => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const d = new Date()
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
       })(),
       concepto: '',
       monto: '',
@@ -343,159 +306,138 @@ export default function NuevoMovimientoDialog({
       medio_pago_id: '',
       numero_cheque: '',
       tipo_cambio: '',
-    });
-    setSelectedFiles([]);
-    setError('');
-  };
+    })
+    setSelectedFiles([])
+    setError('')
+  }
 
   // Cerrar dialog
   const handleClose = () => {
-    resetForm();
-    setIsTransferenciaInterna(false);
+    resetForm()
+    setIsTransferenciaInterna(false)
     setTransferenciaData({
       fecha: (() => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const d = new Date()
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
       })(),
       concepto: '',
       descripcion: '',
       monto: '',
       banco_origen_id: '',
       banco_destino_id: '',
-    });
-    onClose();
-  };
+    })
+    onClose()
+  }
 
   // Manejar selección de archivos
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const validFiles = files.filter((file) => {
-      const isValidType =
-        file.type === 'application/pdf' ||
-        file.type === 'image/jpeg' ||
-        file.type === 'image/jpg';
-      const isValidSize = file.size <= 10 * 1024 * 1024;
-      return isValidType && isValidSize;
-    });
+    const files = Array.from(e.target.files || [])
+    const validFiles = files.filter(file => {
+      const isValidType = file.type === 'application/pdf' || file.type === 'image/jpeg' || file.type === 'image/jpg'
+      const isValidSize = file.size <= 10 * 1024 * 1024
+      return isValidType && isValidSize
+    })
 
     if (validFiles.length !== files.length) {
-      setError(
-        'Algunos archivos no son válidos. Solo se permiten PDF y JPG menores a 10MB',
-      );
-      setTimeout(() => setError(''), 3000);
+      setError('Algunos archivos no son válidos. Solo se permiten PDF y JPG menores a 10MB')
+      setTimeout(() => setError(''), 3000)
     }
 
-    setSelectedFiles((prev) => [...prev, ...validFiles]);
+    setSelectedFiles(prev => [...prev, ...validFiles])
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = ''
     }
-  };
+  }
 
   const handleRemoveFile = (index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-  };
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index))
+  }
 
   // Subir documentos después de crear el movimiento
   const uploadDocuments = async (movimientoId: number) => {
-    if (selectedFiles.length === 0) return;
+    if (selectedFiles.length === 0) return
 
     const endpoint =
       cajaTipo === 'banco'
         ? API_ENDPOINTS.CAJA_BANCO.UPLOAD_DOCUMENTO(movimientoId)
-        : API_ENDPOINTS.MOVIMIENTOS.UPLOAD_DOCUMENTO(movimientoId);
+        : API_ENDPOINTS.MOVIMIENTOS.UPLOAD_DOCUMENTO(movimientoId)
 
     for (const file of selectedFiles) {
-      const formData = new FormData();
-      formData.append('file', file);
+      const formData = new FormData()
+      formData.append('file', file)
 
       try {
         await apiFetch(endpoint, {
           method: 'POST',
           body: formData,
           headers: {},
-        });
+        })
       } catch (error) {
-        console.error('Error al subir documento:', error);
+        console.error('Error al subir documento:', error)
       }
     }
-  };
+  }
 
   // Guardar transferencia interna entre bancos
   const handleSaveTransferencia = async () => {
-    if (
-      !transferenciaData.banco_origen_id ||
-      !transferenciaData.banco_destino_id
-    ) {
-      setError('Seleccioná banco origen y banco destino.');
-      return;
+    if (!transferenciaData.banco_origen_id || !transferenciaData.banco_destino_id) {
+      setError('Seleccioná banco origen y banco destino.')
+      return
     }
-    if (
-      transferenciaData.banco_origen_id === transferenciaData.banco_destino_id
-    ) {
-      setError('El banco origen y destino no pueden ser el mismo.');
-      return;
+    if (transferenciaData.banco_origen_id === transferenciaData.banco_destino_id) {
+      setError('El banco origen y destino no pueden ser el mismo.')
+      return
     }
     if (!transferenciaData.monto || parseFloat(transferenciaData.monto) <= 0) {
-      setError('El monto debe ser mayor a cero.');
-      return;
+      setError('El monto debe ser mayor a cero.')
+      return
     }
     // Validación de saldo real en el frontend (si tenemos los parciales)
     if (parcialesBancos.length > 0) {
-      const parcial = parcialesBancos.find(
-        (p) => p.banco_id?.toString() === transferenciaData.banco_origen_id,
-      );
-      const saldoDisponible = Number(parcial?.total_real ?? 0);
-      const montoSolicitado = parseFloat(transferenciaData.monto);
+      const parcial = parcialesBancos.find(p => p.banco_id?.toString() === transferenciaData.banco_origen_id)
+      const saldoDisponible = Number(parcial?.total_real ?? 0)
+      const montoSolicitado = parseFloat(transferenciaData.monto)
       if (montoSolicitado > saldoDisponible) {
-        const simbolo = moneda === 'USD' ? 'US$' : '$';
+        const simbolo = moneda === 'USD' ? 'US$' : '$'
         setError(
           `Saldo insuficiente. El banco origen tiene ${simbolo} ${saldoDisponible.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} de saldo real y no puede cubrir ${simbolo} ${montoSolicitado.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`,
-        );
-        return;
+        )
+        return
       }
     }
     try {
-      setIsSaving(true);
-      setError('');
-      const res = await apiFetch(
-        API_ENDPOINTS.CAJA_BANCO.TRANSFERENCIA_INTERNA,
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            sucursal_id: sucursalId,
-            user_id: user?.id,
-            fecha: transferenciaData.fecha,
-            concepto:
-              transferenciaData.concepto ||
-              'Transferencia interna entre bancos',
-            descripcion: transferenciaData.descripcion || null,
-            monto: parseFloat(transferenciaData.monto),
-            banco_origen_id: Number(transferenciaData.banco_origen_id),
-            banco_destino_id: Number(transferenciaData.banco_destino_id),
-            moneda: moneda,
-          }),
-        },
-      );
-      const data = await res.json();
-      if (!res.ok)
-        throw new Error(data.message || 'Error al realizar transferencia');
-      handleClose();
-      onSuccess();
+      setIsSaving(true)
+      setError('')
+      const res = await apiFetch(API_ENDPOINTS.CAJA_BANCO.TRANSFERENCIA_INTERNA, {
+        method: 'POST',
+        body: JSON.stringify({
+          sucursal_id: sucursalId,
+          user_id: user?.id,
+          fecha: transferenciaData.fecha,
+          concepto: transferenciaData.concepto || 'Transferencia interna entre bancos',
+          descripcion: transferenciaData.descripcion || null,
+          monto: parseFloat(transferenciaData.monto),
+          banco_origen_id: Number(transferenciaData.banco_origen_id),
+          banco_destino_id: Number(transferenciaData.banco_destino_id),
+          moneda: moneda,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Error al realizar transferencia')
+      handleClose()
+      onSuccess()
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Error al realizar transferencia';
-      setError(message);
+      const message = err instanceof Error ? err.message : 'Error al realizar transferencia'
+      setError(message)
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   // Guardar nuevo movimiento
   const handleSave = async () => {
-    const isBanco = isApprovalMode
-      ? cajaTipo === 'banco'
-      : formData.tipo_movimiento === 'banco';
-    const schema = isBanco ? movimientoBancoSchema : movimientoBaseSchema;
+    const isBanco = isApprovalMode ? cajaTipo === 'banco' : formData.tipo_movimiento === 'banco'
+    const schema = isBanco ? movimientoBancoSchema : movimientoBaseSchema
 
     const validation = schema.safeParse({
       fecha: formData.fecha,
@@ -511,69 +453,55 @@ export default function NuevoMovimientoDialog({
         banco_id: formData.banco_id,
         medio_pago_id: formData.medio_pago_id,
       }),
-    });
+    })
 
     if (!validation.success) {
-      setError(validation.error.issues[0]?.message ?? 'Error de validación');
-      return;
+      setError(validation.error.issues[0]?.message ?? 'Error de validación')
+      return
     }
 
     if (moneda === 'USD' && (!formData.tipo_cambio || Number(formData.tipo_cambio) <= 0)) {
-      setError('Debes ingresar un tipo de cambio válido');
-      return;
+      setError('Debes ingresar un tipo de cambio válido')
+      return
     }
 
     try {
-      setIsSaving(true);
-      setError('');
+      setIsSaving(true)
+      setError('')
 
       // ── Modo aprobación: llama SOLO a APROBAR (que crea el movimiento internamente) ──
       if (isApprovalMode) {
-        const aprobarRes = await apiFetch(
-          API_ENDPOINTS.PAGOS_PENDIENTES.APROBAR(pagoIdToApprove!),
-          {
-            method: 'PUT',
-            body: JSON.stringify({
-              usuario_revisor_id: usuarioRevisorId ?? user?.id,
-              tipo_caja: cajaTipo,
-              fecha: formData.fecha,
-              concepto: formData.concepto,
-              comentarios: formData.comentarios,
-              monto: parseFloat(formData.monto),
-              prioridad: formData.prioridad,
-              categoria_id: formData.categoria_id
-                ? Number(formData.categoria_id)
-                : null,
-              subcategoria_id: formData.subcategoria_id
-                ? Number(formData.subcategoria_id)
-                : null,
-              descripcion_id: formData.descripcion_id
-                ? Number(formData.descripcion_id)
-                : null,
-              proveedor_id: formData.proveedor_id
-                ? Number(formData.proveedor_id)
-                : null,
-              comprobante: formData.comprobante || null,
-              banco_id: formData.banco_id ? Number(formData.banco_id) : null,
-              medio_pago_id: formData.medio_pago_id
-                ? Number(formData.medio_pago_id)
-                : null,
-            }),
-          },
-        );
-        const aprobarData = await aprobarRes.json();
-        if (!aprobarRes.ok)
-          throw new Error(aprobarData.message || 'Error al aprobar pago');
+        const aprobarRes = await apiFetch(API_ENDPOINTS.PAGOS_PENDIENTES.APROBAR(pagoIdToApprove!), {
+          method: 'PUT',
+          body: JSON.stringify({
+            usuario_revisor_id: usuarioRevisorId ?? user?.id,
+            tipo_caja: cajaTipo,
+            fecha: formData.fecha,
+            concepto: formData.concepto,
+            comentarios: formData.comentarios,
+            monto: parseFloat(formData.monto),
+            prioridad: formData.prioridad,
+            categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
+            subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
+            descripcion_id: formData.descripcion_id ? Number(formData.descripcion_id) : null,
+            proveedor_id: formData.proveedor_id ? Number(formData.proveedor_id) : null,
+            comprobante: formData.comprobante || null,
+            banco_id: formData.banco_id ? Number(formData.banco_id) : null,
+            medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
+          }),
+        })
+        const aprobarData = await aprobarRes.json()
+        if (!aprobarRes.ok) throw new Error(aprobarData.message || 'Error al aprobar pago')
 
         // Subir documentos si hay alguno
         if (aprobarData.data?.movimiento_id) {
-          await uploadDocuments(aprobarData.data.movimiento_id);
+          await uploadDocuments(aprobarData.data.movimiento_id)
         }
 
-        resetForm();
-        onSuccess();
-        onClose();
-        return;
+        resetForm()
+        onSuccess()
+        onClose()
+        return
       }
 
       // ── Modo normal: crear pago pendiente o movimiento directo ──
@@ -581,7 +509,7 @@ export default function NuevoMovimientoDialog({
         ? API_ENDPOINTS.PAGOS_PENDIENTES.CREATE
         : cajaTipo === 'banco'
           ? API_ENDPOINTS.CAJA_BANCO.CREATE
-          : API_ENDPOINTS.MOVIMIENTOS.CREATE_EFECTIVO;
+          : API_ENDPOINTS.MOVIMIENTOS.CREATE_EFECTIVO
 
       const body = isPagoPendiente
         ? {
@@ -594,28 +522,15 @@ export default function NuevoMovimientoDialog({
             tipo_movimiento: formData.tipo_movimiento,
             prioridad: formData.prioridad,
             tipo: formData.tipo,
-            categoria_id: formData.categoria_id
-              ? Number(formData.categoria_id)
-              : null,
-            subcategoria_id: formData.subcategoria_id
-              ? Number(formData.subcategoria_id)
-              : null,
-            descripcion_id: formData.descripcion_id
-              ? Number(formData.descripcion_id)
-              : null,
-            proveedor_id: formData.proveedor_id
-              ? Number(formData.proveedor_id)
-              : null,
+            categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
+            subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
+            descripcion_id: formData.descripcion_id ? Number(formData.descripcion_id) : null,
+            proveedor_id: formData.proveedor_id ? Number(formData.proveedor_id) : null,
             banco_id: formData.banco_id ? Number(formData.banco_id) : null,
-            medio_pago_id: formData.medio_pago_id
-              ? Number(formData.medio_pago_id)
-              : null,
+            medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
             numero_cheque: formData.numero_cheque || null,
             moneda,
-            tipo_cambio:
-              moneda === 'USD' && formData.tipo_cambio
-                ? parseFloat(formData.tipo_cambio)
-                : null,
+            tipo_cambio: moneda === 'USD' && formData.tipo_cambio ? parseFloat(formData.tipo_cambio) : null,
           }
         : {
             sucursal_id: sucursalId,
@@ -627,43 +542,29 @@ export default function NuevoMovimientoDialog({
             prioridad: formData.prioridad,
             estado: formData.estado,
             tipo: formData.tipo,
-            categoria_id: formData.categoria_id
-              ? Number(formData.categoria_id)
-              : null,
-            subcategoria_id: formData.subcategoria_id
-              ? Number(formData.subcategoria_id)
-              : null,
-            descripcion_id: formData.descripcion_id
-              ? Number(formData.descripcion_id)
-              : null,
-            proveedor_id: formData.proveedor_id
-              ? Number(formData.proveedor_id)
-              : null,
+            categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
+            subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
+            descripcion_id: formData.descripcion_id ? Number(formData.descripcion_id) : null,
+            proveedor_id: formData.proveedor_id ? Number(formData.proveedor_id) : null,
             comprobante: formData.comprobante,
             banco_id: formData.banco_id ? Number(formData.banco_id) : null,
-            medio_pago_id: formData.medio_pago_id
-              ? Number(formData.medio_pago_id)
-              : null,
+            medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
             numero_cheque: formData.numero_cheque || null,
             moneda: moneda,
-            tipo_cambio:
-              moneda === 'USD' && formData.tipo_cambio
-                ? parseFloat(formData.tipo_cambio)
-                : null,
-          };
+            tipo_cambio: moneda === 'USD' && formData.tipo_cambio ? parseFloat(formData.tipo_cambio) : null,
+          }
 
       const response = await apiFetch(endpoint, {
         method: 'POST',
         body: JSON.stringify(body),
-      });
+      })
 
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.message || 'Error al crear movimiento');
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || 'Error al crear movimiento')
 
       // Subir documentos si el movimiento se creó exitosamente y no es pago pendiente
       if (!isPagoPendiente && data.data?.id) {
-        await uploadDocuments(data.data.id);
+        await uploadDocuments(data.data.id)
       }
 
       // Guardar el pago creado en localStorage para detectar cambios de fecha al aprobar
@@ -673,20 +574,19 @@ export default function NuevoMovimientoDialog({
           fecha_original: formData.fecha,
           concepto: formData.concepto,
           sucursal_id: sucursalId,
-        });
+        })
       }
 
-      resetForm();
-      onSuccess();
-      onClose();
+      resetForm()
+      onSuccess()
+      onClose()
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Error al crear movimiento';
-      setError(message);
+      const message = err instanceof Error ? err.message : 'Error al crear movimiento'
+      setError(message)
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -720,10 +620,7 @@ export default function NuevoMovimientoDialog({
                 />
               </svg>
               <p className="text-xs text-emerald-700 font-medium">
-                Caja destino:{' '}
-                <span className="font-bold">
-                  {cajaTipo === 'banco' ? 'Caja Banco' : 'Caja Efectivo'}
-                </span>{' '}
+                Caja destino: <span className="font-bold">{cajaTipo === 'banco' ? 'Caja Banco' : 'Caja Efectivo'}</span>{' '}
                 · Tipo fijo: <span className="font-bold">Egreso</span>
               </p>
             </div>
@@ -740,21 +637,17 @@ export default function NuevoMovimientoDialog({
                   ? 'border-[#002868] bg-[#EEF3FF]'
                   : 'border-[#E0E0E0] bg-[#FAFAFA] hover:border-[#002868]/40'
               }`}
-              onClick={() => setIsTransferenciaInterna((v) => !v)}
+              onClick={() => setIsTransferenciaInterna(v => !v)}
             >
               <Checkbox
                 id="transferencia_interna"
                 checked={isTransferenciaInterna}
-                onCheckedChange={(v) => setIsTransferenciaInterna(Boolean(v))}
+                onCheckedChange={v => setIsTransferenciaInterna(Boolean(v))}
                 className="pointer-events-none"
               />
               <div className="flex flex-col">
-                <span className="text-sm font-semibold text-[#002868]">
-                  Transferencia entre bancos
-                </span>
-                <span className="text-xs text-[#8A8F9C]">
-                  Mover dinero de un banco a otro dentro de esta sucursal
-                </span>
+                <span className="text-sm font-semibold text-[#002868]">Transferencia entre bancos</span>
+                <span className="text-xs text-[#8A8F9C]">Mover dinero de un banco a otro dentro de esta sucursal</span>
               </div>
             </div>
           )}
@@ -776,8 +669,8 @@ export default function NuevoMovimientoDialog({
                     id="transferencia_fecha"
                     type="date"
                     value={transferenciaData.fecha}
-                    onChange={(e) =>
-                      setTransferenciaData((p) => ({
+                    onChange={e =>
+                      setTransferenciaData(p => ({
                         ...p,
                         fecha: e.target.value,
                       }))
@@ -799,8 +692,8 @@ export default function NuevoMovimientoDialog({
                       inputMode="decimal"
                       placeholder="0,00"
                       value={formatInputMonto(transferenciaData.monto)}
-                      onChange={(e) =>
-                        setTransferenciaData((p) => ({
+                      onChange={e =>
+                        setTransferenciaData(p => ({
                           ...p,
                           monto: parseInputMonto(e.target.value),
                         }))
@@ -812,18 +705,15 @@ export default function NuevoMovimientoDialog({
               </div>
 
               <div className="space-y-1.5">
-                <Label
-                  htmlFor="transferencia_concepto"
-                  className={labelClasses}
-                >
+                <Label htmlFor="transferencia_concepto" className={labelClasses}>
                   Concepto
                 </Label>
                 <Input
                   id="transferencia_concepto"
                   placeholder="Ej: Transferencia Galicia → BBVA"
                   value={transferenciaData.concepto}
-                  onChange={(e) =>
-                    setTransferenciaData((p) => ({
+                  onChange={e =>
+                    setTransferenciaData(p => ({
                       ...p,
                       concepto: e.target.value,
                     }))
@@ -833,18 +723,15 @@ export default function NuevoMovimientoDialog({
               </div>
 
               <div className="space-y-1.5">
-                <Label
-                  htmlFor="transferencia_descripcion"
-                  className={labelClasses}
-                >
+                <Label htmlFor="transferencia_descripcion" className={labelClasses}>
                   Descripción
                 </Label>
                 <Input
                   id="transferencia_descripcion"
                   placeholder="Detalles adicionales (opcional)"
                   value={transferenciaData.descripcion}
-                  onChange={(e) =>
-                    setTransferenciaData((p) => ({
+                  onChange={e =>
+                    setTransferenciaData(p => ({
                       ...p,
                       descripcion: e.target.value,
                     }))
@@ -856,17 +743,14 @@ export default function NuevoMovimientoDialog({
               {/* Origen → Destino */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label
-                    htmlFor="transferencia_origen"
-                    className={labelClasses}
-                  >
+                  <Label htmlFor="transferencia_origen" className={labelClasses}>
                     Banco Origen *
                   </Label>
                   <select
                     id="transferencia_origen"
                     value={transferenciaData.banco_origen_id}
-                    onChange={(e) =>
-                      setTransferenciaData((p) => ({
+                    onChange={e =>
+                      setTransferenciaData(p => ({
                         ...p,
                         banco_origen_id: e.target.value,
                       }))
@@ -875,12 +759,8 @@ export default function NuevoMovimientoDialog({
                   >
                     <option value="">Seleccione banco origen</option>
                     {bancos
-                      .filter(
-                        (b) =>
-                          b.id.toString() !==
-                          transferenciaData.banco_destino_id,
-                      )
-                      .map((b) => (
+                      .filter(b => b.id.toString() !== transferenciaData.banco_destino_id)
+                      .map(b => (
                         <option key={b.id} value={b.id}>
                           {b.nombre}
                         </option>
@@ -888,17 +768,14 @@ export default function NuevoMovimientoDialog({
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label
-                    htmlFor="transferencia_destino"
-                    className={labelClasses}
-                  >
+                  <Label htmlFor="transferencia_destino" className={labelClasses}>
                     Banco Destino *
                   </Label>
                   <select
                     id="transferencia_destino"
                     value={transferenciaData.banco_destino_id}
-                    onChange={(e) =>
-                      setTransferenciaData((p) => ({
+                    onChange={e =>
+                      setTransferenciaData(p => ({
                         ...p,
                         banco_destino_id: e.target.value,
                       }))
@@ -907,11 +784,8 @@ export default function NuevoMovimientoDialog({
                   >
                     <option value="">Seleccione banco destino</option>
                     {bancos
-                      .filter(
-                        (b) =>
-                          b.id.toString() !== transferenciaData.banco_origen_id,
-                      )
-                      .map((b) => (
+                      .filter(b => b.id.toString() !== transferenciaData.banco_origen_id)
+                      .map(b => (
                         <option key={b.id} value={b.id}>
                           {b.nombre}
                         </option>
@@ -924,24 +798,14 @@ export default function NuevoMovimientoDialog({
               {transferenciaData.banco_origen_id &&
                 (() => {
                   const parcial = parcialesBancos.find(
-                    (p) =>
-                      p.banco_id?.toString() ===
-                      transferenciaData.banco_origen_id,
-                  );
-                  const saldoOrigen = Number(parcial?.total_real ?? 0);
-                  const montoSolicitado =
-                    parseFloat(transferenciaData.monto) || 0;
-                  const excede =
-                    montoSolicitado > 0 && montoSolicitado > saldoOrigen;
-                  const colorBg = excede
-                    ? 'bg-rose-50 border-rose-200'
-                    : 'bg-emerald-50 border-emerald-200';
-                  const colorText = excede
-                    ? 'text-rose-700'
-                    : 'text-emerald-700';
-                  const colorLabel = excede
-                    ? 'text-rose-500'
-                    : 'text-emerald-500';
+                    p => p.banco_id?.toString() === transferenciaData.banco_origen_id,
+                  )
+                  const saldoOrigen = Number(parcial?.total_real ?? 0)
+                  const montoSolicitado = parseFloat(transferenciaData.monto) || 0
+                  const excede = montoSolicitado > 0 && montoSolicitado > saldoOrigen
+                  const colorBg = excede ? 'bg-rose-50 border-rose-200' : 'bg-emerald-50 border-emerald-200'
+                  const colorText = excede ? 'text-rose-700' : 'text-emerald-700'
+                  const colorLabel = excede ? 'text-rose-500' : 'text-emerald-500'
                   return (
                     <div
                       className={`flex items-center justify-between px-4 py-3 rounded-xl border ${colorBg} transition-all`}
@@ -954,9 +818,7 @@ export default function NuevoMovimientoDialog({
                             <span className="w-2 h-2 rounded-full bg-white" />
                           </span>
                         )}
-                        <span
-                          className={`text-xs font-semibold uppercase tracking-wide ${colorLabel}`}
-                        >
+                        <span className={`text-xs font-semibold uppercase tracking-wide ${colorLabel}`}>
                           Saldo real disponible
                         </span>
                       </div>
@@ -971,45 +833,29 @@ export default function NuevoMovimientoDialog({
                         {excede && (
                           <p className="text-xs text-rose-500 mt-0.5">
                             Faltan {moneda === 'USD' ? 'US$' : '$'}{' '}
-                            {(montoSolicitado - saldoOrigen).toLocaleString(
-                              'es-AR',
-                              {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              },
-                            )}
+                            {(montoSolicitado - saldoOrigen).toLocaleString('es-AR', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
                           </p>
                         )}
                       </div>
                     </div>
-                  );
+                  )
                 })()}
 
               {/* Flecha visual */}
-              {transferenciaData.banco_origen_id &&
-                transferenciaData.banco_destino_id && (
-                  <div className="flex items-center justify-center gap-2 py-2">
-                    <span className="text-sm font-bold text-[#002868]">
-                      {
-                        bancos.find(
-                          (b) =>
-                            b.id.toString() ===
-                            transferenciaData.banco_origen_id,
-                        )?.nombre
-                      }
-                    </span>
-                    <span className="text-[#002868] text-lg">→</span>
-                    <span className="text-sm font-bold text-emerald-600">
-                      {
-                        bancos.find(
-                          (b) =>
-                            b.id.toString() ===
-                            transferenciaData.banco_destino_id,
-                        )?.nombre
-                      }
-                    </span>
-                  </div>
-                )}
+              {transferenciaData.banco_origen_id && transferenciaData.banco_destino_id && (
+                <div className="flex items-center justify-center gap-2 py-2">
+                  <span className="text-sm font-bold text-[#002868]">
+                    {bancos.find(b => b.id.toString() === transferenciaData.banco_origen_id)?.nombre}
+                  </span>
+                  <span className="text-[#002868] text-lg">→</span>
+                  <span className="text-sm font-bold text-emerald-600">
+                    {bancos.find(b => b.id.toString() === transferenciaData.banco_destino_id)?.nombre}
+                  </span>
+                </div>
+              )}
             </section>
           ) : (
             <>
@@ -1046,9 +892,7 @@ export default function NuevoMovimientoDialog({
                       className={`${selectClasses} ${isPagoPendiente || isApprovalMode ? 'opacity-60 cursor-not-allowed bg-gray-50' : ''}`}
                       disabled={isPagoPendiente || isApprovalMode}
                     >
-                      {!isPagoPendiente && !isApprovalMode && (
-                        <option value="ingreso">Ingreso</option>
-                      )}
+                      {!isPagoPendiente && !isApprovalMode && <option value="ingreso">Ingreso</option>}
                       <option value="egreso">Egreso</option>
                     </select>
                   </div>
@@ -1066,7 +910,7 @@ export default function NuevoMovimientoDialog({
                     className={selectClasses}
                   >
                     <option value="">Seleccione descripción</option>
-                    {descripciones.map((d) => (
+                    {descripciones.map(d => (
                       <option key={d.id} value={d.id}>
                         {d.nombre}
                       </option>
@@ -1158,14 +1002,11 @@ export default function NuevoMovimientoDialog({
                         className={`${inputClasses} pl-8`}
                       />
                     </div>
-                    <p className="text-xs text-[#8A8F9C]">
-                      Cotización del dólar al momento de la operación
-                    </p>
+                    <p className="text-xs text-[#8A8F9C]">Cotización del dólar al momento de la operación</p>
                   </div>
                 )}
 
-                {(cajaTipo === 'banco' ||
-                  formData.tipo_movimiento === 'banco') && (
+                {(cajaTipo === 'banco' || formData.tipo_movimiento === 'banco') && (
                   <>
                     <div className="space-y-1.5">
                       <Label htmlFor="comprobante" className={labelClasses}>
@@ -1194,7 +1035,7 @@ export default function NuevoMovimientoDialog({
                           className={selectClasses}
                         >
                           <option value="">Seleccione un banco</option>
-                          {bancos.map((b) => (
+                          {bancos.map(b => (
                             <option key={b.id} value={b.id}>
                               {b.nombre}
                             </option>
@@ -1213,7 +1054,7 @@ export default function NuevoMovimientoDialog({
                           className={selectClasses}
                         >
                           <option value="">Seleccione medio de pago</option>
-                          {mediosPago.map((m) => (
+                          {mediosPago.map(m => (
                             <option key={m.id} value={m.id}>
                               {m.nombre}
                             </option>
@@ -1222,18 +1063,11 @@ export default function NuevoMovimientoDialog({
                       </div>
                     </div>
                     {(() => {
-                      const selectedMedio = mediosPago.find(
-                        (m) => m.id.toString() === formData.medio_pago_id,
-                      );
-                      const isCheque =
-                        selectedMedio &&
-                        /cheque|echeq/i.test(selectedMedio.nombre);
+                      const selectedMedio = mediosPago.find(m => m.id.toString() === formData.medio_pago_id)
+                      const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre)
                       return isCheque ? (
                         <div className="space-y-1.5">
-                          <Label
-                            htmlFor="numero_cheque"
-                            className={labelClasses}
-                          >
+                          <Label htmlFor="numero_cheque" className={labelClasses}>
                             N° de Cheque
                           </Label>
                           <Input
@@ -1245,7 +1079,7 @@ export default function NuevoMovimientoDialog({
                             className={inputClasses}
                           />
                         </div>
-                      ) : null;
+                      ) : null
                     })()}
                   </>
                 )}
@@ -1273,7 +1107,7 @@ export default function NuevoMovimientoDialog({
                     className={selectClasses}
                   >
                     <option value="">Seleccione proveedor</option>
-                    {proveedores.map((p) => (
+                    {proveedores.map(p => (
                       <option key={p.id} value={p.id}>
                         {p.nombre}
                       </option>
@@ -1295,8 +1129,8 @@ export default function NuevoMovimientoDialog({
                     >
                       <option value="">Seleccione categoría</option>
                       {categorias
-                        .filter((c) => c.tipo === formData.tipo)
-                        .map((c) => (
+                        .filter(c => c.tipo === formData.tipo)
+                        .map(c => (
                           <option key={c.id} value={c.id}>
                             {c.nombre}
                           </option>
@@ -1316,7 +1150,7 @@ export default function NuevoMovimientoDialog({
                       className={`${selectClasses} disabled:opacity-40 disabled:bg-[#FAFAFA] disabled:cursor-not-allowed`}
                     >
                       <option value="">Seleccione subcategoría</option>
-                      {subcategorias.map((s) => (
+                      {subcategorias.map(s => (
                         <option key={s.id} value={s.id}>
                           {s.nombre}
                         </option>
@@ -1356,8 +1190,7 @@ export default function NuevoMovimientoDialog({
                 Adjuntar comprobantes
               </h4>
               <p className="text-xs text-[#8A8F9C]">
-                Podés adjuntar facturas u órdenes de pago en formato PDF o JPG
-                (máx. 10MB cada uno)
+                Podés adjuntar facturas u órdenes de pago en formato PDF o JPG (máx. 10MB cada uno)
               </p>
 
               <input
@@ -1388,9 +1221,7 @@ export default function NuevoMovimientoDialog({
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <FileText className="w-4 h-4 text-[#002868] flex-shrink-0" />
-                        <span className="text-sm text-[#1A1A1A] truncate">
-                          {file.name}
-                        </span>
+                        <span className="text-sm text-[#1A1A1A] truncate">{file.name}</span>
                         <span className="text-xs text-[#8A8F9C] flex-shrink-0">
                           ({(file.size / 1024).toFixed(0)} KB)
                         </span>
@@ -1431,25 +1262,17 @@ export default function NuevoMovimientoDialog({
               Cancelar
             </Button>
             <Button
-              onClick={
-                isTransferenciaInterna ? handleSaveTransferencia : handleSave
-              }
+              onClick={isTransferenciaInterna ? handleSaveTransferencia : handleSave}
               disabled={
                 isSaving ||
                 (() => {
-                  if (
-                    !isTransferenciaInterna ||
-                    !transferenciaData.banco_origen_id ||
-                    !transferenciaData.monto
-                  )
-                    return false;
+                  if (!isTransferenciaInterna || !transferenciaData.banco_origen_id || !transferenciaData.monto)
+                    return false
                   const parcial = parcialesBancos.find(
-                    (p) =>
-                      p.banco_id?.toString() ===
-                      transferenciaData.banco_origen_id,
-                  );
-                  const saldo = Number(parcial?.total_real ?? 0);
-                  return parseFloat(transferenciaData.monto) > saldo;
+                    p => p.banco_id?.toString() === transferenciaData.banco_origen_id,
+                  )
+                  const saldo = Number(parcial?.total_real ?? 0)
+                  return parseFloat(transferenciaData.monto) > saldo
                 })()
               }
               className={`h-10 px-6 rounded-lg text-white font-semibold shadow-sm hover:shadow-md transition-all cursor-pointer ${
@@ -1463,11 +1286,7 @@ export default function NuevoMovimientoDialog({
               {isSaving ? (
                 <span className="flex items-center gap-2">
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  {isTransferenciaInterna
-                    ? 'Transfiriendo…'
-                    : isApprovalMode
-                      ? 'Aprobando…'
-                      : 'Creando…'}
+                  {isTransferenciaInterna ? 'Transfiriendo…' : isApprovalMode ? 'Aprobando…' : 'Creando…'}
                 </span>
               ) : isTransferenciaInterna ? (
                 'Confirmar transferencia'
@@ -1481,5 +1300,5 @@ export default function NuevoMovimientoDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

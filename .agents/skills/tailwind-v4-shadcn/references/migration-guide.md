@@ -209,7 +209,7 @@ const severityConfig = {
     bg: 'bg-blue-500/10',
     border: 'border-blue-500/20',
   },
-};
+}
 ```
 
 ✅ **After:**
@@ -231,7 +231,7 @@ const severityConfig = {
     bg: 'bg-info/10',
     border: 'border-info/20',
   },
-};
+}
 ```
 
 ---

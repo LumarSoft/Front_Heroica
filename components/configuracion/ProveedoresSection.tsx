@@ -1,11 +1,11 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { API_ENDPOINTS } from '@/lib/config';
-import { apiFetch } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
+import { API_ENDPOINTS } from '@/lib/config'
+import { apiFetch } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -13,32 +13,32 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { DeleteDialog } from '@/components/ui/delete-dialog';
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { DeleteDialog } from '@/components/ui/delete-dialog'
 
 interface ProveedorItem {
-  id: number;
-  nombre: string;
-  razon_social?: string | null;
-  cuit?: string | null;
-  cbu_alias?: string | null;
-  telefono?: string | null;
-  email?: string | null;
-  direccion?: string | null;
-  activo: boolean;
+  id: number
+  nombre: string
+  razon_social?: string | null
+  cuit?: string | null
+  cbu_alias?: string | null
+  telefono?: string | null
+  email?: string | null
+  direccion?: string | null
+  activo: boolean
 }
 
 interface ProveedorForm {
-  id: number;
-  nombre: string;
-  razon_social: string;
-  cuit: string;
-  cbu_alias: string;
-  telefono: string;
-  email: string;
-  direccion: string;
+  id: number
+  nombre: string
+  razon_social: string
+  cuit: string
+  cbu_alias: string
+  telefono: string
+  email: string
+  direccion: string
 }
 
 const DEFAULT_FORM: ProveedorForm = {
@@ -50,39 +50,39 @@ const DEFAULT_FORM: ProveedorForm = {
   telefono: '',
   email: '',
   direccion: '',
-};
+}
 
 export function ProveedoresSection() {
-  const [items, setItems] = useState<ProveedorItem[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [form, setForm] = useState<ProveedorForm>(DEFAULT_FORM);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [items, setItems] = useState<ProveedorItem[]>([])
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [form, setForm] = useState<ProveedorForm>(DEFAULT_FORM)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<{
-    id: number;
-    nombre: string;
-  } | null>(null);
-  const [detailTarget, setDetailTarget] = useState<ProveedorItem | null>(null);
+    id: number
+    nombre: string
+  } | null>(null)
+  const [detailTarget, setDetailTarget] = useState<ProveedorItem | null>(null)
 
   useEffect(() => {
-    fetchItems();
-  }, []);
+    fetchItems()
+  }, [])
 
   const fetchItems = async () => {
     try {
-      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.PROVEEDORES.GET_ALL);
-      const data = await res.json();
-      if (data.success) setItems(data.data);
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.PROVEEDORES.GET_ALL)
+      const data = await res.json()
+      if (data.success) setItems(data.data)
     } catch {
-      toast.error('Error al obtener proveedores');
+      toast.error('Error al obtener proveedores')
     }
-  };
+  }
 
   const handleOpenNew = () => {
-    setForm(DEFAULT_FORM);
-    setError('');
-    setIsDialogOpen(true);
-  };
+    setForm(DEFAULT_FORM)
+    setError('')
+    setIsDialogOpen(true)
+  }
 
   const handleOpenEdit = (item: ProveedorItem) => {
     setForm({
@@ -94,32 +94,32 @@ export function ProveedoresSection() {
       telefono: item.telefono ?? '',
       email: item.email ?? '',
       direccion: item.direccion ?? '',
-    });
-    setError('');
-    setIsDialogOpen(true);
-  };
+    })
+    setError('')
+    setIsDialogOpen(true)
+  }
 
   const handleSave = async () => {
-    const nombreLimpio = form.nombre.trim();
-    const cuitLimpio = form.cuit.trim();
-    const telefonoLimpio = form.telefono.trim();
-    const emailLimpio = form.email.trim();
+    const nombreLimpio = form.nombre.trim()
+    const cuitLimpio = form.cuit.trim()
+    const telefonoLimpio = form.telefono.trim()
+    const emailLimpio = form.email.trim()
 
     if (!nombreLimpio) {
-      setError('El nombre es requerido');
-      return;
+      setError('El nombre es requerido')
+      return
     }
     if (cuitLimpio && !/^\d+$/.test(cuitLimpio)) {
-      setError('El CUIT/CUIL debe contener solo números y sin guiones');
-      return;
+      setError('El CUIT/CUIL debe contener solo números y sin guiones')
+      return
     }
     if (telefonoLimpio && !/^\d+$/.test(telefonoLimpio)) {
-      setError('El teléfono debe contener solo números');
-      return;
+      setError('El teléfono debe contener solo números')
+      return
     }
     if (emailLimpio && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpio)) {
-      setError('El email no tiene un formato válido');
-      return;
+      setError('El email no tiene un formato válido')
+      return
     }
 
     const payload = {
@@ -131,95 +131,77 @@ export function ProveedoresSection() {
       telefono: telefonoLimpio,
       email: emailLimpio,
       direccion: form.direccion.trim(),
-    };
+    }
 
-    setIsSaving(true);
-    setError('');
+    setIsSaving(true)
+    setError('')
     try {
       const url = form.id
         ? API_ENDPOINTS.CONFIGURACION.PROVEEDORES.UPDATE(form.id)
-        : API_ENDPOINTS.CONFIGURACION.PROVEEDORES.CREATE;
+        : API_ENDPOINTS.CONFIGURACION.PROVEEDORES.CREATE
       const res = await apiFetch(url, {
         method: form.id ? 'PUT' : 'POST',
         body: JSON.stringify(payload),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (data.success) {
-        toast.success(data.message);
-        setIsDialogOpen(false);
-        await fetchItems();
+        toast.success(data.message)
+        setIsDialogOpen(false)
+        await fetchItems()
       } else {
-        setError(data.message);
+        setError(data.message)
       }
     } catch {
-      setError('Error al guardar proveedor');
+      setError('Error al guardar proveedor')
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   const handleConfirmDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) return
     try {
-      const res = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.PROVEEDORES.DELETE(deleteTarget.id),
-        { method: 'DELETE' },
-      );
-      const data = await res.json();
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.PROVEEDORES.DELETE(deleteTarget.id), { method: 'DELETE' })
+      const data = await res.json()
       if (data.success) {
-        toast.success(data.message);
-        await fetchItems();
+        toast.success(data.message)
+        await fetchItems()
       }
     } catch {
-      toast.error('Error al eliminar proveedor');
+      toast.error('Error al eliminar proveedor')
     } finally {
-      setDeleteTarget(null);
+      setDeleteTarget(null)
     }
-  };
+  }
 
   return (
     <>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Proveedores</CardTitle>
-          <Button
-            onClick={handleOpenNew}
-            className="bg-[#002868] hover:bg-[#003d8f]"
-          >
+          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f]">
             + Nuevo Proveedor
           </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {items.map((item) => (
+            {items.map(item => (
               <div
                 key={item.id}
                 className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
               >
                 <div>
-                  <h3 className="font-semibold text-[#002868]">
-                    {item.nombre}
-                  </h3>
+                  <h3 className="font-semibold text-[#002868]">{item.nombre}</h3>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    onClick={() => setDetailTarget(item)}
-                    variant="outline"
-                    size="sm"
-                  >
+                  <Button onClick={() => setDetailTarget(item)} variant="outline" size="sm">
                     Ver más datos
                   </Button>
-                  <Button
-                    onClick={() => handleOpenEdit(item)}
-                    variant="outline"
-                    size="sm"
-                  >
+                  <Button onClick={() => handleOpenEdit(item)} variant="outline" size="sm">
                     Editar
                   </Button>
                   <Button
-                    onClick={() =>
-                      setDeleteTarget({ id: item.id, nombre: item.nombre })
-                    }
+                    onClick={() => setDeleteTarget({ id: item.id, nombre: item.nombre })}
                     variant="outline"
                     size="sm"
                     className="text-rose-600 hover:bg-rose-50"
@@ -241,9 +223,7 @@ export function ProveedoresSection() {
                 {form.id ? 'Editar Proveedor' : 'Nuevo Proveedor'}
               </DialogTitle>
               <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
-                {form.id
-                  ? 'Modifica los detalles de este proveedor'
-                  : 'Agrega un nuevo proveedor al sistema'}
+                {form.id ? 'Modifica los detalles de este proveedor' : 'Agrega un nuevo proveedor al sistema'}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -258,7 +238,7 @@ export function ProveedoresSection() {
               <Input
                 id="prov-nombre"
                 value={form.nombre}
-                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                onChange={e => setForm({ ...form, nombre: e.target.value })}
                 placeholder="Ej: Distribuidora Oeste S.A."
                 className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
               />
@@ -273,9 +253,7 @@ export function ProveedoresSection() {
               <Input
                 id="prov-razon-social"
                 value={form.razon_social}
-                onChange={(e) =>
-                  setForm({ ...form, razon_social: e.target.value })
-                }
+                onChange={e => setForm({ ...form, razon_social: e.target.value })}
                 placeholder="Ej: Distribuidora Oeste S.A."
                 className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
               />
@@ -291,7 +269,7 @@ export function ProveedoresSection() {
                 <Input
                   id="prov-cuit"
                   value={form.cuit}
-                  onChange={(e) => setForm({ ...form, cuit: e.target.value })}
+                  onChange={e => setForm({ ...form, cuit: e.target.value })}
                   placeholder="30123456789"
                   className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
                 />
@@ -306,9 +284,7 @@ export function ProveedoresSection() {
                 <Input
                   id="prov-cbu-alias"
                   value={form.cbu_alias}
-                  onChange={(e) =>
-                    setForm({ ...form, cbu_alias: e.target.value })
-                  }
+                  onChange={e => setForm({ ...form, cbu_alias: e.target.value })}
                   placeholder="CBU o alias bancario"
                   className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
                 />
@@ -325,9 +301,7 @@ export function ProveedoresSection() {
                 <Input
                   id="prov-telefono"
                   value={form.telefono}
-                  onChange={(e) =>
-                    setForm({ ...form, telefono: e.target.value })
-                  }
+                  onChange={e => setForm({ ...form, telefono: e.target.value })}
                   placeholder="Ej: 5491112345678"
                   className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
                 />
@@ -343,7 +317,7 @@ export function ProveedoresSection() {
                   id="prov-email"
                   type="email"
                   value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
                   placeholder="contacto@proveedor.com"
                   className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
                 />
@@ -359,7 +333,7 @@ export function ProveedoresSection() {
               <Input
                 id="prov-direccion"
                 value={form.direccion}
-                onChange={(e) => setForm({ ...form, direccion: e.target.value })}
+                onChange={e => setForm({ ...form, direccion: e.target.value })}
                 placeholder="Dirección fiscal/comercial"
                 className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
               />
@@ -391,22 +365,34 @@ export function ProveedoresSection() {
         <DialogContent className="sm:max-w-[540px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
           <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
             <DialogHeader className="p-0 border-0">
-              <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
-                Ver más datos
-              </DialogTitle>
+              <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">Ver más datos</DialogTitle>
               <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
                 Datos ampliados del proveedor seleccionado
               </DialogDescription>
             </DialogHeader>
           </div>
           <div className="px-8 py-6 space-y-3 text-sm">
-            <div><span className="font-semibold text-[#1A1A1A]">Nombre:</span> {detailTarget?.nombre || '-'}</div>
-            <div><span className="font-semibold text-[#1A1A1A]">Razón social:</span> {detailTarget?.razon_social || '-'}</div>
-            <div><span className="font-semibold text-[#1A1A1A]">CUIT:</span> {detailTarget?.cuit || '-'}</div>
-            <div><span className="font-semibold text-[#1A1A1A]">CBU / Alias:</span> {detailTarget?.cbu_alias || '-'}</div>
-            <div><span className="font-semibold text-[#1A1A1A]">Teléfono:</span> {detailTarget?.telefono || '-'}</div>
-            <div><span className="font-semibold text-[#1A1A1A]">Email:</span> {detailTarget?.email || '-'}</div>
-            <div><span className="font-semibold text-[#1A1A1A]">Dirección:</span> {detailTarget?.direccion || '-'}</div>
+            <div>
+              <span className="font-semibold text-[#1A1A1A]">Nombre:</span> {detailTarget?.nombre || '-'}
+            </div>
+            <div>
+              <span className="font-semibold text-[#1A1A1A]">Razón social:</span> {detailTarget?.razon_social || '-'}
+            </div>
+            <div>
+              <span className="font-semibold text-[#1A1A1A]">CUIT:</span> {detailTarget?.cuit || '-'}
+            </div>
+            <div>
+              <span className="font-semibold text-[#1A1A1A]">CBU / Alias:</span> {detailTarget?.cbu_alias || '-'}
+            </div>
+            <div>
+              <span className="font-semibold text-[#1A1A1A]">Teléfono:</span> {detailTarget?.telefono || '-'}
+            </div>
+            <div>
+              <span className="font-semibold text-[#1A1A1A]">Email:</span> {detailTarget?.email || '-'}
+            </div>
+            <div>
+              <span className="font-semibold text-[#1A1A1A]">Dirección:</span> {detailTarget?.direccion || '-'}
+            </div>
           </div>
           <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
             <DialogFooter className="sm:justify-end">
@@ -429,5 +415,5 @@ export function ProveedoresSection() {
         onCancel={() => setDeleteTarget(null)}
       />
     </>
-  );
+  )
 }

@@ -19,12 +19,12 @@ npm install tailwindcss @tailwindcss/vite
 
 ```javascript
 // vite.config.ts
-import { defineConfig } from 'vite';
-import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [tailwindcss()],
-});
+})
 ```
 
 ```css
@@ -85,9 +85,8 @@ Custom design system
 Using square bracket notation for one-off custom values without leaving HTML.
 
 ```html
-Pixel-perfect positioning Custom hex colors, font sizes, and content Any CSS
-property Reference custom properties Complex grid layouts Font size from CSS
-variable Color from CSS variable
+Pixel-perfect positioning Custom hex colors, font sizes, and content Any CSS property Reference custom properties
+Complex grid layouts Font size from CSS variable Color from CSS variable
 ```
 
 ## Color System
@@ -95,8 +94,8 @@ variable Color from CSS variable
 Working with Tailwind's comprehensive color palette and opacity modifiers.
 
 ```html
-Color utilities across all properties Alpha channel with percentage Arbitrary
-opacity values Opacity from CSS variable Adapts to color scheme
+Color utilities across all properties Alpha channel with percentage Arbitrary opacity values Opacity from CSS variable
+Adapts to color scheme
 ```
 
 ## Dark Mode
@@ -124,18 +123,17 @@ Controlled by .dark class
 document.documentElement.classList.toggle(
   'dark',
   localStorage.theme === 'dark' ||
-    (!('theme' in localStorage) &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches),
-);
+    (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
+)
 
 // User chooses light mode
-localStorage.theme = 'light';
+localStorage.theme = 'light'
 
 // User chooses dark mode
-localStorage.theme = 'dark';
+localStorage.theme = 'dark'
 
 // User chooses system preference
-localStorage.removeItem('theme');
+localStorage.removeItem('theme')
 ```
 
 ## State Variants
@@ -143,8 +141,7 @@ localStorage.removeItem('theme');
 Styling elements based on pseudo-classes and parent/sibling state.
 
 ```html
-- Item content **Title** Description Please provide a valid email address.
-Option
+- Item content **Title** Description Please provide a valid email address. Option
 ```
 
 ## Responsive Design
@@ -152,8 +149,7 @@ Option
 Building mobile-first responsive layouts with breakpoint variants.
 
 ```html
-# Responsive heading Text scales with viewport Desktop only Mobile only Custom
-breakpoint Below medium
+# Responsive heading Text scales with viewport Desktop only Mobile only Custom breakpoint Below medium
 ```
 
 ## Custom Utilities
@@ -210,8 +206,8 @@ Creating reusable custom utility classes with variant support.
 ```
 
 ```html
-Custom utilities work with variants Variants and arbitrary values supported
-Utility with modifier (font-size/line-height)
+Custom utilities work with variants Variants and arbitrary values supported Utility with modifier
+(font-size/line-height)
 ```
 
 ## Custom Variants
@@ -380,8 +376,7 @@ Using Tailwind's CSS functions for dynamic values and opacity adjustments.
 Styling ::before, ::after, ::placeholder, and other pseudo-elements.
 
 ```html
-Email - First item - Second item Select this text to see custom colors
-Typography with pseudo-elements
+Email - First item - Second item Select this text to see custom colors Typography with pseudo-elements
 ```
 
 ## Media Queries
@@ -389,9 +384,8 @@ Typography with pseudo-elements
 Conditional styling based on user preferences and device capabilities.
 
 ```html
-Respects user preference Only animates if motion allowed Adjusts for contrast
-needs Hidden in portrait mode Layout adapts to orientation Not shown when
-printing Only visible in print Progressive enhancement
+Respects user preference Only animates if motion allowed Adjusts for contrast needs Hidden in portrait mode Layout
+adapts to orientation Not shown when printing Only visible in print Progressive enhancement
 ```
 
 ## Summary

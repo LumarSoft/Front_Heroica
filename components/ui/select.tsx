@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import * as SelectPrimitive from '@radix-ui/react-select';
+import * as React from 'react'
+import * as SelectPrimitive from '@radix-ui/react-select'
 
-const Select = SelectPrimitive.Root;
+const Select = SelectPrimitive.Root
 
-const SelectGroup = SelectPrimitive.Group;
+const SelectGroup = SelectPrimitive.Group
 
-const SelectValue = SelectPrimitive.Value;
+const SelectValue = SelectPrimitive.Value
 
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
@@ -28,16 +28,12 @@ const SelectTrigger = React.forwardRef<
         stroke="currentColor"
         className="h-4 w-4 opacity-50"
       >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-        />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
       </svg>
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
-));
-SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
+))
+SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
 
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
@@ -63,20 +59,16 @@ const SelectContent = React.forwardRef<
       </SelectPrimitive.Viewport>
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
-));
-SelectContent.displayName = SelectPrimitive.Content.displayName;
+))
+SelectContent.displayName = SelectPrimitive.Content.displayName
 
 const SelectLabel = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Label>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
 >(({ className, ...props }, ref) => (
-  <SelectPrimitive.Label
-    ref={ref}
-    className={`py-1.5 pl-8 pr-2 text-sm font-semibold ${className || ''}`}
-    {...props}
-  />
-));
-SelectLabel.displayName = SelectPrimitive.Label.displayName;
+  <SelectPrimitive.Label ref={ref} className={`py-1.5 pl-8 pr-2 text-sm font-semibold ${className || ''}`} {...props} />
+))
+SelectLabel.displayName = SelectPrimitive.Label.displayName
 
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
@@ -97,39 +89,22 @@ const SelectItem = React.forwardRef<
           stroke="currentColor"
           className="h-4 w-4"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M4.5 12.75l6 6 9-13.5"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
         </svg>
       </SelectPrimitive.ItemIndicator>
     </span>
 
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
   </SelectPrimitive.Item>
-));
-SelectItem.displayName = SelectPrimitive.Item.displayName;
+))
+SelectItem.displayName = SelectPrimitive.Item.displayName
 
 const SelectSeparator = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>
 >(({ className, ...props }, ref) => (
-  <SelectPrimitive.Separator
-    ref={ref}
-    className={`-mx-1 my-1 h-px bg-gray-100 ${className || ''}`}
-    {...props}
-  />
-));
-SelectSeparator.displayName = SelectPrimitive.Separator.displayName;
+  <SelectPrimitive.Separator ref={ref} className={`-mx-1 my-1 h-px bg-gray-100 ${className || ''}`} {...props} />
+))
+SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
-export {
-  Select,
-  SelectGroup,
-  SelectValue,
-  SelectTrigger,
-  SelectContent,
-  SelectLabel,
-  SelectItem,
-  SelectSeparator,
-};
+export { Select, SelectGroup, SelectValue, SelectTrigger, SelectContent, SelectLabel, SelectItem, SelectSeparator }

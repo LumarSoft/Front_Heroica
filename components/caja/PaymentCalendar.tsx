@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react'
 import {
   startOfMonth,
   endOfMonth,
@@ -11,57 +11,50 @@ import {
   subMonths,
   isToday,
   isSameMonth,
-} from 'date-fns';
-import { es } from 'date-fns/locale';
-import {
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-  TrendingDown,
-  TrendingUp,
-  Minus,
-} from 'lucide-react';
-import type { Transaction } from '@/lib/types';
-import type { ColumnDef } from '@/components/caja/TransactionTable';
-import { TransactionTable } from '@/components/caja/TransactionTable';
-import { formatMonto } from '@/lib/formatters';
-import { cn } from '@/lib/utils';
+} from 'date-fns'
+import { es } from 'date-fns/locale'
+import { ArrowLeft, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Minus } from 'lucide-react'
+import type { Transaction } from '@/lib/types'
+import type { ColumnDef } from '@/components/caja/TransactionTable'
+import { TransactionTable } from '@/components/caja/TransactionTable'
+import { formatMonto } from '@/lib/formatters'
+import { cn } from '@/lib/utils'
 
 // =============================================
 // Tipos internos
 // =============================================
 
 interface DayData {
-  egresos: number;
-  ingresos: number;
-  items: Transaction[];
+  egresos: number
+  ingresos: number
+  items: Transaction[]
 }
 
 interface WeekTotals {
-  egresos: number;
-  ingresos: number;
-  neto: number;
+  egresos: number
+  ingresos: number
+  neto: number
 }
 
 interface PaymentCalendarProps {
-  transactions: Transaction[];
-  columns: ColumnDef[];
-  onViewDetails: (t: Transaction) => void;
-  onChangeState?: (t: Transaction) => void;
-  onDelete?: (t: Transaction) => void;
-  onToggleDeuda?: (t: Transaction) => void;
-  onMove?: (t: Transaction) => void;
-  onBulkDelete?: (ids: number[]) => void;
-  onBulkMove?: (ids: number[]) => void;
-  isReadOnly?: boolean;
-  title: string;
-  description: string;
+  transactions: Transaction[]
+  columns: ColumnDef[]
+  onViewDetails: (t: Transaction) => void
+  onChangeState?: (t: Transaction) => void
+  onDelete?: (t: Transaction) => void
+  onToggleDeuda?: (t: Transaction) => void
+  onMove?: (t: Transaction) => void
+  onBulkDelete?: (ids: number[]) => void
+  onBulkMove?: (ids: number[]) => void
+  isReadOnly?: boolean
+  title: string
+  description: string
 }
 
-const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
 function getISODate(date: Date): string {
-  return format(date, 'yyyy-MM-dd');
+  return format(date, 'yyyy-MM-dd')
 }
 
 // =============================================
@@ -69,17 +62,17 @@ function getISODate(date: Date): string {
 // =============================================
 
 interface DayCellProps {
-  date: Date;
-  data: DayData | undefined;
-  isCurrentMonth: boolean;
-  onClick: (date: Date) => void;
-  animationDelay: number;
+  date: Date
+  data: DayData | undefined
+  isCurrentMonth: boolean
+  onClick: (date: Date) => void
+  animationDelay: number
 }
 
 function DayCell({ date, data, isCurrentMonth, onClick, animationDelay }: DayCellProps) {
-  const today = isToday(date);
-  const hasData = data && data.items.length > 0;
-  const neto = hasData ? data.ingresos - data.egresos : 0;
+  const today = isToday(date)
+  const hasData = data && data.items.length > 0
+  const neto = hasData ? data.ingresos - data.egresos : 0
 
   return (
     <div
@@ -98,18 +91,12 @@ function DayCell({ date, data, isCurrentMonth, onClick, animationDelay }: DayCel
         <span
           className={cn(
             'text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full',
-            today && isCurrentMonth
-              ? 'bg-[#002868] text-white'
-              : 'text-[#5A6070]',
+            today && isCurrentMonth ? 'bg-[#002868] text-white' : 'text-[#5A6070]',
           )}
         >
           {format(date, 'd')}
         </span>
-        {hasData && (
-          <span className="text-[11px] text-[#9AA0AC] font-medium">
-            {data.items.length} mov.
-          </span>
-        )}
+        {hasData && <span className="text-[11px] text-[#9AA0AC] font-medium">{data.items.length} mov.</span>}
       </div>
 
       {/* Datos financieros */}
@@ -118,27 +105,18 @@ function DayCell({ date, data, isCurrentMonth, onClick, animationDelay }: DayCel
           {data.egresos > 0 && (
             <div className="flex items-center gap-1 min-w-0">
               <TrendingDown className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
-              <span className="text-xs font-semibold text-rose-600 truncate">
-                {formatMonto(data.egresos)}
-              </span>
+              <span className="text-xs font-semibold text-rose-600 truncate">{formatMonto(data.egresos)}</span>
             </div>
           )}
           {data.ingresos > 0 && (
             <div className="flex items-center gap-1 min-w-0">
               <TrendingUp className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-              <span className="text-xs font-semibold text-emerald-600 truncate">
-                {formatMonto(data.ingresos)}
-              </span>
+              <span className="text-xs font-semibold text-emerald-600 truncate">{formatMonto(data.ingresos)}</span>
             </div>
           )}
           <div className="flex items-center gap-1 pt-1 border-t border-[#E8EAED] min-w-0">
             <Minus className="w-3.5 h-3.5 text-[#002868] flex-shrink-0" />
-            <span
-              className={cn(
-                'text-xs font-bold truncate',
-                neto >= 0 ? 'text-[#002868]' : 'text-amber-600',
-              )}
-            >
+            <span className={cn('text-xs font-bold truncate', neto >= 0 ? 'text-[#002868]' : 'text-amber-600')}>
               {formatMonto(neto)}
             </span>
           </div>
@@ -151,7 +129,7 @@ function DayCell({ date, data, isCurrentMonth, onClick, animationDelay }: DayCel
         </div>
       )}
     </div>
-  );
+  )
 }
 
 // =============================================
@@ -161,38 +139,27 @@ function DayCell({ date, data, isCurrentMonth, onClick, animationDelay }: DayCel
 function WeekTotalsCell({ totals }: { totals: WeekTotals }) {
   return (
     <div className="hidden sm:flex flex-col justify-center gap-1 px-3 py-2 bg-[#F0F4FF] rounded-xl border border-[#002868]/10 w-full overflow-hidden">
-      <p className="text-[9px] font-bold text-[#002868]/60 uppercase tracking-wider mb-0.5">
-        Semana
-      </p>
+      <p className="text-[9px] font-bold text-[#002868]/60 uppercase tracking-wider mb-0.5">Semana</p>
       {totals.egresos > 0 && (
         <div className="flex items-center gap-1 min-w-0">
           <TrendingDown className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
-          <span className="text-xs font-semibold text-rose-600 truncate">
-            {formatMonto(totals.egresos)}
-          </span>
+          <span className="text-xs font-semibold text-rose-600 truncate">{formatMonto(totals.egresos)}</span>
         </div>
       )}
       {totals.ingresos > 0 && (
         <div className="flex items-center gap-1 min-w-0">
           <TrendingUp className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-          <span className="text-xs font-semibold text-emerald-600 truncate">
-            {formatMonto(totals.ingresos)}
-          </span>
+          <span className="text-xs font-semibold text-emerald-600 truncate">{formatMonto(totals.ingresos)}</span>
         </div>
       )}
       <div className="flex items-center gap-1 pt-0.5 border-t border-[#002868]/10 min-w-0">
         <Minus className="w-3.5 h-3.5 text-[#002868] flex-shrink-0" />
-        <span
-          className={cn(
-            'text-xs font-bold truncate',
-            totals.neto >= 0 ? 'text-[#002868]' : 'text-amber-600',
-          )}
-        >
+        <span className={cn('text-xs font-bold truncate', totals.neto >= 0 ? 'text-[#002868]' : 'text-amber-600')}>
           {formatMonto(totals.neto)}
         </span>
       </div>
     </div>
-  );
+  )
 }
 
 // =============================================
@@ -213,111 +180,108 @@ export function PaymentCalendar({
   title,
   description,
 }: PaymentCalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(() => new Date());
-  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [transitionDir, setTransitionDir] = useState<'in' | 'out'>('in');
+  const [currentMonth, setCurrentMonth] = useState(() => new Date())
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [transitionDir, setTransitionDir] = useState<'in' | 'out'>('in')
 
   // Agrupar transactions por fecha ISO
   const dayMap = useMemo(() => {
-    const map = new Map<string, DayData>();
+    const map = new Map<string, DayData>()
     for (const t of transactions) {
-      const datePart = t.fecha?.includes('T') ? t.fecha.split('T')[0] : t.fecha;
-      if (!datePart) continue;
-      const existing = map.get(datePart) ?? { egresos: 0, ingresos: 0, items: [] };
-      const monto = typeof t.monto === 'string' ? parseFloat(t.monto) : (t.monto ?? 0);
+      const datePart = t.fecha?.includes('T') ? t.fecha.split('T')[0] : t.fecha
+      if (!datePart) continue
+      const existing = map.get(datePart) ?? { egresos: 0, ingresos: 0, items: [] }
+      const monto = typeof t.monto === 'string' ? parseFloat(t.monto) : (t.monto ?? 0)
       if (t.tipo === 'egreso') {
-        existing.egresos += Math.abs(monto);
+        existing.egresos += Math.abs(monto)
       } else {
-        existing.ingresos += Math.abs(monto);
+        existing.ingresos += Math.abs(monto)
       }
-      existing.items.push(t);
-      map.set(datePart, existing);
+      existing.items.push(t)
+      map.set(datePart, existing)
     }
-    return map;
-  }, [transactions]);
+    return map
+  }, [transactions])
 
   // Calcular semanas del mes actual
   const weeks = useMemo(() => {
-    const start = startOfMonth(currentMonth);
-    const end = endOfMonth(currentMonth);
-    const days = eachDayOfInterval({ start, end });
+    const start = startOfMonth(currentMonth)
+    const end = endOfMonth(currentMonth)
+    const days = eachDayOfInterval({ start, end })
 
     // getDay retorna 0=Dom..6=Sáb; necesitamos 0=Lun..6=Dom
-    const firstDayOfWeek = (getDay(start) + 6) % 7;
+    const firstDayOfWeek = (getDay(start) + 6) % 7
 
     // Rellenar días anteriores al primer día del mes
-    const paddedDays: (Date | null)[] = [
-      ...Array(firstDayOfWeek).fill(null),
-      ...days,
-    ];
+    const paddedDays: (Date | null)[] = [...Array(firstDayOfWeek).fill(null), ...days]
 
     // Rellenar hasta completar la última semana
     while (paddedDays.length % 7 !== 0) {
-      paddedDays.push(null);
+      paddedDays.push(null)
     }
 
     // Dividir en semanas de 7 días
-    const result: (Date | null)[][] = [];
+    const result: (Date | null)[][] = []
     for (let i = 0; i < paddedDays.length; i += 7) {
-      result.push(paddedDays.slice(i, i + 7));
+      result.push(paddedDays.slice(i, i + 7))
     }
-    return result;
-  }, [currentMonth]);
+    return result
+  }, [currentMonth])
 
   // Totales globales del mes
   const monthTotals = useMemo(() => {
-    let egresos = 0;
-    let ingresos = 0;
-    const monthStart = getISODate(startOfMonth(currentMonth));
-    const monthEnd = getISODate(endOfMonth(currentMonth));
+    let egresos = 0
+    let ingresos = 0
+    const monthStart = getISODate(startOfMonth(currentMonth))
+    const monthEnd = getISODate(endOfMonth(currentMonth))
     dayMap.forEach((data, dateStr) => {
       if (dateStr >= monthStart && dateStr <= monthEnd) {
-        egresos += data.egresos;
-        ingresos += data.ingresos;
+        egresos += data.egresos
+        ingresos += data.ingresos
       }
-    });
-    return { egresos, ingresos, neto: ingresos - egresos };
-  }, [dayMap, currentMonth]);
+    })
+    return { egresos, ingresos, neto: ingresos - egresos }
+  }, [dayMap, currentMonth])
 
   // Transactions del día seleccionado
   const selectedDayTransactions = useMemo(() => {
-    if (!selectedDay) return [];
-    return dayMap.get(getISODate(selectedDay))?.items ?? [];
-  }, [dayMap, selectedDay]);
+    if (!selectedDay) return []
+    return dayMap.get(getISODate(selectedDay))?.items ?? []
+  }, [dayMap, selectedDay])
 
   function handleDayClick(date: Date) {
-    setTransitionDir('in');
-    setIsTransitioning(true);
+    setTransitionDir('in')
+    setIsTransitioning(true)
     setTimeout(() => {
-      setSelectedDay(date);
-      setIsTransitioning(false);
-    }, 150);
+      setSelectedDay(date)
+      setIsTransitioning(false)
+    }, 150)
   }
 
   function handleBack() {
-    setTransitionDir('out');
-    setIsTransitioning(true);
+    setTransitionDir('out')
+    setIsTransitioning(true)
     setTimeout(() => {
-      setSelectedDay(null);
-      setIsTransitioning(false);
-    }, 150);
+      setSelectedDay(null)
+      setIsTransitioning(false)
+    }, 150)
   }
 
   function handlePrevMonth() {
-    setCurrentMonth((m) => subMonths(m, 1));
+    setCurrentMonth(m => subMonths(m, 1))
   }
 
   function handleNextMonth() {
-    setCurrentMonth((m) => addMonths(m, 1));
+    setCurrentMonth(m => addMonths(m, 1))
   }
 
   // ====================================================
   // NIVEL 2: Vista de día seleccionado
   // ====================================================
   if (selectedDay) {
-    const dayLabel = format(selectedDay, "EEEE d 'de' MMMM yyyy", { locale: es });
-    const capitalDayLabel = dayLabel.charAt(0).toUpperCase() + dayLabel.slice(1);
+    const dayLabel = format(selectedDay, "EEEE d 'de' MMMM yyyy", { locale: es })
+    const capitalDayLabel = dayLabel.charAt(0).toUpperCase() + dayLabel.slice(1)
 
     return (
       <div
@@ -342,15 +306,13 @@ export function PaymentCalendar({
 
         {/* Título del día */}
         <div className="mb-4 px-4 py-3 bg-[#F0F4FF] rounded-xl border border-[#002868]/10">
-          <p className="text-xs font-bold text-[#002868]/60 uppercase tracking-wider mb-0.5">
-            Detalle del día
-          </p>
+          <p className="text-xs font-bold text-[#002868]/60 uppercase tracking-wider mb-0.5">Detalle del día</p>
           <p className="text-base font-bold text-[#002868]">{capitalDayLabel}</p>
           {selectedDayTransactions.length > 0 && (
             <div className="flex flex-wrap gap-4 mt-2">
               {(() => {
-                const d = dayMap.get(getISODate(selectedDay))!;
-                const neto = d.ingresos - d.egresos;
+                const d = dayMap.get(getISODate(selectedDay))!
+                const neto = d.ingresos - d.egresos
                 return (
                   <>
                     {d.egresos > 0 && (
@@ -365,15 +327,17 @@ export function PaymentCalendar({
                         {formatMonto(d.ingresos)}
                       </span>
                     )}
-                    <span className={cn(
-                      'flex items-center gap-1 text-xs font-bold',
-                      neto >= 0 ? 'text-[#002868]' : 'text-amber-600',
-                    )}>
+                    <span
+                      className={cn(
+                        'flex items-center gap-1 text-xs font-bold',
+                        neto >= 0 ? 'text-[#002868]' : 'text-amber-600',
+                      )}
+                    >
                       <Minus className="w-3.5 h-3.5" />
                       Neto: {formatMonto(neto)}
                     </span>
                   </>
-                );
+                )
               })()}
             </div>
           )}
@@ -399,7 +363,7 @@ export function PaymentCalendar({
           isReadOnly={isReadOnly}
         />
       </div>
-    );
+    )
   }
 
   // ====================================================
@@ -414,7 +378,6 @@ export function PaymentCalendar({
     >
       {/* Card contenedor */}
       <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm overflow-hidden">
-
         {/* Header del calendario */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 border-b border-[#E8EAED] bg-gradient-to-r from-[#F8F9FA] to-white">
           <div>
@@ -457,10 +420,12 @@ export function PaymentCalendar({
                 {formatMonto(monthTotals.ingresos)}
               </span>
             )}
-            <span className={cn(
-              'flex items-center gap-1 font-bold',
-              monthTotals.neto >= 0 ? 'text-[#002868]' : 'text-amber-600',
-            )}>
+            <span
+              className={cn(
+                'flex items-center gap-1 font-bold',
+                monthTotals.neto >= 0 ? 'text-[#002868]' : 'text-amber-600',
+              )}
+            >
               <Minus className="w-3.5 h-3.5" />
               {formatMonto(monthTotals.neto)}
             </span>
@@ -470,7 +435,7 @@ export function PaymentCalendar({
         <div className="p-4">
           {/* Headers de días de la semana */}
           <div className="grid gap-1 mb-2" style={{ gridTemplateColumns: 'repeat(7, 1fr) 140px' }}>
-            {DAY_NAMES.map((name) => (
+            {DAY_NAMES.map(name => (
               <div
                 key={name}
                 className="text-center text-[10px] font-bold text-[#9AA0AC] uppercase tracking-wider py-1"
@@ -487,18 +452,18 @@ export function PaymentCalendar({
           <div className="space-y-1">
             {weeks.map((week, weekIdx) => {
               // Calcular totales de la semana
-              const weekTotals: WeekTotals = { egresos: 0, ingresos: 0, neto: 0 };
-              let weekHasData = false;
-              week.forEach((day) => {
-                if (!day || !isSameMonth(day, currentMonth)) return;
-                const data = dayMap.get(getISODate(day));
+              const weekTotals: WeekTotals = { egresos: 0, ingresos: 0, neto: 0 }
+              let weekHasData = false
+              week.forEach(day => {
+                if (!day || !isSameMonth(day, currentMonth)) return
+                const data = dayMap.get(getISODate(day))
                 if (data) {
-                  weekTotals.egresos += data.egresos;
-                  weekTotals.ingresos += data.ingresos;
-                  weekHasData = true;
+                  weekTotals.egresos += data.egresos
+                  weekTotals.ingresos += data.ingresos
+                  weekHasData = true
                 }
-              });
-              weekTotals.neto = weekTotals.ingresos - weekTotals.egresos;
+              })
+              weekTotals.neto = weekTotals.ingresos - weekTotals.egresos
 
               return (
                 <div
@@ -507,16 +472,16 @@ export function PaymentCalendar({
                   style={{ gridTemplateColumns: 'repeat(7, 1fr) 140px' }}
                 >
                   {week.map((day, dayIdx) => {
-                    const globalIdx = weekIdx * 7 + dayIdx;
+                    const globalIdx = weekIdx * 7 + dayIdx
                     if (!day) {
                       return (
                         <div
                           key={`empty-${weekIdx}-${dayIdx}`}
                           className="min-h-[110px] rounded-xl bg-[#F8F9FA]/50 border border-dashed border-[#E8EAED]"
                         />
-                      );
+                      )
                     }
-                    const isCurrentMonth = isSameMonth(day, currentMonth);
+                    const isCurrentMonth = isSameMonth(day, currentMonth)
                     return (
                       <DayCell
                         key={getISODate(day)}
@@ -526,7 +491,7 @@ export function PaymentCalendar({
                         onClick={handleDayClick}
                         animationDelay={globalIdx * 20}
                       />
-                    );
+                    )
                   })}
                   {/* Columna totales semanales */}
                   <div className="flex items-stretch min-h-[110px]">
@@ -537,7 +502,7 @@ export function PaymentCalendar({
                     )}
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
         </div>
@@ -556,11 +521,9 @@ export function PaymentCalendar({
             <Minus className="w-3.5 h-3.5 text-[#002868]" />
             <span>Neto</span>
           </div>
-          <span className="text-xs text-[#9AA0AC] ml-auto">
-            Hacé click en un día para ver el detalle
-          </span>
+          <span className="text-xs text-[#9AA0AC] ml-auto">Hacé click en un día para ver el detalle</span>
         </div>
       </div>
     </div>
-  );
+  )
 }

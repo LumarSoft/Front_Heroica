@@ -1,42 +1,24 @@
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-} from 'recharts';
-import { formatMonto } from '@/lib/formatters';
-import type { ReportBreakdownItem, PieTooltipProps } from './types';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts'
+import { formatMonto } from '@/lib/formatters'
+import type { ReportBreakdownItem, PieTooltipProps } from './types'
 
 // =============================================
 // Tooltip personalizado para gráficos de torta
 // =============================================
 
-const COLORS = [
-  '#0088FE',
-  '#00C49F',
-  '#FFBB28',
-  '#FF8042',
-  '#8884d8',
-  '#82ca9d',
-  '#ffc658',
-  '#d0ed57',
-  '#a4de6c',
-];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#d0ed57', '#a4de6c']
 
 function CustomPieTooltip({ active, payload }: PieTooltipProps) {
   if (active && payload && payload.length) {
-    const item = payload[0];
+    const item = payload[0]
     return (
       <div className="bg-white border border-slate-200 rounded-lg shadow-lg px-3 py-2 text-sm">
         <p className="font-semibold text-slate-800">{item.name}</p>
-        <p className="text-slate-600">
-          {formatMonto(item.value, (payload[0] as any).payload.moneda)}
-        </p>
+        <p className="text-slate-600">{formatMonto(item.value, (payload[0] as any).payload.moneda)}</p>
       </div>
-    );
+    )
   }
-  return null;
+  return null
 }
 
 // =============================================
@@ -53,16 +35,16 @@ function DistributionRow({
   onClick,
   moneda,
 }: {
-  item: ReportBreakdownItem;
-  index: number;
-  total: number;
-  color: string;
-  isClickable: boolean;
-  isBack?: boolean;
-  onClick?: () => void;
-  moneda?: 'ARS' | 'USD';
+  item: ReportBreakdownItem
+  index: number
+  total: number
+  color: string
+  isClickable: boolean
+  isBack?: boolean
+  onClick?: () => void
+  moneda?: 'ARS' | 'USD'
 }) {
-  const pct = total > 0 ? (item.value / total) * 100 : 0;
+  const pct = total > 0 ? (item.value / total) * 100 : 0
 
   return (
     <div
@@ -71,30 +53,19 @@ function DistributionRow({
     >
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-2 min-w-0">
-          <span
-            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-            style={{ backgroundColor: color }}
-          />
+          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
           <span
             className={`text-sm font-medium text-slate-700 truncate ${isClickable ? 'group-hover:text-slate-900' : ''}`}
           >
             {item.name}
             {isClickable && !isBack && (
-              <span className="ml-1 text-xs text-slate-400 group-hover:text-slate-500">
-                ▸
-              </span>
+              <span className="ml-1 text-xs text-slate-400 group-hover:text-slate-500">▸</span>
             )}
-            {isClickable && isBack && (
-              <span className="ml-1 text-xs text-slate-400 group-hover:text-slate-500">
-                ↩
-              </span>
-            )}
+            {isClickable && isBack && <span className="ml-1 text-xs text-slate-400 group-hover:text-slate-500">↩</span>}
           </span>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-          <span className="text-xs font-mono text-slate-500 w-10 text-right">
-            {pct.toFixed(1)}%
-          </span>
+          <span className="text-xs font-mono text-slate-500 w-10 text-right">{pct.toFixed(1)}%</span>
           <span className="text-sm font-bold text-slate-800 w-28 text-right tabular-nums">
             {formatMonto(item.value, moneda)}
           </span>
@@ -107,7 +78,7 @@ function DistributionRow({
         />
       </div>
     </div>
-  );
+  )
 }
 
 // =============================================
@@ -120,12 +91,12 @@ function DrillDownBreadcrumb({
   onBack,
   colorClass,
 }: {
-  root: string;
-  selected: string | null;
-  onBack: () => void;
-  colorClass: string;
+  root: string
+  selected: string | null
+  onBack: () => void
+  colorClass: string
 }) {
-  if (!selected) return null;
+  if (!selected) return null
   return (
     <nav className="flex items-center gap-1.5 text-sm mb-1">
       <button
@@ -137,7 +108,7 @@ function DrillDownBreadcrumb({
       <span className="text-slate-400">›</span>
       <span className="font-semibold text-slate-800">{selected}</span>
     </nav>
-  );
+  )
 }
 
 // =============================================
@@ -145,18 +116,18 @@ function DrillDownBreadcrumb({
 // =============================================
 
 interface BreakdownPanelProps {
-  breakdownData: ReportBreakdownItem[];
-  currentData: ReportBreakdownItem[];
-  currentTotal: number;
-  selectedCategory: string | null;
-  onSliceClick: (name: string) => void;
-  onBack: () => void;
-  colorOffset: number;
-  emptyMessage: string;
-  valueColorClass: string;
-  drillDownRoot?: string;
-  drillDownColorClass?: string;
-  moneda?: 'ARS' | 'USD';
+  breakdownData: ReportBreakdownItem[]
+  currentData: ReportBreakdownItem[]
+  currentTotal: number
+  selectedCategory: string | null
+  onSliceClick: (name: string) => void
+  onBack: () => void
+  colorOffset: number
+  emptyMessage: string
+  valueColorClass: string
+  drillDownRoot?: string
+  drillDownColorClass?: string
+  moneda?: 'ARS' | 'USD'
 }
 
 export function BreakdownPanel({
@@ -174,7 +145,7 @@ export function BreakdownPanel({
   moneda = 'ARS',
 }: BreakdownPanelProps) {
   // Agregar moneda a los datos para que el tooltip la pueda leer
-  const chartData = breakdownData.map((d) => ({ ...d, moneda }));
+  const chartData = breakdownData.map(d => ({ ...d, moneda }))
 
   return (
     <>
@@ -190,19 +161,12 @@ export function BreakdownPanel({
           {breakdownData?.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
+                <Pie data={chartData} cx="50%" cy="50%" outerRadius={100} paddingAngle={2} dataKey="value">
                   {breakdownData.map((entry, index) => {
-                    const color = COLORS[(index + colorOffset) % COLORS.length];
-                    const isSelected = selectedCategory === entry.name;
-                    const isDimmed = selectedCategory && !isSelected;
-                    const hasSubs = (entry.subcategorias?.length ?? 0) > 0;
+                    const color = COLORS[(index + colorOffset) % COLORS.length]
+                    const isSelected = selectedCategory === entry.name
+                    const isDimmed = selectedCategory && !isSelected
+                    const hasSubs = (entry.subcategorias?.length ?? 0) > 0
                     return (
                       <Cell
                         key={`cell-${index}`}
@@ -216,7 +180,7 @@ export function BreakdownPanel({
                         }}
                         onClick={() => hasSubs && onSliceClick(entry.name)}
                       />
-                    );
+                    )
                   })}
                 </Pie>
                 <RechartsTooltip content={<CustomPieTooltip />} />
@@ -230,23 +194,14 @@ export function BreakdownPanel({
         {/* List */}
         <div className="flex flex-col">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
-            {selectedCategory
-              ? `Subcategorías de "${selectedCategory}"`
-              : 'Por categoría — clic para desglosar ▸'}
+            {selectedCategory ? `Subcategorías de "${selectedCategory}"` : 'Por categoría — clic para desglosar ▸'}
           </p>
           <div className="space-y-1 overflow-auto max-h-64 print:overflow-visible print:max-h-none pr-1">
             {currentData.map((item, i) => {
               const color = selectedCategory
-                ? COLORS[
-                    (breakdownData.findIndex(
-                      (c) => c.name === selectedCategory,
-                    ) +
-                      colorOffset) %
-                      COLORS.length
-                  ]
-                : COLORS[(i + colorOffset) % COLORS.length];
-              const isClickable =
-                !selectedCategory && (item.subcategorias?.length ?? 0) > 0;
+                ? COLORS[(breakdownData.findIndex(c => c.name === selectedCategory) + colorOffset) % COLORS.length]
+                : COLORS[(i + colorOffset) % COLORS.length]
+              const isClickable = !selectedCategory && (item.subcategorias?.length ?? 0) > 0
               return (
                 <DistributionRow
                   key={i}
@@ -258,7 +213,7 @@ export function BreakdownPanel({
                   onClick={() => onSliceClick(item.name)}
                   moneda={moneda}
                 />
-              );
+              )
             })}
           </div>
           <div className="mt-3 pt-3 border-t border-slate-200 flex justify-between items-center px-3">
@@ -267,24 +222,18 @@ export function BreakdownPanel({
                 onClick={onBack}
                 className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors group"
               >
-                <span className="group-hover:-translate-x-0.5 transition-transform">
-                  ←
-                </span>
+                <span className="group-hover:-translate-x-0.5 transition-transform">←</span>
                 Volver a categorías
               </button>
             ) : (
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Total
-              </span>
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total</span>
             )}
-            <span
-              className={`text-base font-extrabold tabular-nums ${valueColorClass}`}
-            >
+            <span className={`text-base font-extrabold tabular-nums ${valueColorClass}`}>
               {formatMonto(currentTotal, moneda)}
             </span>
           </div>
         </div>
       </div>
     </>
-  );
+  )
 }

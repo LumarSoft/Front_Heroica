@@ -1,17 +1,17 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { ArrowRightLeft } from 'lucide-react';
-import { DeudasInterSucursalDialog } from './DeudasInterSucursalDialog';
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { ArrowRightLeft } from 'lucide-react'
+import { DeudasInterSucursalDialog } from './DeudasInterSucursalDialog'
 
 interface PageHeaderProps {
-  title: string;
-  subtitle: string;
-  onNewMovimiento: () => void;
-  onCompraVentaDivisas?: () => void;
-  isReadOnly?: boolean;
-  sucursalId: number;
+  title: string
+  subtitle: string
+  onNewMovimiento: () => void
+  onCompraVentaDivisas?: () => void
+  isReadOnly?: boolean
+  sucursalId: number
 }
 
 export function PageHeader({
@@ -22,7 +22,7 @@ export function PageHeader({
   isReadOnly = false,
   sucursalId,
 }: PageHeaderProps) {
-  const [showDeudas, setShowDeudas] = useState(false);
+  const [showDeudas, setShowDeudas] = useState(false)
 
   return (
     <>
@@ -45,11 +45,7 @@ export function PageHeader({
               stroke="currentColor"
               className="w-5 h-5"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Deudas
           </Button>
@@ -77,22 +73,14 @@ export function PageHeader({
               stroke="currentColor"
               className="w-5 h-5"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 4.5v15m7.5-7.5h-15"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
             Nuevo Movimiento
           </Button>
         </div>
       </div>
 
-      <DeudasInterSucursalDialog
-        open={showDeudas}
-        onOpenChange={setShowDeudas}
-        sucursalId={sucursalId}
-      />
+      <DeudasInterSucursalDialog open={showDeudas} onOpenChange={setShowDeudas} sucursalId={sucursalId} />
     </>
-  );
+  )
 }

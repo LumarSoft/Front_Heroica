@@ -1,157 +1,140 @@
-'use client';
+'use client'
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { API_ENDPOINTS } from '@/lib/config';
-import { useAuthStore } from '@/store/authStore';
-import { loginSchema } from '@/lib/schemas';
-import { Eye, EyeOff } from 'lucide-react';
-import { Setup2FADialog } from '@/components/Setup2FADialog';
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { API_ENDPOINTS } from '@/lib/config'
+import { useAuthStore } from '@/store/authStore'
+import { loginSchema } from '@/lib/schemas'
+import { Eye, EyeOff } from 'lucide-react'
+import { Setup2FADialog } from '@/components/Setup2FADialog'
 
 export default function LoginPage() {
-  const router = useRouter();
-  const login = useAuthStore((state) => state.login);
+  const router = useRouter()
+  const login = useAuthStore(state => state.login)
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false)
 
-  const [requires2FA, setRequires2FA] = useState(false);
-  const [tempToken, setTempToken] = useState('');
-  const [code2FA, setCode2FA] = useState('');
+  const [requires2FA, setRequires2FA] = useState(false)
+  const [tempToken, setTempToken] = useState('')
+  const [code2FA, setCode2FA] = useState('')
 
-  const [needsSetup2FA, setNeedsSetup2FA] = useState(false);
-  const [pendingUserId, setPendingUserId] = useState<number | null>(null);
+  const [needsSetup2FA, setNeedsSetup2FA] = useState(false)
+  const [pendingUserId, setPendingUserId] = useState<number | null>(null)
 
-  const code2FAInputRef = useRef<HTMLInputElement>(null);
+  const code2FAInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (requires2FA) {
-      code2FAInputRef.current?.focus();
+      code2FAInputRef.current?.focus()
     }
-  }, [requires2FA]);
+  }, [requires2FA])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    const validation = loginSchema.safeParse({ email, password });
+    const validation = loginSchema.safeParse({ email, password })
     if (!validation.success) {
-      setError(validation.error.issues[0]?.message ?? 'Datos inválidos');
-      return;
+      setError(validation.error.issues[0]?.message ?? 'Datos inválidos')
+      return
     }
 
-    setIsLoading(true);
-    setError('');
+    setIsLoading(true)
+    setError('')
 
     try {
       const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al iniciar sesión');
+        throw new Error(data.message || 'Error al iniciar sesión')
       }
 
       if (data.needsSetup2FA) {
-        setPendingUserId(data.userId);
-        setNeedsSetup2FA(true);
-        return;
+        setPendingUserId(data.userId)
+        setNeedsSetup2FA(true)
+        return
       }
 
       if (data.requires2FA) {
-        setRequires2FA(true);
-        setTempToken(data.tempToken);
-        return;
+        setRequires2FA(true)
+        setTempToken(data.tempToken)
+        return
       }
 
-      login(data.data.token, data.data.user);
-      router.push('/sucursales');
+      login(data.data.token, data.data.user)
+      router.push('/sucursales')
     } catch (err: unknown) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : 'Error al conectar con el servidor';
-      setError(message);
+      const message = err instanceof Error ? err.message : 'Error al conectar con el servidor'
+      setError(message)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleVerify2FA = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     if (!code2FA || code2FA.length !== 6) {
-      setError('El código debe tener 6 dígitos');
-      return;
+      setError('El código debe tener 6 dígitos')
+      return
     }
 
-    setIsLoading(true);
-    setError('');
+    setIsLoading(true)
+    setError('')
 
     try {
       const response = await fetch(API_ENDPOINTS.AUTH.VERIFY_2FA, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tempToken, code: code2FA }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Código inválido');
+        throw new Error(data.message || 'Código inválido')
       }
 
-      login(data.data.token, data.data.user);
-      router.push('/sucursales');
+      login(data.data.token, data.data.user)
+      router.push('/sucursales')
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Error al verificar código';
-      setError(message);
+      const message = err instanceof Error ? err.message : 'Error al verificar código'
+      setError(message)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handle2FASetupSuccess = (receivedTempToken: string) => {
-    setNeedsSetup2FA(false);
-    setRequires2FA(true);
-    setTempToken(receivedTempToken);
-    setCode2FA('');
-    setError('');
-    setPendingUserId(null);
-  };
+    setNeedsSetup2FA(false)
+    setRequires2FA(true)
+    setTempToken(receivedTempToken)
+    setCode2FA('')
+    setError('')
+    setPendingUserId(null)
+  }
 
   const handleClose2FASetup = () => {
-    setNeedsSetup2FA(false);
-    setPendingUserId(null);
-    setError('Debes configurar 2FA para poder acceder al sistema');
-  };
+    setNeedsSetup2FA(false)
+    setPendingUserId(null)
+    setError('Debes configurar 2FA para poder acceder al sistema')
+  }
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -164,14 +147,7 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col justify-center items-center w-full px-16">
           <div className="max-w-lg text-center">
             {/* Logo SVG */}
-            <Image
-              src="/HEROICA.svg"
-              alt="Heroica"
-              width={200}
-              height={80}
-              className="h-20 mb-6 mx-auto"
-              priority
-            />
+            <Image src="/HEROICA.svg" alt="Heroica" width={200} height={80} className="h-20 mb-6 mx-auto" priority />
 
             {/* Separador */}
             <div className="h-[1px] w-32 bg-gradient-to-r from-[#002868]/20 via-[#002868]/50 to-[#002868]/20 mb-10 mx-auto"></div>
@@ -185,9 +161,7 @@ export default function LoginPage() {
               {/* La frase */}
               <p className="text-3xl font-light leading-tight max-w-sm mx-auto text-[#002868] border-l-2 border-[#002868]/20 pl-6 italic">
                 "Claridad en las cuentas, <br />
-                <span className="opacity-60">
-                  integridad en los resultados."
-                </span>
+                <span className="opacity-60">integridad en los resultados."</span>
               </p>
             </div>
           </div>
@@ -203,13 +177,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md relative z-10">
           {/* Logo móvil */}
           <div className="lg:hidden text-center mb-8">
-            <Image
-              src="/HEROICA.svg"
-              alt="Heroica"
-              width={120}
-              height={48}
-              className="h-12 mx-auto mb-2"
-            />
+            <Image src="/HEROICA.svg" alt="Heroica" width={120} height={48} className="h-12 mx-auto mb-2" />
             <p className="text-[#666666]">Sistema de Contabilidad</p>
           </div>
 
@@ -243,18 +211,13 @@ export default function LoginPage() {
                             clipRule="evenodd"
                           />
                         </svg>
-                        <p className="text-sm text-red-700 font-medium">
-                          {error}
-                        </p>
+                        <p className="text-sm text-red-700 font-medium">{error}</p>
                       </div>
                     </div>
                   )}
 
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="email"
-                      className="text-[#002868] font-semibold text-sm"
-                    >
+                    <Label htmlFor="email" className="text-[#002868] font-semibold text-sm">
                       Correo Electrónico
                     </Label>
                     <Input
@@ -262,17 +225,14 @@ export default function LoginPage() {
                       type="email"
                       placeholder="tu@email.com"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={e => setEmail(e.target.value)}
                       required
                       className="h-12 border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868] transition-all text-base"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="password"
-                      className="text-[#002868] font-semibold text-sm"
-                    >
+                    <Label htmlFor="password" className="text-[#002868] font-semibold text-sm">
                       Contraseña
                     </Label>
                     <div className="relative">
@@ -281,7 +241,7 @@ export default function LoginPage() {
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={e => setPassword(e.target.value)}
                         required
                         className="h-12 border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868] transition-all text-base pr-12"
                       />
@@ -289,17 +249,9 @@ export default function LoginPage() {
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666666] hover:text-[#002868] transition-colors cursor-pointer"
-                        aria-label={
-                          showPassword
-                            ? 'Ocultar contraseña'
-                            : 'Mostrar contraseña'
-                        }
+                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                       >
-                        {showPassword ? (
-                          <EyeOff className="w-5 h-5" />
-                        ) : (
-                          <Eye className="w-5 h-5" />
-                        )}
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
                   </div>
@@ -350,18 +302,13 @@ export default function LoginPage() {
                             clipRule="evenodd"
                           />
                         </svg>
-                        <p className="text-sm text-red-700 font-medium">
-                          {error}
-                        </p>
+                        <p className="text-sm text-red-700 font-medium">{error}</p>
                       </div>
                     </div>
                   )}
 
                   <div className="space-y-2">
-                    <Label
-                      htmlFor="code2fa"
-                      className="text-[#002868] font-semibold text-sm"
-                    >
+                    <Label htmlFor="code2fa" className="text-[#002868] font-semibold text-sm">
                       Código de Verificación
                     </Label>
                     <Input
@@ -370,11 +317,7 @@ export default function LoginPage() {
                       type="text"
                       placeholder="000000"
                       value={code2FA}
-                      onChange={(e) =>
-                        setCode2FA(
-                          e.target.value.replace(/\D/g, '').slice(0, 6),
-                        )
-                      }
+                      onChange={e => setCode2FA(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       required
                       maxLength={6}
                       className="h-12 border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868] transition-all text-base text-center text-2xl tracking-widest font-mono"
@@ -404,10 +347,10 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      setRequires2FA(false);
-                      setTempToken('');
-                      setCode2FA('');
-                      setError('');
+                      setRequires2FA(false)
+                      setTempToken('')
+                      setCode2FA('')
+                      setError('')
                     }}
                     className="text-sm text-[#666666] hover:text-[#002868] transition-colors"
                   >
@@ -429,12 +372,9 @@ export default function LoginPage() {
       <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>
         <DialogContent className="sm:max-w-md bg-white">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-[#002868]">
-              Contactar Administrador
-            </DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-[#002868]">Contactar Administrador</DialogTitle>
             <DialogDescription className="text-[#666666]">
-              Ponte en contacto con el equipo de soporte para solicitar acceso
-              al sistema
+              Ponte en contacto con el equipo de soporte para solicitar acceso al sistema
             </DialogDescription>
           </DialogHeader>
 
@@ -443,12 +383,7 @@ export default function LoginPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#002868]/10 flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-5 h-5 text-[#002868]"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
+                  <svg className="w-5 h-5 text-[#002868]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -458,12 +393,8 @@ export default function LoginPage() {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs font-semibold text-[#666666] uppercase tracking-wide">
-                    Correo Electrónico
-                  </p>
-                  <p className="text-sm font-medium text-[#1A1A1A]">
-                    lumarsoftarg@gmail.com
-                  </p>
+                  <p className="text-xs font-semibold text-[#666666] uppercase tracking-wide">Correo Electrónico</p>
+                  <p className="text-sm font-medium text-[#1A1A1A]">lumarsoftarg@gmail.com</p>
                 </div>
               </div>
               <a
@@ -483,21 +414,13 @@ export default function LoginPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-5 h-5 text-green-600"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs font-semibold text-[#666666] uppercase tracking-wide">
-                    WhatsApp
-                  </p>
-                  <p className="text-sm font-medium text-[#1A1A1A]">
-                    +54 341 277-6893
-                  </p>
+                  <p className="text-xs font-semibold text-[#666666] uppercase tracking-wide">WhatsApp</p>
+                  <p className="text-sm font-medium text-[#1A1A1A]">+54 341 277-6893</p>
                 </div>
               </div>
               <a
@@ -530,12 +453,8 @@ export default function LoginPage() {
                     />
                   </svg>
                   <div>
-                    <p className="font-semibold text-[#002868]">
-                      Horario de atención
-                    </p>
-                    <p className="text-[#666666]">
-                      Lunes a Viernes: 9:00 - 18:00 hs
-                    </p>
+                    <p className="font-semibold text-[#002868]">Horario de atención</p>
+                    <p className="text-[#666666]">Lunes a Viernes: 9:00 - 18:00 hs</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
@@ -554,9 +473,7 @@ export default function LoginPage() {
                   </svg>
                   <div>
                     <p className="font-semibold text-[#002868]">Departamento</p>
-                    <p className="text-[#666666]">
-                      Soporte Técnico y Administración
-                    </p>
+                    <p className="text-[#666666]">Soporte Técnico y Administración</p>
                   </div>
                 </div>
               </div>
@@ -574,5 +491,5 @@ export default function LoginPage() {
         />
       )}
     </div>
-  );
+  )
 }

@@ -35,9 +35,7 @@ bun add -d @tailwindcss/typography
 **Usage:**
 
 ```html
-<article class="prose lg:prose-xl dark:prose-invert">
-  {{ markdown_content }}
-</article>
+<article class="prose lg:prose-xl dark:prose-invert">{{ markdown_content }}</article>
 ```
 
 **Available classes:**
@@ -89,7 +87,7 @@ These errors happen when using v3 syntax in v4 projects:
 // tailwind.config.js
 module.exports = {
   plugins: [require('@tailwindcss/typography')],
-};
+}
 ```
 
 **Why it fails**: Tailwind v4 doesn't use `tailwind.config.js` for plugins.

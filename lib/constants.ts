@@ -2,7 +2,7 @@ export const ROLES = {
   ADMIN: { id: 2, nombre: 'admin' },
   SUPERADMIN: { id: 3, nombre: 'superadmin' },
   DIRECTIVO: { id: 4, nombre: 'directivo' },
-} as const;
+} as const
 
 export const PERMISOS = {
   VER_MOVIMIENTOS: 'ver_movimientos',
@@ -19,4 +19,4 @@ export const PERMISOS = {
   GESTIONAR_USUARIOS: 'gestionar_usuarios',
   GESTIONAR_ROLES: 'gestionar_roles',
   VER_CONFIGURACION: 'ver_configuracion',
-} as const;
+} as const

@@ -12,26 +12,26 @@ Trap keyboard focus inside a modal dialog so Tab/Shift+Tab cycle through its foc
 function openModal(modal) {
   const focusableElements = modal.querySelectorAll(
     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-  );
-  const firstElement = focusableElements[0];
-  const lastElement = focusableElements[focusableElements.length - 1];
+  )
+  const firstElement = focusableElements[0]
+  const lastElement = focusableElements[focusableElements.length - 1]
 
-  modal.addEventListener('keydown', (e) => {
+  modal.addEventListener('keydown', e => {
     if (e.key === 'Tab') {
       if (e.shiftKey && document.activeElement === firstElement) {
-        e.preventDefault();
-        lastElement.focus();
+        e.preventDefault()
+        lastElement.focus()
       } else if (!e.shiftKey && document.activeElement === lastElement) {
-        e.preventDefault();
-        firstElement.focus();
+        e.preventDefault()
+        firstElement.focus()
       }
     }
     if (e.key === 'Escape') {
-      closeModal();
+      closeModal()
     }
-  });
+  })
 
-  firstElement.focus();
+  firstElement.focus()
 }
 ```
 
@@ -79,31 +79,24 @@ Announce errors to screen readers and focus the first invalid field on submit.
 <form novalidate>
   <div class="field" aria-live="polite">
     <label for="email">Email</label>
-    <input
-      type="email"
-      id="email"
-      aria-invalid="true"
-      aria-describedby="email-error"
-    />
-    <p id="email-error" class="error" role="alert">
-      Please enter a valid email address (e.g., name@example.com)
-    </p>
+    <input type="email" id="email" aria-invalid="true" aria-describedby="email-error" />
+    <p id="email-error" class="error" role="alert">Please enter a valid email address (e.g., name@example.com)</p>
   </div>
 </form>
 ```
 
 ```javascript
-form.addEventListener('submit', (e) => {
-  const firstError = form.querySelector('[aria-invalid="true"]');
+form.addEventListener('submit', e => {
+  const firstError = form.querySelector('[aria-invalid="true"]')
   if (firstError) {
-    e.preventDefault();
-    firstError.focus();
+    e.preventDefault()
+    firstError.focus()
 
-    const errorSummary = document.getElementById('error-summary');
-    errorSummary.textContent = `${errors.length} errors found. Please fix them and try again.`;
-    errorSummary.focus();
+    const errorSummary = document.getElementById('error-summary')
+    errorSummary.textContent = `${errors.length} errors found. Please fix them and try again.`
+    errorSummary.focus()
   }
-});
+})
 ```
 
 ---
@@ -170,18 +163,8 @@ Tabs require `role="tablist"`, `role="tab"`, and `role="tabpanel"` with proper `
 
 ```html
 <div role="tablist" aria-label="Product information">
-  <button role="tab" id="tab-1" aria-selected="true" aria-controls="panel-1">
-    Description
-  </button>
-  <button
-    role="tab"
-    id="tab-2"
-    aria-selected="false"
-    aria-controls="panel-2"
-    tabindex="-1"
-  >
-    Reviews
-  </button>
+  <button role="tab" id="tab-1" aria-selected="true" aria-controls="panel-1">Description</button>
+  <button role="tab" id="tab-2" aria-selected="false" aria-controls="panel-2" tabindex="-1">Reviews</button>
 </div>
 <div role="tabpanel" id="panel-1" aria-labelledby="tab-1">
   <!-- Panel content -->
@@ -213,11 +196,11 @@ Use `aria-live` to announce dynamic content changes to screen readers without mo
 
 ```javascript
 function showNotification(message, type = 'polite') {
-  const container = document.getElementById(`${type}-announcer`);
-  container.textContent = '';
+  const container = document.getElementById(`${type}-announcer`)
+  container.textContent = ''
   requestAnimationFrame(() => {
-    container.textContent = message;
-  });
+    container.textContent = message
+  })
 }
 ```
 

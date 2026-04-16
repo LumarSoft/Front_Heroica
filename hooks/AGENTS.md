@@ -19,14 +19,14 @@ Custom React hooks that encapsulate stateful logic, data fetching, and side effe
 - Every fetch call to a protected endpoint MUST include the Authorization header:
 
   ```ts
-  const { token } = useAuthStore();
+  const { token } = useAuthStore()
 
   fetch(endpoint, {
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-  });
+  })
   ```
 
 - Never fetch the same resource twice during initialization. Audit `useEffect` chains.

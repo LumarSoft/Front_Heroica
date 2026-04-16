@@ -1,31 +1,21 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
-import {
-  Settings,
-  FolderOpen,
-  Folder,
-  Building2,
-  CreditCard,
-  ArrowLeft,
-  Users,
-  Shield,
-  KeyRound,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { PageLoadingSpinner } from '@/components/ui/loading-spinner';
-import { CategoriasSection } from '@/components/configuracion/CategoriasSection';
-import { SubcategoriasSection } from '@/components/configuracion/SubcategoriasSection';
-import { BancosSection } from '@/components/configuracion/BancosSection';
-import { MediosPagoSection } from '@/components/configuracion/MediosPagoSection';
-import { UsuariosSection } from '@/components/configuracion/UsuariosSection';
-import { RolesSection } from '@/components/configuracion/RolesSection';
-import { CambiarPasswordSection } from '@/components/configuracion/CambiarPasswordSection';
-import { DescripcionesSection } from '@/components/configuracion/DescripcionesSection';
-import { ProveedoresSection } from '@/components/configuracion/ProveedoresSection';
-import { Truck, FileText } from 'lucide-react';
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/store/authStore'
+import { Settings, FolderOpen, Folder, Building2, CreditCard, ArrowLeft, Users, Shield, KeyRound } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
+import { CategoriasSection } from '@/components/configuracion/CategoriasSection'
+import { SubcategoriasSection } from '@/components/configuracion/SubcategoriasSection'
+import { BancosSection } from '@/components/configuracion/BancosSection'
+import { MediosPagoSection } from '@/components/configuracion/MediosPagoSection'
+import { UsuariosSection } from '@/components/configuracion/UsuariosSection'
+import { RolesSection } from '@/components/configuracion/RolesSection'
+import { CambiarPasswordSection } from '@/components/configuracion/CambiarPasswordSection'
+import { DescripcionesSection } from '@/components/configuracion/DescripcionesSection'
+import { ProveedoresSection } from '@/components/configuracion/ProveedoresSection'
+import { Truck, FileText } from 'lucide-react'
 
 type ActiveTab =
   | 'categorias'
@@ -36,52 +26,48 @@ type ActiveTab =
   | 'medios'
   | 'usuarios'
   | 'roles'
-  | 'mi-cuenta';
+  | 'mi-cuenta'
 
 export default function ConfiguracionPage() {
-  const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
-  const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin());
-  const canVerConfiguracion = useAuthStore((state) =>
-    state.canVerConfiguracion(),
-  );
-  const canGestionarUsuarios = useAuthStore((state) =>
-    state.canGestionarUsuarios(),
-  );
-  const canGestionarRoles = useAuthStore((state) => state.canGestionarRoles());
+  const router = useRouter()
+  const { isAuthenticated } = useAuthStore()
+  const isSuperAdmin = useAuthStore(state => state.isSuperAdmin())
+  const canVerConfiguracion = useAuthStore(state => state.canVerConfiguracion())
+  const canGestionarUsuarios = useAuthStore(state => state.canGestionarUsuarios())
+  const canGestionarRoles = useAuthStore(state => state.canGestionarRoles())
 
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('mi-cuenta');
+  const [isHydrated, setIsHydrated] = useState(false)
+  const [activeTab, setActiveTab] = useState<ActiveTab>('mi-cuenta')
 
   useEffect(() => {
-    setIsHydrated(true);
-  }, []);
+    setIsHydrated(true)
+  }, [])
 
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated) return
     if (!isAuthenticated) {
-      router.push('/');
-      return;
+      router.push('/')
+      return
     }
     if (!canVerConfiguracion) {
-      router.push('/sucursales');
-      return;
+      router.push('/sucursales')
+      return
     }
     if (isSuperAdmin) {
-      setActiveTab('categorias');
+      setActiveTab('categorias')
     } else {
-      setActiveTab('mi-cuenta');
+      setActiveTab('mi-cuenta')
     }
-  }, [isAuthenticated, isHydrated, router, canVerConfiguracion, isSuperAdmin]);
+  }, [isAuthenticated, isHydrated, router, canVerConfiguracion, isSuperAdmin])
 
-  if (!isHydrated) return <PageLoadingSpinner />;
+  if (!isHydrated) return <PageLoadingSpinner />
 
   // Tabs disponibles según permisos
   const ALL_TABS: {
-    id: ActiveTab;
-    label: string;
-    Icon: React.ElementType;
-    visible: boolean;
+    id: ActiveTab
+    label: string
+    Icon: React.ElementType
+    visible: boolean
   }[] = [
     {
       id: 'categorias',
@@ -127,9 +113,9 @@ export default function ConfiguracionPage() {
       visible: canGestionarRoles,
     },
     { id: 'mi-cuenta', label: 'Mi Cuenta', Icon: KeyRound, visible: true },
-  ];
+  ]
 
-  const TABS = ALL_TABS.filter((t) => t.visible);
+  const TABS = ALL_TABS.filter(t => t.visible)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -191,5 +177,5 @@ export default function ConfiguracionPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

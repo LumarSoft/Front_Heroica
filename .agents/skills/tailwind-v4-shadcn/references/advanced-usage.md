@@ -74,19 +74,13 @@ For complete v3 → v4 migration steps, see `references/migration-guide.md`.
 **Import:**
 
 ```tsx
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 ```
 
 **Usage:**
 
 ```tsx
-<div
-  className={cn(
-    'base-class',
-    isActive && 'active-class',
-    hasError && 'error-class',
-  )}
-/>
+<div className={cn('base-class', isActive && 'active-class', hasError && 'error-class')} />
 ```
 
 **What `cn()` does**: Merges Tailwind classes intelligently (later classes override earlier ones).
@@ -149,28 +143,25 @@ Usage: `className="rounded-[var(--radius-lg)]"`
 Use `cva()` from `class-variance-authority` for complex variants:
 
 ```tsx
-import { cva } from 'class-variance-authority';
+import { cva } from 'class-variance-authority'
 
-const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded-md',
-  {
-    variants: {
-      variant: {
-        default: 'bg-primary text-primary-foreground',
-        destructive: 'bg-destructive text-destructive-foreground',
-      },
-      size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-9 px-3',
-        lg: 'h-11 px-8',
-      },
+const buttonVariants = cva('inline-flex items-center justify-center rounded-md', {
+  variants: {
+    variant: {
+      default: 'bg-primary text-primary-foreground',
+      destructive: 'bg-destructive text-destructive-foreground',
     },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
+    size: {
+      default: 'h-10 px-4 py-2',
+      sm: 'h-9 px-3',
+      lg: 'h-11 px-8',
     },
   },
-);
+  defaultVariants: {
+    variant: 'default',
+    size: 'default',
+  },
+})
 ```
 
 ---

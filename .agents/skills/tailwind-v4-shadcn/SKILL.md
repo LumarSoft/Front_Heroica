@@ -106,10 +106,10 @@ pnpm dlx shadcn@latest init
 
 ```typescript
 // vite.config.ts
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
-import path from 'path';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+import path from 'path'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
@@ -118,7 +118,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-});
+})
 ```
 
 ### 3. Update components.json
@@ -207,9 +207,7 @@ This pattern is **mandatory** - skipping steps will break your theme.
 ### Step 4: Result - Automatic Dark Mode
 
 ```tsx
-<div className="bg-background text-foreground">
-  {/* No dark: variants needed - theme switches automatically */}
-</div>
+<div className="bg-background text-foreground">{/* No dark: variants needed - theme switches automatically */}</div>
 ```
 
 ---
@@ -326,7 +324,7 @@ See `reference/dark-mode.md` for ModeToggle component code.
          colors: { primary: 'hsl(var(--primary))' },
        },
      },
-   };
+   }
    ```
 
 5. **Use `@apply` directive (deprecated in v4)**

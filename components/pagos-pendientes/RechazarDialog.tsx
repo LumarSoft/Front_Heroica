@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { XCircle } from 'lucide-react';
+import { XCircle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -8,18 +8,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 
 interface RechazarDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  motivoRechazo: string;
-  onMotivoChange: (motivo: string) => void;
-  onConfirm: () => void;
-  isSaving: boolean;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  motivoRechazo: string
+  onMotivoChange: (motivo: string) => void
+  onConfirm: () => void
+  isSaving: boolean
 }
 
 export function RechazarDialog({
@@ -46,23 +46,18 @@ export function RechazarDialog({
         </DialogHeader>
         <div className="p-6 space-y-5">
           <div className="space-y-2">
-            <Label
-              htmlFor="motivoRechazo"
-              className="text-xs font-bold text-[#5A6070] uppercase tracking-wider"
-            >
+            <Label htmlFor="motivoRechazo" className="text-xs font-bold text-[#5A6070] uppercase tracking-wider">
               Justificación del rechazo
             </Label>
             <Textarea
               id="motivoRechazo"
               value={motivoRechazo}
-              onChange={(e) => onMotivoChange(e.target.value)}
+              onChange={e => onMotivoChange(e.target.value)}
               placeholder="Ej: Monto incorrecto o falta comprobante..."
               rows={3}
               className="rounded-xl border-[#E0E0E0] text-sm focus:border-rose-500 focus:ring-rose-500/10 resize-none"
             />
-            <p className="text-[10px] text-[#8A8F9C]">
-              Este mensaje será visible para el empleado en su historial.
-            </p>
+            <p className="text-[10px] text-[#8A8F9C]">Este mensaje será visible para el empleado en su historial.</p>
           </div>
         </div>
         <DialogFooter className="p-6 bg-[#F8F9FA]/50 border-t border-[#F0F0F0] sm:justify-end gap-3">
@@ -84,5 +79,5 @@ export function RechazarDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

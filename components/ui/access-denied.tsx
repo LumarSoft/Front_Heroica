@@ -1,17 +1,17 @@
-'use client';
+'use client'
 
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 
 interface AccessDeniedProps {
   /** Nombre del recurso al que se deniega acceso, ej: "caja de efectivo" */
-  resource: string;
-  backUrl: string;
+  resource: string
+  backUrl: string
 }
 
 /** Bloque de "Acceso Denegado" reutilizable para empleados sin permisos */
 export function AccessDenied({ resource, backUrl }: AccessDeniedProps) {
-  const router = useRouter();
+  const router = useRouter()
   return (
     <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-[#E0E0E0] shadow-sm flex-grow">
       <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-6">
@@ -30,19 +30,13 @@ export function AccessDenied({ resource, backUrl }: AccessDeniedProps) {
           />
         </svg>
       </div>
-      <h2 className="text-2xl font-bold text-[#002868] mb-2">
-        Acceso Denegado
-      </h2>
+      <h2 className="text-2xl font-bold text-[#002868] mb-2">Acceso Denegado</h2>
       <p className="text-[#666666] text-center max-w-md">
-        No tienes permisos para gestionar {resource}. Si crees que esto es un
-        error, contacta con el administrador.
+        No tienes permisos para gestionar {resource}. Si crees que esto es un error, contacta con el administrador.
       </p>
-      <Button
-        onClick={() => router.push(backUrl)}
-        className="mt-8 bg-[#002868] hover:bg-[#003d8f] text-white"
-      >
+      <Button onClick={() => router.push(backUrl)} className="mt-8 bg-[#002868] hover:bg-[#003d8f] text-white">
         Volver al inicio
       </Button>
     </div>
-  );
+  )
 }

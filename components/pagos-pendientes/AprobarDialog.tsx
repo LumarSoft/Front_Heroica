@@ -1,40 +1,26 @@
-'use client';
+'use client'
 
-import { CheckCircle2, Banknote, Building2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { formatMonto } from '@/lib/formatters';
-import type { PagoPendiente } from '@/lib/types';
+import { CheckCircle2, Banknote, Building2 } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { formatMonto } from '@/lib/formatters'
+import type { PagoPendiente } from '@/lib/types'
 
 interface AprobarDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  selectedPago: PagoPendiente | null;
-  onSelectCaja: (caja: 'efectivo' | 'banco') => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  selectedPago: PagoPendiente | null
+  onSelectCaja: (caja: 'efectivo' | 'banco') => void
 }
 
-export function AprobarDialog({
-  open,
-  onOpenChange,
-  selectedPago,
-  onSelectCaja,
-}: AprobarDialogProps) {
+export function AprobarDialog({ open, onOpenChange, selectedPago, onSelectCaja }: AprobarDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[440px] bg-white border-[#E0E0E0] shadow-2xl rounded-2xl p-0 overflow-hidden">
         <DialogHeader className="p-6 border-b border-[#F0F0F0] bg-[#F8F9FA]/50">
           <DialogTitle className="text-xl font-bold text-[#002868] flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-              <CheckCircle2
-                className="w-5 h-5 text-emerald-600"
-                strokeWidth={2}
-              />
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" strokeWidth={2} />
             </div>
             ¿Dónde registrar el pago?
           </DialogTitle>
@@ -42,10 +28,7 @@ export function AprobarDialog({
             Seleccioná la caja en la que se registrará el egreso.
             {selectedPago && (
               <span className="block mt-1 font-semibold text-[#1A1A1A]">
-                {selectedPago.concepto} ·{' '}
-                {formatMonto(
-                  Math.abs(parseFloat(selectedPago.monto.toString())),
-                )}
+                {selectedPago.concepto} · {formatMonto(Math.abs(parseFloat(selectedPago.monto.toString())))}
               </span>
             )}
           </DialogDescription>
@@ -61,9 +44,7 @@ export function AprobarDialog({
             </div>
             <div className="text-center">
               <p className="font-bold text-[#002868] text-sm">Caja Efectivo</p>
-              <p className="text-xs text-[#666666] mt-0.5">
-                Dinero en sucursal
-              </p>
+              <p className="text-xs text-[#666666] mt-0.5">Dinero en sucursal</p>
             </div>
           </button>
 
@@ -76,9 +57,7 @@ export function AprobarDialog({
             </div>
             <div className="text-center">
               <p className="font-bold text-[#002868] text-sm">Caja Banco</p>
-              <p className="text-xs text-[#666666] mt-0.5">
-                Transferencia / débito
-              </p>
+              <p className="text-xs text-[#666666] mt-0.5">Transferencia / débito</p>
             </div>
           </button>
         </div>
@@ -94,5 +73,5 @@ export function AprobarDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

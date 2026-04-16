@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -8,32 +8,32 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles';
-import { API_ENDPOINTS } from '@/lib/config';
-import { apiFetch } from '@/lib/api';
-import type { SelectOption } from '@/lib/types';
-import { ArrowRightLeft } from 'lucide-react';
-import { toast } from 'sonner';
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles'
+import { API_ENDPOINTS } from '@/lib/config'
+import { apiFetch } from '@/lib/api'
+import type { SelectOption } from '@/lib/types'
+import { ArrowRightLeft } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface Sucursal {
-  id: number;
-  nombre: string;
-  activo: boolean;
+  id: number
+  nombre: string
+  activo: boolean
 }
 
 interface BulkMoverDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  selectedIds: number[];
-  currentSucursalId: number;
-  cajaTipo: 'efectivo' | 'banco';
-  onSuccess: () => void;
-  bancosExternos?: SelectOption[];
-  mediosPagoExternos?: SelectOption[];
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  selectedIds: number[]
+  currentSucursalId: number
+  cajaTipo: 'efectivo' | 'banco'
+  onSuccess: () => void
+  bancosExternos?: SelectOption[]
+  mediosPagoExternos?: SelectOption[]
 }
 
 export function BulkMoverDialog({
@@ -46,9 +46,9 @@ export function BulkMoverDialog({
   bancosExternos = [],
   mediosPagoExternos = [],
 }: BulkMoverDialogProps) {
-  const [isSaving, setIsSaving] = useState(false);
-  const [sucursales, setSucursales] = useState<Sucursal[]>([]);
-  const [isLoadingSucursales, setIsLoadingSucursales] = useState(false);
+  const [isSaving, setIsSaving] = useState(false)
+  const [sucursales, setSucursales] = useState<Sucursal[]>([])
+  const [isLoadingSucursales, setIsLoadingSucursales] = useState(false)
   const [formData, setFormData] = useState({
     destino_sucursal_id: String(currentSucursalId),
     destino_tipo_movimiento: cajaTipo,
@@ -56,18 +56,17 @@ export function BulkMoverDialog({
     banco_id: '',
     medio_pago_id: '',
     numero_cheque: '',
-  });
+  })
 
   useEffect(() => {
     if (open) {
-      setIsLoadingSucursales(true);
+      setIsLoadingSucursales(true)
       apiFetch(API_ENDPOINTS.SUCURSALES.GET_ALL)
-        .then((r) => r.json())
-        .then((d) => {
-          if (d.success)
-            setSucursales(d.data.filter((s: Sucursal) => s.activo));
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) setSucursales(d.data.filter((s: Sucursal) => s.activo))
         })
-        .finally(() => setIsLoadingSucursales(false));
+        .finally(() => setIsLoadingSucursales(false))
 
       setFormData({
         destino_sucursal_id: String(currentSucursalId),
@@ -76,77 +75,68 @@ export function BulkMoverDialog({
         banco_id: '',
         medio_pago_id: '',
         numero_cheque: '',
-      });
+      })
     }
-  }, [open, currentSucursalId, cajaTipo]);
+  }, [open, currentSucursalId, cajaTipo])
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>,
-  ) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
 
-  const isDestinoBanco = formData.destino_tipo_movimiento === 'banco';
+  const isDestinoBanco = formData.destino_tipo_movimiento === 'banco'
 
-  const selectedMedio = mediosPagoExternos.find(
-    (m) => m.id.toString() === formData.medio_pago_id,
-  );
-  const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre);
+  const selectedMedio = mediosPagoExternos.find(m => m.id.toString() === formData.medio_pago_id)
+  const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre)
 
   const handleSave = async () => {
     if (!formData.destino_sucursal_id) {
-      toast.error('Seleccioná una sucursal destino.');
-      return;
+      toast.error('Seleccioná una sucursal destino.')
+      return
     }
     if (isDestinoBanco && !formData.banco_id) {
-      toast.error('Seleccioná un banco destino.');
-      return;
+      toast.error('Seleccioná un banco destino.')
+      return
     }
     if (isDestinoBanco && !formData.medio_pago_id) {
-      toast.error('Seleccioná un medio de pago.');
-      return;
+      toast.error('Seleccioná un medio de pago.')
+      return
     }
 
-    const endpoint =
-      cajaTipo === 'banco'
-        ? API_ENDPOINTS.CAJA_BANCO.BULK_MOVER
-        : API_ENDPOINTS.MOVIMIENTOS.BULK_MOVER;
+    const endpoint = cajaTipo === 'banco' ? API_ENDPOINTS.CAJA_BANCO.BULK_MOVER : API_ENDPOINTS.MOVIMIENTOS.BULK_MOVER
 
     const body: Record<string, unknown> = {
       ids: selectedIds,
       destino_sucursal_id: Number(formData.destino_sucursal_id),
       destino_tipo_movimiento: formData.destino_tipo_movimiento,
       destino_saldo: formData.destino_saldo,
-    };
-
-    if (isDestinoBanco) {
-      body.banco_id = formData.banco_id ? Number(formData.banco_id) : null;
-      body.medio_pago_id = formData.medio_pago_id
-        ? Number(formData.medio_pago_id)
-        : null;
-      body.numero_cheque = formData.numero_cheque || null;
     }
 
-    setIsSaving(true);
+    if (isDestinoBanco) {
+      body.banco_id = formData.banco_id ? Number(formData.banco_id) : null
+      body.medio_pago_id = formData.medio_pago_id ? Number(formData.medio_pago_id) : null
+      body.numero_cheque = formData.numero_cheque || null
+    }
+
+    setIsSaving(true)
     try {
       const res = await apiFetch(endpoint, {
         method: 'PUT',
         body: JSON.stringify(body),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (data.success) {
-        toast.success(data.message);
-        onSuccess();
-        onOpenChange(false);
+        toast.success(data.message)
+        onSuccess()
+        onOpenChange(false)
       } else {
-        toast.error(data.message || 'Error al mover.');
+        toast.error(data.message || 'Error al mover.')
       }
     } catch {
-      toast.error('Error de red al mover.');
+      toast.error('Error de red al mover.')
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -177,7 +167,7 @@ export function BulkMoverDialog({
               disabled={isLoadingSucursales}
             >
               <option value="">Seleccione sucursal</option>
-              {sucursales.map((s) => (
+              {sucursales.map(s => (
                 <option key={s.id} value={s.id}>
                   {s.nombre}
                 </option>
@@ -214,20 +204,13 @@ export function BulkMoverDialog({
 
           {isDestinoBanco && (
             <div className="space-y-4 mt-4 p-4 bg-[#F8F9FA] rounded-md border border-[#E0E0E0]">
-              <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest">
-                Datos Bancarios
-              </h4>
+              <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest">Datos Bancarios</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className={labelClasses}>Banco</Label>
-                  <select
-                    name="banco_id"
-                    value={formData.banco_id}
-                    onChange={handleChange}
-                    className={selectClasses}
-                  >
+                  <select name="banco_id" value={formData.banco_id} onChange={handleChange} className={selectClasses}>
                     <option value="">Seleccione banco</option>
-                    {bancosExternos.map((b) => (
+                    {bancosExternos.map(b => (
                       <option key={b.id} value={b.id}>
                         {b.nombre}
                       </option>
@@ -243,7 +226,7 @@ export function BulkMoverDialog({
                     className={selectClasses}
                   >
                     <option value="">Seleccione medio</option>
-                    {mediosPagoExternos.map((m) => (
+                    {mediosPagoExternos.map(m => (
                       <option key={m.id} value={m.id}>
                         {m.nombre}
                       </option>
@@ -288,5 +271,5 @@ export function BulkMoverDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

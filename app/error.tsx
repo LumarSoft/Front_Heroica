@@ -1,11 +1,11 @@
-'use client';
+'use client'
 
-import { Button } from '@/components/ui/button';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { Button } from '@/components/ui/button'
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 
 interface ErrorPageProps {
-  error: Error & { digest?: string };
-  reset: () => void;
+  error: Error & { digest?: string }
+  reset: () => void
 }
 
 export default function GlobalError({ error, reset }: ErrorPageProps) {
@@ -21,14 +21,9 @@ export default function GlobalError({ error, reset }: ErrorPageProps) {
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-slate-800">Algo salió mal</h1>
           <p className="text-slate-500 text-sm">
-            Ocurrió un error inesperado. Por favor, intentá nuevamente o volvé
-            al inicio.
+            Ocurrió un error inesperado. Por favor, intentá nuevamente o volvé al inicio.
           </p>
-          {error.digest && (
-            <p className="text-xs text-slate-400 font-mono mt-2">
-              Ref: {error.digest}
-            </p>
-          )}
+          {error.digest && <p className="text-xs text-slate-400 font-mono mt-2">Ref: {error.digest}</p>}
         </div>
 
         <div className="flex gap-3 justify-center">
@@ -40,15 +35,12 @@ export default function GlobalError({ error, reset }: ErrorPageProps) {
             <Home className="w-4 h-4 mr-2" />
             Ir al inicio
           </Button>
-          <Button
-            onClick={reset}
-            className="bg-[#002868] hover:bg-[#003d8f] text-white"
-          >
+          <Button onClick={reset} className="bg-[#002868] hover:bg-[#003d8f] text-white">
             <RefreshCw className="w-4 h-4 mr-2" />
             Reintentar
           </Button>
         </div>
       </div>
     </div>
-  );
+  )
 }

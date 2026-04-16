@@ -1,12 +1,12 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { API_ENDPOINTS } from '@/lib/config';
-import { apiFetch } from '@/lib/api';
-import { subcategoriaSchema } from '@/lib/schemas';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
+import { API_ENDPOINTS } from '@/lib/config'
+import { apiFetch } from '@/lib/api'
+import { subcategoriaSchema } from '@/lib/schemas'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -14,38 +14,32 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { DeleteDialog } from '@/components/ui/delete-dialog';
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DeleteDialog } from '@/components/ui/delete-dialog'
 
 interface Categoria {
-  id: number;
-  nombre: string;
+  id: number
+  nombre: string
 }
 
 interface Subcategoria {
-  id: number;
-  categoria_id: number;
-  categoria_nombre: string;
-  nombre: string;
-  descripcion: string;
-  activo: boolean;
+  id: number
+  categoria_id: number
+  categoria_nombre: string
+  nombre: string
+  descripcion: string
+  activo: boolean
 }
 
 interface SubcategoriaForm {
-  id: number;
-  categoria_id: number;
-  nombre: string;
-  descripcion: string;
+  id: number
+  categoria_id: number
+  nombre: string
+  descripcion: string
 }
 
 const DEFAULT_FORM: SubcategoriaForm = {
@@ -53,45 +47,43 @@ const DEFAULT_FORM: SubcategoriaForm = {
   categoria_id: 0,
   nombre: '',
   descripcion: '',
-};
+}
 
 export function SubcategoriasSection() {
-  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([]);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [form, setForm] = useState<SubcategoriaForm>(DEFAULT_FORM);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
+  const [categorias, setCategorias] = useState<Categoria[]>([])
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [form, setForm] = useState<SubcategoriaForm>(DEFAULT_FORM)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<{
-    id: number;
-    nombre: string;
-  } | null>(null);
-  const [filtroCategoria, setFiltroCategoria] = useState<string>('todas');
+    id: number
+    nombre: string
+  } | null>(null)
+  const [filtroCategoria, setFiltroCategoria] = useState<string>('todas')
 
   useEffect(() => {
-    fetchSubcategorias();
-    fetchCategorias();
-  }, []);
+    fetchSubcategorias()
+    fetchCategorias()
+  }, [])
 
   const fetchCategorias = async () => {
-    const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL);
-    const data = await res.json();
-    if (data.success) setCategorias(data.data);
-  };
+    const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL)
+    const data = await res.json()
+    if (data.success) setCategorias(data.data)
+  }
 
   const fetchSubcategorias = async () => {
-    const res = await apiFetch(
-      API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_ALL,
-    );
-    const data = await res.json();
-    if (data.success) setSubcategorias(data.data);
-  };
+    const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_ALL)
+    const data = await res.json()
+    if (data.success) setSubcategorias(data.data)
+  }
 
   const handleOpenNew = () => {
-    setForm(DEFAULT_FORM);
-    setError('');
-    setIsDialogOpen(true);
-  };
+    setForm(DEFAULT_FORM)
+    setError('')
+    setIsDialogOpen(true)
+  }
 
   const handleOpenEdit = (sub: Subcategoria) => {
     setForm({
@@ -99,67 +91,64 @@ export function SubcategoriasSection() {
       categoria_id: sub.categoria_id,
       nombre: sub.nombre,
       descripcion: sub.descripcion || '',
-    });
-    setError('');
-    setIsDialogOpen(true);
-  };
+    })
+    setError('')
+    setIsDialogOpen(true)
+  }
 
   const handleSave = async () => {
-    const validation = subcategoriaSchema.safeParse(form);
+    const validation = subcategoriaSchema.safeParse(form)
     if (!validation.success) {
-      setError(validation.error.issues[0]?.message ?? 'Error de validación');
-      return;
+      setError(validation.error.issues[0]?.message ?? 'Error de validación')
+      return
     }
-    setIsSaving(true);
-    setError('');
+    setIsSaving(true)
+    setError('')
     try {
       const url = form.id
         ? API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.UPDATE(form.id)
-        : API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.CREATE;
+        : API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.CREATE
       const res = await apiFetch(url, {
         method: form.id ? 'PUT' : 'POST',
         body: JSON.stringify(form),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (data.success) {
-        toast.success(data.message);
-        setIsDialogOpen(false);
-        await fetchSubcategorias();
+        toast.success(data.message)
+        setIsDialogOpen(false)
+        await fetchSubcategorias()
       } else {
-        setError(data.message);
+        setError(data.message)
       }
     } catch {
-      setError('Error al guardar subcategoría');
+      setError('Error al guardar subcategoría')
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   const handleConfirmDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) return
     try {
-      const res = await apiFetch(
-        API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.DELETE(deleteTarget.id),
-        { method: 'DELETE' },
-      );
-      const data = await res.json();
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.DELETE(deleteTarget.id), {
+        method: 'DELETE',
+      })
+      const data = await res.json()
       if (data.success) {
-        toast.success(data.message);
-        await fetchSubcategorias();
+        toast.success(data.message)
+        await fetchSubcategorias()
       }
     } catch {
-      toast.error('Error al eliminar subcategoría');
+      toast.error('Error al eliminar subcategoría')
     } finally {
-      setDeleteTarget(null);
+      setDeleteTarget(null)
     }
-  };
+  }
 
   const subcategoriasFiltradas =
     filtroCategoria === 'todas'
       ? subcategorias
-      : subcategorias.filter(
-          (sub) => sub.categoria_id.toString() === filtroCategoria,
-        );
+      : subcategorias.filter(sub => sub.categoria_id.toString() === filtroCategoria)
 
   return (
     <>
@@ -173,7 +162,7 @@ export function SubcategoriasSection() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todas">Todas las categorías</SelectItem>
-                {categorias.map((cat) => (
+                {categorias.map(cat => (
                   <SelectItem key={cat.id} value={cat.id.toString()}>
                     {cat.nombre}
                   </SelectItem>
@@ -181,50 +170,31 @@ export function SubcategoriasSection() {
               </SelectContent>
             </Select>
           </div>
-          <Button
-            onClick={handleOpenNew}
-            className="bg-[#002868] hover:bg-[#003d8f] w-full sm:w-auto"
-          >
+          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f] w-full sm:w-auto">
             + Nueva Subcategoría
           </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {subcategoriasFiltradas.length === 0 ? (
-              <p className="text-center text-[#666666] py-8">
-                No hay subcategorías para mostrar
-              </p>
+              <p className="text-center text-[#666666] py-8">No hay subcategorías para mostrar</p>
             ) : (
-              subcategoriasFiltradas.map((sub) => (
+              subcategoriasFiltradas.map(sub => (
                 <div
                   key={sub.id}
                   className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
                 >
                   <div>
-                    <h3 className="font-semibold text-[#002868]">
-                      {sub.nombre}
-                    </h3>
-                    <p className="text-xs text-[#666666]">
-                      Categoría: {sub.categoria_nombre}
-                    </p>
-                    {sub.descripcion && (
-                      <p className="text-sm text-[#666666] mt-1">
-                        {sub.descripcion}
-                      </p>
-                    )}
+                    <h3 className="font-semibold text-[#002868]">{sub.nombre}</h3>
+                    <p className="text-xs text-[#666666]">Categoría: {sub.categoria_nombre}</p>
+                    {sub.descripcion && <p className="text-sm text-[#666666] mt-1">{sub.descripcion}</p>}
                   </div>
                   <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleOpenEdit(sub)}
-                      variant="outline"
-                      size="sm"
-                    >
+                    <Button onClick={() => handleOpenEdit(sub)} variant="outline" size="sm">
                       Editar
                     </Button>
                     <Button
-                      onClick={() =>
-                        setDeleteTarget({ id: sub.id, nombre: sub.nombre })
-                      }
+                      onClick={() => setDeleteTarget({ id: sub.id, nombre: sub.nombre })}
                       variant="outline"
                       size="sm"
                       className="text-rose-600 hover:bg-rose-50"
@@ -263,15 +233,13 @@ export function SubcategoriasSection() {
               </Label>
               <Select
                 value={form.categoria_id ? form.categoria_id.toString() : ''}
-                onValueChange={(value) =>
-                  setForm({ ...form, categoria_id: parseInt(value) })
-                }
+                onValueChange={value => setForm({ ...form, categoria_id: parseInt(value) })}
               >
                 <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
                   <SelectValue placeholder="Seleccionar categoría" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categorias.map((cat) => (
+                  {categorias.map(cat => (
                     <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.nombre}
                     </SelectItem>
@@ -289,7 +257,7 @@ export function SubcategoriasSection() {
               <Input
                 id="subcat-nombre"
                 value={form.nombre}
-                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                onChange={e => setForm({ ...form, nombre: e.target.value })}
                 placeholder="Ej: Luz"
                 className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
               />
@@ -304,9 +272,7 @@ export function SubcategoriasSection() {
               <Textarea
                 id="subcat-desc"
                 value={form.descripcion || ''}
-                onChange={(e) =>
-                  setForm({ ...form, descripcion: e.target.value })
-                }
+                onChange={e => setForm({ ...form, descripcion: e.target.value })}
                 placeholder="Descripción opcional"
                 className="min-h-[80px] rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
               />
@@ -341,5 +307,5 @@ export function SubcategoriasSection() {
         onCancel={() => setDeleteTarget(null)}
       />
     </>
-  );
+  )
 }

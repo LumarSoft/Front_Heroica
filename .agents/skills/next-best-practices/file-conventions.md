@@ -97,17 +97,17 @@ Prefix with `_` to exclude from routing.
 
 ```ts
 // middleware.ts (root of project)
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   // Auth, redirects, rewrites, etc.
-  return NextResponse.next();
+  return NextResponse.next()
 }
 
 export const config = {
   matcher: ['/dashboard/:path*', '/api/:path*'],
-};
+}
 ```
 
 ### Next.js 16+: `proxy.ts`
@@ -116,17 +116,17 @@ Renamed for clarity - same capabilities, different names:
 
 ```ts
 // proxy.ts (root of project)
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 export function proxy(request: NextRequest) {
   // Same logic as middleware
-  return NextResponse.next();
+  return NextResponse.next()
 }
 
 export const proxyConfig = {
   matcher: ['/dashboard/:path*', '/api/:path*'],
-};
+}
 ```
 
 | Version | File            | Export         | Config        |

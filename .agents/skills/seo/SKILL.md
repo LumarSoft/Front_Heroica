@@ -270,10 +270,7 @@ X-Frame-Options: DENY
     "name": "Example Company",
     "url": "https://example.com",
     "logo": "https://example.com/logo.png",
-    "sameAs": [
-      "https://twitter.com/example",
-      "https://linkedin.com/company/example"
-    ],
+    "sameAs": ["https://twitter.com/example", "https://linkedin.com/company/example"],
     "contactPoint": {
       "@type": "ContactPoint",
       "telephone": "+1-555-123-4567",

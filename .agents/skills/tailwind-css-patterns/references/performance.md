@@ -14,7 +14,7 @@ export default {
   ],
   // Enable JIT for faster builds
   jit: true,
-};
+}
 ```
 
 ### Content Path Best Practices
@@ -34,16 +34,10 @@ export default {
 </div>
 
 <!-- Optimize images with aspect-ratio -->
-<img
-  class="aspect-video w-full object-cover"
-  src="video.jpg"
-  alt="Video thumbnail"
-/>
+<img class="aspect-video w-full object-cover" src="video.jpg" alt="Video thumbnail" />
 
 <!-- Use contain for paint optimization -->
-<div class="contain-layout">
-  Complex layout that doesn't affect outside elements
-</div>
+<div class="contain-layout">Complex layout that doesn't affect outside elements</div>
 ```
 
 ---
@@ -88,7 +82,7 @@ module.exports = {
       ],
     },
   },
-};
+}
 ```
 
 ### Minification

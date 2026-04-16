@@ -48,11 +48,7 @@ Comprehensive accessibility guidelines based on WCAG 2.2 and Lighthouse accessib
 
 <!-- ✅ Complex image with longer description -->
 <figure>
-  <img
-    src="infographic.png"
-    alt="2024 market trends infographic"
-    aria-describedby="infographic-desc"
-  />
+  <img src="infographic.png" alt="2024 market trends infographic" aria-describedby="infographic-desc" />
   <figcaption id="infographic-desc">
     <!-- Detailed description -->
   </figcaption>
@@ -150,19 +146,8 @@ Comprehensive accessibility guidelines based on WCAG 2.2 and Lighthouse accessib
 <!-- Video with captions -->
 <video controls>
   <source src="video.mp4" type="video/mp4" />
-  <track
-    kind="captions"
-    src="captions.vtt"
-    srclang="en"
-    label="English"
-    default
-  />
-  <track
-    kind="descriptions"
-    src="descriptions.vtt"
-    srclang="en"
-    label="Descriptions"
-  />
+  <track kind="captions" src="captions.vtt" srclang="en" label="English" default />
+  <track kind="descriptions" src="descriptions.vtt" srclang="en" label="Descriptions" />
 </video>
 
 <!-- Audio with transcript -->
@@ -185,16 +170,16 @@ Comprehensive accessibility guidelines based on WCAG 2.2 and Lighthouse accessib
 
 ```javascript
 // ❌ Only handles click
-element.addEventListener('click', handleAction);
+element.addEventListener('click', handleAction)
 
 // ✅ Handles both click and keyboard
-element.addEventListener('click', handleAction);
-element.addEventListener('keydown', (e) => {
+element.addEventListener('click', handleAction)
+element.addEventListener('keydown', e => {
   if (e.key === 'Enter' || e.key === ' ') {
-    e.preventDefault();
-    handleAction();
+    e.preventDefault()
+    handleAction()
   }
-});
+})
 ```
 
 **No keyboard traps.** Users must be able to Tab into and out of every component. Use the [modal focus trap pattern](references/A11Y-PATTERNS.md#modal-focus-trap) for dialogs—the native `<dialog>` element handles this automatically.
@@ -285,7 +270,7 @@ function showSessionWarning() {
       { label: 'Log out', action: logout },
     ],
     timeout: 120000,
-  });
+  })
 }
 ```
 

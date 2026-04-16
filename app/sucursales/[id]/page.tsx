@@ -1,76 +1,60 @@
-'use client';
+'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import { toast } from 'sonner';
-import { API_ENDPOINTS } from '@/lib/config';
-import { apiFetch } from '@/lib/api';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { useAuthGuard } from '@/hooks/use-auth-guard';
-import { useEmployeeNotifications } from '@/hooks/use-employee-notifications';
-import { formatMonto } from '@/lib/formatters';
-import type { Sucursal, Documento, CuentaBancaria } from '@/lib/types';
-import {
-  Mail,
-  Paperclip,
-  ArrowLeft,
-  Download,
-  Trash2,
-  AlertTriangle,
-} from 'lucide-react';
-import { PageLoadingSpinner } from '@/components/ui/loading-spinner';
-import { ErrorBanner } from '@/components/ui/error-banner';
-import { useAuthStore } from '@/store/authStore';
+import { useEffect, useState, useRef, useCallback } from 'react'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
+import { toast } from 'sonner'
+import { API_ENDPOINTS } from '@/lib/config'
+import { apiFetch } from '@/lib/api'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { useAuthGuard } from '@/hooks/use-auth-guard'
+import { useEmployeeNotifications } from '@/hooks/use-employee-notifications'
+import { formatMonto } from '@/lib/formatters'
+import type { Sucursal, Documento, CuentaBancaria } from '@/lib/types'
+import { Mail, Paperclip, ArrowLeft, Download, Trash2, AlertTriangle } from 'lucide-react'
+import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
+import { ErrorBanner } from '@/components/ui/error-banner'
+import { useAuthStore } from '@/store/authStore'
 
 export default function SucursalDetailPage() {
-  const router = useRouter();
-  const params = useParams();
-  const sucursalId = Number(params.id);
-  const { user, isGuardLoading } = useAuthGuard();
+  const router = useRouter()
+  const params = useParams()
+  const sucursalId = Number(params.id)
+  const { user, isGuardLoading } = useAuthGuard()
 
-  const canVerReportes = useAuthStore((state) => state.canVerReportes());
-  const canAprobarPendientes = useAuthStore((state) =>
-    state.canAprobarPendientes(),
-  );
-  const canVerMovimientos = useAuthStore((state) => state.canVerMovimientos());
-  const canVerPendientes = useAuthStore((state) => state.canVerPendientes());
-  const canGestionarSucursales = useAuthStore((state) =>
-    state.canGestionarSucursales(),
-  );
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const dateInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const [pendingCount, setPendingCount] = useState(0);
-  const searchParams = useSearchParams();
-  const [moneda, setMoneda] = useState<'ARS' | 'USD'>(
-    (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS',
-  );
+  const canVerReportes = useAuthStore(state => state.canVerReportes())
+  const canAprobarPendientes = useAuthStore(state => state.canAprobarPendientes())
+  const canVerMovimientos = useAuthStore(state => state.canVerMovimientos())
+  const canVerPendientes = useAuthStore(state => state.canVerPendientes())
+  const canGestionarSucursales = useAuthStore(state => state.canGestionarSucursales())
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  const dateInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  const [pendingCount, setPendingCount] = useState(0)
+  const searchParams = useSearchParams()
+  const [moneda, setMoneda] = useState<'ARS' | 'USD'>((searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS')
 
   const handleMonedaChange = (newMoneda: 'ARS' | 'USD') => {
-    setMoneda(newMoneda);
-    router.replace(`/sucursales/${params.id}?moneda=${newMoneda}`);
-  };
+    setMoneda(newMoneda)
+    router.replace(`/sucursales/${params.id}?moneda=${newMoneda}`)
+  }
 
   // Notificaciones para empleados (aprobaciones / rechazos de pagos pendientes)
-  const isEmployee = user?.rol === 'empleado';
-  const { unseenCount: employeeUnseenCount, clearUnseenCount } =
-    useEmployeeNotifications(user?.id, sucursalId, isEmployee);
+  const isEmployee = user?.rol === 'empleado'
+  const { unseenCount: employeeUnseenCount, clearUnseenCount } = useEmployeeNotifications(
+    user?.id,
+    sucursalId,
+    isEmployee,
+  )
 
-  const [sucursal, setSucursal] = useState<Sucursal | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
-  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+  const [sucursal, setSucursal] = useState<Sucursal | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false)
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false)
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -78,353 +62,306 @@ export default function SucursalDetailPage() {
     cuit: '',
     direccion: '',
     email_correspondencia: '',
-  });
+  })
 
   // Estados para totales de cajas
   const [totalesEfectivo, setTotalesEfectivo] = useState({
     total_real: 0,
     total_necesario: 0,
     ultima_actualizacion: null as string | null,
-  });
+  })
   const [totalesBanco, setTotalesBanco] = useState({
     total_real: 0,
     total_necesario: 0,
     ultima_actualizacion: null as string | null,
-  });
-  const [loadingTotales, setLoadingTotales] = useState(true);
+  })
+  const [loadingTotales, setLoadingTotales] = useState(true)
 
   // Estados para documentos (múltiples)
-  const [documentos, setDocumentos] = useState<Documento[]>([]);
-  const [loadingDocumentos, setLoadingDocumentos] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [documentos, setDocumentos] = useState<Documento[]>([])
+  const [loadingDocumentos, setLoadingDocumentos] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [docToDelete, setDocToDelete] = useState<{
-    id: number;
-    nombre: string;
-  } | null>(null);
-  const [isDeleteDocDialogOpen, setIsDeleteDocDialogOpen] = useState(false);
+    id: number
+    nombre: string
+  } | null>(null)
+  const [isDeleteDocDialogOpen, setIsDeleteDocDialogOpen] = useState(false)
 
   // Estados para cuentas bancarias
-  const [cuentaToDeleteId, setCuentaToDeleteId] = useState<number | null>(null);
-  const [cuentasBancarias, setCuentasBancarias] = useState<CuentaBancaria[]>(
-    [],
-  );
-  const [loadingCuentas, setLoadingCuentas] = useState(false);
+  const [cuentaToDeleteId, setCuentaToDeleteId] = useState<number | null>(null)
+  const [cuentasBancarias, setCuentasBancarias] = useState<CuentaBancaria[]>([])
+  const [loadingCuentas, setLoadingCuentas] = useState(false)
   const [nuevaCuenta, setNuevaCuenta] = useState({
     cbu: '',
     alias: '',
     tipo_cuenta: '',
     banco: '',
-  });
-  const [isAddingCuenta, setIsAddingCuenta] = useState(false);
-  const [isSavingCuenta, setIsSavingCuenta] = useState(false);
+  })
+  const [isAddingCuenta, setIsAddingCuenta] = useState(false)
+  const [isSavingCuenta, setIsSavingCuenta] = useState(false)
 
   // Funciones para manejo de documentos (múltiples)
   const fetchDocumentos = useCallback(async () => {
     try {
-      setLoadingDocumentos(true);
-      const response = await apiFetch(
-        API_ENDPOINTS.SUCURSALES.GET_DOCUMENTOS(sucursalId),
-      );
-      const data = await response.json();
-      if (response.ok) setDocumentos(data.data || []);
+      setLoadingDocumentos(true)
+      const response = await apiFetch(API_ENDPOINTS.SUCURSALES.GET_DOCUMENTOS(sucursalId))
+      const data = await response.json()
+      if (response.ok) setDocumentos(data.data || [])
     } catch {
     } finally {
-      setLoadingDocumentos(false);
+      setLoadingDocumentos(false)
     }
-  }, [sucursalId]);
+  }, [sucursalId])
 
   const fetchCuentasBancarias = useCallback(async () => {
     try {
-      setLoadingCuentas(true);
-      const res = await apiFetch(
-        API_ENDPOINTS.CUENTAS_BANCARIAS.GET_BY_SUCURSAL(sucursalId),
-      );
-      const data = await res.json();
-      if (res.ok) setCuentasBancarias(data.data || []);
+      setLoadingCuentas(true)
+      const res = await apiFetch(API_ENDPOINTS.CUENTAS_BANCARIAS.GET_BY_SUCURSAL(sucursalId))
+      const data = await res.json()
+      if (res.ok) setCuentasBancarias(data.data || [])
     } catch {
     } finally {
-      setLoadingCuentas(false);
+      setLoadingCuentas(false)
     }
-  }, [sucursalId]);
+  }, [sucursalId])
 
   // Función para cargar totales de las cajas
   const fetchTotales = useCallback(async () => {
     try {
-      setLoadingTotales(true);
+      setLoadingTotales(true)
 
-      const resEfectivo = await apiFetch(
-        API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(sucursalId, moneda),
-      );
-      const dataEfectivo = await resEfectivo.json();
-      if (resEfectivo.ok) setTotalesEfectivo(dataEfectivo.data);
+      const resEfectivo = await apiFetch(API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(sucursalId, moneda))
+      const dataEfectivo = await resEfectivo.json()
+      if (resEfectivo.ok) setTotalesEfectivo(dataEfectivo.data)
 
-      const resBanco = await apiFetch(
-        API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(sucursalId, moneda),
-      );
-      const dataBanco = await resBanco.json();
-      if (resBanco.ok) setTotalesBanco(dataBanco.data);
+      const resBanco = await apiFetch(API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(sucursalId, moneda))
+      const dataBanco = await resBanco.json()
+      if (resBanco.ok) setTotalesBanco(dataBanco.data)
     } catch {
     } finally {
-      setLoadingTotales(false);
+      setLoadingTotales(false)
     }
-  }, [sucursalId, moneda]);
+  }, [sucursalId, moneda])
 
   useEffect(() => {
-    if (isGuardLoading) return;
+    if (isGuardLoading) return
 
     // Cargar datos de la sucursal
     const fetchSucursal = async () => {
       try {
-        const response = await apiFetch(
-          API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId),
-        );
-        const data = await response.json();
+        const response = await apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId))
+        const data = await response.json()
 
         if (!response.ok) {
-          throw new Error(data.message || 'Error al cargar sucursal');
+          throw new Error(data.message || 'Error al cargar sucursal')
         }
 
-        setSucursal(data.data);
+        setSucursal(data.data)
         setFormData({
           nombre: data.data.nombre,
           razon_social: data.data.razon_social,
           cuit: data.data.cuit,
           direccion: data.data.direccion,
           email_correspondencia: data.data.email_correspondencia || '',
-        });
+        })
       } catch (err: unknown) {
-        const message =
-          err instanceof Error ? err.message : 'Error al cargar sucursal';
-        setError(message);
+        const message = err instanceof Error ? err.message : 'Error al cargar sucursal'
+        setError(message)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchSucursal();
-    fetchDocumentos();
-    fetchTotales();
-    fetchCuentasBancarias();
-  }, [
-    isGuardLoading,
-    sucursalId,
-    fetchDocumentos,
-    fetchTotales,
-    fetchCuentasBancarias,
-  ]);
+    fetchSucursal()
+    fetchDocumentos()
+    fetchTotales()
+    fetchCuentasBancarias()
+  }, [isGuardLoading, sucursalId, fetchDocumentos, fetchTotales, fetchCuentasBancarias])
 
   useEffect(() => {
     if (canAprobarPendientes) {
       const fetchPendingCount = async () => {
         try {
-          const response = await apiFetch(
-            API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(sucursalId),
-          );
+          const response = await apiFetch(API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(sucursalId))
           if (response.ok) {
-            const data = await response.json();
-            setPendingCount(data.data.length);
+            const data = await response.json()
+            setPendingCount(data.data.length)
           }
         } catch {
           // Polling failure is non-critical; silently ignore
         }
-      };
+      }
 
-      fetchPendingCount();
+      fetchPendingCount()
       // Polling every 30 seconds
-      const interval = setInterval(fetchPendingCount, 30000);
-      return () => clearInterval(interval);
+      const interval = setInterval(fetchPendingCount, 30000)
+      return () => clearInterval(interval)
     }
-  }, [user?.rol]);
+  }, [user?.rol])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let { name, value } = e.target;
+    let { name, value } = e.target
 
     if (name === 'cuit') {
-      const digits = value.replace(/\D/g, '');
+      const digits = value.replace(/\D/g, '')
       if (digits.length <= 11) {
         if (digits.length > 2 && digits.length <= 10) {
-          value = `${digits.substring(0, 2)}-${digits.substring(2)}`;
+          value = `${digits.substring(0, 2)}-${digits.substring(2)}`
         } else if (digits.length > 10) {
-          value = `${digits.substring(0, 2)}-${digits.substring(
-            2,
-            10,
-          )}-${digits.substring(10, 11)}`;
+          value = `${digits.substring(0, 2)}-${digits.substring(2, 10)}-${digits.substring(10, 11)}`
         } else {
-          value = digits;
+          value = digits
         }
       } else {
-        return; // No permitir más de 11 dígitos
+        return // No permitir más de 11 dígitos
       }
     }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
 
   const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    setError('');
+    e.preventDefault()
+    setIsSaving(true)
+    setError('')
 
     try {
-      const response = await apiFetch(
-        API_ENDPOINTS.SUCURSALES.UPDATE(sucursalId),
-        {
-          method: 'PUT',
-          body: JSON.stringify(formData),
-        },
-      );
+      const response = await apiFetch(API_ENDPOINTS.SUCURSALES.UPDATE(sucursalId), {
+        method: 'PUT',
+        body: JSON.stringify(formData),
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al actualizar sucursal');
+        throw new Error(data.message || 'Error al actualizar sucursal')
       }
 
-      setSucursal(data.data);
-      toast.success('Sucursal actualizada exitosamente');
+      setSucursal(data.data)
+      toast.success('Sucursal actualizada exitosamente')
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Error al actualizar sucursal';
-      setError(message);
+      const message = err instanceof Error ? err.message : 'Error al actualizar sucursal'
+      setError(message)
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
-  const handleUploadDoc = async (
-    tipoDoc: string,
-    fechaVenc: string,
-    file: File,
-  ) => {
-    setIsUploadingDoc(true);
-    setError('');
+  const handleUploadDoc = async (tipoDoc: string, fechaVenc: string, file: File) => {
+    setIsUploadingDoc(true)
+    setError('')
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('tipo_documento', tipoDoc);
-      formData.append('fecha_vencimiento', fechaVenc);
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('tipo_documento', tipoDoc)
+      formData.append('fecha_vencimiento', fechaVenc)
 
-      const response = await apiFetch(
-        API_ENDPOINTS.SUCURSALES.UPLOAD_DOCUMENTO(sucursalId),
-        {
-          method: 'POST',
-          body: formData,
-        },
-      );
+      const response = await apiFetch(API_ENDPOINTS.SUCURSALES.UPLOAD_DOCUMENTO(sucursalId), {
+        method: 'POST',
+        body: formData,
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al subir documento');
+        throw new Error(data.message || 'Error al subir documento')
       }
 
-      toast.success('Documento subido exitosamente');
-      await fetchDocumentos();
+      toast.success('Documento subido exitosamente')
+      await fetchDocumentos()
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Error al subir documento';
-      setError(message);
+      const message = err instanceof Error ? err.message : 'Error al subir documento'
+      setError(message)
     } finally {
-      setIsUploadingDoc(false);
+      setIsUploadingDoc(false)
     }
-  };
+  }
 
   const handleAddCuenta = async () => {
     if (!nuevaCuenta.cbu) {
-      setError('El CBU es obligatorio');
-      return;
+      setError('El CBU es obligatorio')
+      return
     }
     if (nuevaCuenta.cbu.length !== 22) {
-      setError(
-        `El CBU debe tener exactamente 22 dígitos (actualmente tiene ${nuevaCuenta.cbu.length})`,
-      );
-      return;
+      setError(`El CBU debe tener exactamente 22 dígitos (actualmente tiene ${nuevaCuenta.cbu.length})`)
+      return
     }
-    setIsSavingCuenta(true);
-    setError('');
+    setIsSavingCuenta(true)
+    setError('')
     try {
-      const response = await apiFetch(
-        API_ENDPOINTS.CUENTAS_BANCARIAS.CREATE(sucursalId),
-        {
-          method: 'POST',
-          body: JSON.stringify(nuevaCuenta),
-        },
-      );
-      if (!response.ok) throw new Error('Error al crear cuenta');
-      toast.success('Cuenta agregada exitosamente');
-      setNuevaCuenta({ cbu: '', alias: '', tipo_cuenta: '', banco: '' });
-      setIsAddingCuenta(false);
-      await fetchCuentasBancarias();
+      const response = await apiFetch(API_ENDPOINTS.CUENTAS_BANCARIAS.CREATE(sucursalId), {
+        method: 'POST',
+        body: JSON.stringify(nuevaCuenta),
+      })
+      if (!response.ok) throw new Error('Error al crear cuenta')
+      toast.success('Cuenta agregada exitosamente')
+      setNuevaCuenta({ cbu: '', alias: '', tipo_cuenta: '', banco: '' })
+      setIsAddingCuenta(false)
+      await fetchCuentasBancarias()
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Error al agregar cuenta';
-      setError(message);
+      const message = err instanceof Error ? err.message : 'Error al agregar cuenta'
+      setError(message)
     } finally {
-      setIsSavingCuenta(false);
+      setIsSavingCuenta(false)
     }
-  };
+  }
 
   const handleDeleteCuenta = (id: number) => {
-    setCuentaToDeleteId(id);
-  };
+    setCuentaToDeleteId(id)
+  }
 
   const handleConfirmDeleteCuenta = async () => {
-    if (!cuentaToDeleteId) return;
+    if (!cuentaToDeleteId) return
     try {
-      const response = await apiFetch(
-        API_ENDPOINTS.CUENTAS_BANCARIAS.DELETE(cuentaToDeleteId),
-        { method: 'DELETE' },
-      );
-      if (!response.ok) throw new Error('Error al eliminar cuenta');
-      toast.success('Cuenta eliminada');
-      await fetchCuentasBancarias();
+      const response = await apiFetch(API_ENDPOINTS.CUENTAS_BANCARIAS.DELETE(cuentaToDeleteId), { method: 'DELETE' })
+      if (!response.ok) throw new Error('Error al eliminar cuenta')
+      toast.success('Cuenta eliminada')
+      await fetchCuentasBancarias()
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al eliminar';
-      setError(message);
+      const message = err instanceof Error ? err.message : 'Error al eliminar'
+      setError(message)
     } finally {
-      setCuentaToDeleteId(null);
+      setCuentaToDeleteId(null)
     }
-  };
+  }
 
   const handleDownloadDoc = (docId: number) => {
-    const url = API_ENDPOINTS.SUCURSALES.DOWNLOAD_DOCUMENTO(sucursalId, docId);
-    window.open(url, '_blank');
-  };
+    const url = API_ENDPOINTS.SUCURSALES.DOWNLOAD_DOCUMENTO(sucursalId, docId)
+    window.open(url, '_blank')
+  }
 
   const openDeleteDocDialog = (docId: number, nombreArchivo: string) => {
-    setDocToDelete({ id: docId, nombre: nombreArchivo });
-    setIsDeleteDocDialogOpen(true);
-  };
+    setDocToDelete({ id: docId, nombre: nombreArchivo })
+    setIsDeleteDocDialogOpen(true)
+  }
 
   const handleDeleteDoc = async () => {
-    if (!docToDelete) return;
+    if (!docToDelete) return
 
-    setError('');
+    setError('')
 
     try {
-      const response = await apiFetch(
-        API_ENDPOINTS.SUCURSALES.DELETE_DOCUMENTO(sucursalId, docToDelete.id),
-        { method: 'DELETE' },
-      );
+      const response = await apiFetch(API_ENDPOINTS.SUCURSALES.DELETE_DOCUMENTO(sucursalId, docToDelete.id), {
+        method: 'DELETE',
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al eliminar documento');
+        throw new Error(data.message || 'Error al eliminar documento')
       }
 
-      toast.success('Documento eliminado exitosamente');
-      await fetchDocumentos();
+      toast.success('Documento eliminado exitosamente')
+      await fetchDocumentos()
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Error al eliminar documento';
-      toast.error(message);
+      const message = err instanceof Error ? err.message : 'Error al eliminar documento'
+      toast.error(message)
     } finally {
-      setIsDeleteDocDialogOpen(false);
-      setDocToDelete(null);
+      setIsDeleteDocDialogOpen(false)
+      setDocToDelete(null)
     }
-  };
+  }
 
   const MANDATORY_DOC_TYPES = [
     'Constancia de CUIT',
@@ -432,41 +369,36 @@ export default function SucursalDetailPage() {
     'Certificado MyPyme',
     'Constancia de CBU',
     'Habilitación del local',
-  ];
+  ]
 
-  const missingDocsCount = MANDATORY_DOC_TYPES.filter(
-    (tipo) => !documentos.find((d) => d.tipo_documento === tipo),
-  ).length;
+  const missingDocsCount = MANDATORY_DOC_TYPES.filter(tipo => !documentos.find(d => d.tipo_documento === tipo)).length
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-  const expiredDocs = documentos.filter((d) => {
-    if (!d.fecha_vencimiento) return false;
-    const venc = new Date(d.fecha_vencimiento);
-    venc.setHours(0, 0, 0, 0);
-    return venc < today;
-  });
-  const expiredDocsCount = expiredDocs.length;
+  const expiredDocs = documentos.filter(d => {
+    if (!d.fecha_vencimiento) return false
+    const venc = new Date(d.fecha_vencimiento)
+    venc.setHours(0, 0, 0, 0)
+    return venc < today
+  })
+  const expiredDocsCount = expiredDocs.length
 
-  const totalAlertCount = missingDocsCount + expiredDocsCount;
+  const totalAlertCount = missingDocsCount + expiredDocsCount
 
-  if (isGuardLoading || isLoading) return <PageLoadingSpinner />;
+  if (isGuardLoading || isLoading) return <PageLoadingSpinner />
 
   if (!sucursal) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-[#1A1A1A] text-xl mb-4">Sucursal no encontrada</p>
-          <Button
-            onClick={() => router.push('/sucursales')}
-            className="bg-[#002868] text-white hover:bg-[#003d8f]"
-          >
+          <Button onClick={() => router.push('/sucursales')} className="bg-[#002868] text-white hover:bg-[#003d8f]">
             Volver a Sucursales
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -488,9 +420,7 @@ export default function SucursalDetailPage() {
               </Button>
 
               {/* Nombre de la Sucursal */}
-              <h1 className="text-2xl font-bold text-[#002868]">
-                {sucursal.nombre}
-              </h1>
+              <h1 className="text-2xl font-bold text-[#002868]">{sucursal.nombre}</h1>
             </div>
 
             <div className="flex items-center gap-3">
@@ -526,11 +456,7 @@ export default function SucursalDetailPage() {
               {/* Botón Reportes */}
               {canVerReportes && (
                 <Button
-                  onClick={() =>
-                    router.push(
-                      `/sucursales/${params.id}/reportes?moneda=${moneda}`,
-                    )
-                  }
+                  onClick={() => router.push(`/sucursales/${params.id}/reportes?moneda=${moneda}`)}
                   size="sm"
                   className="bg-[#002868] text-white hover:bg-[#003d8f] cursor-pointer transition-all shadow-md"
                 >
@@ -564,9 +490,7 @@ export default function SucursalDetailPage() {
             {canVerMovimientos ? 'Gestión de Cajas' : 'Gestión de Pagos'}
           </h2>
           <p className="text-lg text-[#666666] mb-6">
-            {canVerMovimientos
-              ? 'Selecciona la caja que deseas gestionar'
-              : 'Gestiona tus solicitudes de pago'}
+            {canVerMovimientos ? 'Selecciona la caja que deseas gestionar' : 'Gestiona tus solicitudes de pago'}
           </p>
 
           {/* Selector de Moneda */}
@@ -601,11 +525,7 @@ export default function SucursalDetailPage() {
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Caja en Efectivo */}
             <Card
-              onClick={() =>
-                router.push(
-                  `/sucursales/${params.id}/caja-efectivo?moneda=${moneda}`,
-                )
-              }
+              onClick={() => router.push(`/sucursales/${params.id}/caja-efectivo?moneda=${moneda}`)}
               className="border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
             >
               {/* Decoración de fondo */}
@@ -640,14 +560,10 @@ export default function SucursalDetailPage() {
                   </div>
                 ) : (
                   <div className="mb-3">
-                    <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide mb-1">
-                      Saldo Real
-                    </p>
+                    <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide mb-1">Saldo Real</p>
                     <p
                       className={`text-2xl font-bold ${
-                        totalesEfectivo.total_real >= 0
-                          ? 'text-emerald-600'
-                          : 'text-rose-600'
+                        totalesEfectivo.total_real >= 0 ? 'text-emerald-600' : 'text-rose-600'
                       }`}
                     >
                       {formatMonto(totalesEfectivo.total_real, moneda)}
@@ -655,9 +571,7 @@ export default function SucursalDetailPage() {
                     {totalesEfectivo.ultima_actualizacion && (
                       <p className="text-xs text-slate-400 mt-1">
                         Última act:{' '}
-                        {new Date(
-                          totalesEfectivo.ultima_actualizacion,
-                        ).toLocaleString('es-AR', {
+                        {new Date(totalesEfectivo.ultima_actualizacion).toLocaleString('es-AR', {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric',
@@ -684,11 +598,7 @@ export default function SucursalDetailPage() {
                       stroke="currentColor"
                       className="w-4 h-4 text-[#002868] group-hover:text-white group-hover:translate-x-1 transition-all"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                      />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                     </svg>
                   </div>
                 </div>
@@ -697,11 +607,7 @@ export default function SucursalDetailPage() {
 
             {/* Caja en Banco */}
             <Card
-              onClick={() =>
-                router.push(
-                  `/sucursales/${params.id}/caja-banco?moneda=${moneda}`,
-                )
-              }
+              onClick={() => router.push(`/sucursales/${params.id}/caja-banco?moneda=${moneda}`)}
               className="border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
             >
               {/* Decoración de fondo */}
@@ -736,14 +642,10 @@ export default function SucursalDetailPage() {
                   </div>
                 ) : (
                   <div className="mb-3">
-                    <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide mb-1">
-                      Saldo Real
-                    </p>
+                    <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide mb-1">Saldo Real</p>
                     <p
                       className={`text-2xl font-bold ${
-                        totalesBanco.total_real >= 0
-                          ? 'text-emerald-600'
-                          : 'text-rose-600'
+                        totalesBanco.total_real >= 0 ? 'text-emerald-600' : 'text-rose-600'
                       }`}
                     >
                       {formatMonto(totalesBanco.total_real, moneda)}
@@ -751,9 +653,7 @@ export default function SucursalDetailPage() {
                     {totalesBanco.ultima_actualizacion && (
                       <p className="text-xs text-slate-400 mt-1">
                         Última act:{' '}
-                        {new Date(
-                          totalesBanco.ultima_actualizacion,
-                        ).toLocaleString('es-AR', {
+                        {new Date(totalesBanco.ultima_actualizacion).toLocaleString('es-AR', {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric',
@@ -765,9 +665,7 @@ export default function SucursalDetailPage() {
                   </div>
                 )}
 
-                <p className="text-[#666666] text-base leading-relaxed">
-                  Administra cuentas y transacciones bancarias
-                </p>
+                <p className="text-[#666666] text-base leading-relaxed">Administra cuentas y transacciones bancarias</p>
 
                 {/* Flecha decorativa */}
                 <div className="mt-6 flex justify-center">
@@ -780,11 +678,7 @@ export default function SucursalDetailPage() {
                       stroke="currentColor"
                       className="w-4 h-4 text-[#002868] group-hover:text-white group-hover:translate-x-1 transition-all"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                      />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                     </svg>
                   </div>
                 </div>
@@ -794,10 +688,8 @@ export default function SucursalDetailPage() {
             {/* Pagos Pendientes de Autorización */}
             <Card
               onClick={() => {
-                clearUnseenCount();
-                router.push(
-                  `/sucursales/${params.id}/pagos-pendientes?moneda=${moneda}`,
-                );
+                clearUnseenCount()
+                router.push(`/sucursales/${params.id}/pagos-pendientes?moneda=${moneda}`)
               }}
               className="border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
             >
@@ -835,9 +727,7 @@ export default function SucursalDetailPage() {
                     </span>
                   )}
                 </h3>
-                <p className="text-[#666666] text-base leading-relaxed">
-                  Gestiona pagos pendientes de autorización
-                </p>
+                <p className="text-[#666666] text-base leading-relaxed">Gestiona pagos pendientes de autorización</p>
 
                 {/* Flecha decorativa */}
                 <div className="mt-6 flex justify-center">
@@ -850,11 +740,7 @@ export default function SucursalDetailPage() {
                       stroke="currentColor"
                       className="w-4 h-4 text-[#002868] group-hover:text-white group-hover:translate-x-1 transition-all"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                      />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                     </svg>
                   </div>
                 </div>
@@ -866,10 +752,8 @@ export default function SucursalDetailPage() {
           <div className="max-w-md mx-auto">
             <Card
               onClick={() => {
-                clearUnseenCount();
-                router.push(
-                  `/sucursales/${params.id}/pagos-pendientes?moneda=${moneda}`,
-                );
+                clearUnseenCount()
+                router.push(`/sucursales/${params.id}/pagos-pendientes?moneda=${moneda}`)
               }}
               className="border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
             >
@@ -902,9 +786,7 @@ export default function SucursalDetailPage() {
                     </span>
                   )}
                 </h3>
-                <p className="text-[#666666] text-base leading-relaxed">
-                  Gestiona tus solicitudes de pago
-                </p>
+                <p className="text-[#666666] text-base leading-relaxed">Gestiona tus solicitudes de pago</p>
 
                 {/* Flecha decorativa */}
                 <div className="mt-6 flex justify-center">
@@ -917,11 +799,7 @@ export default function SucursalDetailPage() {
                       stroke="currentColor"
                       className="w-4 h-4 text-[#002868] group-hover:text-white group-hover:translate-x-1 transition-all"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                      />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                     </svg>
                   </div>
                 </div>
@@ -935,12 +813,8 @@ export default function SucursalDetailPage() {
       <Dialog open={isInfoDialogOpen} onOpenChange={setIsInfoDialogOpen}>
         <DialogContent className="sm:max-w-2xl bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-[#002868]">
-              Información de la Sucursal
-            </DialogTitle>
-            <DialogDescription className="text-[#666666]">
-              Consulta y edita los datos de la sucursal
-            </DialogDescription>
+            <DialogTitle className="text-2xl font-bold text-[#002868]">Información de la Sucursal</DialogTitle>
+            <DialogDescription className="text-[#666666]">Consulta y edita los datos de la sucursal</DialogDescription>
           </DialogHeader>
 
           <div className="mt-4">
@@ -949,8 +823,7 @@ export default function SucursalDetailPage() {
               <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
                 <p className="text-sm text-amber-800 font-medium">
-                  Sucursal <strong>inactiva</strong> — solo visualización, no se
-                  pueden editar datos.
+                  Sucursal <strong>inactiva</strong> — solo visualización, no se pueden editar datos.
                 </p>
               </div>
             )}
@@ -966,8 +839,7 @@ export default function SucursalDetailPage() {
                       : `Faltan ${missingDocsCount} documentos obligatorios por subir`}
                   </p>
                   <p className="text-xs text-red-600 mt-0.5">
-                    Revisá la sección Documentación y completá los archivos
-                    pendientes.
+                    Revisá la sección Documentación y completá los archivos pendientes.
                   </p>
                 </div>
               </div>
@@ -985,7 +857,7 @@ export default function SucursalDetailPage() {
                   </p>
                   <p className="text-xs text-orange-600 mt-0.5">
                     {expiredDocsCount > 1
-                      ? expiredDocs.map((d) => d.tipo_documento).join(', ')
+                      ? expiredDocs.map(d => d.tipo_documento).join(', ')
                       : 'Actualizá el documento para mantener la documentación al día.'}
                   </p>
                 </div>
@@ -997,10 +869,7 @@ export default function SucursalDetailPage() {
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="nombre"
-                    className="text-[#002868] font-semibold text-sm"
-                  >
+                  <Label htmlFor="nombre" className="text-[#002868] font-semibold text-sm">
                     Nombre de la Sucursal *
                   </Label>
                   <Input
@@ -1015,10 +884,7 @@ export default function SucursalDetailPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="razon_social"
-                    className="text-[#002868] font-semibold text-sm"
-                  >
+                  <Label htmlFor="razon_social" className="text-[#002868] font-semibold text-sm">
                     Razón Social *
                   </Label>
                   <Input
@@ -1033,10 +899,7 @@ export default function SucursalDetailPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="cuit"
-                    className="text-[#002868] font-semibold text-sm"
-                  >
+                  <Label htmlFor="cuit" className="text-[#002868] font-semibold text-sm">
                     CUIT *
                   </Label>
                   <Input
@@ -1051,10 +914,7 @@ export default function SucursalDetailPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="direccion"
-                    className="text-[#002868] font-semibold text-sm"
-                  >
+                  <Label htmlFor="direccion" className="text-[#002868] font-semibold text-sm">
                     Dirección *
                   </Label>
                   <Input
@@ -1069,12 +929,8 @@ export default function SucursalDetailPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="email_correspondencia"
-                    className="text-[#002868] font-semibold text-sm"
-                  >
-                    <Mail className="w-4 h-4 inline mr-1" /> Email de
-                    Correspondencia
+                  <Label htmlFor="email_correspondencia" className="text-[#002868] font-semibold text-sm">
+                    <Mail className="w-4 h-4 inline mr-1" /> Email de Correspondencia
                   </Label>
                   <Input
                     id="email_correspondencia"
@@ -1101,31 +957,25 @@ export default function SucursalDetailPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {MANDATORY_DOC_TYPES.map((tipoDoc) => {
-                      const docSubido = documentos.find(
-                        (d) => d.tipo_documento === tipoDoc,
-                      );
+                    {MANDATORY_DOC_TYPES.map(tipoDoc => {
+                      const docSubido = documentos.find(d => d.tipo_documento === tipoDoc)
                       const isExpired = docSubido?.fecha_vencimiento
                         ? (() => {
-                            const v = new Date(docSubido.fecha_vencimiento);
-                            v.setHours(0, 0, 0, 0);
-                            return v < today;
+                            const v = new Date(docSubido.fecha_vencimiento)
+                            v.setHours(0, 0, 0, 0)
+                            return v < today
                           })()
-                        : false;
+                        : false
 
                       return (
                         <div
                           key={tipoDoc}
                           className={`p-4 rounded-lg border ${
-                            isExpired
-                              ? 'bg-orange-50 border-orange-300'
-                              : 'bg-gray-50 border-gray-200'
+                            isExpired ? 'bg-orange-50 border-orange-300' : 'bg-gray-50 border-gray-200'
                           }`}
                         >
                           <div className="flex justify-between items-center mb-2">
-                            <h4 className="font-semibold text-[#002868] text-sm">
-                              {tipoDoc}
-                            </h4>
+                            <h4 className="font-semibold text-[#002868] text-sm">{tipoDoc}</h4>
                             {docSubido ? (
                               isExpired ? (
                                 <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full font-semibold border border-orange-300">
@@ -1153,9 +1003,7 @@ export default function SucursalDetailPage() {
                                   strokeWidth={2}
                                   stroke="currentColor"
                                   className={`w-5 h-5 flex-shrink-0 ${
-                                    isExpired
-                                      ? 'text-orange-500'
-                                      : 'text-green-600'
+                                    isExpired ? 'text-orange-500' : 'text-green-600'
                                   }`}
                                 >
                                   <path
@@ -1165,24 +1013,13 @@ export default function SucursalDetailPage() {
                                   />
                                 </svg>
                                 <div className="min-w-0">
-                                  <p
-                                    className="text-sm truncate"
-                                    title={docSubido.nombre_archivo}
-                                  >
+                                  <p className="text-sm truncate" title={docSubido.nombre_archivo}>
                                     {docSubido.nombre_archivo}
                                   </p>
-                                  <p
-                                    className={`text-xs font-medium ${
-                                      isExpired
-                                        ? 'text-red-600'
-                                        : 'text-gray-500'
-                                    }`}
-                                  >
+                                  <p className={`text-xs font-medium ${isExpired ? 'text-red-600' : 'text-gray-500'}`}>
                                     Vence:{' '}
                                     {docSubido.fecha_vencimiento
-                                      ? new Date(
-                                          docSubido.fecha_vencimiento,
-                                        ).toLocaleDateString('es-AR', {
+                                      ? new Date(docSubido.fecha_vencimiento).toLocaleDateString('es-AR', {
                                           timeZone: 'UTC',
                                         })
                                       : 'N/A'}
@@ -1195,9 +1032,7 @@ export default function SucursalDetailPage() {
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() =>
-                                    handleDownloadDoc(docSubido.id)
-                                  }
+                                  onClick={() => handleDownloadDoc(docSubido.id)}
                                   className="h-8 px-2 border-[#002868]/30 hover:bg-[#002868] hover:text-white transition-colors"
                                 >
                                   <Download className="w-4 h-4" />
@@ -1207,12 +1042,7 @@ export default function SucursalDetailPage() {
                                     type="button"
                                     variant="outline"
                                     size="sm"
-                                    onClick={() =>
-                                      openDeleteDocDialog(
-                                        docSubido.id,
-                                        docSubido.nombre_archivo,
-                                      )
-                                    }
+                                    onClick={() => openDeleteDocDialog(docSubido.id, docSubido.nombre_archivo)}
                                     className="h-8 px-2 border-red-200 text-red-600 bg-red-50 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -1223,13 +1053,11 @@ export default function SucursalDetailPage() {
                           ) : sucursal?.activo && canGestionarSucursales ? (
                             <div className="flex flex-col gap-2 mt-2">
                               <div className="flex gap-2 items-center">
-                                <Label className="text-xs text-gray-500 min-w-[120px]">
-                                  Fecha Vencimiento:
-                                </Label>
+                                <Label className="text-xs text-gray-500 min-w-[120px]">Fecha Vencimiento:</Label>
                                 <Input
                                   type="date"
-                                  ref={(el) => {
-                                    dateInputRefs.current[tipoDoc] = el;
+                                  ref={el => {
+                                    dateInputRefs.current[tipoDoc] = el
                                   }}
                                   className="h-8 text-sm"
                                 />
@@ -1237,8 +1065,8 @@ export default function SucursalDetailPage() {
                               <div className="flex gap-2">
                                 <Input
                                   type="file"
-                                  ref={(el) => {
-                                    fileInputRefs.current[tipoDoc] = el;
+                                  ref={el => {
+                                    fileInputRefs.current[tipoDoc] = el
                                   }}
                                   accept=".pdf,.jpg,.jpeg"
                                   className="h-8 text-sm flex-1"
@@ -1249,24 +1077,13 @@ export default function SucursalDetailPage() {
                                   disabled={isUploadingDoc}
                                   className="h-8 bg-[#002868]"
                                   onClick={() => {
-                                    const fileInput =
-                                      fileInputRefs.current[tipoDoc];
-                                    const dateInput =
-                                      dateInputRefs.current[tipoDoc];
-                                    if (
-                                      !fileInput?.files?.[0] ||
-                                      !dateInput?.value
-                                    ) {
-                                      toast.error(
-                                        'Selecciona archivo y fecha de vencimiento',
-                                      );
-                                      return;
+                                    const fileInput = fileInputRefs.current[tipoDoc]
+                                    const dateInput = dateInputRefs.current[tipoDoc]
+                                    if (!fileInput?.files?.[0] || !dateInput?.value) {
+                                      toast.error('Selecciona archivo y fecha de vencimiento')
+                                      return
                                     }
-                                    handleUploadDoc(
-                                      tipoDoc,
-                                      dateInput.value,
-                                      fileInput.files[0],
-                                    );
+                                    handleUploadDoc(tipoDoc, dateInput.value, fileInput.files[0])
                                   }}
                                 >
                                   Subir
@@ -1274,12 +1091,10 @@ export default function SucursalDetailPage() {
                               </div>
                             </div>
                           ) : (
-                            <p className="text-xs text-gray-400 mt-2 italic">
-                              No hay documento subido
-                            </p>
+                            <p className="text-xs text-gray-400 mt-2 italic">No hay documento subido</p>
                           )}
                         </div>
-                      );
+                      )
                     })}
                   </div>
                 )}
@@ -1325,7 +1140,7 @@ export default function SucursalDetailPage() {
                         <Label className="text-xs">Banco</Label>
                         <Input
                           value={nuevaCuenta.banco}
-                          onChange={(e) =>
+                          onChange={e =>
                             setNuevaCuenta({
                               ...nuevaCuenta,
                               banco: e.target.value,
@@ -1339,7 +1154,7 @@ export default function SucursalDetailPage() {
                         <Label className="text-xs">Tipo de Cuenta</Label>
                         <Input
                           value={nuevaCuenta.tipo_cuenta}
-                          onChange={(e) =>
+                          onChange={e =>
                             setNuevaCuenta({
                               ...nuevaCuenta,
                               tipo_cuenta: e.target.value,
@@ -1350,7 +1165,7 @@ export default function SucursalDetailPage() {
                         />
                         <Input
                           value={nuevaCuenta.tipo_cuenta}
-                          onChange={(e) =>
+                          onChange={e =>
                             setNuevaCuenta({
                               ...nuevaCuenta,
                               tipo_cuenta: e.target.value,
@@ -1364,7 +1179,7 @@ export default function SucursalDetailPage() {
                         <Label className="text-xs">CBU / CVU *</Label>
                         <Input
                           value={nuevaCuenta.cbu}
-                          onChange={(e) =>
+                          onChange={e =>
                             setNuevaCuenta({
                               ...nuevaCuenta,
                               cbu: e.target.value,
@@ -1375,17 +1190,14 @@ export default function SucursalDetailPage() {
                         />
                         <Input
                           value={nuevaCuenta.cbu}
-                          onChange={(e) => {
-                            const onlyDigits = e.target.value
-                              .replace(/\D/g, '')
-                              .slice(0, 22);
-                            setNuevaCuenta({ ...nuevaCuenta, cbu: onlyDigits });
+                          onChange={e => {
+                            const onlyDigits = e.target.value.replace(/\D/g, '').slice(0, 22)
+                            setNuevaCuenta({ ...nuevaCuenta, cbu: onlyDigits })
                           }}
                           maxLength={22}
                           inputMode="numeric"
                           className={`h-8 text-sm ${
-                            nuevaCuenta.cbu.length > 0 &&
-                            nuevaCuenta.cbu.length !== 22
+                            nuevaCuenta.cbu.length > 0 && nuevaCuenta.cbu.length !== 22
                               ? 'border-red-400 focus-visible:ring-red-400'
                               : nuevaCuenta.cbu.length === 22
                                 ? 'border-green-400 focus-visible:ring-green-400'
@@ -1409,7 +1221,7 @@ export default function SucursalDetailPage() {
                         <Label className="text-xs">Alias</Label>
                         <Input
                           value={nuevaCuenta.alias}
-                          onChange={(e) =>
+                          onChange={e =>
                             setNuevaCuenta({
                               ...nuevaCuenta,
                               alias: e.target.value,
@@ -1438,7 +1250,7 @@ export default function SucursalDetailPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {cuentasBancarias.map((cuenta) => (
+                    {cuentasBancarias.map(cuenta => (
                       <div
                         key={cuenta.id}
                         className="p-3 bg-white rounded-lg border border-gray-200 shadow-sm flex justify-between items-center group hover:border-[#002868]"
@@ -1447,12 +1259,8 @@ export default function SucursalDetailPage() {
                           <p className="font-semibold text-sm text-[#1A1A1A]">
                             {cuenta.banco} - {cuenta.tipo_cuenta}
                           </p>
-                          <p className="text-xs text-gray-600">
-                            CBU: {cuenta.cbu}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Alias: {cuenta.alias || '-'}
-                          </p>
+                          <p className="text-xs text-gray-600">CBU: {cuenta.cbu}</p>
+                          <p className="text-xs text-gray-500">Alias: {cuenta.alias || '-'}</p>
                         </div>
                         {sucursal?.activo && canGestionarSucursales && (
                           <Button
@@ -1468,9 +1276,7 @@ export default function SucursalDetailPage() {
                       </div>
                     ))}
                     {cuentasBancarias.length === 0 && !isAddingCuenta && (
-                      <p className="text-sm text-gray-500 text-center py-2">
-                        No hay cuentas bancarias registradas
-                      </p>
+                      <p className="text-sm text-gray-500 text-center py-2">No hay cuentas bancarias registradas</p>
                     )}
                   </div>
                 )}
@@ -1479,9 +1285,7 @@ export default function SucursalDetailPage() {
               <div className="flex gap-3 pt-4">
                 <Button
                   type="submit"
-                  disabled={
-                    isSaving || !sucursal?.activo || !canGestionarSucursales
-                  }
+                  disabled={isSaving || !sucursal?.activo || !canGestionarSucursales}
                   className="flex-1 bg-[#002868] hover:bg-[#003d8f] text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? (
@@ -1510,18 +1314,15 @@ export default function SucursalDetailPage() {
       {/* Modal de Confirmación para Eliminar Cuenta Bancaria */}
       <Dialog
         open={!!cuentaToDeleteId}
-        onOpenChange={(open) => {
-          if (!open) setCuentaToDeleteId(null);
+        onOpenChange={open => {
+          if (!open) setCuentaToDeleteId(null)
         }}
       >
         <DialogContent className="sm:max-w-md bg-white">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-[#1A1A1A]">
-              Eliminar Cuenta Bancaria
-            </DialogTitle>
+            <DialogTitle className="text-xl font-bold text-[#1A1A1A]">Eliminar Cuenta Bancaria</DialogTitle>
             <DialogDescription className="text-[#666666]">
-              ¿Estás seguro de eliminar esta cuenta bancaria? Esta acción no se
-              puede deshacer.
+              ¿Estás seguro de eliminar esta cuenta bancaria? Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 mt-4">
@@ -1544,21 +1345,14 @@ export default function SucursalDetailPage() {
       </Dialog>
 
       {/* Modal de Confirmación para Eliminar Documento */}
-      <Dialog
-        open={isDeleteDocDialogOpen}
-        onOpenChange={setIsDeleteDocDialogOpen}
-      >
+      <Dialog open={isDeleteDocDialogOpen} onOpenChange={setIsDeleteDocDialogOpen}>
         <DialogContent className="sm:max-w-md bg-white">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-[#1A1A1A]">
-              Confirmar Eliminación
-            </DialogTitle>
+            <DialogTitle className="text-xl font-bold text-[#1A1A1A]">Confirmar Eliminación</DialogTitle>
             <DialogDescription className="text-[#666666]">
               ¿Estás seguro de que deseas eliminar el archivo{' '}
-              <span className="font-semibold text-[#1A1A1A]">
-                "{docToDelete?.nombre}"
-              </span>
-              ? Esta acción no se puede deshacer.
+              <span className="font-semibold text-[#1A1A1A]">"{docToDelete?.nombre}"</span>? Esta acción no se puede
+              deshacer.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 mt-4">
@@ -1580,5 +1374,5 @@ export default function SucursalDetailPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

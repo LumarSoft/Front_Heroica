@@ -15,10 +15,10 @@ Global state management using Zustand.
 - Stores must be defined with a TypeScript interface:
   ```ts
   interface AuthState {
-    token: string | null;
-    user: User | null;
-    setToken: (token: string) => void;
-    logout: () => void;
+    token: string | null
+    user: User | null
+    setToken: (token: string) => void
+    logout: () => void
   }
   ```
 
@@ -45,8 +45,8 @@ Global state management using Zustand.
 
   ```ts
   // ✅ Correct
-  const token = useAuthStore((state) => state.token);
+  const token = useAuthStore(state => state.token)
 
   // ❌ Avoid — subscribes to all state changes
-  const { token, user, logout } = useAuthStore();
+  const { token, user, logout } = useAuthStore()
   ```

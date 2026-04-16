@@ -48,11 +48,11 @@ Using `npm` or `yarn` will create a conflicting lockfile (`package-lock.json` / 
 
   ```ts
   // ❌ Wrong
-  fetch(`/api/sucursales/${userInput}/movimientos`);
+  fetch(`/api/sucursales/${userInput}/movimientos`)
 
   // ✅ Correct
-  const safeId = encodeURIComponent(userInput);
-  fetch(`/api/sucursales/${safeId}/movimientos`);
+  const safeId = encodeURIComponent(userInput)
+  fetch(`/api/sucursales/${safeId}/movimientos`)
   ```
 
 - **NEVER** trust client-side validation alone. It is UI feedback only. The server must always validate independently. Zod schemas on the client do not replace server-side validation.
