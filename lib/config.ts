@@ -12,6 +12,8 @@ export const API_ENDPOINTS = {
     CONFIRM_2FA: `${API_URL}/api/auth/confirm-2fa`,
     DISABLE_2FA: `${API_URL}/api/auth/disable-2fa`,
     RESET_2FA: `${API_URL}/api/auth/reset-2fa`,
+    DISPOSITIVOS: `${API_URL}/api/auth/dispositivos`,
+    DISPOSITIVO: (id: number) => `${API_URL}/api/auth/dispositivos/${id}`,
   },
   SUCURSALES: {
     GET_ALL: `${API_URL}/api/sucursales`,

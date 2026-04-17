@@ -24,6 +24,7 @@ export function apiFetch(url: string, options: RequestInit = {}): Promise<Respon
 
   return fetch(url, {
     ...options,
+    credentials: 'include',
     headers: {
       ...defaultHeaders,
       ...(options.headers as Record<string, string> | undefined),

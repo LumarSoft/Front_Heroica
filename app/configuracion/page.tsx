@@ -13,6 +13,7 @@ import { MediosPagoSection } from '@/components/configuracion/MediosPagoSection'
 import { UsuariosSection } from '@/components/configuracion/UsuariosSection'
 import { RolesSection } from '@/components/configuracion/RolesSection'
 import { CambiarPasswordSection } from '@/components/configuracion/CambiarPasswordSection'
+import { DispositivosConfianzaSection } from '@/components/configuracion/DispositivosConfianzaSection'
 import { DescripcionesSection } from '@/components/configuracion/DescripcionesSection'
 import { ProveedoresSection } from '@/components/configuracion/ProveedoresSection'
 import { Truck, FileText } from 'lucide-react'
@@ -173,7 +174,12 @@ export default function ConfiguracionPage() {
           {activeTab === 'medios' && <MediosPagoSection />}
           {activeTab === 'usuarios' && <UsuariosSection />}
           {activeTab === 'roles' && <RolesSection />}
-          {activeTab === 'mi-cuenta' && <CambiarPasswordSection />}
+          {activeTab === 'mi-cuenta' && (
+            <div className="max-w-lg">
+              <CambiarPasswordSection />
+              <DispositivosConfianzaSection />
+            </div>
+          )}
         </div>
       </div>
     </div>
