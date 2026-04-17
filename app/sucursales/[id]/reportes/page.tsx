@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label'
 import { apiFetch } from '@/lib/api'
 import { formatMonto } from '@/lib/formatters'
 import type { Sucursal } from '@/lib/types'
-import { Printer, TrendingUp, TrendingDown, AlertTriangle, ArrowLeft } from 'lucide-react'
+import { Download, TrendingUp, TrendingDown, AlertTriangle, ArrowLeft, Loader2 } from 'lucide-react'
+import { useAuthStore } from '@/store/authStore'
 import { SectionHeading } from '@/components/reportes/SectionHeading'
 import { SummaryCard } from '@/components/reportes/SummaryCard'
 import { BreakdownPanel } from '@/components/reportes/BreakdownPanel'
@@ -19,6 +20,9 @@ import { DeudaPanel } from '@/components/reportes/DeudaPanel'
 import { CreditoPanel } from '@/components/reportes/CreditoPanel'
 import { MonthlyLineChart } from '@/components/reportes/MonthlyLineChart'
 import { MonthlyCategoryBarChart } from '@/components/reportes/MonthlyCategoryBarChart'
+import { TopConceptosPanel } from '@/components/reportes/TopConceptosPanel'
+import { SaludFinancieraPanel } from '@/components/reportes/SaludFinancieraPanel'
+import { ComparativoCategoriaPanel } from '@/components/reportes/ComparativoCategoriaPanel'
 import type { ReportData } from '@/components/reportes/types'
 import type { MonthlyDataPoint } from '@/components/reportes/MonthlyLineChart'
 import type { CategoryDataPoint } from '@/components/reportes/MonthlyCategoryBarChart'
@@ -35,6 +39,7 @@ export default function ReportesPage() {
   const [monthlyData, setMonthlyData] = useState<MonthlyDataPoint[]>([])
   const [categoryData, setCategoryData] = useState<CategoryDataPoint[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isExporting, setIsExporting] = useState(false)
 
   const [selectedIngresoCategory, setSelectedIngresoCategory] = useState<string | null>(null)
   const [selectedEgresoCategory, setSelectedEgresoCategory] = useState<string | null>(null)
@@ -183,7 +188,59 @@ export default function ReportesPage() {
     }
   }, [monthlyData, debouncedMonth])
 
-  const handlePrint = () => window.print()
+  const handleDownloadPDF = useCallback(async () => {
+    if (isExporting) return
+    const token = useAuthStore.getState().token
+    if (!token) {
+      toast.error('Sesión expirada. Volvé a iniciar sesión.')
+      return
+    }
+    const rawId = Array.isArray(params.id) ? params.id[0] : params.id
+    const safeId = rawId != null ? encodeURIComponent(String(rawId)) : ''
+    if (!safeId) return
+
+    setIsExporting(true)
+    const loadingToast = toast.loading('Generando PDF…')
+    try {
+      const url = `/api/reportes/${safeId}/pdf?moneda=${moneda}&startDate=${startDate}&endDate=${endDate}`
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (!response.ok) {
+        let detail = 'No se pudo generar el PDF'
+        try {
+          const errJson = await response.json()
+          detail = errJson.message || detail
+        } catch {
+          /* body no JSON */
+        }
+        throw new Error(detail)
+      }
+
+      const blob = await response.blob()
+      const disposition = response.headers.get('content-disposition') || ''
+      const match = disposition.match(/filename="?([^"]+)"?/i)
+      const suggested = match?.[1] ?? `Reporte_${debouncedMonth}_${moneda}.pdf`
+
+      const downloadUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = downloadUrl
+      a.download = suggested
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(downloadUrl)
+
+      toast.success('PDF descargado')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al generar PDF'
+      toast.error(message)
+    } finally {
+      toast.dismiss(loadingToast)
+      setIsExporting(false)
+    }
+  }, [isExporting, params.id, moneda, startDate, endDate, debouncedMonth])
 
   if (isGuardLoading || (!sucursal && isLoading)) {
     return (
@@ -196,7 +253,7 @@ export default function ReportesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED] pb-24">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-[#E0E0E0]/50 sticky top-0 z-50 shadow-sm print:hidden">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-[#E0E0E0]/50 sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-6 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -242,11 +299,16 @@ export default function ReportesPage() {
 
               <Button
                 variant="default"
-                className="ml-2 h-9 bg-[#002868] text-white hover:bg-[#003d8f] flex items-center gap-2"
-                onClick={handlePrint}
+                className="ml-2 h-9 bg-[#002868] text-white hover:bg-[#003d8f] flex items-center gap-2 disabled:opacity-70"
+                onClick={handleDownloadPDF}
+                disabled={isExporting || isLoading || !reportData}
               >
-                <Printer className="w-4 h-4" />
-                Imprimir
+                {isExporting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                {isExporting ? 'Generando…' : 'Descargar PDF'}
               </Button>
             </div>
           </div>
@@ -259,27 +321,7 @@ export default function ReportesPage() {
             <div className="w-10 h-10 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
           </div>
         ) : reportData ? (
-          <div className="space-y-10 print:space-y-4">
-            {/* Print header */}
-            <div className="hidden print:flex flex-col mb-8 border-b-2 border-[#002868] pb-4">
-              <div className="flex justify-between items-end">
-                <div>
-                  <h2 className="text-3xl font-black text-[#002868] tracking-tight">Reporte de Resultados</h2>
-                  <p className="text-slate-600 font-medium text-lg mt-1">Sucursal: {sucursal?.nombre}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-slate-800 capitalize">
-                    {new Date(startDate + 'T12:00:00').toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}
-                  </p>
-                  <p
-                    className={`text-sm font-bold mt-1 uppercase tracking-widest ${isClosedMonth ? 'text-blue-600' : 'text-emerald-600'}`}
-                  >
-                    {isClosedMonth ? 'Período Cerrado' : 'Mes en Curso (Parcial)'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
+          <div className="space-y-10">
             {/* ── 1 · Resumen General ──────────────────────────────────────── */}
             <section>
               <SectionHeading number="1" title="Resumen General del Período" />
@@ -337,7 +379,7 @@ export default function ReportesPage() {
             </section>
 
             {/* ── 2 · Evolución Mensual ────────────────────────────────────── */}
-            <section className="page-break-before print:hidden">
+            <section>
               <SectionHeading number="2" title="Evolución Mensual (Histórico)" className="mt-4" />
               <div className="flex flex-col gap-5">
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -356,7 +398,7 @@ export default function ReportesPage() {
             </section>
 
             {/* ── 3 · Ingresos ─────────────────────────────────────────────── */}
-            <section className="page-break-before">
+            <section>
               <SectionHeading number="3" title="Discriminado de Ingresos" className="mt-4" />
               <BreakdownPanel
                 breakdownData={reportData.ingresosBreakdown}
@@ -375,7 +417,7 @@ export default function ReportesPage() {
             </section>
 
             {/* ── 4 · Egresos ──────────────────────────────────────────────── */}
-            <section className="page-break-before">
+            <section>
               <SectionHeading number="4" title="Discriminado de Egresos" className="mt-4" />
               <BreakdownPanel
                 breakdownData={reportData.egresosBreakdown}
@@ -394,74 +436,51 @@ export default function ReportesPage() {
             </section>
 
             {/* ── 5 · Deudas (A Pagar) ──────────────────────────────────────── */}
-            <section className="mt-8 page-break-before">
+            <section className="mt-8">
               <SectionHeading number="5" title="Listado de Deudas (A Pagar)" className="mt-4" />
               <DeudaPanel deudas={reportData.detalles?.deudas || []} moneda={moneda} />
             </section>
 
             {/* ── 6 · Créditos (A Cobrar) ──────────────────────────────────────── */}
-            <section className="mt-8 page-break-before">
+            <section className="mt-8">
               <SectionHeading number="6" title="Listado de Créditos (A Cobrar)" className="mt-4" />
               <CreditoPanel creditos={reportData.detalles?.creditos || []} moneda={moneda} />
             </section>
 
-            {/* ── Print: Detalle extendido ──────────────────────────────────── */}
-            <div className="page-break-before mt-12 hidden print:block">
-              <h2 className="text-xl font-bold text-slate-800 mb-4 border-b-2 border-slate-200 pb-2">
-                Detalle de Movimientos Principales
-              </h2>
-              {(() => {
-                const allMovs = [
-                  ...(reportData.detalles?.ingresos ?? []),
-                  ...(reportData.detalles?.egresos ?? []),
-                ].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
-                if (allMovs.length === 0)
-                  return (
-                    <p className="text-center italic text-slate-500 mt-10 text-sm">
-                      No hay movimientos en este período.
-                    </p>
-                  )
+            {/* ── 7 · Top 10 Conceptos ─────────────────────────────────────── */}
+            <section className="mt-8">
+              <SectionHeading number="7" title="Top 10 Descripciones del Período" className="mt-4" />
+              <TopConceptosPanel
+                ingresos={reportData.detalles?.ingresos ?? []}
+                egresos={reportData.detalles?.egresos ?? []}
+                moneda={moneda}
+              />
+            </section>
 
-                return (
-                  <table className="w-full text-sm text-left border-collapse mt-4">
-                    <thead>
-                      <tr className="border-b-2 border-slate-300 text-slate-700">
-                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">Fecha</th>
-                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">Concepto</th>
-                        <th className="py-2 px-2 font-bold uppercase text-xs tracking-wider">
-                          Categoría / Subcategoría
-                        </th>
-                        <th className="py-2 px-2 text-right font-bold uppercase text-xs tracking-wider">Monto</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {allMovs.map((mov, i) => (
-                        <tr key={mov.id ?? i} className="print:break-inside-avoid">
-                          <td className="py-2 px-2 text-slate-500 whitespace-nowrap">
-                            {new Date(mov.fecha).toLocaleDateString('es-AR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                            })}
-                          </td>
-                          <td className="py-2 px-2 font-medium text-slate-800">{mov.concepto || 'Sin concepto'}</td>
-                          <td className="py-2 px-2 text-slate-500 text-xs">
-                            {mov.categoria_nombre || 'General'}
-                            {mov.subcategoria_nombre ? ` / ${mov.subcategoria_nombre}` : ''}
-                          </td>
-                          <td
-                            className={`py-2 px-2 text-right font-bold tabular-nums whitespace-nowrap ${mov.tipo === 'ingreso' ? 'text-emerald-600' : 'text-rose-600'}`}
-                          >
-                            {mov.tipo === 'ingreso' ? '+' : '-'}
-                            {formatMonto(Math.abs(mov.monto), moneda)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )
-              })()}
-            </div>
+            {/* ── 8 · Salud Financiera ─────────────────────────────────────── */}
+            <section className="mt-8">
+              <SectionHeading number="8" title="Indicadores de Salud Financiera" className="mt-4" />
+              <SaludFinancieraPanel
+                ingresosBreakdown={reportData.ingresosBreakdown}
+                egresosBreakdown={reportData.egresosBreakdown}
+                creditos={reportData.resumen.creditos ?? 0}
+                deudas={reportData.resumen.deudas ?? 0}
+                totalIngresos={reportData.resumen.ingresos}
+                totalEgresos={reportData.resumen.egresos}
+                moneda={moneda}
+              />
+            </section>
+
+            {/* ── 9 · Comparativo por Categoría ────────────────────────────── */}
+            <section className="mt-8">
+              <SectionHeading number="9" title="Comparativo por Categoría" className="mt-4" />
+              <ComparativoCategoriaPanel
+                categoryData={categoryData}
+                currentMonth={debouncedMonth}
+                moneda={moneda}
+              />
+            </section>
+
           </div>
         ) : null}
       </main>
