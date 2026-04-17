@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label'
 import { apiFetch } from '@/lib/api'
 import { formatMonto } from '@/lib/formatters'
 import type { Sucursal } from '@/lib/types'
-import { Printer, TrendingUp, TrendingDown, AlertTriangle, ArrowLeft } from 'lucide-react'
+import { Download, TrendingUp, TrendingDown, AlertTriangle, ArrowLeft, Loader2 } from 'lucide-react'
+import { useAuthStore } from '@/store/authStore'
 import { SectionHeading } from '@/components/reportes/SectionHeading'
 import { SummaryCard } from '@/components/reportes/SummaryCard'
 import { BreakdownPanel } from '@/components/reportes/BreakdownPanel'
@@ -38,6 +39,7 @@ export default function ReportesPage() {
   const [monthlyData, setMonthlyData] = useState<MonthlyDataPoint[]>([])
   const [categoryData, setCategoryData] = useState<CategoryDataPoint[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isExporting, setIsExporting] = useState(false)
 
   const [selectedIngresoCategory, setSelectedIngresoCategory] = useState<string | null>(null)
   const [selectedEgresoCategory, setSelectedEgresoCategory] = useState<string | null>(null)
@@ -186,7 +188,59 @@ export default function ReportesPage() {
     }
   }, [monthlyData, debouncedMonth])
 
-  const handlePrint = () => window.print()
+  const handleDownloadPDF = useCallback(async () => {
+    if (isExporting) return
+    const token = useAuthStore.getState().token
+    if (!token) {
+      toast.error('Sesión expirada. Volvé a iniciar sesión.')
+      return
+    }
+    const rawId = Array.isArray(params.id) ? params.id[0] : params.id
+    const safeId = rawId != null ? encodeURIComponent(String(rawId)) : ''
+    if (!safeId) return
+
+    setIsExporting(true)
+    const loadingToast = toast.loading('Generando PDF…')
+    try {
+      const url = `/api/reportes/${safeId}/pdf?moneda=${moneda}&startDate=${startDate}&endDate=${endDate}`
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (!response.ok) {
+        let detail = 'No se pudo generar el PDF'
+        try {
+          const errJson = await response.json()
+          detail = errJson.message || detail
+        } catch {
+          /* body no JSON */
+        }
+        throw new Error(detail)
+      }
+
+      const blob = await response.blob()
+      const disposition = response.headers.get('content-disposition') || ''
+      const match = disposition.match(/filename="?([^"]+)"?/i)
+      const suggested = match?.[1] ?? `Reporte_${debouncedMonth}_${moneda}.pdf`
+
+      const downloadUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = downloadUrl
+      a.download = suggested
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(downloadUrl)
+
+      toast.success('PDF descargado')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al generar PDF'
+      toast.error(message)
+    } finally {
+      toast.dismiss(loadingToast)
+      setIsExporting(false)
+    }
+  }, [isExporting, params.id, moneda, startDate, endDate, debouncedMonth])
 
   if (isGuardLoading || (!sucursal && isLoading)) {
     return (
@@ -199,7 +253,7 @@ export default function ReportesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED] pb-24">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-[#E0E0E0]/50 sticky top-0 z-50 shadow-sm print:hidden">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-[#E0E0E0]/50 sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-6 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -245,11 +299,16 @@ export default function ReportesPage() {
 
               <Button
                 variant="default"
-                className="ml-2 h-9 bg-[#002868] text-white hover:bg-[#003d8f] flex items-center gap-2"
-                onClick={handlePrint}
+                className="ml-2 h-9 bg-[#002868] text-white hover:bg-[#003d8f] flex items-center gap-2 disabled:opacity-70"
+                onClick={handleDownloadPDF}
+                disabled={isExporting || isLoading || !reportData}
               >
-                <Printer className="w-4 h-4" />
-                Imprimir
+                {isExporting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                {isExporting ? 'Generando…' : 'Descargar PDF'}
               </Button>
             </div>
           </div>
@@ -262,81 +321,11 @@ export default function ReportesPage() {
             <div className="w-10 h-10 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
           </div>
         ) : reportData ? (
-          <div className="space-y-10 print:space-y-4">
-            {/* ─── Print header ───────────────────────────────────────────────── */}
-            <div className="hidden print:block mb-6">
-              {/* Título y meta */}
-              <div className="flex justify-between items-start border-b-2 border-[#002868] pb-3 mb-4">
-                <div>
-                  <h2 className="text-2xl font-black text-[#002868] tracking-tight">Reporte de Resultados</h2>
-                  <p className="text-slate-600 font-medium text-sm mt-0.5">Sucursal: {sucursal?.nombre}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xl font-bold text-slate-800 capitalize">
-                    {new Date(startDate + 'T12:00:00').toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}
-                  </p>
-                  <p className={`text-xs font-bold mt-0.5 uppercase tracking-widest ${isClosedMonth ? 'text-blue-600' : 'text-emerald-600'}`}>
-                    {isClosedMonth ? 'Período Cerrado' : 'Mes en Curso (Parcial)'}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-0.5">Moneda: {moneda}</p>
-                </div>
-              </div>
-
-              {/* Resumen ejecutivo en tabla compacta */}
-              <table className="print-table w-full" style={{ fontSize: '10pt' }}>
-                <thead>
-                  <tr>
-                    <th className="text-center">Ingresos Totales</th>
-                    <th className="text-center">Egresos Totales</th>
-                    <th className="text-center">Resultado Neto</th>
-                    <th className="text-center">Deudas (A Pagar)</th>
-                    <th className="text-center">Créditos (A Cobrar)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="text-center" style={{ fontWeight: 800, color: '#059669', fontSize: '12pt', fontVariantNumeric: 'tabular-nums' }}>
-                      {formatMonto(reportData.resumen.ingresos, moneda)}
-                    </td>
-                    <td className="text-center" style={{ fontWeight: 800, color: '#e11d48', fontSize: '12pt', fontVariantNumeric: 'tabular-nums' }}>
-                      {formatMonto(reportData.resumen.egresos, moneda)}
-                    </td>
-                    <td className="text-center" style={{ fontWeight: 800, fontSize: '12pt', fontVariantNumeric: 'tabular-nums', color: reportData.resumen.resultado >= 0 ? '#1d4ed8' : '#dc2626' }}>
-                      {formatMonto(reportData.resumen.resultado, moneda)}
-                      <div style={{ fontSize: '8pt', fontWeight: 600, marginTop: '2px', color: reportData.resumen.resultado > 0 ? '#059669' : reportData.resumen.resultado < 0 ? '#dc2626' : '#64748b' }}>
-                        {reportData.resumen.resultado > 0 ? 'Ganancia' : reportData.resumen.resultado < 0 ? 'Pérdida' : 'Equilibrio'}
-                      </div>
-                    </td>
-                    <td className="text-center" style={{ fontWeight: 800, color: '#d97706', fontSize: '12pt', fontVariantNumeric: 'tabular-nums' }}>
-                      {formatMonto(reportData.resumen.deudas || 0, moneda)}
-                    </td>
-                    <td className="text-center" style={{ fontWeight: 800, color: '#4f46e5', fontSize: '12pt', fontVariantNumeric: 'tabular-nums' }}>
-                      {formatMonto(reportData.resumen.creditos || 0, moneda)}
-                    </td>
-                  </tr>
-                  {monthlyDeltas && (
-                    <tr>
-                      <td className="text-center" style={{ fontSize: '8pt', color: (monthlyDeltas.ingresos ?? 0) >= 0 ? '#059669' : '#e11d48' }}>
-                        {monthlyDeltas.ingresos !== null ? `${(monthlyDeltas.ingresos ?? 0) > 0 ? '+' : ''}${(monthlyDeltas.ingresos ?? 0).toFixed(1)}% vs mes ant.` : '—'}
-                      </td>
-                      <td className="text-center" style={{ fontSize: '8pt', color: (monthlyDeltas.egresos ?? 0) <= 0 ? '#059669' : '#e11d48' }}>
-                        {monthlyDeltas.egresos !== null ? `${(monthlyDeltas.egresos ?? 0) > 0 ? '+' : ''}${(monthlyDeltas.egresos ?? 0).toFixed(1)}% vs mes ant.` : '—'}
-                      </td>
-                      <td className="text-center" style={{ fontSize: '8pt', color: (monthlyDeltas.resultado ?? 0) >= 0 ? '#059669' : '#e11d48' }}>
-                        {monthlyDeltas.resultado !== null ? `${(monthlyDeltas.resultado ?? 0) > 0 ? '+' : ''}${(monthlyDeltas.resultado ?? 0).toFixed(1)}% vs mes ant.` : '—'}
-                      </td>
-                      <td className="text-center" style={{ fontSize: '8pt', color: '#94a3b8' }}>Histórico total</td>
-                      <td className="text-center" style={{ fontSize: '8pt', color: '#94a3b8' }}>A favor nuestro</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
+          <div className="space-y-10">
             {/* ── 1 · Resumen General ──────────────────────────────────────── */}
             <section>
               <SectionHeading number="1" title="Resumen General del Período" />
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-5 print-summary-grid">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
                 <SummaryCard
                   label="Ingresos Totales"
                   value={formatMonto(reportData.resumen.ingresos, moneda)}
@@ -390,7 +379,7 @@ export default function ReportesPage() {
             </section>
 
             {/* ── 2 · Evolución Mensual ────────────────────────────────────── */}
-            <section className="page-break-before print:hidden">
+            <section>
               <SectionHeading number="2" title="Evolución Mensual (Histórico)" className="mt-4" />
               <div className="flex flex-col gap-5">
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -409,7 +398,7 @@ export default function ReportesPage() {
             </section>
 
             {/* ── 3 · Ingresos ─────────────────────────────────────────────── */}
-            <section className="page-break-before">
+            <section>
               <SectionHeading number="3" title="Discriminado de Ingresos" className="mt-4" />
               <BreakdownPanel
                 breakdownData={reportData.ingresosBreakdown}
@@ -428,7 +417,7 @@ export default function ReportesPage() {
             </section>
 
             {/* ── 4 · Egresos ──────────────────────────────────────────────── */}
-            <section className="page-break-before">
+            <section>
               <SectionHeading number="4" title="Discriminado de Egresos" className="mt-4" />
               <BreakdownPanel
                 breakdownData={reportData.egresosBreakdown}
@@ -447,19 +436,19 @@ export default function ReportesPage() {
             </section>
 
             {/* ── 5 · Deudas (A Pagar) ──────────────────────────────────────── */}
-            <section className="mt-8 page-break-before">
+            <section className="mt-8">
               <SectionHeading number="5" title="Listado de Deudas (A Pagar)" className="mt-4" />
               <DeudaPanel deudas={reportData.detalles?.deudas || []} moneda={moneda} />
             </section>
 
             {/* ── 6 · Créditos (A Cobrar) ──────────────────────────────────────── */}
-            <section className="mt-8 page-break-before">
+            <section className="mt-8">
               <SectionHeading number="6" title="Listado de Créditos (A Cobrar)" className="mt-4" />
               <CreditoPanel creditos={reportData.detalles?.creditos || []} moneda={moneda} />
             </section>
 
             {/* ── 7 · Top 10 Conceptos ─────────────────────────────────────── */}
-            <section className="mt-8 page-break-before">
+            <section className="mt-8">
               <SectionHeading number="7" title="Top 10 Descripciones del Período" className="mt-4" />
               <TopConceptosPanel
                 ingresos={reportData.detalles?.ingresos ?? []}
@@ -469,7 +458,7 @@ export default function ReportesPage() {
             </section>
 
             {/* ── 8 · Salud Financiera ─────────────────────────────────────── */}
-            <section className="mt-8 page-break-before">
+            <section className="mt-8">
               <SectionHeading number="8" title="Indicadores de Salud Financiera" className="mt-4" />
               <SaludFinancieraPanel
                 ingresosBreakdown={reportData.ingresosBreakdown}
@@ -483,7 +472,7 @@ export default function ReportesPage() {
             </section>
 
             {/* ── 9 · Comparativo por Categoría ────────────────────────────── */}
-            <section className="mt-8 page-break-before">
+            <section className="mt-8">
               <SectionHeading number="9" title="Comparativo por Categoría" className="mt-4" />
               <ComparativoCategoriaPanel
                 categoryData={categoryData}
@@ -492,133 +481,6 @@ export default function ReportesPage() {
               />
             </section>
 
-            {/* ── Print: Detalle de movimientos por tipo ────────────────────── */}
-            <div className="page-break-before mt-8 hidden print:block">
-              <h2 className="text-lg font-bold text-slate-800 mb-4 pb-2" style={{ borderBottom: '2px solid #cbd5e1' }}>
-                Detalle de Movimientos del Período
-              </h2>
-
-              {((reportData.detalles?.ingresos?.length ?? 0) === 0 && (reportData.detalles?.egresos?.length ?? 0) === 0) ? (
-                <p className="text-center italic text-slate-500 mt-6 text-sm">
-                  No hay movimientos registrados en este período.
-                </p>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                  {/* Columna Ingresos */}
-                  <div>
-                    <p style={{ fontWeight: 700, color: '#059669', fontSize: '10pt', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #d1fae5' }}>
-                      Ingresos — {formatMonto(reportData.resumen.ingresos, moneda)}
-                    </p>
-                    {(reportData.detalles?.ingresos?.length ?? 0) === 0 ? (
-                      <p style={{ color: '#94a3b8', fontSize: '9pt', fontStyle: 'italic' }}>Sin ingresos en el período.</p>
-                    ) : (
-                      <table className="print-table w-full">
-                        <thead>
-                          <tr>
-                            <th className="text-left" style={{ width: '18%' }}>Fecha</th>
-                            <th className="text-left" style={{ width: '42%' }}>Concepto</th>
-                            <th className="text-left" style={{ width: '22%' }}>Categoría</th>
-                            <th className="text-right" style={{ width: '18%' }}>Monto</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {[...(reportData.detalles?.ingresos ?? [])]
-                            .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
-                            .map((mov, i) => (
-                              <tr key={mov.id ?? i}>
-                                <td style={{ color: '#64748b', whiteSpace: 'nowrap', fontSize: '8pt' }}>
-                                  {new Date(mov.fecha).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
-                                </td>
-                                <td style={{ color: '#1e293b', fontWeight: 500, fontSize: '9pt' }}>
-                                  {mov.concepto || '—'}
-                                </td>
-                                <td style={{ color: '#64748b', fontSize: '8pt' }}>
-                                  {mov.categoria_nombre || 'General'}
-                                  {mov.subcategoria_nombre ? ` / ${mov.subcategoria_nombre}` : ''}
-                                </td>
-                                <td style={{ textAlign: 'right', fontWeight: 700, color: '#059669', fontVariantNumeric: 'tabular-nums', fontSize: '9pt' }}>
-                                  +{formatMonto(Math.abs(mov.monto), moneda)}
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                        <tfoot>
-                          <tr>
-                            <td colSpan={3} style={{ fontWeight: 700 }}>Subtotal ingresos</td>
-                            <td style={{ textAlign: 'right', fontWeight: 700, color: '#059669', fontVariantNumeric: 'tabular-nums' }}>
-                              {formatMonto(reportData.resumen.ingresos, moneda)}
-                            </td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    )}
-                  </div>
-
-                  {/* Columna Egresos */}
-                  <div>
-                    <p style={{ fontWeight: 700, color: '#e11d48', fontSize: '10pt', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #ffe4e6' }}>
-                      Egresos — {formatMonto(reportData.resumen.egresos, moneda)}
-                    </p>
-                    {(reportData.detalles?.egresos?.length ?? 0) === 0 ? (
-                      <p style={{ color: '#94a3b8', fontSize: '9pt', fontStyle: 'italic' }}>Sin egresos en el período.</p>
-                    ) : (
-                      <table className="print-table w-full">
-                        <thead>
-                          <tr>
-                            <th className="text-left" style={{ width: '18%' }}>Fecha</th>
-                            <th className="text-left" style={{ width: '42%' }}>Concepto</th>
-                            <th className="text-left" style={{ width: '22%' }}>Categoría</th>
-                            <th className="text-right" style={{ width: '18%' }}>Monto</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {[...(reportData.detalles?.egresos ?? [])]
-                            .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
-                            .map((mov, i) => (
-                              <tr key={mov.id ?? i}>
-                                <td style={{ color: '#64748b', whiteSpace: 'nowrap', fontSize: '8pt' }}>
-                                  {new Date(mov.fecha).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
-                                </td>
-                                <td style={{ color: '#1e293b', fontWeight: 500, fontSize: '9pt' }}>
-                                  {mov.concepto || '—'}
-                                </td>
-                                <td style={{ color: '#64748b', fontSize: '8pt' }}>
-                                  {mov.categoria_nombre || 'General'}
-                                  {mov.subcategoria_nombre ? ` / ${mov.subcategoria_nombre}` : ''}
-                                </td>
-                                <td style={{ textAlign: 'right', fontWeight: 700, color: '#e11d48', fontVariantNumeric: 'tabular-nums', fontSize: '9pt' }}>
-                                  -{formatMonto(Math.abs(mov.monto), moneda)}
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                        <tfoot>
-                          <tr>
-                            <td colSpan={3} style={{ fontWeight: 700 }}>Subtotal egresos</td>
-                            <td style={{ textAlign: 'right', fontWeight: 700, color: '#e11d48', fontVariantNumeric: 'tabular-nums' }}>
-                              {formatMonto(reportData.resumen.egresos, moneda)}
-                            </td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Resultado neto al pie del detalle */}
-              <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '2px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem' }}>
-                <span style={{ fontSize: '10pt', fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Resultado Neto del Período
-                </span>
-                <span style={{ fontSize: '14pt', fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: reportData.resumen.resultado >= 0 ? '#1d4ed8' : '#dc2626' }}>
-                  {formatMonto(reportData.resumen.resultado, moneda)}
-                </span>
-                <span style={{ fontSize: '9pt', fontWeight: 600, color: reportData.resumen.resultado > 0 ? '#059669' : reportData.resumen.resultado < 0 ? '#dc2626' : '#64748b' }}>
-                  ({reportData.resumen.resultado > 0 ? 'Ganancia' : reportData.resumen.resultado < 0 ? 'Pérdida' : 'Equilibrio'})
-                </span>
-              </div>
-            </div>
           </div>
         ) : null}
       </main>
