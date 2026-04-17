@@ -108,7 +108,7 @@ export default function Navbar({
               aria-label="Calculadora"
             >
               <Calculator className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Calculadora</span>
+              <span className="hidden sm:inline">Calculadora (F1)</span>
             </Button>
 
             {/* Tareas Button */}
