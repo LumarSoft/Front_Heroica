@@ -61,8 +61,8 @@
   --secondary-foreground: #1a1a1a; /* Texto oscuro en fondos secundarios */
   --muted: #f5f5f5; /* Gris claro para elementos apagados */
   --muted-foreground: #666666; /* Gris medio para texto secundario */
-  --accent: #002868; /* Azul Marino para acentos */
-  --accent-foreground: #ffffff; /* Texto blanco en acentos */
+  --accent: #EEF2FF; /* Azul muy claro para fondos de hover/acento */
+  --accent-foreground: #002868; /* Texto azul marino sobre fondo claro */
   --destructive: #dc2626; /* Rojo para acciones destructivas */
   --border: #e0e0e0; /* Gris claro para bordes */
   --input: #e0e0e0; /* Gris claro para inputs */

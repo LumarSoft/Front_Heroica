@@ -254,25 +254,25 @@ export default function ReportesPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED] pb-24">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-[#E0E0E0]/50 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
               <Button
                 onClick={() => router.push(`/sucursales/${params.id}?moneda=${moneda}`)}
                 variant="outline"
                 size="sm"
-                className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer"
+                className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer flex-shrink-0"
               >
-                <ArrowLeft className="w-4 h-4 mr-1" />
-                Volver
+                <ArrowLeft className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline">Volver</span>
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-[#002868]">Reportes — {moneda}</h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-[#002868]">Reportes — {moneda}</h1>
                 <p className="text-sm text-slate-500">{sucursal?.nombre}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 bg-white p-2 rounded-lg shadow-sm border border-gray-100">
+            <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-gray-100 w-full sm:w-auto">
               <div className="flex items-center gap-2">
                 <Label htmlFor="month" className="text-sm font-medium whitespace-nowrap">
                   Mes a consultar:
@@ -315,7 +315,7 @@ export default function ReportesPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {isLoading && !reportData ? (
           <div className="flex justify-center p-20">
             <div className="w-10 h-10 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />

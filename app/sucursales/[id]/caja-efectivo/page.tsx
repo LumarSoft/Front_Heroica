@@ -121,7 +121,7 @@ export default function CajaEfectivoPage() {
         sucursalNombre={sucursalNombre ? `${sucursalNombre} — ${moneda}` : ''}
       />
 
-      <main className="container mx-auto px-6 py-8 flex flex-col h-full">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col h-full">
         {user?.rol === 'empleado' ? (
           <AccessDenied resource="la caja de efectivo" backUrl={`/sucursales/${params.id}`} />
         ) : (

@@ -14,9 +14,11 @@ import { useAuthGuard } from '@/hooks/use-auth-guard'
 import { useEmployeeNotifications } from '@/hooks/use-employee-notifications'
 import { formatMonto } from '@/lib/formatters'
 import type { Sucursal, Documento, CuentaBancaria } from '@/lib/types'
-import { Mail, Paperclip, ArrowLeft, Download, Trash2, AlertTriangle } from 'lucide-react'
+import { Mail, Paperclip, ArrowLeft, Download, Trash2, AlertTriangle, Info, BarChart2 } from 'lucide-react'
+import Image from 'next/image'
 import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
 import { ErrorBanner } from '@/components/ui/error-banner'
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/store/authStore'
 
 export default function SucursalDetailPage() {
@@ -403,89 +405,115 @@ export default function SucursalDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
-      {/* Header Ultra-Minimalista */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-[#E0E0E0]/50 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {/* Botón Volver */}
-              <Button
-                onClick={() => router.push('/sucursales')}
-                variant="outline"
-                size="sm"
-                className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer"
-              >
-                <ArrowLeft className="w-4 h-4 mr-1" />
-                Volver
-              </Button>
+      <header className="bg-white border-b border-[#E0E0E0] shadow-sm sticky top-0 z-50">
+        <div className="container mx-auto px-3 sm:px-6">
+          <div className="flex items-center h-14 sm:h-16 gap-2 sm:gap-3">
 
-              {/* Nombre de la Sucursal */}
-              <h1 className="text-2xl font-bold text-[#002868]">{sucursal.nombre}</h1>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {/* Botón Ver Información */}
-              <Button
-                onClick={() => setIsInfoDialogOpen(true)}
-                variant="outline"
-                size="sm"
-                className="relative border-[#002868] text-[#002868] hover:bg-[#002868] hover:text-white cursor-pointer transition-all"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
-                  className="w-4 h-4 mr-2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-                  />
-                </svg>
-                Ver Información
-                {!loadingDocumentos && totalAlertCount > 0 && (
-                  <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white ring-2 ring-white shadow-md">
-                    {totalAlertCount}
-                  </span>
-                )}
-              </Button>
-
-              {/* Botón Reportes */}
-              {canVerReportes && (
-                <Button
-                  onClick={() => router.push(`/sucursales/${params.id}/reportes?moneda=${moneda}`)}
-                  size="sm"
-                  className="bg-[#002868] text-white hover:bg-[#003d8f] cursor-pointer transition-all shadow-md"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-4 h-4 mr-2"
+            {/* Back button */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => router.push('/sucursales')}
+                    variant="ghost"
+                    size="icon"
+                    className="w-8 h-8 sm:w-9 sm:h-9 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 flex-shrink-0 cursor-pointer rounded-lg"
+                    aria-label="Volver a sucursales"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
-                    />
-                  </svg>
-                  Ver Reportes
-                </Button>
-              )}
+                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Volver a sucursales</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {/* Logo */}
+            <Image
+              src="/HEROICA.svg"
+              alt="Heroica"
+              width={80}
+              height={32}
+              className="h-6 sm:h-8 w-auto flex-shrink-0"
+              priority
+            />
+
+            {/* Divider */}
+            <div className="h-6 sm:h-8 w-px bg-[#E0E0E0] flex-shrink-0" />
+
+            {/* Sucursal context */}
+            <div className="flex flex-col justify-center min-w-0 flex-1 sm:flex-none">
+              <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC] leading-none mb-0.5">
+                Sucursal
+              </p>
+              <h1 className="text-xs sm:text-sm font-semibold text-[#002868] truncate leading-none">
+                {sucursal.nombre}
+              </h1>
             </div>
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Actions */}
+            <TooltipProvider>
+              <div className="flex items-center gap-0.5 flex-shrink-0">
+                {/* Ver Información */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => setIsInfoDialogOpen(true)}
+                      variant="ghost"
+                      size="icon"
+                      className="relative w-8 h-8 sm:w-9 sm:h-9 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 transition-all cursor-pointer rounded-lg"
+                      aria-label="Ver información de la sucursal"
+                    >
+                      <Info className="w-4 h-4" />
+                      {!loadingDocumentos && totalAlertCount > 0 && (
+                        <span className="absolute top-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white ring-1 ring-white">
+                          {totalAlertCount}
+                        </span>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    Ver información
+                    {!loadingDocumentos && totalAlertCount > 0 && (
+                      <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-red-500 text-[9px] font-bold text-white">
+                        {totalAlertCount} alerta{totalAlertCount !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Ver Reportes */}
+                {canVerReportes && (
+                  <>
+                    <div className="h-6 w-px bg-[#E0E0E0] mx-1 flex-shrink-0" />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={() => router.push(`/sucursales/${params.id}/reportes?moneda=${moneda}`)}
+                          variant="ghost"
+                          size="icon"
+                          className="w-8 h-8 sm:w-9 sm:h-9 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 transition-all cursor-pointer rounded-lg"
+                          aria-label="Ver reportes"
+                        >
+                          <BarChart2 className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Ver reportes</TooltipContent>
+                    </Tooltip>
+                  </>
+                )}
+              </div>
+            </TooltipProvider>
           </div>
         </div>
       </header>
 
       {/* Main Content - LAS CAJAS SON LAS ESTRELLAS */}
-      <main className="container mx-auto px-6 py-16">
+      <main className="container mx-auto px-4 sm:px-6 py-8 md:py-16">
         {/* Título Destacado */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8 md:mb-12">
           <h2 className="text-4xl md:text-5xl font-bold text-[#002868] mb-3">
             {canVerMovimientos ? 'Gestión de Cajas' : 'Gestión de Pagos'}
           </h2>
@@ -522,7 +550,7 @@ export default function SucursalDetailPage() {
 
         {canVerMovimientos ? (
           /* Las 3 Cajas - MUY GRANDES Y PROTAGONISTAS */
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
             {/* Caja en Efectivo */}
             <Card
               onClick={() => router.push(`/sucursales/${params.id}/caja-efectivo?moneda=${moneda}`)}
@@ -531,15 +559,15 @@ export default function SucursalDetailPage() {
               {/* Decoración de fondo */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#002868]/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
 
-              <CardContent className="p-10 text-center relative z-10">
-                <div className="w-28 h-28 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-[#002868]/10 to-[#002868]/5 flex items-center justify-center group-hover:from-[#002868]/20 group-hover:to-[#002868]/10 transition-all duration-300 group-hover:scale-110">
+              <CardContent className="p-6 md:p-10 text-center relative z-10">
+                <div className="w-20 h-20 md:w-28 md:h-28 mx-auto mb-4 md:mb-6 rounded-2xl bg-gradient-to-br from-[#002868]/10 to-[#002868]/5 flex items-center justify-center group-hover:from-[#002868]/20 group-hover:to-[#002868]/10 transition-all duration-300 group-hover:scale-110">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     strokeWidth={1.5}
                     stroke="currentColor"
-                    className="w-14 h-14 text-[#002868]"
+                    className="w-10 h-10 md:w-14 md:h-14 text-[#002868]"
                   >
                     <path
                       strokeLinecap="round"
@@ -548,7 +576,7 @@ export default function SucursalDetailPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors">
+                <h3 className="text-xl md:text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors">
                   Caja en Efectivo
                 </h3>
 
@@ -613,15 +641,15 @@ export default function SucursalDetailPage() {
               {/* Decoración de fondo */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#002868]/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
 
-              <CardContent className="p-10 text-center relative z-10">
-                <div className="w-28 h-28 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-[#002868]/10 to-[#002868]/5 flex items-center justify-center group-hover:from-[#002868]/20 group-hover:to-[#002868]/10 transition-all duration-300 group-hover:scale-110">
+              <CardContent className="p-6 md:p-10 text-center relative z-10">
+                <div className="w-20 h-20 md:w-28 md:h-28 mx-auto mb-4 md:mb-6 rounded-2xl bg-gradient-to-br from-[#002868]/10 to-[#002868]/5 flex items-center justify-center group-hover:from-[#002868]/20 group-hover:to-[#002868]/10 transition-all duration-300 group-hover:scale-110">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     strokeWidth={1.5}
                     stroke="currentColor"
-                    className="w-14 h-14 text-[#002868]"
+                    className="w-10 h-10 md:w-14 md:h-14 text-[#002868]"
                   >
                     <path
                       strokeLinecap="round"
@@ -630,7 +658,7 @@ export default function SucursalDetailPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors">
+                <h3 className="text-xl md:text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors">
                   Caja en Banco
                 </h3>
 
@@ -696,15 +724,15 @@ export default function SucursalDetailPage() {
               {/* Decoración de fondo */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#002868]/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
 
-              <CardContent className="p-10 text-center relative z-10">
-                <div className="w-28 h-28 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-[#002868]/10 to-[#002868]/5 flex items-center justify-center group-hover:from-[#002868]/20 group-hover:to-[#002868]/10 transition-all duration-300 group-hover:scale-110">
+              <CardContent className="p-6 md:p-10 text-center relative z-10">
+                <div className="w-20 h-20 md:w-28 md:h-28 mx-auto mb-4 md:mb-6 rounded-2xl bg-gradient-to-br from-[#002868]/10 to-[#002868]/5 flex items-center justify-center group-hover:from-[#002868]/20 group-hover:to-[#002868]/10 transition-all duration-300 group-hover:scale-110">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     strokeWidth={1.5}
                     stroke="currentColor"
-                    className="w-14 h-14 text-[#002868]"
+                    className="w-10 h-10 md:w-14 md:h-14 text-[#002868]"
                   >
                     <path
                       strokeLinecap="round"
@@ -713,7 +741,7 @@ export default function SucursalDetailPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors relative inline-block">
+                <h3 className="text-xl md:text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors relative inline-block">
                   Pagos Pendientes
                   {canAprobarPendientes && pendingCount > 0 && (
                     <span className="absolute -top-3 -right-6 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white ring-2 ring-white shadow-lg animate-bounce">
@@ -760,15 +788,15 @@ export default function SucursalDetailPage() {
               {/* Decoración de fondo */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#002868]/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
 
-              <CardContent className="p-10 text-center relative z-10">
-                <div className="w-28 h-28 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-[#002868]/10 to-[#002868]/5 flex items-center justify-center group-hover:from-[#002868]/20 group-hover:to-[#002868]/10 transition-all duration-300 group-hover:scale-110">
+              <CardContent className="p-6 md:p-10 text-center relative z-10">
+                <div className="w-20 h-20 md:w-28 md:h-28 mx-auto mb-4 md:mb-6 rounded-2xl bg-gradient-to-br from-[#002868]/10 to-[#002868]/5 flex items-center justify-center group-hover:from-[#002868]/20 group-hover:to-[#002868]/10 transition-all duration-300 group-hover:scale-110">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     strokeWidth={1.5}
                     stroke="currentColor"
-                    className="w-14 h-14 text-[#002868]"
+                    className="w-10 h-10 md:w-14 md:h-14 text-[#002868]"
                   >
                     <path
                       strokeLinecap="round"
@@ -777,7 +805,7 @@ export default function SucursalDetailPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors relative inline-block">
+                <h3 className="text-xl md:text-3xl font-bold text-[#002868] mb-3 group-hover:text-[#003d8f] transition-colors relative inline-block">
                   Pagos Pendientes
                   {/* Badge empleado: nuevas aprobaciones/rechazos */}
                   {isEmployee && employeeUnseenCount > 0 && (

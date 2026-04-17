@@ -86,161 +86,163 @@ export function EndDateFilter({
   )
 
   return (
-    <div className="flex flex-wrap items-center gap-3 p-4 bg-white rounded-xl border border-[#E0E0E0] shadow-sm mb-6">
-      {/* Desde */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-[#5A6070] uppercase tracking-wide whitespace-nowrap">Desde</span>
-        <Popover>
-          <PopoverTrigger asChild>
-            <button type="button" className={triggerClass}>
-              <CalendarDays className="w-4 h-4 text-[#002868] flex-shrink-0" />
-              <span className={dateRange?.from ? 'text-[#1A1A1A] font-medium' : 'text-[#9AA0AC]'}>
-                {dateRange?.from ? format(dateRange.from, 'd MMM yyyy', { locale: es }) : 'dd/mm/aaaa'}
-              </span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={dateRange?.from}
-              onSelect={handleFromSelect}
-              disabled={date => (dateRange?.to ? date > dateRange.to : false)}
-              initialFocus
-              locale={es}
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
+    <div className="flex flex-col gap-3 p-3 sm:p-4 bg-white rounded-xl border border-[#E0E0E0] shadow-sm mb-6">
+      {/* Row 1: Date range + banco filter + view toggle */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        {/* Date range — always on one line */}
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+          <span className="text-xs font-semibold text-[#5A6070] uppercase tracking-wide whitespace-nowrap hidden xs:block">Desde</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" className={cn(triggerClass, 'flex-1 min-w-0 max-w-[140px] sm:max-w-[160px]')}>
+                <CalendarDays className="w-4 h-4 text-[#002868] flex-shrink-0" />
+                <span className={cn('truncate text-xs sm:text-sm', dateRange?.from ? 'text-[#1A1A1A] font-medium' : 'text-[#9AA0AC]')}>
+                  {dateRange?.from ? format(dateRange.from, 'd MMM yy', { locale: es }) : 'Desde'}
+                </span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dateRange?.from}
+                onSelect={handleFromSelect}
+                disabled={date => (dateRange?.to ? date > dateRange.to : false)}
+                initialFocus
+                locale={es}
+              />
+            </PopoverContent>
+          </Popover>
 
-      <span className="text-[#D0D0D0] text-lg font-light select-none">→</span>
+          <span className="text-[#D0D0D0] text-base font-light select-none flex-shrink-0">→</span>
 
-      {/* Hasta */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-[#5A6070] uppercase tracking-wide whitespace-nowrap">Hasta</span>
-        <Popover>
-          <PopoverTrigger asChild>
-            <button type="button" className={triggerClass}>
-              <CalendarDays className="w-4 h-4 text-[#002868] flex-shrink-0" />
-              <span className={dateRange?.to ? 'text-[#1A1A1A] font-medium' : 'text-[#9AA0AC]'}>
-                {dateRange?.to ? format(dateRange.to, 'd MMM yyyy', { locale: es }) : 'dd/mm/aaaa'}
-              </span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={dateRange?.to}
-              onSelect={handleToSelect}
-              disabled={date => (dateRange?.from ? date < dateRange.from : false)}
-              defaultMonth={dateRange?.from ?? dateRange?.to}
-              initialFocus
-              locale={es}
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {/* Separador con filtro banco */}
-      {showBancoFilter && <div className="hidden sm:block w-px h-7 bg-[#E0E0E0]" />}
-
-      {/* Filtro Banco */}
-      {showBancoFilter && (
-        <div ref={containerRef} className="relative flex items-center gap-2">
-          <Landmark className="w-4 h-4 text-[#002868] flex-shrink-0" />
-          <button
-            type="button"
-            onClick={() => setIsOpen(p => !p)}
-            className="h-9 min-w-[150px] rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] hover:bg-white px-3 text-sm text-[#1A1A1A] flex items-center justify-between gap-2 cursor-pointer transition-all hover:border-[#B0B0B0]"
-          >
-            <span className="truncate">{bancosLabel}</span>
-            <ChevronDown
-              className={`w-4 h-4 text-[#5A6070] flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
-          {isOpen && (
-            <div className="absolute top-full left-0 mt-2 w-full min-w-[220px] bg-white border border-[#E0E0E0] rounded-xl shadow-xl p-2 z-50">
-              <div className="max-h-52 overflow-y-auto">
-                {bancos?.map(banco => {
-                  const id = banco.id.toString()
-                  return (
-                    <label
-                      key={banco.id}
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#F5F6F8] cursor-pointer transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={bancosSeleccionadosSet.has(id)}
-                        onChange={() => toggleBanco(id)}
-                        className="h-4 w-4 rounded border-[#E0E0E0] accent-[#002868] cursor-pointer"
-                      />
-                      <span className="text-sm font-medium text-[#1A1A1A] truncate">{banco.nombre}</span>
-                    </label>
-                  )
-                })}
-              </div>
-            </div>
-          )}
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" className={cn(triggerClass, 'flex-1 min-w-0 max-w-[140px] sm:max-w-[160px]')}>
+                <CalendarDays className="w-4 h-4 text-[#002868] flex-shrink-0" />
+                <span className={cn('truncate text-xs sm:text-sm', dateRange?.to ? 'text-[#1A1A1A] font-medium' : 'text-[#9AA0AC]')}>
+                  {dateRange?.to ? format(dateRange.to, 'd MMM yy', { locale: es }) : 'Hasta'}
+                </span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dateRange?.to}
+                onSelect={handleToSelect}
+                disabled={date => (dateRange?.from ? date < dateRange.from : false)}
+                defaultMonth={dateRange?.from ?? dateRange?.to}
+                initialFocus
+                locale={es}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
-      )}
 
-      {/* Buscador de texto */}
-      {onSearchTextChange && (
-        <>
-          <div className="hidden sm:block w-px h-7 bg-[#E0E0E0]" />
-          <div className="relative flex items-center">
-            <Search className="absolute left-3 w-4 h-4 text-[#9AA0AC] pointer-events-none" />
-            <input
-              type="text"
-              value={searchText}
-              onChange={e => onSearchTextChange(e.target.value)}
-              placeholder="Buscar concepto, N° cheque..."
-              className="h-9 pl-9 pr-3 rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] text-sm text-[#1A1A1A] placeholder:text-[#9AA0AC] outline-none focus:border-[#002868]/60 focus:bg-white transition-all min-w-[220px]"
-            />
+        {/* Filtro Banco */}
+        {showBancoFilter && (
+          <div ref={containerRef} className="relative flex items-center gap-1.5">
+            <Landmark className="w-4 h-4 text-[#002868] flex-shrink-0" />
+            <button
+              type="button"
+              onClick={() => setIsOpen(p => !p)}
+              className="h-9 min-w-[120px] sm:min-w-[150px] rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] hover:bg-white px-3 text-sm text-[#1A1A1A] flex items-center justify-between gap-2 cursor-pointer transition-all hover:border-[#B0B0B0]"
+            >
+              <span className="truncate text-xs sm:text-sm">{bancosLabel}</span>
+              <ChevronDown
+                className={`w-4 h-4 text-[#5A6070] flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+            {isOpen && (
+              <div className="absolute top-full left-0 mt-2 w-full min-w-[220px] bg-white border border-[#E0E0E0] rounded-xl shadow-xl p-2 z-50">
+                <div className="max-h-52 overflow-y-auto">
+                  {bancos?.map(banco => {
+                    const id = banco.id.toString()
+                    return (
+                      <label
+                        key={banco.id}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#F5F6F8] cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={bancosSeleccionadosSet.has(id)}
+                          onChange={() => toggleBanco(id)}
+                          className="h-4 w-4 rounded border-[#E0E0E0] accent-[#002868] cursor-pointer"
+                        />
+                        <span className="text-sm font-medium text-[#1A1A1A] truncate">{banco.nombre}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
-        </>
-      )}
+        )}
 
-      {/* Toggle Tabla / Calendario */}
-      {onViewModeChange && (
-        <>
-          <div className="hidden sm:block w-px h-7 bg-[#E0E0E0]" />
-          <div className="flex items-center gap-0.5 p-0.5 bg-[#F0F4FF] rounded-lg border border-[#002868]/15">
+        {/* Toggle Tabla / Calendario */}
+        {onViewModeChange && (
+          <div className="flex items-center gap-0.5 p-0.5 bg-[#F0F4FF] rounded-lg border border-[#002868]/15 ml-auto">
             <button
               type="button"
               onClick={() => onViewModeChange('tabla')}
               className={cn(
-                'flex items-center gap-1.5 h-7 px-3 rounded-md text-xs font-semibold transition-all',
+                'flex items-center gap-1.5 h-7 px-2 sm:px-3 rounded-md text-xs font-semibold transition-all',
                 viewMode === 'tabla'
                   ? 'bg-[#002868] text-white shadow-sm'
                   : 'text-[#5A6070] hover:text-[#002868] hover:bg-white/60',
               )}
             >
               <LayoutList className="w-3.5 h-3.5" />
-              Tabla
+              <span className="hidden sm:inline">Tabla</span>
             </button>
             <button
               type="button"
               onClick={() => onViewModeChange('calendario')}
               className={cn(
-                'flex items-center gap-1.5 h-7 px-3 rounded-md text-xs font-semibold transition-all',
+                'flex items-center gap-1.5 h-7 px-2 sm:px-3 rounded-md text-xs font-semibold transition-all',
                 viewMode === 'calendario'
                   ? 'bg-[#002868] text-white shadow-sm'
                   : 'text-[#5A6070] hover:text-[#002868] hover:bg-white/60',
               )}
             >
               <CalendarDays className="w-3.5 h-3.5" />
-              Calendario
+              <span className="hidden sm:inline">Calendario</span>
             </button>
           </div>
-        </>
+        )}
+      </div>
+
+      {/* Row 2: Search + limpiar */}
+      {onSearchTextChange && (
+        <div className="flex items-center gap-2">
+          <div className="relative flex items-center flex-1">
+            <Search className="absolute left-3 w-4 h-4 text-[#9AA0AC] pointer-events-none" />
+            <input
+              type="text"
+              value={searchText}
+              onChange={e => onSearchTextChange(e.target.value)}
+              placeholder="Buscar concepto, N° cheque..."
+              className="w-full h-9 pl-9 pr-3 rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] text-sm text-[#1A1A1A] placeholder:text-[#9AA0AC] outline-none focus:border-[#002868]/60 focus:bg-white transition-all"
+            />
+          </div>
+          {hayFiltro && (
+            <Button
+              variant="ghost"
+              onClick={onLimpiar}
+              className="h-9 px-3 text-rose-600 hover:text-rose-700 hover:bg-rose-50 flex items-center gap-1.5 rounded-lg font-semibold transition-colors cursor-pointer flex-shrink-0"
+            >
+              <FilterX className="w-4 h-4" />
+              <span className="hidden sm:inline">Limpiar</span>
+            </Button>
+          )}
+        </div>
       )}
 
-      {/* Botón Limpiar */}
-      {hayFiltro && (
+      {/* Botón Limpiar (cuando no hay buscador) */}
+      {!onSearchTextChange && hayFiltro && (
         <Button
           variant="ghost"
           onClick={onLimpiar}
-          className="h-9 px-4 text-rose-600 hover:text-rose-700 hover:bg-rose-50 flex items-center gap-2 rounded-lg font-semibold transition-colors cursor-pointer ml-auto"
+          className="h-9 px-4 text-rose-600 hover:text-rose-700 hover:bg-rose-50 flex items-center gap-2 rounded-lg font-semibold transition-colors cursor-pointer self-start"
         >
           <FilterX className="w-4 h-4" />
           Limpiar

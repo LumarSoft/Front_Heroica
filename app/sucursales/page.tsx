@@ -187,10 +187,10 @@ export default function SucursalesPage() {
       <Navbar userName={user?.nombre} userRole={user?.rol} onLogout={handleLogout} />
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-12 flex-1">
-        <div className="mb-10">
-          <h2 className="text-4xl font-bold text-[#002868] mb-2">Sucursales</h2>
-          <p className="text-[#666666] text-lg">Selecciona una sucursal para gestionar.</p>
+      <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 flex-1">
+        <div className="mb-6 sm:mb-10">
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#002868] mb-2">Sucursales</h2>
+          <p className="text-[#666666] text-base sm:text-lg">Selecciona una sucursal para gestionar.</p>
         </div>
 
         <ErrorBanner error={error} />

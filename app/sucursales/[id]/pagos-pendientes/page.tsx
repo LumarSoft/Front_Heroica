@@ -179,7 +179,7 @@ export default function PagosPendientesPage() {
         backUrl={`/sucursales/${params.id}?moneda=${moneda}`}
       />
 
-      <main className="container mx-auto px-6 py-8">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <ErrorBanner error={error} />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">

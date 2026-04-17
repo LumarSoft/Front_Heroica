@@ -227,17 +227,17 @@ export function TransactionTable({
   return (
     <Card className="border-[#E0E0E0] bg-white shadow-lg">
       <CardHeader className="border-b border-[#E0E0E0] px-3 py-3 sm:px-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-2xl font-bold text-[#002868]">{title}</CardTitle>
-            <CardDescription className="text-[#666666]">{description}</CardDescription>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-base sm:text-2xl font-bold text-[#002868] leading-tight">{title}</CardTitle>
+            <CardDescription className="text-[#666666] text-xs sm:text-sm mt-0.5 leading-snug">{description}</CardDescription>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-[#666666] font-medium mb-1">Total</p>
+          <div className="text-right flex-shrink-0">
+            <p className="text-xs text-[#666666] font-medium mb-1">Total</p>
             <div
-              className={`inline-flex items-center justify-center px-4 py-2 rounded-lg ${total >= 0 ? 'bg-emerald-50 border border-emerald-200' : 'bg-rose-50 border border-rose-200'}`}
+              className={`inline-flex items-center justify-center px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg ${total >= 0 ? 'bg-emerald-50 border border-emerald-200' : 'bg-rose-50 border border-rose-200'}`}
             >
-              <p className={`text-2xl font-bold ${total >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+              <p className={`text-lg sm:text-2xl font-bold tabular-nums ${total >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                 {formatMonto(total)}
               </p>
             </div>

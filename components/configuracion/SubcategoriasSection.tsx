@@ -170,7 +170,7 @@ export function SubcategoriasSection() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f] w-full sm:w-auto">
+          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f] text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4">
             + Nueva Subcategoría
           </Button>
         </CardHeader>
@@ -182,22 +182,27 @@ export function SubcategoriasSection() {
               subcategoriasFiltradas.map(sub => (
                 <div
                   key={sub.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                  className="flex items-center justify-between gap-3 p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div>
                     <h3 className="font-semibold text-[#002868]">{sub.nombre}</h3>
                     <p className="text-xs text-[#666666]">Categoría: {sub.categoria_nombre}</p>
                     {sub.descripcion && <p className="text-sm text-[#666666] mt-1">{sub.descripcion}</p>}
                   </div>
-                  <div className="flex gap-2">
-                    <Button onClick={() => handleOpenEdit(sub)} variant="outline" size="sm">
+                  <div className="flex gap-1.5 flex-shrink-0">
+                    <Button
+                      onClick={() => handleOpenEdit(sub)}
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2.5 text-xs border-[#E0E0E0] text-[#5A6070] hover:bg-[#EEF2FF] hover:border-[#002868] hover:text-[#002868]"
+                    >
                       Editar
                     </Button>
                     <Button
                       onClick={() => setDeleteTarget({ id: sub.id, nombre: sub.nombre })}
                       variant="outline"
                       size="sm"
-                      className="text-rose-600 hover:bg-rose-50"
+                      className="h-7 px-2.5 text-xs border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-400 hover:text-rose-600"
                     >
                       Eliminar
                     </Button>

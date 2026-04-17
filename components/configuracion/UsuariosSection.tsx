@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { Trash2, Building2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Trash2, Building2, ChevronDown, ChevronUp, ShieldCheck, Lock, KeyRound } from 'lucide-react'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
@@ -355,7 +355,7 @@ export function UsuariosSection() {
                 setShowSucursales(false)
                 setIsCreateOpen(true)
               }}
-              className="bg-[#002868] hover:bg-[#003d8f] text-white"
+              className="bg-[#002868] hover:bg-[#003d8f] text-white text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
             >
               + Nuevo Usuario
             </Button>
@@ -375,141 +375,120 @@ export function UsuariosSection() {
                 return (
                   <div
                     key={usuario.id}
-                    className={`flex items-center gap-4 px-6 py-4 transition-colors ${usuario.activo ? 'hover:bg-gray-50/80' : 'bg-gray-50/50'}`}
+                    className={`px-4 sm:px-6 py-3.5 sm:py-4 transition-colors ${usuario.activo ? 'hover:bg-gray-50/80' : 'bg-gray-50/50'}`}
                   >
-                    {/* Avatar */}
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 select-none ${
-                        usuario.activo ? 'bg-[#002868]/10 text-[#002868]' : 'bg-gray-200 text-gray-400'
-                      }`}
-                    >
-                      {getInitials(usuario.nombre)}
-                    </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4">
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-[#1A1A1A] truncate">{usuario.nombre}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
-                          {badgeLabel}
-                        </span>
-                        {usuario.two_factor_enabled && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-200 flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path
-                                fillRule="evenodd"
-                                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            2FA
-                          </span>
-                        )}
-                        {usuario.two_factor_enabled && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-200 flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path
-                                fillRule="evenodd"
-                                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            2FA
-                          </span>
-                        )}
-                        {!usuario.activo && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
-                            Inactivo
-                          </span>
-                        )}
-                        {isProtected && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                            Protegido
-                          </span>
-                        )}
-                        {usuario.must_change_password && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-                            Debe cambiar clave
-                          </span>
-                        )}
+                      {/* Avatar + Info */}
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div
+                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 select-none ${
+                            usuario.activo ? 'bg-[#002868]/10 text-[#002868]' : 'bg-gray-200 text-gray-400'
+                          }`}
+                        >
+                          {getInitials(usuario.nombre)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          {/* Línea 1: nombre + rol + estado activo */}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-[#1A1A1A] text-sm truncate">{usuario.nombre}</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 ${badgeClass}`}>
+                              {badgeLabel}
+                            </span>
+                            {!usuario.activo && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200 flex-shrink-0">
+                                Inactivo
+                              </span>
+                            )}
+                          </div>
+                          {/* Línea 2: email + indicadores secundarios */}
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-xs text-[#666666] truncate">{usuario.email}</p>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {usuario.two_factor_enabled && (
+                                <span title="2FA activo" className="text-green-600">
+                                  <ShieldCheck className="w-3 h-3" />
+                                </span>
+                              )}
+                              {isProtected && (
+                                <span title="Usuario protegido del sistema" className="text-amber-500">
+                                  <Lock className="w-3 h-3" />
+                                </span>
+                              )}
+                              {usuario.must_change_password && (
+                                <span title="Debe cambiar contraseña al ingresar" className="text-orange-500">
+                                  <KeyRound className="w-3 h-3" />
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-sm text-[#666666] truncate mt-0.5">{usuario.email}</p>
-                    </div>
 
-                    {/* Acciones */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {isProtected ? (
-                        <span className="text-xs text-[#999999] italic px-2">No editable</span>
-                      ) : isSelf ? (
-                        <span className="text-xs text-[#999999] italic px-2">Sesión actual</span>
-                      ) : !canGestionarUsuarios ? (
-                        <span className="text-xs text-[#999999] italic px-2">Solo lectura</span>
-                      ) : (
-                        <>
-                          {/* Selector de rol dinámico */}
-                          <Select
-                            value={usuario.rol_id.toString()}
-                            onValueChange={value => handleChangeRol(usuario.id, parseInt(value))}
-                          >
-                            <SelectTrigger className="w-[160px] h-9 text-sm border-[#E0E0E0] bg-white text-[#1A1A1A]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {roles.map(rol => (
-                                <SelectItem key={rol.id} value={rol.id.toString()}>
-                                  {getRolLabel(rol.nombre)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                      {/* Acciones */}
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 pl-12 sm:pl-0">
+                        {isProtected ? (
+                          <span className="text-xs text-[#999999] italic">No editable</span>
+                        ) : isSelf ? (
+                          <span className="text-xs text-[#999999] italic">Sesión actual</span>
+                        ) : !canGestionarUsuarios ? (
+                          <span className="text-xs text-[#999999] italic">Solo lectura</span>
+                        ) : (
+                          <>
+                            <Select
+                              value={usuario.rol_id.toString()}
+                              onValueChange={value => handleChangeRol(usuario.id, parseInt(value))}
+                            >
+                              <SelectTrigger className="w-[130px] sm:w-[150px] h-8 text-xs sm:text-sm border-[#E0E0E0] bg-white text-[#1A1A1A]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {roles.map(rol => (
+                                  <SelectItem key={rol.id} value={rol.id.toString()}>
+                                    {getRolLabel(rol.nombre)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
 
-                          {/* Botón sucursales */}
-                          <button
-                            id={`btn-sucursales-${usuario.id}`}
-                            onClick={() => openSucursalesDialog(usuario)}
-                            title="Gestionar sucursales"
-                            className="w-8 h-8 flex items-center justify-center rounded-md text-[#555] hover:text-[#002868] hover:bg-[#EEF2FF] transition-colors cursor-pointer"
-                          >
-                            <Building2 className="w-4 h-4" />
-                          </button>
+                            <button
+                              id={`btn-sucursales-${usuario.id}`}
+                              onClick={() => openSucursalesDialog(usuario)}
+                              title="Gestionar sucursales"
+                              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md text-[#555] hover:text-[#002868] hover:bg-[#EEF2FF] transition-colors cursor-pointer flex-shrink-0"
+                            >
+                              <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            </button>
 
-                          {/* Toggle activo */}
-                          <div className="flex items-center gap-1.5">
                             <Switch
                               id={`activo-${usuario.id}`}
                               checked={usuario.activo}
                               onCheckedChange={() => handleToggleActivo(usuario.id)}
-                              className="data-[state=checked]:bg-[#002868]"
+                              className="data-[state=checked]:bg-[#002868] flex-shrink-0"
                             />
-                            <Label
-                              htmlFor={`activo-${usuario.id}`}
-                              className="text-xs text-[#666666] cursor-pointer w-12 select-none"
-                            >
-                              {usuario.activo ? 'Activo' : 'Inactivo'}
-                            </Label>
-                          </div>
 
-                          {/* Eliminar */}
-                          <button
-                            id={`btn-eliminar-usuario-${usuario.id}`}
-                            onClick={() => handleDeleteClick(usuario)}
-                            title="Eliminar usuario"
-                            className="w-8 h-8 flex items-center justify-center rounded-md text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                          {usuario.two_factor_enabled && (
-                            <Button
-                              onClick={() => handleResetClick(usuario)}
-                              variant="outline"
-                              size="sm"
-                              className="border-orange-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700 h-8 text-xs"
+                            <button
+                              id={`btn-eliminar-usuario-${usuario.id}`}
+                              onClick={() => handleDeleteClick(usuario)}
+                              title="Eliminar usuario"
+                              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer flex-shrink-0"
                             >
-                              Resetear 2FA
-                            </Button>
-                          )}
-                        </>
-                      )}
+                              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            </button>
+
+                            {usuario.two_factor_enabled && (
+                              <Button
+                                onClick={() => handleResetClick(usuario)}
+                                variant="outline"
+                                size="sm"
+                                className="border-orange-300 text-orange-600 hover:bg-orange-50 hover:text-orange-700 h-7 sm:h-8 text-[10px] sm:text-xs px-2 hidden sm:flex flex-shrink-0"
+                              >
+                                Reset 2FA
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )
