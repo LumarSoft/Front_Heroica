@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { API_ENDPOINTS } from '@/lib/config'
 import { useAuthStore } from '@/store/authStore'
 import { loginSchema } from '@/lib/schemas'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Monitor } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Setup2FADialog } from '@/components/Setup2FADialog'
 
 export default function LoginPage() {
@@ -28,6 +29,7 @@ export default function LoginPage() {
   const [requires2FA, setRequires2FA] = useState(false)
   const [tempToken, setTempToken] = useState('')
   const [code2FA, setCode2FA] = useState('')
+  const [rememberDevice, setRememberDevice] = useState(false)
 
   const [needsSetup2FA, setNeedsSetup2FA] = useState(false)
   const [pendingUserId, setPendingUserId] = useState<number | null>(null)
@@ -56,6 +58,7 @@ export default function LoginPage() {
       const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       })
 
@@ -102,7 +105,8 @@ export default function LoginPage() {
       const response = await fetch(API_ENDPOINTS.AUTH.VERIFY_2FA, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tempToken, code: code2FA }),
+        credentials: 'include',
+        body: JSON.stringify({ tempToken, code: code2FA, rememberDevice }),
       })
 
       const data = await response.json()
@@ -326,6 +330,25 @@ export default function LoginPage() {
                       Abre tu aplicación autenticadora y verifica el código
                     </p>
                   </div>
+
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-[#002868]/5 border border-[#002868]/10">
+                    <Checkbox
+                      id="remember-device"
+                      checked={rememberDevice}
+                      onCheckedChange={checked => setRememberDevice(checked === true)}
+                      className="mt-0.5 border-[#002868]/40 data-[state=checked]:bg-[#002868] data-[state=checked]:border-[#002868]"
+                    />
+                    <label htmlFor="remember-device" className="cursor-pointer select-none space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <Monitor className="w-3.5 h-3.5 text-[#002868]" />
+                        <span className="text-sm font-semibold text-[#002868]">Recordar este dispositivo por 30 días</span>
+                      </div>
+                      <p className="text-xs text-[#666666]">
+                        No se te pedirá el código en este dispositivo durante 30 días.
+                        Solo marcá esta opción en dispositivos personales de confianza.
+                      </p>
+                    </label>
+                  </div>
                 </CardContent>
 
                 <CardFooter className="flex flex-col space-y-4 pt-2">
@@ -350,6 +373,7 @@ export default function LoginPage() {
                       setRequires2FA(false)
                       setTempToken('')
                       setCode2FA('')
+                      setRememberDevice(false)
                       setError('')
                     }}
                     className="text-sm text-[#666666] hover:text-[#002868] transition-colors"
