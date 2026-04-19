@@ -173,6 +173,15 @@ export const API_ENDPOINTS = {
     CREATE: `${API_URL}/api/tareas`,
     UPDATE: (id: number) => `${API_URL}/api/tareas/${id}`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/tareas/${id}/estado`,
+    ASIGNAR: (id: number) => `${API_URL}/api/tareas/${id}/asignar`,
     DELETE: (id: number) => `${API_URL}/api/tareas/${id}`,
+    GET_COMENTARIOS: (id: number) => `${API_URL}/api/tareas/${id}/comentarios`,
+    CREATE_COMENTARIO: (id: number) => `${API_URL}/api/tareas/${id}/comentarios`,
+    DELETE_COMENTARIO: (id: number, comentarioId: number) => `${API_URL}/api/tareas/${id}/comentarios/${comentarioId}`,
+  },
+  NOTIFICACIONES: {
+    MIS: `${API_URL}/api/notificaciones/mis`,
+    CREATE: `${API_URL}/api/notificaciones`,
+    LEER: `${API_URL}/api/notificaciones/leer`,
   },
 }
