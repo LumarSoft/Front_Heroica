@@ -536,6 +536,8 @@ function TareaDialog({ open, onClose, onSave, saving, initial, usuarios }: Tarea
   const [tipo, setTipo] = useState<Tipo>('otro')
   const [prioridad, setPrioridad] = useState<Prioridad>('media')
   const [asignadoA, setAsignadoA] = useState<number | null>(null)
+  const [isImproving, setIsImproving] = useState(false)
+  const [originalDescripcion, setOriginalDescripcion] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -545,8 +547,40 @@ function TareaDialog({ open, onClose, onSave, saving, initial, usuarios }: Tarea
       setTipo(initial?.tipo ?? 'otro')
       setPrioridad(initial?.prioridad ?? 'media')
       setAsignadoA(initial?.asignado_a ?? null)
+      setOriginalDescripcion(null)
     }
   }, [open, initial])
+
+  async function handleMejorarConIA() {
+    if (!descripcion.trim()) {
+      toast.error('Escribí una descripción primero para poder mejorarla')
+      return
+    }
+    setIsImproving(true)
+    try {
+      const res = await fetch('/api/ai/mejorar-descripcion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ descripcion, titulo: titulo || 'Sin título', tipo }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setOriginalDescripcion(descripcion)
+      setDescripcion(data.descripcion)
+      toast.success('Descripción mejorada con IA')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error al mejorar la descripción')
+    } finally {
+      setIsImproving(false)
+    }
+  }
+
+  function handleRevertir() {
+    if (originalDescripcion !== null) {
+      setDescripcion(originalDescripcion)
+      setOriginalDescripcion(null)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -637,15 +671,58 @@ function TareaDialog({ open, onClose, onSave, saving, initial, usuarios }: Tarea
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="descripcion" className="text-slate-700 font-semibold text-sm">Descripción</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="descripcion" className="text-slate-700 font-semibold text-sm">Descripción</Label>
+                <button
+                  type="button"
+                  onClick={handleMejorarConIA}
+                  disabled={isImproving || !descripcion.trim()}
+                  className={cn(
+                    'flex items-center gap-1.5 text-[11px] font-semibold rounded-md px-2.5 py-1 border transition-all cursor-pointer',
+                    'text-[#002868] border-[#002868]/25 bg-[#002868]/5',
+                    'hover:bg-[#002868]/10 hover:border-[#002868]/40',
+                    'disabled:opacity-35 disabled:cursor-not-allowed',
+                  )}
+                >
+                  {isImproving ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
+                      Mejorando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3" />
+                      Mejorar con IA
+                    </>
+                  )}
+                </button>
+              </div>
               <textarea
                 id="descripcion"
                 placeholder="Describí con más detalle el problema o la mejora..."
                 value={descripcion}
-                onChange={e => setDescripcion(e.target.value)}
+                onChange={e => { setDescripcion(e.target.value); setOriginalDescripcion(null) }}
                 rows={4}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-md focus:outline-none focus:border-[#002868] focus:ring-1 focus:ring-[#002868] resize-none placeholder:text-slate-400"
+                disabled={isImproving}
+                className={cn(
+                  'w-full px-3 py-2 text-sm border rounded-md focus:outline-none resize-none placeholder:text-slate-400 transition-all',
+                  isImproving
+                    ? 'bg-slate-50 text-slate-400 border-slate-200'
+                    : 'border-slate-200 focus:border-[#002868] focus:ring-1 focus:ring-[#002868]',
+                )}
               />
+              <div className="flex items-center justify-between min-h-[16px]">
+                {originalDescripcion !== null && (
+                  <button
+                    type="button"
+                    onClick={handleRevertir}
+                    className="flex items-center gap-1 text-[10px] font-semibold text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                  >
+                    <RefreshCw className="w-2.5 h-2.5" />
+                    Revertir
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
