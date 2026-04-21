@@ -144,11 +144,11 @@ const DEUDA_COLUMN: ColumnDef = {
 // =============================================
 
 export function getBancoColumns(): ColumnDef[] {
-  return [...BASE_COLUMNS, DESCRIPCION_COLUMN, COMENTARIO_COLUMN, MONTO_COLUMN, ...BANCO_COLUMNS, DEUDA_COLUMN]
+  return [...BASE_COLUMNS, DESCRIPCION_COLUMN, MONTO_COLUMN, ...BANCO_COLUMNS, DEUDA_COLUMN]
 }
 
 export function getEfectivoColumns(): ColumnDef[] {
-  return [...BASE_COLUMNS, DESCRIPCION_COLUMN, COMENTARIO_COLUMN, MONTO_COLUMN, ...EFECTIVO_COLUMNS, DEUDA_COLUMN]
+  return [...BASE_COLUMNS, DESCRIPCION_COLUMN, MONTO_COLUMN, ...EFECTIVO_COLUMNS, DEUDA_COLUMN]
 }
 
 // =============================================
