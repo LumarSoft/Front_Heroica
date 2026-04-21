@@ -311,13 +311,18 @@ function TaskCard({ tarea, onViewDetail, onEdit, onDelete, onMoveForward, onMove
         )}
 
         <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0">
             {tarea.asignado_a_nombre ? (
-              <Avatar name={tarea.asignado_a_nombre} size="sm" />
+              <>
+                <Avatar name={tarea.asignado_a_nombre} size="sm" />
+                <span className="text-[10px] font-medium text-slate-600 truncate max-w-[72px]">
+                  {tarea.asignado_a_nombre.split(' ')[0]}
+                </span>
+              </>
             ) : (
               <div className="w-5 h-5 rounded-full border-2 border-dashed border-slate-300 shrink-0" />
             )}
-            <span className="text-[10px] text-slate-400">{formatDate(tarea.created_at)}</span>
+            <span className="text-[10px] text-slate-400 shrink-0 ml-auto">{formatDate(tarea.created_at)}</span>
           </div>
           {tarea.comentarios_count > 0 && (
             <span className="inline-flex items-center gap-1 text-[10px] text-slate-400">
@@ -731,12 +736,14 @@ function DetailDialog({
   const [newComment, setNewComment] = useState('')
   const [sendingComment, setSendingComment] = useState(false)
   const [assigning, setAssigning] = useState(false)
+  const [pendingNotifyDesc, setPendingNotifyDesc] = useState<string | null>(null)
   const commentsEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!tarea) return
     setComentarios([])
     setNewComment('')
+    setPendingNotifyDesc(null)
     fetchComentarios(tarea.id)
   }, [tarea?.id])
 
@@ -766,7 +773,7 @@ function DetailDialog({
       setNewComment('')
       onCommentAdded(tarea.id)
       const preview = commentText.length > 80 ? commentText.substring(0, 80) + '...' : commentText
-      onCommentSent(`Nuevo comentario en ${tarea.codigo}: "${preview}"`, tarea.id)
+      setPendingNotifyDesc(`Nuevo comentario en ${tarea.codigo}: "${preview}"`)
       setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80)
     } catch {
       toast.error('Error al agregar comentario')
@@ -781,6 +788,7 @@ function DetailDialog({
       await apiFetch(API_ENDPOINTS.TAREAS.DELETE_COMENTARIO(tarea.id, comentarioId), { method: 'DELETE' })
       setComentarios(prev => prev.filter(c => c.id !== comentarioId))
       onCommentDeleted(tarea.id)
+      setPendingNotifyDesc(null)
     } catch {
       toast.error('Error al eliminar comentario')
     }
@@ -942,6 +950,18 @@ function DetailDialog({
                     <span className="ml-1.5 text-xs font-normal text-slate-400">({comentarios.length})</span>
                   )}
                 </h3>
+                {pendingNotifyDesc && (
+                  <button
+                    onClick={() => {
+                      onCommentSent(pendingNotifyDesc, tarea.id)
+                      setPendingNotifyDesc(null)
+                    }}
+                    className="ml-auto flex items-center gap-1.5 text-[10px] font-semibold text-[#002868] bg-[#002868]/8 hover:bg-[#002868]/14 px-2.5 py-1 rounded-lg transition-colors cursor-pointer animate-pulse"
+                  >
+                    <Bell className="w-3 h-3" />
+                    Notificar
+                  </button>
+                )}
               </div>
             </div>
 
