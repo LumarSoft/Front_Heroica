@@ -206,6 +206,8 @@ export default function CajaBancoPage() {
                   onBancosChange={caja.setBancosFiltro}
                   searchText={caja.searchText}
                   onSearchTextChange={caja.setSearchText}
+                  filtroDeuda={caja.filtroDeuda}
+                  onFiltroDeudeChange={caja.setFiltroDeuda}
                   viewMode={viewMode}
                   onViewModeChange={setViewMode}
                 />

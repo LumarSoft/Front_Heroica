@@ -160,6 +160,8 @@ export default function CajaEfectivoPage() {
                   hayFiltro={caja.hayFiltroActivo}
                   searchText={caja.searchText}
                   onSearchTextChange={caja.setSearchText}
+                  filtroDeuda={caja.filtroDeuda}
+                  onFiltroDeudeChange={caja.setFiltroDeuda}
                   viewMode={viewMode}
                   onViewModeChange={setViewMode}
                 />

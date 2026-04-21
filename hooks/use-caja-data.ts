@@ -144,6 +144,8 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
   const [bancosFiltro, setBancosFiltro] = useState<string[]>([])
   // --- Búsqueda por texto (concepto, descripción, N° cheque) ---
   const [searchText, setSearchText] = useState('')
+  // --- Filtro por deuda ---
+  const [filtroDeuda, setFiltroDeuda] = useState<'todos' | 'solo_deudas' | 'sin_deudas'>('todos')
 
   // --- Catálogos ---
   const [categorias, setCategorias] = useState<Categoria[]>([])
@@ -580,8 +582,11 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
             return id ? bancosFiltroSet.has(id) : false
           })
 
-    return searchText.trim() ? filteredByBanco.filter(m => matchesSearch(m, searchText.trim())) : filteredByBanco
-  }, [saldoReal, dateRange, bancosFiltroSet, searchText, matchesSearch])
+    const filteredBySearch = searchText.trim() ? filteredByBanco.filter(m => matchesSearch(m, searchText.trim())) : filteredByBanco
+    if (filtroDeuda === 'solo_deudas') return filteredBySearch.filter(m => m.es_deuda)
+    if (filtroDeuda === 'sin_deudas') return filteredBySearch.filter(m => !m.es_deuda)
+    return filteredBySearch
+  }, [saldoReal, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda])
 
   const { saldoNecesarioFiltrado, saldoNecesarioSinDeudaFiltrado } = useMemo(() => {
     let filteredByDate = saldoNecesario
@@ -609,15 +614,19 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
             return id ? bancosFiltroSet.has(id) : false
           })
 
-    const filtered = searchText.trim()
+    const filteredBySearch = searchText.trim()
       ? filteredByBanco.filter(m => matchesSearch(m, searchText.trim()))
       : filteredByBanco
+
+    let filtered = filteredBySearch
+    if (filtroDeuda === 'solo_deudas') filtered = filteredBySearch.filter(m => m.es_deuda)
+    else if (filtroDeuda === 'sin_deudas') filtered = filteredBySearch.filter(m => !m.es_deuda)
 
     return {
       saldoNecesarioFiltrado: filtered,
       saldoNecesarioSinDeudaFiltrado: filtered.filter(m => !m.es_deuda),
     }
-  }, [saldoNecesario, dateRange, bancosFiltroSet, searchText, matchesSearch])
+  }, [saldoNecesario, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda])
 
   // Parciales filtrados: agrupar saldoReal + saldoNecesarioSinDeudaFiltrado por banco_id
   const parcialesFiltrados = useMemo<BancoParcial[]>(() => {
@@ -645,6 +654,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     setDateRange(undefined)
     setBancosFiltro([])
     setSearchText('')
+    setFiltroDeuda('todos')
   }
 
   return {
@@ -679,8 +689,10 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     setBancosFiltro,
     searchText,
     setSearchText,
+    filtroDeuda,
+    setFiltroDeuda,
     limpiarFiltros,
-    hayFiltroActivo: dateRange !== undefined || bancosFiltro.length > 0 || searchText !== '',
+    hayFiltroActivo: dateRange !== undefined || bancosFiltro.length > 0 || searchText !== '' || filtroDeuda !== 'todos',
 
     // Estado de dialogs
     isDetailsDialogOpen,

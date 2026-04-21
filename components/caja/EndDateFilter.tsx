@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { CalendarDays, ChevronDown, FilterX, Landmark, LayoutList, Search } from 'lucide-react'
+import { CalendarDays, ChevronDown, Clock, FilterX, Landmark, LayoutList, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -23,6 +23,8 @@ interface EndDateFilterProps {
   onSearchTextChange?: (text: string) => void
   viewMode?: 'tabla' | 'calendario'
   onViewModeChange?: (mode: 'tabla' | 'calendario') => void
+  filtroDeuda?: 'todos' | 'solo_deudas' | 'sin_deudas'
+  onFiltroDeudeChange?: (v: 'todos' | 'solo_deudas' | 'sin_deudas') => void
 }
 
 export function EndDateFilter({
@@ -37,6 +39,8 @@ export function EndDateFilter({
   onSearchTextChange,
   viewMode = 'tabla',
   onViewModeChange,
+  filtroDeuda = 'todos',
+  onFiltroDeudeChange,
 }: EndDateFilterProps) {
   const showBancoFilter = Boolean(bancos?.length && onBancosChange)
   const [isOpen, setIsOpen] = useState(false)
@@ -211,34 +215,68 @@ export function EndDateFilter({
         )}
       </div>
 
-      {/* Row 2: Search + limpiar */}
-      {onSearchTextChange && (
-        <div className="flex items-center gap-2">
-          <div className="relative flex items-center flex-1">
-            <Search className="absolute left-3 w-4 h-4 text-[#9AA0AC] pointer-events-none" />
-            <input
-              type="text"
-              value={searchText}
-              onChange={e => onSearchTextChange(e.target.value)}
-              placeholder="Buscar concepto, N° cheque..."
-              className="w-full h-9 pl-9 pr-3 rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] text-sm text-[#1A1A1A] placeholder:text-[#9AA0AC] outline-none focus:border-[#002868]/60 focus:bg-white transition-all"
-            />
-          </div>
-          {hayFiltro && (
-            <Button
-              variant="ghost"
-              onClick={onLimpiar}
-              className="h-9 px-3 text-rose-600 hover:text-rose-700 hover:bg-rose-50 flex items-center gap-1.5 rounded-lg font-semibold transition-colors cursor-pointer flex-shrink-0"
-            >
-              <FilterX className="w-4 h-4" />
-              <span className="hidden sm:inline">Limpiar</span>
-            </Button>
+      {/* Row 2: Search + filtro deuda + limpiar */}
+      {(onSearchTextChange || onFiltroDeudeChange) && (
+        <div className="flex flex-wrap items-center gap-2">
+          {onSearchTextChange && (
+            <div className="relative flex items-center flex-1 min-w-[160px]">
+              <Search className="absolute left-3 w-4 h-4 text-[#9AA0AC] pointer-events-none" />
+              <input
+                type="text"
+                value={searchText}
+                onChange={e => onSearchTextChange(e.target.value)}
+                placeholder="Buscar concepto, N° cheque..."
+                className="w-full h-9 pl-9 pr-3 rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] text-sm text-[#1A1A1A] placeholder:text-[#9AA0AC] outline-none focus:border-[#002868]/60 focus:bg-white transition-all"
+              />
+            </div>
           )}
+          {onFiltroDeudeChange && (
+            <div className="flex items-center gap-0.5 p-0.5 bg-[#FFF8F0] rounded-lg border border-orange-200 flex-shrink-0">
+              {(
+                [
+                  { value: 'todos' as const, label: 'Todos', shortLabel: 'All', showIcon: false },
+                  { value: 'solo_deudas' as const, label: 'Solo deudas', shortLabel: 'Deudas', showIcon: true },
+                  { value: 'sin_deudas' as const, label: 'Sin deudas', shortLabel: 'S/D', showIcon: false },
+                ]
+              ).map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => onFiltroDeudeChange(opt.value)}
+                  className={cn(
+                    'flex items-center gap-1 h-7 px-2 sm:px-3 rounded-md text-xs font-semibold transition-all',
+                    filtroDeuda === opt.value
+                      ? 'bg-orange-500 text-white shadow-sm'
+                      : 'text-orange-700 hover:text-orange-800 hover:bg-orange-100/60',
+                  )}
+                >
+                  {opt.showIcon && <Clock className="w-3 h-3 flex-shrink-0" />}
+                  <span className="hidden sm:inline">{opt.label}</span>
+                  <span className="sm:hidden">{opt.shortLabel}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            onClick={onLimpiar}
+            disabled={!hayFiltro}
+            className={cn(
+              'h-9 px-3 flex items-center gap-1.5 rounded-lg font-semibold transition-colors cursor-pointer flex-shrink-0',
+              hayFiltro
+                ? 'text-rose-600 hover:text-rose-700 hover:bg-rose-50'
+                : 'text-transparent pointer-events-none select-none',
+            )}
+            aria-hidden={!hayFiltro}
+          >
+            <FilterX className="w-4 h-4" />
+            <span className="hidden sm:inline">Limpiar</span>
+          </Button>
         </div>
       )}
 
-      {/* Botón Limpiar (cuando no hay buscador) */}
-      {!onSearchTextChange && hayFiltro && (
+      {/* Botón Limpiar (cuando no hay buscador ni filtro deuda) */}
+      {!onSearchTextChange && !onFiltroDeudeChange && hayFiltro && (
         <Button
           variant="ghost"
           onClick={onLimpiar}
