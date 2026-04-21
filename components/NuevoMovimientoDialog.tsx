@@ -17,8 +17,9 @@ import {
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { AlertTriangle, Upload, X, FileText, Download } from 'lucide-react'
+import { Combobox } from '@/components/ui/combobox'
 import { trackCreatedPago } from '@/hooks/use-employee-notifications'
-import type { Categoria, Subcategoria, SelectOption, BancoParcial } from '@/lib/types'
+import type { Categoria, Subcategoria, SelectOption, BancoParcial, DescripcionOption } from '@/lib/types'
 import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles'
 import { movimientoBaseSchema, movimientoBancoSchema } from '@/lib/schemas'
 import { parseInputMonto, formatInputMonto } from '@/lib/formatters'
@@ -50,7 +51,7 @@ interface NuevoMovimientoDialogProps {
   categoriasExternas?: Categoria[]
   bancosExternos?: SelectOption[]
   mediosPagoExternos?: SelectOption[]
-  descripcionesExternas?: SelectOption[]
+  descripcionesExternas?: DescripcionOption[]
   proveedoresExternas?: SelectOption[]
   moneda?: 'ARS' | 'USD'
   /** Parciales de saldo real por banco (para validar transferencias internas) */
@@ -110,6 +111,7 @@ export default function NuevoMovimientoDialog({
     categoria_id: '',
     subcategoria_id: '',
     descripcion_id: '',
+    descripcion_nombre: '', // nombre pendiente cuando el usuario quiere crear una nueva
     proveedor_id: '',
     comprobante: '',
     banco_id: '',
@@ -122,7 +124,7 @@ export default function NuevoMovimientoDialog({
   const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
   const [bancosInternos, setBancosInternos] = useState<SelectOption[]>([])
   const [mediosPagoInternos, setMediosPagoInternos] = useState<SelectOption[]>([])
-  const [descripcionesInternas, setDescripcionesInternas] = useState<SelectOption[]>([])
+  const [descripcionesInternas, setDescripcionesInternas] = useState<DescripcionOption[]>([])
   const [proveedoresInternos, setProveedoresInternos] = useState<SelectOption[]>([])
 
   // Usa los catálogos externos si se proveen, si no usa los internos (fetched)
@@ -267,6 +269,8 @@ export default function NuevoMovimientoDialog({
       setFormData(prev => ({
         ...prev,
         [name]: value,
+        descripcion_id: '',
+        descripcion_nombre: '',
         categoria_id: '',
         subcategoria_id: '',
       }))
@@ -300,6 +304,7 @@ export default function NuevoMovimientoDialog({
       categoria_id: '',
       subcategoria_id: '',
       descripcion_id: '',
+      descripcion_nombre: '',
       proveedor_id: '',
       comprobante: '',
       banco_id: '',
@@ -439,13 +444,37 @@ export default function NuevoMovimientoDialog({
     const isBanco = isApprovalMode ? cajaTipo === 'banco' : formData.tipo_movimiento === 'banco'
     const schema = isBanco ? movimientoBancoSchema : movimientoBaseSchema
 
+    // Si hay una descripción nueva pendiente (sin ID), crearla antes de validar
+    let descripcionId = formData.descripcion_id
+    if (!descripcionId && formData.descripcion_nombre.trim()) {
+      try {
+        const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.CREATE, {
+          method: 'POST',
+          body: JSON.stringify({
+            nombre: formData.descripcion_nombre.trim(),
+            tipo: formData.tipo,
+            categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
+            subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.message || 'Error al crear descripción')
+        descripcionId = data.data.id.toString()
+        // Actualizar el estado para que la descripción quede persistida
+        setFormData(prev => ({ ...prev, descripcion_id: descripcionId, descripcion_nombre: '' }))
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Error al crear la descripción')
+        return
+      }
+    }
+
     const validation = schema.safeParse({
       fecha: formData.fecha,
       concepto: formData.concepto,
       monto: formData.monto,
       categoria_id: formData.categoria_id,
       subcategoria_id: formData.subcategoria_id,
-      descripcion_id: formData.descripcion_id,
+      descripcion_id: descripcionId,
       proveedor_id: formData.proveedor_id,
       comentarios: formData.comentarios,
       prioridad: formData.prioridad,
@@ -483,7 +512,7 @@ export default function NuevoMovimientoDialog({
             prioridad: formData.prioridad,
             categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
             subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
-            descripcion_id: formData.descripcion_id ? Number(formData.descripcion_id) : null,
+            descripcion_id: descripcionId ? Number(descripcionId) : null,
             proveedor_id: formData.proveedor_id ? Number(formData.proveedor_id) : null,
             comprobante: formData.comprobante || null,
             banco_id: formData.banco_id ? Number(formData.banco_id) : null,
@@ -524,7 +553,7 @@ export default function NuevoMovimientoDialog({
             tipo: formData.tipo,
             categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
             subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
-            descripcion_id: formData.descripcion_id ? Number(formData.descripcion_id) : null,
+            descripcion_id: descripcionId ? Number(descripcionId) : null,
             proveedor_id: formData.proveedor_id ? Number(formData.proveedor_id) : null,
             banco_id: formData.banco_id ? Number(formData.banco_id) : null,
             medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
@@ -544,7 +573,7 @@ export default function NuevoMovimientoDialog({
             tipo: formData.tipo,
             categoria_id: formData.categoria_id ? Number(formData.categoria_id) : null,
             subcategoria_id: formData.subcategoria_id ? Number(formData.subcategoria_id) : null,
-            descripcion_id: formData.descripcion_id ? Number(formData.descripcion_id) : null,
+            descripcion_id: descripcionId ? Number(descripcionId) : null,
             proveedor_id: formData.proveedor_id ? Number(formData.proveedor_id) : null,
             comprobante: formData.comprobante,
             banco_id: formData.banco_id ? Number(formData.banco_id) : null,
@@ -899,23 +928,82 @@ export default function NuevoMovimientoDialog({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="descripcion_id" className={labelClasses}>
+                  <Label className={labelClasses}>
                     Descripción (Clasificación) *
                   </Label>
-                  <select
-                    id="descripcion_id"
-                    name="descripcion_id"
+                  <Combobox
+                    options={descripciones
+                      .filter(d => !d.tipo || d.tipo === formData.tipo)
+                      .map(d => ({ value: d.id.toString(), label: d.nombre }))}
                     value={formData.descripcion_id}
-                    onChange={handleInputChange}
-                    className={selectClasses}
-                  >
-                    <option value="">Seleccione descripción</option>
-                    {descripciones.map(d => (
-                      <option key={d.id} value={d.id}>
-                        {d.nombre}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={value => {
+                      const selectedDesc = descripciones.find(d => d.id.toString() === value)
+                      setFormData(prev => ({
+                        ...prev,
+                        descripcion_id: value,
+                        descripcion_nombre: '',
+                        ...(selectedDesc?.categoria_id && { categoria_id: selectedDesc.categoria_id.toString() }),
+                        subcategoria_id: selectedDesc?.subcategoria_id
+                          ? selectedDesc.subcategoria_id.toString()
+                          : '',
+                      }))
+                    }}
+                    onCreateOption={nombre => {
+                      setFormData(prev => ({
+                        ...prev,
+                        descripcion_id: '',
+                        descripcion_nombre: nombre,
+                      }))
+                    }}
+                    pendingLabel={formData.descripcion_nombre || undefined}
+                    placeholder="Seleccione o escriba una descripción"
+                    searchPlaceholder="Buscar o crear descripción..."
+                    emptyText="No hay descripciones para este tipo"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="categoria_id" className={labelClasses}>
+                      Categoría
+                    </Label>
+                    <select
+                      id="categoria_id"
+                      name="categoria_id"
+                      value={formData.categoria_id}
+                      onChange={handleInputChange}
+                      className={selectClasses}
+                    >
+                      <option value="">Seleccione categoría</option>
+                      {categorias
+                        .filter(c => c.tipo === formData.tipo)
+                        .map(c => (
+                          <option key={c.id} value={c.id}>
+                            {c.nombre}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="subcategoria_id" className={labelClasses}>
+                      Subcategoría
+                    </Label>
+                    <select
+                      id="subcategoria_id"
+                      name="subcategoria_id"
+                      value={formData.subcategoria_id}
+                      onChange={handleInputChange}
+                      disabled={!formData.categoria_id}
+                      className={`${selectClasses} disabled:opacity-40 disabled:bg-[#FAFAFA] disabled:cursor-not-allowed`}
+                    >
+                      <option value="">Seleccione subcategoría</option>
+                      {subcategorias.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -1088,11 +1176,11 @@ export default function NuevoMovimientoDialog({
               {/* ── Separador ── */}
               <div className="border-t border-dashed border-[#E8E8E8]" />
 
-              {/* ── Sección: Categorización y Estado ── */}
+              {/* ── Sección: Detalles adicionales ── */}
               <section className="space-y-4">
                 <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
                   <span className="w-1 h-4 bg-[#002868] rounded-full" />
-                  Clasificación y Categorización
+                  Detalles adicionales
                 </h4>
 
                 <div className="space-y-1.5">
@@ -1113,50 +1201,6 @@ export default function NuevoMovimientoDialog({
                       </option>
                     ))}
                   </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="categoria_id" className={labelClasses}>
-                      Categoría
-                    </Label>
-                    <select
-                      id="categoria_id"
-                      name="categoria_id"
-                      value={formData.categoria_id}
-                      onChange={handleInputChange}
-                      className={selectClasses}
-                    >
-                      <option value="">Seleccione categoría</option>
-                      {categorias
-                        .filter(c => c.tipo === formData.tipo)
-                        .map(c => (
-                          <option key={c.id} value={c.id}>
-                            {c.nombre}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="subcategoria_id" className={labelClasses}>
-                      Subcategoría
-                    </Label>
-                    <select
-                      id="subcategoria_id"
-                      name="subcategoria_id"
-                      value={formData.subcategoria_id}
-                      onChange={handleInputChange}
-                      disabled={!formData.categoria_id}
-                      className={`${selectClasses} disabled:opacity-40 disabled:bg-[#FAFAFA] disabled:cursor-not-allowed`}
-                    >
-                      <option value="">Seleccione subcategoría</option>
-                      {subcategorias.map(s => (
-                        <option key={s.id} value={s.id}>
-                          {s.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
                 </div>
 
                 {!isPagoPendiente && (

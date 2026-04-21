@@ -17,25 +17,34 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
-
-interface DescripcionItem {
-  id: number
-  nombre: string
-  activo: boolean
-}
+import type { Categoria, Subcategoria, DescripcionOption } from '@/lib/types'
+import { selectClasses, labelClasses } from '@/lib/dialog-styles'
 
 interface DescripcionForm {
   id: number
   nombre: string
+  tipo: 'ingreso' | 'egreso' | ''
+  categoria_id: string
+  subcategoria_id: string
 }
 
 const DEFAULT_FORM: DescripcionForm = {
   id: 0,
   nombre: '',
+  tipo: '',
+  categoria_id: '',
+  subcategoria_id: '',
+}
+
+const TIPO_LABELS: Record<string, string> = {
+  ingreso: 'Ingreso',
+  egreso: 'Egreso',
 }
 
 export function DescripcionesSection() {
-  const [items, setItems] = useState<DescripcionItem[]>([])
+  const [items, setItems] = useState<DescripcionOption[]>([])
+  const [categorias, setCategorias] = useState<Categoria[]>([])
+  const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [form, setForm] = useState<DescripcionForm>(DEFAULT_FORM)
   const [isSaving, setIsSaving] = useState(false)
@@ -47,7 +56,17 @@ export function DescripcionesSection() {
 
   useEffect(() => {
     fetchItems()
+    fetchCategorias()
   }, [])
+
+  // Recargar subcategorías cuando cambia la categoría en el form
+  useEffect(() => {
+    if (form.categoria_id) {
+      fetchSubcategorias(Number(form.categoria_id))
+    } else {
+      setSubcategorias([])
+    }
+  }, [form.categoria_id])
 
   const fetchItems = async () => {
     try {
@@ -59,16 +78,40 @@ export function DescripcionesSection() {
     }
   }
 
+  const fetchCategorias = async () => {
+    try {
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL)
+      const data = await res.json()
+      if (data.success) setCategorias(data.data || [])
+    } catch {
+      // Non-critical
+    }
+  }
+
+  const fetchSubcategorias = async (categoriaId: number) => {
+    try {
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId))
+      const data = await res.json()
+      if (res.ok) setSubcategorias(data.data || [])
+    } catch {
+      // Non-critical
+    }
+  }
+
   const handleOpenNew = () => {
     setForm(DEFAULT_FORM)
+    setSubcategorias([])
     setError('')
     setIsDialogOpen(true)
   }
 
-  const handleOpenEdit = (item: DescripcionItem) => {
+  const handleOpenEdit = (item: DescripcionOption) => {
     setForm({
       id: item.id,
       nombre: item.nombre,
+      tipo: (item.tipo as 'ingreso' | 'egreso') ?? '',
+      categoria_id: item.categoria_id?.toString() ?? '',
+      subcategoria_id: item.subcategoria_id?.toString() ?? '',
     })
     setError('')
     setIsDialogOpen(true)
@@ -79,6 +122,10 @@ export function DescripcionesSection() {
       setError('El nombre es requerido')
       return
     }
+    if (!form.tipo) {
+      setError('El tipo es requerido')
+      return
+    }
     setIsSaving(true)
     setError('')
     try {
@@ -87,7 +134,12 @@ export function DescripcionesSection() {
         : API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.CREATE
       const res = await apiFetch(url, {
         method: form.id ? 'PUT' : 'POST',
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          nombre: form.nombre,
+          tipo: form.tipo,
+          categoria_id: form.categoria_id ? Number(form.categoria_id) : null,
+          subcategoria_id: form.subcategoria_id ? Number(form.subcategoria_id) : null,
+        }),
       })
       const data = await res.json()
       if (data.success) {
@@ -122,6 +174,11 @@ export function DescripcionesSection() {
     }
   }
 
+  // Categorías filtradas según el tipo elegido en el form
+  const categoriasFiltradas = form.tipo
+    ? categorias.filter(c => !c.tipo || c.tipo === form.tipo)
+    : categorias
+
   return (
     <>
       <Card>
@@ -132,14 +189,36 @@ export function DescripcionesSection() {
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
+          <div className="space-y-2 pt-4">
+            {items.length === 0 && (
+              <p className="text-sm text-[#8A8F9C] text-center py-6">No hay descripciones configuradas.</p>
+            )}
             {items.map(item => (
               <div
                 key={item.id}
                 className="flex items-center justify-between gap-3 p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <div>
-                  <h3 className="font-semibold text-[#002868]">{item.nombre}</h3>
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-[#002868]">{item.nombre}</h3>
+                    {item.tipo && (
+                      <span
+                        className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
+                          item.tipo === 'ingreso'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200'
+                        }`}
+                      >
+                        {TIPO_LABELS[item.tipo]}
+                      </span>
+                    )}
+                  </div>
+                  {(item.categoria_nombre || item.subcategoria_nombre) && (
+                    <p className="text-xs text-[#8A8F9C]">
+                      {item.categoria_nombre}
+                      {item.subcategoria_nombre && ` › ${item.subcategoria_nombre}`}
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-1.5 flex-shrink-0">
                   <Button
@@ -178,6 +257,7 @@ export function DescripcionesSection() {
             </DialogHeader>
           </div>
           <div className="px-8 py-6 space-y-4">
+            {/* Nombre */}
             <div>
               <Label
                 htmlFor="desc-nombre"
@@ -193,6 +273,69 @@ export function DescripcionesSection() {
                 className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
               />
             </div>
+
+            {/* Tipo */}
+            <div>
+              <Label htmlFor="desc-tipo" className={labelClasses}>
+                Tipo de movimiento *
+              </Label>
+              <select
+                id="desc-tipo"
+                value={form.tipo}
+                onChange={e => {
+                  setForm({ ...form, tipo: e.target.value as 'ingreso' | 'egreso' | '', categoria_id: '', subcategoria_id: '' })
+                  setSubcategorias([])
+                }}
+                className={selectClasses}
+              >
+                <option value="">Seleccione tipo</option>
+                <option value="ingreso">Ingreso</option>
+                <option value="egreso">Egreso</option>
+              </select>
+            </div>
+
+            {/* Categoría */}
+            <div>
+              <Label htmlFor="desc-categoria" className={labelClasses}>
+                Categoría sugerida
+              </Label>
+              <select
+                id="desc-categoria"
+                value={form.categoria_id}
+                onChange={e => setForm({ ...form, categoria_id: e.target.value, subcategoria_id: '' })}
+                disabled={!form.tipo}
+                className={`${selectClasses} disabled:opacity-40 disabled:cursor-not-allowed`}
+              >
+                <option value="">Sin categoría</option>
+                {categoriasFiltradas.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Subcategoría */}
+            <div>
+              <Label htmlFor="desc-subcategoria" className={labelClasses}>
+                Subcategoría sugerida
+              </Label>
+              <select
+                id="desc-subcategoria"
+                value={form.subcategoria_id}
+                onChange={e => setForm({ ...form, subcategoria_id: e.target.value })}
+                disabled={!form.categoria_id}
+                className={`${selectClasses} disabled:opacity-40 disabled:cursor-not-allowed`}
+              >
+                <option value="">Sin subcategoría</option>
+                {subcategorias.map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {error && <p className="text-sm text-rose-600">{error}</p>}
           </div>
           <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
@@ -206,7 +349,7 @@ export function DescripcionesSection() {
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={isSaving || !form.nombre.trim()}
+                disabled={isSaving || !form.nombre.trim() || !form.tipo}
                 className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all"
               >
                 {isSaving ? 'Guardando...' : 'Guardar'}

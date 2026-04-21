@@ -347,7 +347,7 @@ export default function CajaBancoPage() {
         isOpen={caja.isNuevoMovimientoDialogOpen}
         onClose={() => caja.setIsNuevoMovimientoDialogOpen(false)}
         sucursalId={caja.sucursalId}
-        onSuccess={caja.fetchMovimientos}
+        onSuccess={() => { caja.fetchMovimientos(); caja.fetchDescripciones() }}
         cajaTipo="banco"
         moneda={moneda}
         categoriasExternas={caja.categorias}

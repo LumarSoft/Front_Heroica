@@ -300,7 +300,7 @@ export default function CajaEfectivoPage() {
         isOpen={caja.isNuevoMovimientoDialogOpen}
         onClose={() => caja.setIsNuevoMovimientoDialogOpen(false)}
         sucursalId={caja.sucursalId}
-        onSuccess={caja.fetchMovimientos}
+        onSuccess={() => { caja.fetchMovimientos(); caja.fetchDescripciones() }}
         cajaTipo="efectivo"
         moneda={moneda}
         categoriasExternas={caja.categorias}

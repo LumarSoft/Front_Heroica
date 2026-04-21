@@ -112,3 +112,14 @@ export interface SelectOption {
   id: number
   nombre: string
 }
+
+export interface DescripcionOption {
+  id: number
+  nombre: string
+  tipo?: 'ingreso' | 'egreso'
+  categoria_id?: number | null
+  subcategoria_id?: number | null
+  categoria_nombre?: string | null
+  subcategoria_nombre?: string | null
+  activo?: boolean
+}
