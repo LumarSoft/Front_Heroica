@@ -8,7 +8,7 @@ import { apiFetch } from '@/lib/api'
 import { parseInputMonto } from '@/lib/formatters'
 import { DateRange } from 'react-day-picker'
 import { useAuthStore } from '@/store/authStore'
-import type { Transaction, BancoParcial, Categoria, Subcategoria, SelectOption } from '@/lib/types'
+import type { Transaction, BancoParcial, Categoria, Subcategoria, SelectOption, DescripcionOption } from '@/lib/types'
 
 // =============================================
 // Tipos internos del hook
@@ -150,7 +150,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
   const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
   const [bancos, setBancos] = useState<SelectOption[]>([])
   const [mediosPago, setMediosPago] = useState<SelectOption[]>([])
-  const [descripciones, setDescripciones] = useState<SelectOption[]>([])
+  const [descripciones, setDescripciones] = useState<DescripcionOption[]>([])
   const [proveedores, setProveedores] = useState<SelectOption[]>([])
 
   // --- Estado de dialogs ---
@@ -718,5 +718,6 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     // Fetchers
     initialize,
     fetchMovimientos,
+    fetchDescripciones,
   }
 }
