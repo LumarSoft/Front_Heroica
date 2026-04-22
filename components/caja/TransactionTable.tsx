@@ -51,9 +51,22 @@ const DESCRIPCION_COLUMN: ColumnDef = {
   render: t => {
     const text = t.descripcion_nombre || t.concepto || null
     return (
-      <span className="block w-full text-[#666666] truncate" title={text || ''}>
-        {truncarTexto(text)}
-      </span>
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <span className="block w-full text-[#666666] truncate" title={text || ''}>
+          {truncarTexto(text)}
+        </span>
+        {t.numero_cheque && (
+          <span
+            className="inline-flex items-center gap-1 self-start px-1.5 py-0.5 rounded-md bg-violet-50 border border-violet-200 text-violet-700 text-[10px] font-semibold tracking-wide whitespace-nowrap"
+            title={`Cheque N° ${t.numero_cheque}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-2.5 h-2.5 flex-shrink-0">
+              <path d="M2 3.5A1.5 1.5 0 0 1 3.5 2h9A1.5 1.5 0 0 1 14 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5v-9ZM4 6a.75.75 0 0 0 0 1.5h8A.75.75 0 0 0 12 6H4Zm0 3a.75.75 0 0 0 0 1.5h4A.75.75 0 0 0 8 9H4Z" />
+            </svg>
+            #{t.numero_cheque}
+          </span>
+        )}
+      </div>
     )
   },
 }
