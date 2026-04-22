@@ -280,7 +280,6 @@ export default function TareasPage() {
         userRole={user?.rol}
         onLogout={handleLogout}
         showBackButton
-        backUrl="/sucursales"
       />
 
       {/* Page Header */}

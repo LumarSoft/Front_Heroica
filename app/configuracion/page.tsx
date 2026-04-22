@@ -112,7 +112,7 @@ export default function ConfiguracionPage() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    onClick={() => router.push('/sucursales')}
+                    onClick={() => router.back()}
                     variant="ghost"
                     size="icon"
                     className="w-8 h-8 sm:w-9 sm:h-9 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 flex-shrink-0 cursor-pointer rounded-lg"
@@ -121,7 +121,7 @@ export default function ConfiguracionPage() {
                     <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom">Volver a sucursales</TooltipContent>
+                <TooltipContent side="bottom">Volver</TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
