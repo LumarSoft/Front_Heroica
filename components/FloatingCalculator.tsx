@@ -101,6 +101,15 @@ export default function FloatingCalculator() {
     return parseFloat(n.toPrecision(10)).toString()
   }
 
+  // Converts internal JS value (e.g. "1234.56") to es-AR display format ("1.234,56")
+  const formatDisplay = (value: string): string => {
+    if (value === 'Error') return 'Error'
+    const [intPart, decPart] = value.split('.')
+    const formattedInt = (intPart || '0').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+    if (decPart !== undefined) return `${formattedInt},${decPart}`
+    return formattedInt
+  }
+
   // Core input handler using refs to avoid stale closures when called from keyboard listeners
   const handleInputWithRefs = useCallback((value: string) => {
     const currentDisplay = displayRef.current
@@ -205,7 +214,7 @@ export default function FloatingCalculator() {
       // Copy display value: Ctrl+C / Cmd+C
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
         e.preventDefault()
-        navigator.clipboard.writeText(displayRef.current).then(() => {
+        navigator.clipboard.writeText(formatDisplay(displayRef.current)).then(() => {
           setCopied(true)
           setTimeout(() => setCopied(false), 1500)
         })
@@ -240,8 +249,13 @@ export default function FloatingCalculator() {
 
       e.preventDefault()
       const text = e.clipboardData?.getData('text') ?? ''
-      const cleaned = text.trim().replace(',', '.')
-      const num = parseFloat(cleaned)
+      let raw = text.trim()
+      if (raw.includes(',') && raw.includes('.')) {
+        raw = raw.replace(/\./g, '').replace(',', '.')
+      } else if (raw.includes(',')) {
+        raw = raw.replace(',', '.')
+      }
+      const num = parseFloat(raw)
       if (!isNaN(num)) {
         setDisplay(formatResult(num))
         setWaitingForOperand(false)
@@ -257,7 +271,7 @@ export default function FloatingCalculator() {
   }, [isOpen, handleInputWithRefs])
 
   const handleCopyDisplay = () => {
-    navigator.clipboard.writeText(display).then(() => {
+    navigator.clipboard.writeText(formatDisplay(display)).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     })
@@ -313,7 +327,7 @@ export default function FloatingCalculator() {
           <div className="px-4 py-3 text-right">
             {operator && (
               <p className="text-[#8888aa] text-xs h-4">
-                {prevValue} {operator}
+                {prevValue !== null ? formatDisplay(String(prevValue)) : ''} {operator}
               </p>
             )}
             {!operator && <p className="h-4" />}
@@ -328,10 +342,10 @@ export default function FloatingCalculator() {
               </button>
               <p
                 className="text-white font-light overflow-hidden text-ellipsis cursor-text select-text"
-                style={{ fontSize: display.length > 9 ? '1.25rem' : '1.75rem' }}
+                style={{ fontSize: formatDisplay(display).length > 9 ? '1.25rem' : '1.75rem' }}
                 title="Ctrl+C para copiar · Ctrl+V para pegar"
               >
-                {display}
+                {formatDisplay(display)}
               </p>
             </div>
           </div>
@@ -359,7 +373,7 @@ export default function FloatingCalculator() {
                         ${!isEq && !isOp && !isTop ? 'bg-[#2a2a3a] text-white hover:bg-[#3a3a4a]' : ''}
                       `}
                     >
-                      {btn}
+                      {btn === '.' ? ',' : btn}
                     </button>
                   )
                 })}
