@@ -14,7 +14,7 @@ import { useAuthGuard } from '@/hooks/use-auth-guard'
 import { useEmployeeNotifications } from '@/hooks/use-employee-notifications'
 import { formatMonto } from '@/lib/formatters'
 import type { Sucursal, Documento, CuentaBancaria } from '@/lib/types'
-import { Mail, Paperclip, ArrowLeft, Download, Trash2, AlertTriangle, Info, BarChart2 } from 'lucide-react'
+import { Mail, Paperclip, ArrowLeft, Download, Trash2, AlertTriangle, Info, BarChart2, Upload, X } from 'lucide-react'
 import Image from 'next/image'
 import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
 import { ErrorBanner } from '@/components/ui/error-banner'
@@ -57,6 +57,8 @@ export default function SucursalDetailPage() {
   const [error, setError] = useState('')
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false)
   const [isUploadingDoc, setIsUploadingDoc] = useState(false)
+  const [uploadState, setUploadState] = useState<Record<string, { file: File | null; date: string }>>({})
+  const [uploadingDocType, setUploadingDocType] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -251,6 +253,7 @@ export default function SucursalDetailPage() {
 
   const handleUploadDoc = async (tipoDoc: string, fechaVenc: string, file: File) => {
     setIsUploadingDoc(true)
+    setUploadingDocType(tipoDoc)
     setError('')
 
     try {
@@ -271,12 +274,21 @@ export default function SucursalDetailPage() {
       }
 
       toast.success('Documento subido exitosamente')
+      setUploadState(prev => {
+        const next = { ...prev }
+        delete next[tipoDoc]
+        return next
+      })
+      if (fileInputRefs.current[tipoDoc]) {
+        fileInputRefs.current[tipoDoc]!.value = ''
+      }
       await fetchDocumentos()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al subir documento'
       setError(message)
     } finally {
       setIsUploadingDoc(false)
+      setUploadingDocType(null)
     }
   }
 
@@ -371,6 +383,7 @@ export default function SucursalDetailPage() {
     'Certificado MyPyme',
     'Constancia de CBU',
     'Habilitación del local',
+    'Balance',
   ]
 
   const missingDocsCount = MANDATORY_DOC_TYPES.filter(tipo => !documentos.find(d => d.tipo_documento === tipo)).length
@@ -408,7 +421,6 @@ export default function SucursalDetailPage() {
       <header className="bg-white border-b border-[#E0E0E0] shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-3 sm:px-6">
           <div className="flex items-center h-14 sm:h-16 gap-2 sm:gap-3">
-
             {/* Back button */}
             <TooltipProvider>
               <Tooltip>
@@ -1079,41 +1091,121 @@ export default function SucursalDetailPage() {
                               </div>
                             </div>
                           ) : sucursal?.activo && canGestionarSucursales ? (
-                            <div className="flex flex-col gap-2 mt-2">
-                              <div className="flex gap-2 items-center">
-                                <Label className="text-xs text-gray-500 min-w-[120px]">Fecha Vencimiento:</Label>
-                                <Input
-                                  type="date"
-                                  ref={el => {
-                                    dateInputRefs.current[tipoDoc] = el
-                                  }}
-                                  className="h-8 text-sm"
-                                />
-                              </div>
-                              <div className="flex gap-2">
-                                <Input
+                            <div className="mt-3 space-y-2">
+                              {/* Zona de selección de archivo */}
+                              <div
+                                role="button"
+                                tabIndex={0}
+                                className={`relative flex items-center gap-3 rounded-lg border-2 border-dashed p-3 cursor-pointer transition-all ${
+                                  uploadState[tipoDoc]?.file
+                                    ? 'border-[#002868]/40 bg-[#002868]/5'
+                                    : 'border-gray-300 bg-white hover:border-[#002868]/50 hover:bg-blue-50/30'
+                                }`}
+                                onClick={() => fileInputRefs.current[tipoDoc]?.click()}
+                                onKeyDown={e => e.key === 'Enter' && fileInputRefs.current[tipoDoc]?.click()}
+                              >
+                                <input
                                   type="file"
                                   ref={el => {
                                     fileInputRefs.current[tipoDoc] = el
                                   }}
                                   accept=".pdf,.jpg,.jpeg"
-                                  className="h-8 text-sm flex-1"
+                                  className="hidden"
+                                  onChange={e => {
+                                    const file = e.target.files?.[0] ?? null
+                                    setUploadState(prev => ({
+                                      ...prev,
+                                      [tipoDoc]: { file, date: prev[tipoDoc]?.date ?? '' },
+                                    }))
+                                  }}
                                 />
+                                <div
+                                  className={`flex-shrink-0 rounded-md p-1.5 ${
+                                    uploadState[tipoDoc]?.file ? 'bg-[#002868]/10' : 'bg-gray-100'
+                                  }`}
+                                >
+                                  <Paperclip
+                                    className={`w-4 h-4 ${
+                                      uploadState[tipoDoc]?.file ? 'text-[#002868]' : 'text-gray-400'
+                                    }`}
+                                  />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  {uploadState[tipoDoc]?.file ? (
+                                    <>
+                                      <p className="text-xs font-semibold text-[#002868] truncate">
+                                        {uploadState[tipoDoc].file!.name}
+                                      </p>
+                                      <p className="text-xs text-gray-400">
+                                        {(uploadState[tipoDoc].file!.size / 1024).toFixed(1)} KB
+                                      </p>
+                                    </>
+                                  ) : (
+                                    <p className="text-xs text-gray-500">
+                                      Haz clic para adjuntar <span className="text-gray-400">(PDF, JPG)</span>
+                                    </p>
+                                  )}
+                                </div>
+                                {uploadState[tipoDoc]?.file && (
+                                  <button
+                                    type="button"
+                                    className="flex-shrink-0 rounded-full p-0.5 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      if (fileInputRefs.current[tipoDoc]) {
+                                        fileInputRefs.current[tipoDoc]!.value = ''
+                                      }
+                                      setUploadState(prev => ({
+                                        ...prev,
+                                        [tipoDoc]: { file: null, date: prev[tipoDoc]?.date ?? '' },
+                                      }))
+                                    }}
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Fecha + botón subir */}
+                              <div className="flex gap-2 items-center">
+                                <div className="flex items-center gap-1.5 flex-1">
+                                  <Label className="text-xs text-gray-500 whitespace-nowrap">Vence:</Label>
+                                  <Input
+                                    type="date"
+                                    value={uploadState[tipoDoc]?.date ?? ''}
+                                    onChange={e =>
+                                      setUploadState(prev => ({
+                                        ...prev,
+                                        [tipoDoc]: {
+                                          file: prev[tipoDoc]?.file ?? null,
+                                          date: e.target.value,
+                                        },
+                                      }))
+                                    }
+                                    className="h-8 text-sm"
+                                  />
+                                </div>
                                 <Button
                                   type="button"
                                   size="sm"
-                                  disabled={isUploadingDoc}
-                                  className="h-8 bg-[#002868]"
+                                  disabled={
+                                    (isUploadingDoc && uploadingDocType === tipoDoc) ||
+                                    !uploadState[tipoDoc]?.file ||
+                                    !uploadState[tipoDoc]?.date
+                                  }
+                                  className="h-8 bg-[#002868] disabled:opacity-40 disabled:cursor-not-allowed gap-1.5 whitespace-nowrap"
                                   onClick={() => {
-                                    const fileInput = fileInputRefs.current[tipoDoc]
-                                    const dateInput = dateInputRefs.current[tipoDoc]
-                                    if (!fileInput?.files?.[0] || !dateInput?.value) {
-                                      toast.error('Selecciona archivo y fecha de vencimiento')
-                                      return
-                                    }
-                                    handleUploadDoc(tipoDoc, dateInput.value, fileInput.files[0])
+                                    const file = uploadState[tipoDoc]?.file
+                                    const date = uploadState[tipoDoc]?.date
+                                    if (!file || !date) return
+                                    handleUploadDoc(tipoDoc, date, file)
                                   }}
                                 >
+                                  {isUploadingDoc && uploadingDocType === tipoDoc ? (
+                                    <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                  ) : (
+                                    <Upload className="w-3.5 h-3.5" />
+                                  )}
                                   Subir
                                 </Button>
                               </div>
