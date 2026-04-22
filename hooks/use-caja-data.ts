@@ -552,7 +552,9 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
       (m.concepto?.toLowerCase().includes(lower) ?? false) ||
       (m.comentarios?.toLowerCase().includes(lower) ?? false) ||
       (m.numero_cheque?.toLowerCase().includes(lower) ?? false) ||
-      (m.comprobante?.toLowerCase().includes(lower) ?? false)
+      (m.comprobante?.toLowerCase().includes(lower) ?? false) ||
+      (m.descripcion_nombre?.toLowerCase().includes(lower) ?? false) ||
+      m.monto.toString().includes(lower)
     )
   }, [])
 

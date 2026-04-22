@@ -225,7 +225,7 @@ export function EndDateFilter({
                 type="text"
                 value={searchText}
                 onChange={e => onSearchTextChange(e.target.value)}
-                placeholder="Buscar concepto, N° cheque..."
+                placeholder="Buscar descripción, importe, N° cheque..."
                 className="w-full h-9 pl-9 pr-3 rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] text-sm text-[#1A1A1A] placeholder:text-[#9AA0AC] outline-none focus:border-[#002868]/60 focus:bg-white transition-all"
               />
             </div>
