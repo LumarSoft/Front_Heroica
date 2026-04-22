@@ -70,7 +70,7 @@ export default function Navbar({
   userRole,
   onLogout,
   showBackButton = false,
-  backUrl = '/sucursales',
+  backUrl,
   sucursalNombre,
 }: NavbarProps) {
   const router = useRouter()
@@ -170,7 +170,7 @@ export default function Navbar({
           {/* Back */}
           {showBackButton && (
             <Button
-              onClick={() => router.push(backUrl)}
+              onClick={() => backUrl ? router.push(backUrl) : router.back()}
               variant="ghost"
               size="icon"
               className="w-8 h-8 sm:w-9 sm:h-9 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 flex-shrink-0 cursor-pointer"
