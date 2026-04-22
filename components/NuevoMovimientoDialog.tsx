@@ -1183,6 +1183,7 @@ export default function NuevoMovimientoDialog({
                   Detalles adicionales
                 </h4>
 
+                {/* CAMPO PROVEEDOR — oculto temporalmente a pedido del cliente. Descomentar para reactivar.
                 <div className="space-y-1.5">
                   <Label htmlFor="proveedor_id" className={labelClasses}>
                     Proveedor *
@@ -1202,6 +1203,7 @@ export default function NuevoMovimientoDialog({
                     ))}
                   </select>
                 </div>
+                */}
 
                 {!isPagoPendiente && (
                   <div className="space-y-1.5">

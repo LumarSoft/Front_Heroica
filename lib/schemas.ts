@@ -27,7 +27,7 @@ export const movimientoBaseSchema = z.object({
   categoria_id: z.string().min(1, 'Debes seleccionar una categoría'),
   subcategoria_id: z.string().min(1, 'Debes seleccionar una subcategoría'),
   descripcion_id: z.string().min(1, 'Debes seleccionar una descripción'),
-  proveedor_id: z.string().min(1, 'Debes seleccionar un proveedor'),
+  proveedor_id: z.string().optional(), // oculto temporalmente a pedido del cliente
   comentarios: z.string().optional(),
   prioridad: z.enum(['baja', 'media', 'alta']),
 })
