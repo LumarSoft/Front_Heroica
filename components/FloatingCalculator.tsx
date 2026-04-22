@@ -13,16 +13,25 @@ const BUTTONS = [
 ]
 
 const KEY_MAP: Record<string, string> = {
-  '0': '0', '1': '1', '2': '2', '3': '3', '4': '4',
-  '5': '5', '6': '6', '7': '7', '8': '8', '9': '9',
-  '.': '.', ',': '.',
+  '0': '0',
+  '1': '1',
+  '2': '2',
+  '3': '3',
+  '4': '4',
+  '5': '5',
+  '6': '6',
+  '7': '7',
+  '8': '8',
+  '9': '9',
+  '.': '.',
+  ',': '.',
   '+': '+',
   '-': '−',
   '*': '×',
   '/': '÷',
-  'Enter': '=',
+  Enter: '=',
   '=': '=',
-  'Escape': 'C',
+  Escape: 'C',
   '%': '%',
 }
 
@@ -47,10 +56,18 @@ export default function FloatingCalculator() {
   const operatorRef = useRef(operator)
   const waitingForOperandRef = useRef(waitingForOperand)
 
-  useEffect(() => { displayRef.current = display }, [display])
-  useEffect(() => { prevValueRef.current = prevValue }, [prevValue])
-  useEffect(() => { operatorRef.current = operator }, [operator])
-  useEffect(() => { waitingForOperandRef.current = waitingForOperand }, [waitingForOperand])
+  useEffect(() => {
+    displayRef.current = display
+  }, [display])
+  useEffect(() => {
+    prevValueRef.current = prevValue
+  }, [prevValue])
+  useEffect(() => {
+    operatorRef.current = operator
+  }, [operator])
+  useEffect(() => {
+    waitingForOperandRef.current = waitingForOperand
+  }, [waitingForOperand])
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -77,7 +94,9 @@ export default function FloatingCalculator() {
         y: Math.min(Math.max(0, rawY), window.innerHeight - h),
       })
     }
-    const handleMouseUp = () => { dragging.current = false }
+    const handleMouseUp = () => {
+      dragging.current = false
+    }
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', handleMouseUp)
     return () => {
@@ -88,11 +107,16 @@ export default function FloatingCalculator() {
 
   const calculate = (a: number, b: number, op: string): number => {
     switch (op) {
-      case '+': return a + b
-      case '−': return a - b
-      case '×': return a * b
-      case '÷': return b !== 0 ? a / b : 0
-      default: return b
+      case '+':
+        return a + b
+      case '−':
+        return a - b
+      case '×':
+        return a * b
+      case '÷':
+        return b !== 0 ? a / b : 0
+      default:
+        return b
     }
   }
 
@@ -205,11 +229,7 @@ export default function FloatingCalculator() {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't intercept when user is typing in a form field
       const target = e.target as HTMLElement
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable
-      ) return
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return
 
       // Copy display value: Ctrl+C / Cmd+C
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
@@ -241,11 +261,7 @@ export default function FloatingCalculator() {
 
     const handlePaste = (e: ClipboardEvent) => {
       const target = e.target as HTMLElement
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable
-      ) return
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return
 
       e.preventDefault()
       const text = e.clipboardData?.getData('text') ?? ''
