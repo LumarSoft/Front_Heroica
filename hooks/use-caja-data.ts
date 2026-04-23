@@ -547,12 +547,31 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
 
   const matchesSearch = useCallback((m: Transaction, q: string): boolean => {
     if (!q) return true
-    const lower = q.toLowerCase()
+    const trimmed = q.trim()
+
+    // Búsqueda por cheque: query que empieza con #
+    if (trimmed.startsWith('#')) {
+      const chequeQuery = trimmed.slice(1).toLowerCase()
+      return (m.numero_cheque?.toLowerCase().includes(chequeQuery) ?? false)
+    }
+
+    const lower = trimmed.toLowerCase()
+    const formattedMonto = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2 }).format(Math.abs(m.monto))
+    const formattedMontoSigned = m.monto < 0 ? `-${formattedMonto}` : formattedMonto
+    const montoMatches =
+      formattedMonto.includes(lower) ||
+      formattedMontoSigned.includes(lower) ||
+      (lower.includes(',') && (
+        formattedMonto.replace(/\./g, '').includes(lower.replace(/\./g, '')) ||
+        formattedMontoSigned.replace(/\./g, '').includes(lower.replace(/\./g, ''))
+      ))
     return (
       (m.concepto?.toLowerCase().includes(lower) ?? false) ||
       (m.comentarios?.toLowerCase().includes(lower) ?? false) ||
       (m.numero_cheque?.toLowerCase().includes(lower) ?? false) ||
-      (m.comprobante?.toLowerCase().includes(lower) ?? false)
+      (m.comprobante?.toLowerCase().includes(lower) ?? false) ||
+      (m.descripcion_nombre?.toLowerCase().includes(lower) ?? false) ||
+      montoMatches
     )
   }, [])
 
