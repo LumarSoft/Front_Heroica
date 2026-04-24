@@ -340,9 +340,25 @@ export default function SucursalDetailPage() {
     }
   }
 
-  const handleDownloadDoc = (docId: number) => {
-    const url = API_ENDPOINTS.SUCURSALES.DOWNLOAD_DOCUMENTO(sucursalId, docId)
-    window.open(url, '_blank')
+  const handleDownloadDoc = async (docId: number) => {
+    try {
+      const url = API_ENDPOINTS.SUCURSALES.DOWNLOAD_DOCUMENTO(sucursalId, docId)
+      const response = await apiFetch(url)
+      if (!response.ok) throw new Error('Error al descargar documento')
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      const disposition = response.headers.get('Content-Disposition')
+      const match = disposition?.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+      a.download = match?.[1]?.replace(/['"]/g, '') ?? 'documento'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(blobUrl)
+    } catch {
+      toast.error('Error al descargar el documento')
+    }
   }
 
   const openDeleteDocDialog = (docId: number, nombreArchivo: string) => {
