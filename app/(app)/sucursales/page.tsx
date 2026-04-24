@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
-import { PageLoadingSpinner, LoadingSpinner } from '@/components/ui/loading-spinner'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ErrorBanner } from '@/components/ui/error-banner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,15 +18,12 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import Navbar from '@/components/Navbar'
-import { useAuthGuard } from '@/hooks/use-auth-guard'
 import { useAuthStore } from '@/store/authStore'
 import type { Sucursal } from '@/lib/types'
 import { sucursalSchema } from '@/lib/schemas'
 
 export default function SucursalesPage() {
   const router = useRouter()
-  const { user, isGuardLoading, handleLogout } = useAuthGuard()
   const [sucursales, setSucursales] = useState<Sucursal[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -43,9 +40,6 @@ export default function SucursalesPage() {
   })
 
   useEffect(() => {
-    if (isGuardLoading) return
-
-    // Cargar sucursales desde la API
     const fetchSucursales = async () => {
       try {
         const response = await apiFetch(API_ENDPOINTS.SUCURSALES.GET_ALL)
@@ -65,7 +59,7 @@ export default function SucursalesPage() {
     }
 
     fetchSucursales()
-  }, [isGuardLoading])
+  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let { name, value } = e.target
@@ -179,15 +173,9 @@ export default function SucursalesPage() {
     router.push(`/sucursales/${id}`)
   }
 
-  if (isGuardLoading) return <PageLoadingSpinner />
-
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
-      {/* Navbar */}
-      <Navbar userName={user?.nombre} userRole={user?.rol} onLogout={handleLogout} />
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 flex-1">
+    <div className="min-h-full bg-[#F8F9FA] flex flex-col">
+      <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-10 flex-1">
         <div className="mb-6 sm:mb-10">
           <h2 className="text-3xl sm:text-4xl font-bold text-[#002868] mb-2">Sucursales</h2>
           <p className="text-[#666666] text-base sm:text-lg">Selecciona una sucursal para gestionar.</p>

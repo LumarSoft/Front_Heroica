@@ -6,12 +6,10 @@ import { toast } from 'sonner'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { AlertTriangle, Plus } from 'lucide-react'
-import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
 import { ErrorBanner } from '@/components/ui/error-banner'
 import { Button } from '@/components/ui/button'
-import Navbar from '@/components/Navbar'
 import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
-import { useAuthGuard } from '@/hooks/use-auth-guard'
+import { useAuthStore } from '@/store/authStore'
 import { calcularTotal } from '@/lib/formatters'
 import { PagosPendientesTable } from '@/components/pagos-pendientes/PagosPendientesTable'
 import { AprobarDialog } from '@/components/pagos-pendientes/AprobarDialog'
@@ -21,7 +19,7 @@ import type { PagoPendiente } from '@/lib/types'
 
 export default function PagosPendientesPage() {
   const params = useParams()
-  const { user, isGuardLoading, handleLogout } = useAuthGuard()
+  const user = useAuthStore(state => state.user)
   const searchParams = useSearchParams()
   const moneda = (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS'
 
@@ -90,11 +88,9 @@ export default function PagosPendientesPage() {
   }, [params.id, user, moneda])
 
   useEffect(() => {
-    if (!isGuardLoading) {
-      if (activeTab === 'pendientes') fetchPagosPendientes()
-      else fetchHistorial()
-    }
-  }, [isGuardLoading, activeTab, fetchPagosPendientes, fetchHistorial])
+    if (activeTab === 'pendientes') fetchPagosPendientes()
+    else fetchHistorial()
+  }, [activeTab, fetchPagosPendientes, fetchHistorial])
 
   const handleOpenAprobar = (pago: PagoPendiente) => {
     setSelectedPago(pago)
@@ -144,8 +140,6 @@ export default function PagosPendientesPage() {
     }
   }
 
-  if (isGuardLoading) return <PageLoadingSpinner />
-
   const total = calcularTotal(pagosPendientes)
   const isEmployee = user?.rol === 'empleado'
   const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin'
@@ -170,15 +164,7 @@ export default function PagosPendientesPage() {
   const displayData = activeTab === 'pendientes' ? pagosPendientes : isAdmin ? historialFiltrado : historial
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
-      <Navbar
-        userName={user?.nombre}
-        userRole={user?.rol}
-        onLogout={handleLogout}
-        showBackButton={true}
-        backUrl={`/sucursales/${params.id}?moneda=${moneda}`}
-      />
-
+    <div className="min-h-full bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <ErrorBanner error={error} />
 

@@ -10,12 +10,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { useAuthGuard } from '@/hooks/use-auth-guard'
 import { useEmployeeNotifications } from '@/hooks/use-employee-notifications'
 import { formatMonto } from '@/lib/formatters'
 import type { Sucursal, Documento, CuentaBancaria } from '@/lib/types'
 import { Mail, Paperclip, ArrowLeft, Download, Trash2, AlertTriangle, Info, BarChart2, Upload, X } from 'lucide-react'
-import Image from 'next/image'
 import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
 import { ErrorBanner } from '@/components/ui/error-banner'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
@@ -25,7 +23,7 @@ export default function SucursalDetailPage() {
   const router = useRouter()
   const params = useParams()
   const sucursalId = Number(params.id)
-  const { user, isGuardLoading } = useAuthGuard()
+  const user = useAuthStore(state => state.user)
 
   const canVerReportes = useAuthStore(state => state.canVerReportes())
   const canAprobarPendientes = useAuthStore(state => state.canAprobarPendientes())
@@ -148,8 +146,6 @@ export default function SucursalDetailPage() {
   }, [sucursalId, moneda])
 
   useEffect(() => {
-    if (isGuardLoading) return
-
     // Cargar datos de la sucursal
     const fetchSucursal = async () => {
       try {
@@ -180,7 +176,7 @@ export default function SucursalDetailPage() {
     fetchDocumentos()
     fetchTotales()
     fetchCuentasBancarias()
-  }, [isGuardLoading, sucursalId, fetchDocumentos, fetchTotales, fetchCuentasBancarias])
+  }, [sucursalId, fetchDocumentos, fetchTotales, fetchCuentasBancarias])
 
   useEffect(() => {
     if (canAprobarPendientes) {
@@ -401,11 +397,11 @@ export default function SucursalDetailPage() {
 
   const totalAlertCount = missingDocsCount + expiredDocsCount
 
-  if (isGuardLoading || isLoading) return <PageLoadingSpinner />
+  if (isLoading) return <PageLoadingSpinner />
 
   if (!sucursal) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-full bg-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-[#1A1A1A] text-xl mb-4">Sucursal no encontrada</p>
           <Button onClick={() => router.push('/sucursales')} className="bg-[#002868] text-white hover:bg-[#003d8f]">
@@ -417,10 +413,10 @@ export default function SucursalDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
-      <header className="bg-white border-b border-[#E0E0E0] shadow-sm sticky top-0 z-50">
+    <div className="min-h-full bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
+      <header className="bg-white border-b border-[#E0E0E0] sticky top-0 z-50">
         <div className="container mx-auto px-3 sm:px-6">
-          <div className="flex items-center h-14 sm:h-16 gap-2 sm:gap-3">
+          <div className="flex items-center h-12 gap-2 sm:gap-3">
             {/* Back button */}
             <TooltipProvider>
               <Tooltip>
@@ -429,28 +425,15 @@ export default function SucursalDetailPage() {
                     onClick={() => router.push('/sucursales')}
                     variant="ghost"
                     size="icon"
-                    className="w-8 h-8 sm:w-9 sm:h-9 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 flex-shrink-0 cursor-pointer rounded-lg"
+                    className="w-8 h-8 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 flex-shrink-0 cursor-pointer rounded-lg"
                     aria-label="Volver a sucursales"
                   >
-                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <ArrowLeft className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">Volver a sucursales</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-
-            {/* Logo */}
-            <Image
-              src="/HEROICA.svg"
-              alt="Heroica"
-              width={80}
-              height={32}
-              className="h-6 sm:h-8 w-auto flex-shrink-0"
-              priority
-            />
-
-            {/* Divider */}
-            <div className="h-6 sm:h-8 w-px bg-[#E0E0E0] flex-shrink-0" />
 
             {/* Sucursal context */}
             <div className="flex flex-col justify-center min-w-0 flex-1 sm:flex-none">
@@ -523,7 +506,7 @@ export default function SucursalDetailPage() {
       </header>
 
       {/* Main Content - LAS CAJAS SON LAS ESTRELLAS */}
-      <main className="container mx-auto px-4 sm:px-6 py-8 md:py-16">
+      <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-10">
         {/* Título Destacado */}
         <div className="text-center mb-8 md:mb-12">
           <h2 className="text-4xl md:text-5xl font-bold text-[#002868] mb-3">
@@ -1283,31 +1266,9 @@ export default function SucursalDetailPage() {
                           className="h-8 text-sm"
                           placeholder="CA $ / CC"
                         />
-                        <Input
-                          value={nuevaCuenta.tipo_cuenta}
-                          onChange={e =>
-                            setNuevaCuenta({
-                              ...nuevaCuenta,
-                              tipo_cuenta: e.target.value,
-                            })
-                          }
-                          className="h-8 text-sm"
-                          placeholder="CA $ / CC"
-                        />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">CBU / CVU *</Label>
-                        <Input
-                          value={nuevaCuenta.cbu}
-                          onChange={e =>
-                            setNuevaCuenta({
-                              ...nuevaCuenta,
-                              cbu: e.target.value,
-                            })
-                          }
-                          className="h-8 text-sm"
-                          placeholder="22 dígitos"
-                        />
                         <Input
                           value={nuevaCuenta.cbu}
                           onChange={e => {
