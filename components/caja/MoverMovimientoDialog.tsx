@@ -16,6 +16,7 @@ import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles'
 import { API_ENDPOINTS, API_URL } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import type { Transaction, SelectOption } from '@/lib/types'
+import { isMedioPagoChequeLike } from '@/lib/cheque'
 import { ArrowRightLeft } from 'lucide-react'
 import { toast } from 'sonner' // using sonner since it's what hook uses
 
@@ -234,7 +235,7 @@ export function MoverMovimientoDialog({
               </div>
               {(() => {
                 const selectedMedio = mediosPagoExternos.find(m => m.id.toString() === formData.medio_pago_id)
-                const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre)
+                const isCheque = isMedioPagoChequeLike(selectedMedio?.nombre)
                 return isCheque ? (
                   <div className="space-y-1.5">
                     <Label className={labelClasses}>N° de Cheque</Label>

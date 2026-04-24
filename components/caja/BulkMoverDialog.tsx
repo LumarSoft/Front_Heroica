@@ -16,6 +16,7 @@ import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import type { SelectOption } from '@/lib/types'
+import { isMedioPagoChequeLike } from '@/lib/cheque'
 import { ArrowRightLeft } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -86,7 +87,7 @@ export function BulkMoverDialog({
   const isDestinoBanco = formData.destino_tipo_movimiento === 'banco'
 
   const selectedMedio = mediosPagoExternos.find(m => m.id.toString() === formData.medio_pago_id)
-  const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre)
+  const isCheque = isMedioPagoChequeLike(selectedMedio?.nombre)
 
   const handleSave = async () => {
     if (!formData.destino_sucursal_id) {
