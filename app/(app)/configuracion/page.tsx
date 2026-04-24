@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { useAuthStore } from '@/store/authStore'
 import {
   Settings,
@@ -103,11 +102,11 @@ export default function ConfiguracionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+    <div className="min-h-full bg-[#F8F9FA] flex flex-col">
       {/* Header — mismo patrón que el resto de la app */}
-      <header className="bg-white border-b border-[#E0E0E0] shadow-sm sticky top-0 z-40">
-        <div className="container mx-auto px-3 sm:px-6">
-          <div className="flex items-center h-14 sm:h-16 gap-2 sm:gap-3">
+      <header className="bg-white border-b border-[#E0E0E0] sticky top-0 z-40">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex items-center h-12 gap-2 sm:gap-3">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -115,19 +114,15 @@ export default function ConfiguracionPage() {
                     onClick={() => router.back()}
                     variant="ghost"
                     size="icon"
-                    className="w-8 h-8 sm:w-9 sm:h-9 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 flex-shrink-0 cursor-pointer rounded-lg"
+                    className="w-8 h-8 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 flex-shrink-0 cursor-pointer rounded-lg"
                     aria-label="Volver"
                   >
-                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <ArrowLeft className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">Volver</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-
-            <Image src="/HEROICA.svg" alt="Heroica" width={80} height={32} className="h-6 sm:h-8 w-auto flex-shrink-0" priority />
-
-            <div className="h-6 sm:h-8 w-px bg-[#E0E0E0] flex-shrink-0" />
 
             <div className="flex items-center gap-2 min-w-0">
               <Settings className="w-4 h-4 text-[#9AA0AC] flex-shrink-0" />
@@ -142,7 +137,7 @@ export default function ConfiguracionPage() {
         </div>
       </header>
 
-      <div className="container mx-auto px-3 sm:px-6 py-6 flex-1">
+      <div className="container mx-auto px-4 sm:px-6 py-6 flex-1">
         <div className="max-w-6xl mx-auto">
 
           {/* Mobile nav — STANDALONE above content, not inside flex row */}

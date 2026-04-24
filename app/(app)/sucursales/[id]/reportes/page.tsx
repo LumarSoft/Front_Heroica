@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { API_ENDPOINTS } from '@/lib/config'
-import { useAuthGuard } from '@/hooks/use-auth-guard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,8 +31,6 @@ export default function ReportesPage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const moneda = (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS'
-  const { isGuardLoading } = useAuthGuard()
-
   const [sucursal, setSucursal] = useState<Sucursal | null>(null)
   const [reportData, setReportData] = useState<ReportData | null>(null)
   const [monthlyData, setMonthlyData] = useState<MonthlyDataPoint[]>([])
@@ -122,11 +119,10 @@ export default function ReportesPage() {
   }, [params.id, startDate, endDate, moneda])
 
   useEffect(() => {
-    if (isGuardLoading) return
     fetchSucursal()
     fetchReportData()
     fetchMonthlyData()
-  }, [isGuardLoading, fetchSucursal, fetchReportData, fetchMonthlyData])
+  }, [fetchSucursal, fetchReportData, fetchMonthlyData])
 
   // ── Computed data ────────────────────────────────────────────────────────────
   const currentIngresosData = useMemo(() => {
@@ -242,33 +238,32 @@ export default function ReportesPage() {
     }
   }, [isExporting, params.id, moneda, startDate, endDate, debouncedMonth])
 
-  if (isGuardLoading || (!sucursal && isLoading)) {
+  if (!sucursal && isLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-full bg-white flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED] pb-24">
+    <div className="min-h-full bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED] pb-10">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-[#E0E0E0]/50 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <header className="bg-white border-b border-[#E0E0E0] sticky top-0 z-50">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-2">
             <div className="flex items-center gap-3">
               <Button
                 onClick={() => router.push(`/sucursales/${params.id}?moneda=${moneda}`)}
-                variant="outline"
-                size="sm"
-                className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer flex-shrink-0"
+                variant="ghost"
+                size="icon"
+                className="w-8 h-8 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 flex-shrink-0 cursor-pointer rounded-lg"
               >
-                <ArrowLeft className="w-4 h-4 sm:mr-1" />
-                <span className="hidden sm:inline">Volver</span>
+                <ArrowLeft className="w-4 h-4" />
               </Button>
               <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-[#002868]">Reportes — {moneda}</h1>
-                <p className="text-sm text-slate-500">{sucursal?.nombre}</p>
+                <h1 className="text-sm font-semibold text-[#002868]">Reportes — {moneda}</h1>
+                <p className="text-[10px] text-[#9AA0AC] leading-none">{sucursal?.nombre}</p>
               </div>
             </div>
 

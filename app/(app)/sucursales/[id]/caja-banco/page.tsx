@@ -4,12 +4,10 @@ import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import Navbar from '@/components/Navbar'
 import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
-import { useAuthGuard } from '@/hooks/use-auth-guard'
 import { useCajaData } from '@/hooks/use-caja-data'
 import { formatMonto, calcularTotal } from '@/lib/formatters'
-import { PageLoadingSpinner, ContentLoadingSpinner } from '@/components/ui/loading-spinner'
+import { ContentLoadingSpinner } from '@/components/ui/loading-spinner'
 import { ErrorBanner } from '@/components/ui/error-banner'
 import { AccessDenied } from '@/components/ui/access-denied'
 import { useAuthStore } from '@/store/authStore'
@@ -32,7 +30,7 @@ const columns = getBancoColumns()
 
 export default function CajaBancoPage() {
   const params = useParams()
-  const { user, isGuardLoading, handleLogout } = useAuthGuard()
+  const user = useAuthStore(state => state.user)
   const searchParams = useSearchParams()
   const moneda = (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS'
   const caja = useCajaData('banco', moneda)
@@ -105,27 +103,14 @@ export default function CajaBancoPage() {
 
   const { initialize } = caja
   useEffect(() => {
-    if (!isGuardLoading) {
-      if (user?.rol === 'empleado') return
-      initialize()
-    }
-  }, [isGuardLoading, user?.rol, initialize])
-
-  if (isGuardLoading) return <PageLoadingSpinner />
+    if (user?.rol === 'empleado') return
+    initialize()
+  }, [user?.rol, initialize])
 
   const bancoNeto = Number(selectedBanco?.total_real ?? 0) + Number(selectedBanco?.total_necesario ?? 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
-      <Navbar
-        userName={user?.nombre}
-        userRole={user?.rol}
-        onLogout={handleLogout}
-        showBackButton={true}
-        backUrl={`/sucursales/${params.id}?moneda=${moneda}`}
-        sucursalNombre={sucursalNombre ? `${sucursalNombre} — ${moneda}` : ''}
-      />
-
+    <div className="min-h-full bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col h-full">
         {user?.rol === 'empleado' ? (
           <AccessDenied resource="la caja de bancos" backUrl={`/sucursales/${params.id}`} />

@@ -5,10 +5,8 @@ import { Plus, Clock, Loader2, CheckCheck, Search, X, FlaskConical } from 'lucid
 import { toast } from 'sonner'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
-import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
 import { Button } from '@/components/ui/button'
-import Navbar from '@/components/Navbar'
-import { useAuthGuard } from '@/hooks/use-auth-guard'
+import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
 import {
   COLUMNAS,
@@ -28,7 +26,7 @@ import { NotificarDialog } from '@/components/tareas/NotificarDialog'
 import type { Tarea, UsuarioBasico, NotificarData, Tipo, Prioridad, Estado } from '@/components/tareas/types'
 
 export default function TareasPage() {
-  const { user, isGuardLoading, handleLogout } = useAuthGuard()
+  const user = useAuthStore(state => state.user)
 
   const [tareas, setTareas] = useState<Tarea[]>([])
   const [usuarios, setUsuarios] = useState<UsuarioBasico[]>([])
@@ -54,10 +52,10 @@ export default function TareasPage() {
   // ─── Fetch ───────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (isGuardLoading || !user) return
+    if (!user) return
     fetchTareas()
     fetchUsuarios()
-  }, [isGuardLoading, user])
+  }, [user])
 
   async function fetchTareas() {
     try {
@@ -271,17 +269,8 @@ export default function TareasPage() {
 
   const hasActiveFilters = filterTipo !== 'all' || filterPrioridad !== 'all' || filterVersion !== 'all' || !!searchQuery
 
-  if (isGuardLoading) return <PageLoadingSpinner />
-
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
-      <Navbar
-        userName={user?.nombre}
-        userRole={user?.rol}
-        onLogout={handleLogout}
-        showBackButton
-      />
-
+    <div className="min-h-full bg-slate-100 flex flex-col">
       {/* Page Header */}
       <div className="bg-white border-b border-slate-200">
         <div className="container mx-auto px-4 sm:px-6 py-6">
