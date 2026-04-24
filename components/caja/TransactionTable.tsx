@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatFecha, formatMonto, calcularTotal, truncarTexto } from '@/lib/formatters'
+import { isMedioPagoChequeLike, tieneNumeroChequeCargado } from '@/lib/cheque'
 import type { Transaction } from '@/lib/types'
+import { cn } from '@/lib/utils'
 import { Clock, Trash2, ArrowRightLeft } from 'lucide-react'
 
 // =============================================
@@ -55,9 +57,17 @@ const DESCRIPCION_COLUMN: ColumnDef = {
         <span className="block w-full text-[#666666] truncate" title={text || ''}>
           {truncarTexto(text)}
         </span>
-        {t.numero_cheque && (
+        {isMedioPagoChequeLike(t.medio_pago_nombre) && !tieneNumeroChequeCargado(t.numero_cheque) && (
           <span
-            className="inline-flex items-center gap-1 self-start px-1.5 py-0.5 rounded-md bg-violet-50 border border-violet-200 text-violet-700 text-[10px] font-semibold tracking-wide whitespace-nowrap"
+            className="inline-flex items-center gap-1 self-start px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-semibold tracking-wide whitespace-nowrap"
+            title="Medio cheque / eCheq: pendiente cargar N° en el banco"
+          >
+            Sin N° cheque
+          </span>
+        )}
+        {tieneNumeroChequeCargado(t.numero_cheque) && (
+          <span
+            className="inline-flex items-center gap-1 self-start px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-semibold tracking-wide whitespace-nowrap"
             title={`Cheque N° ${t.numero_cheque}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-2.5 h-2.5 flex-shrink-0">
@@ -89,11 +99,38 @@ const BANCO_COLUMNS: ColumnDef[] = [
     key: 'medio_pago',
     label: 'Medio Pago',
     widthClass: 'w-[120px]',
-    render: t => (
-      <span className="block w-full text-[#666666] truncate" title={t.medio_pago_nombre || ''}>
-        {t.medio_pago_nombre || '-'}
-      </span>
-    ),
+    render: t => {
+      const nombre = t.medio_pago_nombre || ''
+      const chequeLike = isMedioPagoChequeLike(nombre)
+      const conNumero = tieneNumeroChequeCargado(t.numero_cheque)
+      if (!nombre) {
+        return <span className="block w-full text-[#666666]">-</span>
+      }
+      if (!chequeLike) {
+        return (
+          <span className="block w-full text-[#666666] truncate" title={nombre}>
+            {nombre}
+          </span>
+        )
+      }
+      return (
+        <span
+          className={cn(
+            'inline-flex max-w-full items-center px-1.5 py-0.5 rounded-md border text-[11px] font-semibold truncate',
+            conNumero
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-amber-50 border-amber-200 text-amber-900',
+          )}
+          title={
+            conNumero
+              ? `${nombre} — N° ${t.numero_cheque}`
+              : `${nombre} — sin N° aún (pendiente en banco)`
+          }
+        >
+          <span className="truncate">{nombre}</span>
+        </span>
+      )
+    },
   },
   {
     key: 'banco',
