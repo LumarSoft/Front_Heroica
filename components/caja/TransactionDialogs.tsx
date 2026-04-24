@@ -187,7 +187,7 @@ export function DetailsDialog({
     }
   }
 
-  const handleDownloadDocumento = (docId: number) => {
+  const handleDownloadDocumento = async (docId: number) => {
     if (!movimientoId) return
 
     const endpoint =
@@ -195,7 +195,23 @@ export function DetailsDialog({
         ? API_ENDPOINTS.CAJA_BANCO.DOWNLOAD_DOCUMENTO(movimientoId, docId)
         : API_ENDPOINTS.MOVIMIENTOS.DOWNLOAD_DOCUMENTO(movimientoId, docId)
 
-    window.open(endpoint, '_blank')
+    try {
+      const response = await apiFetch(endpoint)
+      if (!response.ok) throw new Error('Error al descargar documento')
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      const disposition = response.headers.get('Content-Disposition')
+      const match = disposition?.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+      a.download = match?.[1]?.replace(/['"]/g, '') ?? 'documento'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(blobUrl)
+    } catch {
+      // silently fail — caller has no toast context here
+    }
   }
 
   return (
@@ -538,13 +554,7 @@ export function DetailsDialog({
                               type="button"
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
-                                const endpoint =
-                                  cajaTipo === 'banco'
-                                    ? API_ENDPOINTS.CAJA_BANCO.DOWNLOAD_DOCUMENTO(movimientoId, doc.id)
-                                    : API_ENDPOINTS.MOVIMIENTOS.DOWNLOAD_DOCUMENTO(movimientoId, doc.id)
-                                window.open(endpoint, '_blank')
-                              }}
+                              onClick={() => handleDownloadDocumento(doc.id)}
                               className="h-6 w-6 p-0 hover:bg-green-50 hover:text-green-600 cursor-pointer"
                               title="Ver documento"
                             >
