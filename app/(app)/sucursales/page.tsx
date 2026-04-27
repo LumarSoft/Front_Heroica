@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/store/authStore'
 import type { Sucursal } from '@/lib/types'
 import { sucursalSchema } from '@/lib/schemas'
+import { Building2, CircleCheck, CircleOff, Plus } from 'lucide-react'
 
 export default function SucursalesPage() {
   const router = useRouter()
@@ -173,27 +174,44 @@ export default function SucursalesPage() {
     router.push(`/sucursales/${id}`)
   }
 
+  const totalSucursales = sucursales.length
+  const sucursalesActivas = sucursales.filter(s => s.activo).length
+  const sucursalesInactivas = totalSucursales - sucursalesActivas
+
   return (
-    <div className="min-h-full bg-[#F8F9FA] flex flex-col">
+    <div className="min-h-full flex flex-col bg-gradient-to-br from-[#F0F5FF] via-[#F8FAFF] to-white">
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-10 flex-1">
-        <div className="mb-6 sm:mb-10">
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#002868] mb-2">Sucursales</h2>
-          <p className="text-[#666666] text-base sm:text-lg">Selecciona una sucursal para gestionar.</p>
+        <div className="mb-8 sm:mb-10 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-[#002868] flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Building2 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7A93BB] mb-1">Módulo</p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-[#002868]">Tesorería</h1>
+              <p className="text-[#666666] text-base sm:text-lg mt-1">
+                Elegí una sucursal para ingresar a cajas, pagos pendientes y reportes.
+              </p>
+            </div>
+          </div>
         </div>
 
         <ErrorBanner error={error} />
 
+        
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
             <LoadingSpinner />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {sucursales.map(sucursal => (
               <Card
                 key={sucursal.id}
-                className={`group border-[#E0E0E0] bg-white shadow-md transition-all duration-300 relative overflow-hidden cursor-pointer ${
-                  sucursal.activo ? 'hover:border-[#002868] hover:shadow-xl' : 'opacity-60 grayscale'
+                className={`group relative overflow-hidden border-[#D8E3F8] bg-white shadow-sm transition-all duration-300 ${
+                  sucursal.activo
+                    ? 'cursor-pointer hover:-translate-y-1 hover:border-[#002868] hover:shadow-xl'
+                    : 'opacity-60 grayscale cursor-pointer'
                 }`}
                 onClick={() => handleSucursalClick(sucursal.id)}
               >
@@ -311,7 +329,7 @@ export default function SucursalesPage() {
         )}
 
         {!isLoading && sucursales.length === 0 && (
-          <div className="text-center py-20 bg-white rounded-lg border-2 border-dashed border-[#E0E0E0]">
+          <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#D8E3F8]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -333,7 +351,7 @@ export default function SucursalesPage() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full py-6 mt-auto border-t border-[#E0E0E0] text-center text-[#666666] text-sm">
+      <footer className="w-full py-6 mt-auto border-t border-[#E8EDF8] text-center text-[#666666] text-sm">
         Developed with ❤️ by{' '}
         <a
           href="https://lumarsoft.com"
