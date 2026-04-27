@@ -130,9 +130,14 @@ export default function RecursosHumanosSucursalPage() {
         <div className="max-w-5xl mx-auto mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {SECONDARY_SECTIONS.map(section => {
             const Icon = section.icon
+            const href =
+              section.label === 'Escala'
+                ? `/recursos-humanos/${sucursalId}/escalas`
+                : undefined
             return (
               <Card
                 key={section.label}
+                onClick={() => href && router.push(href)}
                 className="group border-2 border-[#D8E3F8] bg-white shadow-sm transition-all duration-300 hover:border-[#002868] hover:shadow-lg cursor-pointer overflow-hidden"
               >
                 <CardContent className="p-6 flex items-center gap-4">
