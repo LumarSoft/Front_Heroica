@@ -13,7 +13,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import type { Tarea, Tipo, Prioridad, UsuarioBasico } from './types'
+import { MODULO_CONFIG, MODULOS } from './constants'
+import type { Tarea, Tipo, Prioridad, UsuarioBasico, Modulo } from './types'
 
 interface TareaDialogProps {
   open: boolean
@@ -23,6 +24,7 @@ interface TareaDialogProps {
     descripcion: string
     tipo: Tipo
     prioridad: Prioridad
+    modulo: Modulo
     version: string
     asignado_a: number | null
   }) => Promise<void>
@@ -35,6 +37,7 @@ export function TareaDialog({ open, onClose, onSave, saving, initial, usuarios }
   const [titulo, setTitulo] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [version, setVersion] = useState('')
+  const [modulo, setModulo] = useState<Modulo>('tesoreria')
   const [tipo, setTipo] = useState<Tipo>('otro')
   const [prioridad, setPrioridad] = useState<Prioridad>('media')
   const [asignadoA, setAsignadoA] = useState<number | null>(null)
@@ -44,6 +47,7 @@ export function TareaDialog({ open, onClose, onSave, saving, initial, usuarios }
       setTitulo(initial?.titulo ?? '')
       setDescripcion(initial?.descripcion ?? '')
       setVersion(initial?.version ?? '')
+      setModulo(initial?.modulo ?? 'tesoreria')
       setTipo(initial?.tipo ?? 'otro')
       setPrioridad(initial?.prioridad ?? 'media')
       setAsignadoA(initial?.asignado_a ?? null)
@@ -57,6 +61,7 @@ export function TareaDialog({ open, onClose, onSave, saving, initial, usuarios }
       titulo: titulo.trim(),
       descripcion: descripcion.trim(),
       version: version.trim(),
+      modulo,
       tipo,
       prioridad,
       asignado_a: asignadoA,
@@ -107,6 +112,21 @@ export function TareaDialog({ open, onClose, onSave, saving, initial, usuarios }
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
+                <Label className="text-slate-700 font-semibold text-sm">Módulo *</Label>
+                <Select value={modulo} onValueChange={v => setModulo(v as Modulo)}>
+                  <SelectTrigger className="border-slate-200 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MODULOS.map(m => (
+                      <SelectItem key={m} value={m}>
+                        {MODULO_CONFIG[m].label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
                 <Label className="text-slate-700 font-semibold text-sm">Tipo *</Label>
                 <Select value={tipo} onValueChange={v => setTipo(v as Tipo)}>
                   <SelectTrigger className="border-slate-200 text-sm">
@@ -120,6 +140,9 @@ export function TareaDialog({ open, onClose, onSave, saving, initial, usuarios }
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-slate-700 font-semibold text-sm">Prioridad *</Label>
                 <Select value={prioridad} onValueChange={v => setPrioridad(v as Prioridad)}>
@@ -133,26 +156,26 @@ export function TareaDialog({ open, onClose, onSave, saving, initial, usuarios }
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-slate-700 font-semibold text-sm">Asignar a</Label>
-              <Select
-                value={asignadoA !== null ? String(asignadoA) : 'sin_asignar'}
-                onValueChange={v => setAsignadoA(v === 'sin_asignar' ? null : Number(v))}
-              >
-                <SelectTrigger className="border-slate-200 text-sm">
-                  <SelectValue placeholder="Sin asignar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sin_asignar">Sin asignar</SelectItem>
-                  {usuarios.map(u => (
-                    <SelectItem key={u.id} value={String(u.id)}>
-                      {u.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-1.5">
+                <Label className="text-slate-700 font-semibold text-sm">Asignar a</Label>
+                <Select
+                  value={asignadoA !== null ? String(asignadoA) : 'sin_asignar'}
+                  onValueChange={v => setAsignadoA(v === 'sin_asignar' ? null : Number(v))}
+                >
+                  <SelectTrigger className="border-slate-200 text-sm">
+                    <SelectValue placeholder="Sin asignar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sin_asignar">Sin asignar</SelectItem>
+                    {usuarios.map(u => (
+                      <SelectItem key={u.id} value={String(u.id)}>
+                        {u.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-1.5">

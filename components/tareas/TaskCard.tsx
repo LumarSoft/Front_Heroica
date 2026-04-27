@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { ChevronRight, ChevronLeft, Pencil, Trash2, MessageCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { TIPO_CONFIG, PRIORIDAD_CONFIG, ESTADO_SIGUIENTE, ESTADO_ANTERIOR } from './constants'
+import { TIPO_CONFIG, PRIORIDAD_CONFIG, ESTADO_SIGUIENTE, ESTADO_ANTERIOR, MODULO_CONFIG } from './constants'
 import { formatDate, highlightText } from './utils'
 import { Avatar } from './Avatar'
 import type { Tarea } from './types'
@@ -33,6 +33,7 @@ export function TaskCard({
 }: TaskCardProps) {
   const tipo = TIPO_CONFIG[tarea.tipo]
   const prio = PRIORIDAD_CONFIG[tarea.prioridad]
+  const modulo = MODULO_CONFIG[tarea.modulo] ?? MODULO_CONFIG.tesoreria
   const canGoForward = !!ESTADO_SIGUIENTE[tarea.estado]
   const canGoBack = !!ESTADO_ANTERIOR[tarea.estado]
   const isDone = tarea.estado === 'completado'
@@ -60,6 +61,9 @@ export function TaskCard({
       <div className="p-3.5 flex flex-col gap-2.5">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-[10px] font-bold bg-[#002868] text-white px-2 py-0.5 rounded-full">{tarea.codigo}</span>
+          <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full border', modulo.badge)}>
+            {modulo.label}
+          </span>
           {tarea.version && (
             <span className="text-[10px] font-semibold text-[#002868] border border-[#002868]/30 px-2 py-0.5 rounded-full">
               v{tarea.version}
