@@ -237,10 +237,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([])
   const [bellOpen, setBellOpen] = useState(false)
   const [loadingNotif, setLoadingNotif] = useState(false)
-  const bellBtnRef = useRef<HTMLButtonElement>(null)
   const notifPanelRef = useRef<HTMLDivElement>(null)
-  const [bellPos, setBellPos] = useState<{ top: number; left: number } | null>(null)
-
   const unread = notificaciones.filter(n => !n.leida).length
 
   useEffect(() => {
@@ -249,18 +246,6 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
     const interval = setInterval(doFetch, 30_000)
     return () => clearInterval(interval)
   }, [user])
-
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      const t = e.target as Node
-      if (
-        bellBtnRef.current && !bellBtnRef.current.contains(t) &&
-        notifPanelRef.current && !notifPanelRef.current.contains(t)
-      ) setBellOpen(false)
-    }
-    if (bellOpen) document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [bellOpen])
 
   useEffect(() => {
     function handler(e: KeyboardEvent) { if (e.key === 'Escape') setBellOpen(false) }
@@ -306,14 +291,6 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
   }
 
   function handleBellClick() {
-    if (bellBtnRef.current) {
-      const rect = bellBtnRef.current.getBoundingClientRect()
-      const panelW = Math.min(380, window.innerWidth - 24)
-      setBellPos({
-        top: rect.top,
-        left: Math.max(8, Math.min(rect.right + 8, window.innerWidth - panelW - 8)),
-      })
-    }
     setBellOpen(v => !v)
   }
 
@@ -409,62 +386,6 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
               onClick={onMobileClose}
             />
 
-            {/* Bell (special — needs ref for positioning) */}
-            {isCollapsed ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    ref={bellBtnRef}
-                    onClick={handleBellClick}
-                    className={cn(
-                      'w-full h-10 flex items-center justify-center rounded-xl transition-all duration-150',
-                      bellOpen
-                        ? 'bg-[#EAF0FF] text-[#002868]'
-                        : 'text-[#64748B] hover:bg-[#EEF3FF] hover:text-[#1E293B]',
-                    )}
-                  >
-                    <div className="relative">
-                      <Bell className="w-[18px] h-[18px]" />
-                      {unread > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 w-[14px] h-[14px] bg-rose-500 rounded-full flex items-center justify-center text-white text-[8px] font-bold leading-none">
-                          {unread > 9 ? '9+' : unread}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  Notificaciones{unread > 0 ? ` (${unread})` : ''}
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <button
-                ref={bellBtnRef}
-                onClick={handleBellClick}
-                className={cn(
-                  'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
-                  bellOpen
-                    ? 'bg-[#EAF0FF] text-[#002868] font-semibold'
-                    : 'text-[#64748B] hover:bg-[#EEF3FF] hover:text-[#1E293B]',
-                )}
-              >
-                <div className="relative flex-shrink-0">
-                  <Bell className="w-4 h-4" />
-                  {unread > 0 && !bellOpen && (
-                    <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center rounded-full h-[13px] min-w-[13px] px-0.5 bg-rose-500 text-white text-[8px] font-bold leading-none">
-                      {unread > 9 ? '9+' : unread}
-                    </span>
-                  )}
-                </div>
-                <span className="flex-1 text-left whitespace-nowrap">Notificaciones</span>
-                {unread > 0 && (
-                  <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full font-semibold leading-none">
-                    {unread}
-                  </span>
-                )}
-              </button>
-            )}
-
             {canVerConfiguracion && (
               <NavItem
                 icon={Settings}
@@ -536,7 +457,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          'hidden md:flex flex-col flex-shrink-0 h-full',
+          'hidden md:flex flex-col flex-shrink-0 h-full z-[160]',
           'bg-[#F7F9FD] border-r border-[#E2E8F5]',
           'transition-[width] duration-300 ease-in-out overflow-hidden',
           collapsed ? 'w-[68px]' : 'w-64',
@@ -585,6 +506,64 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
           )}
         </div>
 
+        {/* Bell row — between header and modules */}
+        <div className={cn('flex-shrink-0 border-b border-[#E2E8F5]', layoutCollapsed ? 'px-2 py-2' : 'px-3 py-2')}>
+          {layoutCollapsed ? (
+            <TooltipProvider delayDuration={80}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={handleBellClick}
+                    className={cn(
+                      'w-full h-10 flex items-center justify-center rounded-xl transition-all duration-150',
+                      bellOpen
+                        ? 'bg-[#EAF0FF] text-[#002868]'
+                        : 'text-[#64748B] hover:bg-[#EEF3FF] hover:text-[#1E293B]',
+                    )}
+                  >
+                    <div className="relative">
+                      <Bell className="w-[18px] h-[18px]" />
+                      {unread > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 w-[14px] h-[14px] bg-rose-500 rounded-full flex items-center justify-center text-white text-[8px] font-bold leading-none">
+                          {unread > 9 ? '9+' : unread}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  Notificaciones{unread > 0 ? ` (${unread})` : ''}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <button
+              onClick={handleBellClick}
+              className={cn(
+                'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                bellOpen
+                  ? 'bg-[#EAF0FF] text-[#002868] font-semibold'
+                  : 'text-[#64748B] hover:bg-[#EEF3FF] hover:text-[#1E293B]',
+              )}
+            >
+              <div className="relative flex-shrink-0">
+                <Bell className="w-4 h-4" />
+                {unread > 0 && !bellOpen && (
+                  <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center rounded-full h-[13px] min-w-[13px] px-0.5 bg-rose-500 text-white text-[8px] font-bold leading-none">
+                    {unread > 9 ? '9+' : unread}
+                  </span>
+                )}
+              </div>
+              <span className="flex-1 text-left whitespace-nowrap">Notificaciones</span>
+              {unread > 0 && (
+                <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full font-semibold leading-none">
+                  {unread}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
+
         {buildNav(layoutCollapsed)}
         {buildUserFooter(layoutCollapsed)}
       </aside>
@@ -607,124 +586,177 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
                 <X className="w-4 h-4" />
               </button>
             </div>
+            {/* Bell row */}
+            <div className="flex-shrink-0 border-b border-[#E2E8F5] px-3 py-2">
+              <button
+                onClick={handleBellClick}
+                className={cn(
+                  'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                  bellOpen
+                    ? 'bg-[#EAF0FF] text-[#002868] font-semibold'
+                    : 'text-[#64748B] hover:bg-[#EEF3FF] hover:text-[#1E293B]',
+                )}
+              >
+                <div className="relative flex-shrink-0">
+                  <Bell className="w-4 h-4" />
+                  {unread > 0 && !bellOpen && (
+                    <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center rounded-full h-[13px] min-w-[13px] px-0.5 bg-rose-500 text-white text-[8px] font-bold leading-none">
+                      {unread > 9 ? '9+' : unread}
+                    </span>
+                  )}
+                </div>
+                <span className="flex-1 text-left whitespace-nowrap">Notificaciones</span>
+                {unread > 0 && (
+                  <span className="text-[10px] bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded-full font-semibold leading-none">
+                    {unread}
+                  </span>
+                )}
+              </button>
+            </div>
             {buildNav(false)}
             {buildUserFooter(false)}
           </aside>
         </div>
       )}
 
-      {/* Notification panel — fixed, escapes sidebar overflow */}
-      {bellOpen && bellPos && (
-        <div
-          ref={notifPanelRef}
-          className="fixed z-[200] w-[92vw] sm:w-[380px] bg-white rounded-2xl shadow-2xl border border-slate-200/80 overflow-hidden"
-          style={{ top: bellPos.top, left: bellPos.left }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#002868]/8 flex items-center justify-center">
-                <Bell className="w-3.5 h-3.5 text-[#002868]" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-800 leading-none">Notificaciones</p>
-                {unread > 0 && (
-                  <p className="text-[10px] text-rose-500 font-semibold mt-0.5 leading-none">
-                    {unread} sin leer
-                  </p>
-                )}
-              </div>
+      {/* Notification drawer — slides in from the right */}
+
+      {/* Backdrop */}
+      <div
+        className={cn(
+          'fixed inset-0 z-[150] bg-black/25 backdrop-blur-[2px] transition-opacity duration-300',
+          bellOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
+        )}
+        onClick={() => setBellOpen(false)}
+      />
+
+      {/* Drawer */}
+      <div
+        ref={notifPanelRef}
+        className={cn(
+          'fixed inset-y-0 right-0 z-[200] w-full sm:w-[400px] bg-white shadow-2xl flex flex-col',
+          'transition-transform duration-300 ease-in-out',
+          bellOpen ? 'translate-x-0' : 'translate-x-full',
+        )}
+        aria-hidden={!bellOpen}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-[#002868]/8 flex items-center justify-center">
+              <Bell className="w-4 h-4 text-[#002868]" />
             </div>
-            <div className="flex items-center gap-1.5">
-              {unread > 0 && (
-                <button
-                  onClick={marcarTodasLeidas}
-                  className="flex items-center gap-1 text-[10px] font-semibold text-[#002868] bg-[#002868]/6 hover:bg-[#002868]/12 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
-                >
-                  <CheckCheck className="w-3 h-3" />
-                  Marcar todo
-                </button>
+            <div>
+              <p className="text-sm font-bold text-slate-800 leading-none">Notificaciones</p>
+              {unread > 0 ? (
+                <p className="text-[11px] text-rose-500 font-semibold mt-0.5 leading-none">
+                  {unread} sin leer
+                </p>
+              ) : (
+                <p className="text-[11px] text-slate-400 mt-0.5 leading-none">
+                  Al día
+                </p>
               )}
-              <button
-                onClick={() => setBellOpen(false)}
-                className="w-6 h-6 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            {unread > 0 && (
+              <button
+                onClick={marcarTodasLeidas}
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#002868] bg-[#002868]/6 hover:bg-[#002868]/12 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+              >
+                <CheckCheck className="w-3.5 h-3.5" />
+                Marcar todo
+              </button>
+            )}
+            <button
+              onClick={() => setBellOpen(false)}
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
 
-          {/* List */}
-          <div className="max-h-[400px] overflow-y-auto">
-            {notificaciones.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-                <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
-                  <Bell className="w-5 h-5 text-slate-400" />
-                </div>
-                <p className="text-sm font-semibold text-slate-600">Sin notificaciones</p>
-                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  Cuando alguien te notifique sobre una tarea, aparecerá acá.
-                </p>
+        {/* List */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {notificaciones.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full px-8 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                <Bell className="w-6 h-6 text-slate-400" />
               </div>
-            ) : (
-              <div className="divide-y divide-slate-50">
-                {notificaciones.map(n => {
-                  const isUnread = !n.leida
-                  const isMove = n.tipo === 'movimiento'
-                  return (
-                    <button
-                      key={n.id}
-                      onClick={() => handleOpenNotificacion(n)}
-                      className={cn(
-                        'w-full text-left px-4 py-3.5 flex gap-3 items-start transition-colors duration-150 cursor-pointer',
-                        isUnread ? 'bg-blue-50/50 hover:bg-blue-50' : 'hover:bg-slate-50',
-                      )}
-                    >
-                      <div className={cn(
-                        'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5',
-                        isMove ? 'bg-blue-100 text-blue-600' : 'bg-violet-100 text-violet-600',
-                      )}>
-                        {isMove
-                          ? <ArrowRight className="w-3.5 h-3.5" />
-                          : <MessageCircle className="w-3.5 h-3.5" />
-                        }
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="inline-block text-[9px] font-bold bg-[#002868] text-white px-1.5 py-0.5 rounded-full mb-1">
+              <p className="text-sm font-semibold text-slate-600">Sin notificaciones</p>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed max-w-[220px]">
+                Cuando alguien te notifique sobre una tarea, aparecerá acá.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {notificaciones.map(n => {
+                const isUnread = !n.leida
+                const isMove = n.tipo === 'movimiento'
+                return (
+                  <button
+                    key={n.id}
+                    onClick={() => handleOpenNotificacion(n)}
+                    className={cn(
+                      'w-full text-left px-5 py-4 flex gap-3.5 items-start transition-colors duration-150 cursor-pointer',
+                      isUnread ? 'bg-blue-50/40 hover:bg-blue-50/70' : 'hover:bg-slate-50',
+                    )}
+                  >
+                    <div className={cn(
+                      'w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5',
+                      isMove ? 'bg-blue-100 text-blue-600' : 'bg-violet-100 text-violet-600',
+                    )}>
+                      {isMove
+                        ? <ArrowRight className="w-4 h-4" />
+                        : <MessageCircle className="w-4 h-4" />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-bold bg-[#002868] text-white px-1.5 py-0.5 rounded-full leading-none">
                           {n.tarea_codigo}
                         </span>
-                        <p className={cn(
-                          'text-xs leading-snug',
-                          isUnread ? 'font-semibold text-slate-800' : 'text-slate-600',
-                        )}>
-                          {n.descripcion}
-                        </p>
-                        <p className="text-[10px] text-slate-400 mt-1 font-medium">
-                          De {n.de_nombre} · {timeAgo(n.created_at)}
-                        </p>
+                        {n.tarea_titulo && (
+                          <span className="text-[11px] text-slate-500 font-medium truncate">
+                            {n.tarea_titulo}
+                          </span>
+                        )}
                       </div>
-                      {isUnread && <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-2" />}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          {notificaciones.length > 0 && (
-            <div className="border-t border-slate-100 px-4 py-3">
-              <button
-                onClick={() => { setBellOpen(false); router.push('/tareas') }}
-                className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-[#002868] hover:text-[#003d8f] transition-colors cursor-pointer py-1"
-              >
-                Ver tablero de tareas
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+                      <p className={cn(
+                        'text-xs leading-snug line-clamp-3',
+                        isUnread ? 'font-semibold text-slate-800' : 'text-slate-600',
+                      )}>
+                        {n.descripcion}
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-1.5 font-medium">
+                        De {n.de_nombre} · {timeAgo(n.created_at)}
+                      </p>
+                    </div>
+                    {isUnread && (
+                      <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-1.5" />
+                    )}
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>
-      )}
+
+        {/* Footer */}
+        {notificaciones.length > 0 && (
+          <div className="border-t border-slate-100 px-5 py-3.5 flex-shrink-0">
+            <button
+              onClick={() => { setBellOpen(false); router.push('/tareas') }}
+              className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-[#002868] hover:text-[#003d8f] bg-[#002868]/4 hover:bg-[#002868]/8 py-2.5 rounded-xl transition-colors cursor-pointer"
+            >
+              Ver tablero de tareas
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
     </>
   )
 }
