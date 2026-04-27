@@ -62,7 +62,7 @@ export default function EscalasSalarialesPage() {
   const openCreate = () => { setEditTarget(null); setFormOpen(true) }
   const openEdit = (escala: EscalaSalarial) => { setEditTarget(escala); setFormOpen(true) }
 
-  const handleSave = async (body: Omit<EscalaSalarial, 'id'>) => {
+  const handleSave = async (body: Omit<EscalaSalarial, 'id' | 'puesto_nombre'>) => {
     setSaving(true)
     try {
       const isEdit = editTarget !== null
@@ -169,6 +169,7 @@ export default function EscalasSalarialesPage() {
         initial={editTarget}
         defaultMes={filterMes}
         defaultAnio={filterAnio}
+        sucursalId={sucursalId}
       />
 
       <EscalaDeleteDialog

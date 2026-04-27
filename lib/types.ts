@@ -110,7 +110,8 @@ export interface CuentaBancaria {
 
 export interface EscalaSalarial {
   id: number
-  puesto: string
+  puesto_id: number
+  puesto_nombre: string
   sueldo_base: number
   mes: number
   anio: number
