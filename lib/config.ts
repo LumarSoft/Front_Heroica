@@ -184,4 +184,11 @@ export const API_ENDPOINTS = {
     CREATE: `${API_URL}/api/notificaciones`,
     LEER: `${API_URL}/api/notificaciones/leer`,
   },
+  PERSONAL: {
+    GET_ALL: `${API_URL}/api/personal`,
+    GET_BY_ID: (id: number) => `${API_URL}/api/personal/${id}`,
+    CREATE: `${API_URL}/api/personal`,
+    UPDATE: (id: number) => `${API_URL}/api/personal/${id}`,
+    DELETE: (id: number) => `${API_URL}/api/personal/${id}`,
+  },
 }
