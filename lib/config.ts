@@ -190,6 +190,12 @@ export const API_ENDPOINTS = {
     CREATE: `${API_URL}/api/notificaciones`,
     LEER: `${API_URL}/api/notificaciones/leer`,
   },
+  ESCALAS_SALARIALES: {
+    GET_ALL: `${API_URL}/api/escalas-salariales`,
+    CREATE: `${API_URL}/api/escalas-salariales`,
+    UPDATE: (id: number) => `${API_URL}/api/escalas-salariales/${id}`,
+    DELETE: (id: number) => `${API_URL}/api/escalas-salariales/${id}`,
+  },
   PERSONAL: {
     GET_ALL: `${API_URL}/api/personal`,
     GET_BY_ID: (id: number) => `${API_URL}/api/personal/${id}`,

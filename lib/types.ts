@@ -108,6 +108,15 @@ export interface CuentaBancaria {
   banco?: string
 }
 
+export interface EscalaSalarial {
+  id: number
+  puesto: string
+  sueldo_base: number
+  mes: number
+  anio: number
+  valor_hora: number | null
+}
+
 export interface SelectOption {
   id: number
   nombre: string
