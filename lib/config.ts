@@ -179,6 +179,12 @@ export const API_ENDPOINTS = {
     CREATE_COMENTARIO: (id: number) => `${API_URL}/api/tareas/${id}/comentarios`,
     DELETE_COMENTARIO: (id: number, comentarioId: number) => `${API_URL}/api/tareas/${id}/comentarios/${comentarioId}`,
   },
+  RRHH_CALENDARIO: {
+    GET_ALL: `${API_URL}/api/rrhh/calendario`,
+    CREATE: `${API_URL}/api/rrhh/calendario`,
+    UPDATE: (id: number) => `${API_URL}/api/rrhh/calendario/${id}`,
+    DELETE: (id: number) => `${API_URL}/api/rrhh/calendario/${id}`,
+  },
   NOTIFICACIONES: {
     MIS: `${API_URL}/api/notificaciones/mis`,
     CREATE: `${API_URL}/api/notificaciones`,
@@ -189,5 +195,12 @@ export const API_ENDPOINTS = {
     CREATE: `${API_URL}/api/escalas-salariales`,
     UPDATE: (id: number) => `${API_URL}/api/escalas-salariales/${id}`,
     DELETE: (id: number) => `${API_URL}/api/escalas-salariales/${id}`,
+  },
+  PERSONAL: {
+    GET_ALL: `${API_URL}/api/personal`,
+    GET_BY_ID: (id: number) => `${API_URL}/api/personal/${id}`,
+    CREATE: `${API_URL}/api/personal`,
+    UPDATE: (id: number) => `${API_URL}/api/personal/${id}`,
+    DELETE: (id: number) => `${API_URL}/api/personal/${id}`,
   },
 }

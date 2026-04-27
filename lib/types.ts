@@ -122,6 +122,24 @@ export interface SelectOption {
   nombre: string
 }
 
+export type RhCalendarioEventoTipo = 'Capacitación' | 'Reunión' | 'Comunicado' | 'Vencimiento' | 'Evento interno' | 'Otro'
+export type RhCalendarioTipoNotion = 'General' | 'Invitación' | 'Comunicado' | 'Recordatorio'
+
+export interface RhCalendarioEvento {
+  id: number
+  evento: RhCalendarioEventoTipo
+  fecha: string
+  hora: string | null
+  direccion: string | null
+  participantes: string | null
+  comentarios: string | null
+  tipo_notion: RhCalendarioTipoNotion
+  creado_por: number | null
+  creado_por_nombre: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface DescripcionOption {
   id: number
   nombre: string

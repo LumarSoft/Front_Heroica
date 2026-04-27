@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
-import { TIPO_CONFIG, PRIORIDAD_CONFIG, ESTADO_CONFIG, ESTADO_SIGUIENTE, ESTADO_ANTERIOR } from './constants'
+import { TIPO_CONFIG, PRIORIDAD_CONFIG, ESTADO_CONFIG, ESTADO_SIGUIENTE, ESTADO_ANTERIOR, MODULO_CONFIG } from './constants'
 import { formatDate, timeAgo } from './utils'
 import { Avatar } from './Avatar'
 import { MetaItem } from './MetaItem'
@@ -120,6 +120,7 @@ export function DetailDialog({
 
   const tipo = TIPO_CONFIG[tarea.tipo]
   const prio = PRIORIDAD_CONFIG[tarea.prioridad]
+  const modulo = MODULO_CONFIG[tarea.modulo] ?? MODULO_CONFIG.tesoreria
   const estado = ESTADO_CONFIG[tarea.estado]
   const canGoForward = !!ESTADO_SIGUIENTE[tarea.estado]
   const canGoBack = !!ESTADO_ANTERIOR[tarea.estado]
@@ -139,6 +140,9 @@ export function DetailDialog({
               <div className="flex items-center gap-1.5 flex-wrap mb-3">
                 <span className="text-[10px] font-bold bg-[#002868] text-white px-2 py-0.5 rounded-full">
                   {tarea.codigo}
+                </span>
+                <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full border', modulo.badge)}>
+                  {modulo.label}
                 </span>
                 {tarea.version && (
                   <span className="text-[10px] font-semibold text-[#002868] border border-[#002868]/30 px-2 py-0.5 rounded-full">

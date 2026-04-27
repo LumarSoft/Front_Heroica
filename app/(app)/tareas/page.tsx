@@ -15,6 +15,8 @@ import {
   ESTADO_ANTERIOR,
   TIPO_CONFIG,
   PRIORIDAD_CONFIG,
+  MODULO_CONFIG,
+  MODULOS,
 } from '@/components/tareas/constants'
 import { TaskCard } from '@/components/tareas/TaskCard'
 import { EmptyColumn } from '@/components/tareas/EmptyColumn'
@@ -23,7 +25,7 @@ import { TareaDialog } from '@/components/tareas/TareaDialog'
 import { DeleteDialog } from '@/components/tareas/DeleteDialog'
 import { DetailDialog } from '@/components/tareas/DetailDialog'
 import { NotificarDialog } from '@/components/tareas/NotificarDialog'
-import type { Tarea, UsuarioBasico, NotificarData, Tipo, Prioridad, Estado } from '@/components/tareas/types'
+import type { Tarea, UsuarioBasico, NotificarData, Tipo, Prioridad, Estado, Modulo } from '@/components/tareas/types'
 
 export default function TareasPage() {
   const user = useAuthStore(state => state.user)
@@ -32,6 +34,7 @@ export default function TareasPage() {
   const [usuarios, setUsuarios] = useState<UsuarioBasico[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [filterModulo, setFilterModulo] = useState<'all' | Modulo>('all')
   const [filterTipo, setFilterTipo] = useState<'all' | Tipo>('all')
   const [filterPrioridad, setFilterPrioridad] = useState<'all' | Prioridad>('all')
   const [filterVersion, setFilterVersion] = useState<string>('all')
@@ -107,6 +110,7 @@ export default function TareasPage() {
     descripcion: string
     tipo: Tipo
     prioridad: Prioridad
+    modulo: Modulo
     version: string
     asignado_a: number | null
   }) {
@@ -232,6 +236,7 @@ export default function TareasPage() {
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase().trim()
     return tareas.filter(t => {
+      if (filterModulo !== 'all' && t.modulo !== filterModulo) return false
       if (filterTipo !== 'all' && t.tipo !== filterTipo) return false
       if (filterPrioridad !== 'all' && t.prioridad !== filterPrioridad) return false
       if (filterVersion !== 'all') {
@@ -242,13 +247,15 @@ export default function TareasPage() {
         }
       }
       if (q) {
+        const inCode = t.codigo.toLowerCase().includes(q)
+        const inModule = MODULO_CONFIG[t.modulo]?.label.toLowerCase().includes(q) ?? false
         const inTitle = t.titulo.toLowerCase().includes(q)
         const inDesc = t.descripcion?.toLowerCase().includes(q) ?? false
-        if (!inTitle && !inDesc) return false
+        if (!inCode && !inModule && !inTitle && !inDesc) return false
       }
       return true
     })
-  }, [tareas, filterTipo, filterPrioridad, filterVersion, searchQuery])
+  }, [tareas, filterModulo, filterTipo, filterPrioridad, filterVersion, searchQuery])
 
   const grouped = useMemo(() => {
     const map: Record<Estado, Tarea[]> = { pendiente: [], en_progreso: [], en_pruebas: [], completado: [] }
@@ -267,7 +274,8 @@ export default function TareasPage() {
     [tareas],
   )
 
-  const hasActiveFilters = filterTipo !== 'all' || filterPrioridad !== 'all' || filterVersion !== 'all' || !!searchQuery
+  const hasActiveFilters =
+    filterModulo !== 'all' || filterTipo !== 'all' || filterPrioridad !== 'all' || filterVersion !== 'all' || !!searchQuery
 
   return (
     <div className="min-h-full bg-slate-100 flex flex-col">
@@ -367,6 +375,19 @@ export default function TareasPage() {
 
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 sm:divide-x sm:divide-slate-200">
             <div className="flex flex-col gap-1.5 sm:pr-5">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Módulo</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <FilterChip active={filterModulo === 'all'} onClick={() => setFilterModulo('all')}>
+                  Todos
+                </FilterChip>
+                {MODULOS.map(m => (
+                  <FilterChip key={m} active={filterModulo === m} onClick={() => setFilterModulo(m)}>
+                    {MODULO_CONFIG[m].label}
+                  </FilterChip>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5 sm:px-5">
               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Tipo</span>
               <div className="flex items-center gap-1.5 flex-wrap">
                 {(['all', 'bug', 'mejora', 'implementacion', 'otro'] as const).map(t => (
@@ -412,6 +433,7 @@ export default function TareasPage() {
               <button
                 onClick={() => {
                   setSearchQuery('')
+                  setFilterModulo('all')
                   setFilterTipo('all')
                   setFilterPrioridad('all')
                   setFilterVersion('all')

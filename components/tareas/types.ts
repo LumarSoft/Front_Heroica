@@ -1,10 +1,12 @@
 export type Tipo = 'bug' | 'mejora' | 'implementacion' | 'otro'
 export type Prioridad = 'alta' | 'media' | 'baja'
 export type Estado = 'pendiente' | 'en_progreso' | 'en_pruebas' | 'completado'
+export type Modulo = 'tesoreria' | 'rh'
 
 export interface Tarea {
   id: number
   codigo: string
+  modulo: Modulo
   version: string | null
   titulo: string
   descripcion: string | null
