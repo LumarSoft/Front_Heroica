@@ -7,19 +7,15 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   Building2,
   Users,
-  MapPin,
   Calculator,
   ClipboardList,
   Bell,
   Settings,
   LogOut,
-  ChevronDown,
-  ChevronRight,
   ArrowRight,
   MessageCircle,
   CheckCheck,
   X,
-  LayoutGrid,
   Menu,
   PanelLeftClose,
 } from 'lucide-react'
@@ -71,9 +67,6 @@ const MODULES = [
     icon: Building2,
     defaultHref: '/sucursales',
     matchPaths: ['/sucursales'],
-    items: [
-      { label: 'Sucursales', icon: MapPin, href: '/sucursales' },
-    ],
   },
   {
     id: 'recursos-humanos',
@@ -81,9 +74,6 @@ const MODULES = [
     icon: Users,
     defaultHref: '/recursos-humanos',
     matchPaths: ['/recursos-humanos'],
-    items: [
-      { label: 'Panel General', icon: LayoutGrid, href: '/recursos-humanos' },
-    ],
   },
 ] as const
 
@@ -243,28 +233,6 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
     }
   }
 
-  // ── Module expand ─────────────────────────────────────────────────────────────
-  const [expandedModules, setExpandedModules] = useState<string[]>(() => {
-    const active = MODULES
-      .filter(m => m.matchPaths.some(p => pathname?.startsWith(p)))
-      .map(m => m.id)
-    return active.length ? active : ['tesoreria']
-  })
-
-  useEffect(() => {
-    MODULES.forEach(mod => {
-      if (mod.matchPaths.some(p => pathname?.startsWith(p))) {
-        setExpandedModules(prev => prev.includes(mod.id) ? prev : [...prev, mod.id])
-      }
-    })
-  }, [pathname])
-
-  const toggleModule = (id: string) => {
-    setExpandedModules(prev =>
-      prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]
-    )
-  }
-
   // ── Notifications ─────────────────────────────────────────────────────────────
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([])
   const [bellOpen, setBellOpen] = useState(false)
@@ -369,15 +337,15 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
           <nav className={cn('space-y-0.5', isCollapsed ? 'mb-4' : 'mb-5')}>
             {MODULES.map(mod => {
               const modActive = mod.matchPaths.some(p => isActive(p))
-              const isExpanded = expandedModules.includes(mod.id) && !isCollapsed
               const Icon = mod.icon
 
               if (isCollapsed) {
                 return (
                   <Tooltip key={mod.id}>
                     <TooltipTrigger asChild>
-                      <button
-                        onClick={() => router.push(mod.defaultHref)}
+                      <Link
+                        href={mod.defaultHref}
+                        onClick={onMobileClose}
                         className={cn(
                           'w-full h-10 flex items-center justify-center rounded-xl transition-all duration-150',
                           modActive
@@ -386,7 +354,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
                         )}
                       >
                         <Icon className="w-[18px] h-[18px]" />
-                      </button>
+                      </Link>
                     </TooltipTrigger>
                     <TooltipContent side="right">{mod.label}</TooltipContent>
                   </Tooltip>
@@ -394,49 +362,20 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
               }
 
               return (
-                <div key={mod.id}>
-                  <button
-                    onClick={() => toggleModule(mod.id)}
-                    className={cn(
-                      'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
-                      modActive
-                        ? 'bg-[#EAF0FF] text-[#002868] font-semibold'
-                        : 'text-[#64748B] hover:bg-[#EEF3FF] hover:text-[#1E293B]',
-                    )}
-                  >
-                    <Icon className="w-4 h-4 flex-shrink-0" />
-                    <span className="flex-1 text-left whitespace-nowrap">{mod.label}</span>
-                    {isExpanded
-                      ? <ChevronDown className="w-3.5 h-3.5 opacity-40" />
-                      : <ChevronRight className="w-3.5 h-3.5 opacity-30" />
-                    }
-                  </button>
-
-                  {isExpanded && (
-                    <div className="mt-0.5 ml-4 pl-3 border-l border-[#D8E3F8] space-y-0.5 py-0.5">
-                      {mod.items.map(item => {
-                        const ItemIcon = item.icon
-                        const active = isActive(item.href)
-                        return (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={onMobileClose}
-                            className={cn(
-                              'flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm transition-all duration-150',
-                              active
-                                ? 'text-[#002868] bg-[#E4ECFF] font-semibold'
-                                : 'text-[#6B7FA8] hover:text-[#1E293B] hover:bg-[#EEF3FF]',
-                            )}
-                          >
-                            <ItemIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                            <span className="whitespace-nowrap">{item.label}</span>
-                          </Link>
-                        )
-                      })}
-                    </div>
+                <Link
+                  key={mod.id}
+                  href={mod.defaultHref}
+                  onClick={onMobileClose}
+                  className={cn(
+                    'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                    modActive
+                      ? 'bg-[#EAF0FF] text-[#002868] font-semibold'
+                      : 'text-[#64748B] hover:bg-[#EEF3FF] hover:text-[#1E293B]',
                   )}
-                </div>
+                >
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="flex-1 text-left whitespace-nowrap">{mod.label}</span>
+                </Link>
               )
             })}
           </nav>

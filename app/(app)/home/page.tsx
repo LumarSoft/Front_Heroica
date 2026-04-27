@@ -29,7 +29,7 @@ const MODULES = [
     description: 'Gestión de empleados, nómina y liquidaciones de personal.',
     icon: Users,
     href: '/recursos-humanos',
-    available: false,
+    available: true,
     color: '#4F7FE0',
     lightBg: '#EEF3FF',
     features: [
