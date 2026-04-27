@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, BadgePercent, ClipboardList, FileText, Layers3, Scale, Users, Wallet } from 'lucide-react'
+import { ArrowLeft, BadgePercent, Briefcase, ClipboardList, FileText, Layers3, Scale, Users, Wallet } from 'lucide-react'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -31,14 +31,22 @@ const PRIMARY_SECTIONS = [
 
 const SECONDARY_SECTIONS = [
   {
+    label: 'Puestos',
+    description: 'Puestos de trabajo de la sucursal.',
+    icon: Briefcase,
+    href: (id: number) => `/recursos-humanos/${id}/puestos`,
+  },
+  {
     label: 'Incentivos',
     description: 'Premios y objetivos por desempeño.',
     icon: BadgePercent,
+    href: undefined,
   },
   {
     label: 'Escala',
     description: 'Categorías y referencias salariales.',
     icon: Scale,
+    href: (id: number) => `/recursos-humanos/${id}/escalas`,
   },
 ] as const
 
@@ -127,13 +135,10 @@ export default function RecursosHumanosSucursalPage() {
           </p>
         </div>
 
-        <div className="max-w-5xl mx-auto mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="max-w-5xl mx-auto mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
           {SECONDARY_SECTIONS.map(section => {
             const Icon = section.icon
-            const href =
-              section.label === 'Escala'
-                ? `/recursos-humanos/${sucursalId}/escalas`
-                : undefined
+            const href = section.href?.(sucursalId)
             return (
               <Card
                 key={section.label}

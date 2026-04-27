@@ -117,6 +117,14 @@ export interface EscalaSalarial {
   valor_hora: number | null
 }
 
+export interface Puesto {
+  id: number
+  nombre: string
+  sucursal_id: number
+  created_at: string
+  updated_at: string
+}
+
 export interface SelectOption {
   id: number
   nombre: string
