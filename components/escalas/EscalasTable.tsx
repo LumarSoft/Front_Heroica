@@ -85,7 +85,7 @@ export function EscalasTable({
                   onClick={() => onEdit(escala)}
                   className="hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50 cursor-pointer"
                 >
-                  <TableCell className="font-medium text-[#1A1A1A]">{escala.puesto}</TableCell>
+                  <TableCell className="font-medium text-[#1A1A1A]">{escala.puesto_nombre}</TableCell>
                   <TableCell className="text-right font-semibold text-[#002868]">
                     {formatCurrency(escala.sueldo_base)}
                   </TableCell>

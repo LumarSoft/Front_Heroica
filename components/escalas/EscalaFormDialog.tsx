@@ -13,16 +13,19 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { MESES, YEAR_OPTIONS } from './constants'
-import type { EscalaSalarial } from '@/lib/types'
+import { API_ENDPOINTS } from '@/lib/config'
+import { apiFetch } from '@/lib/api'
+import type { EscalaSalarial, Puesto } from '@/lib/types'
 
 interface EscalaFormDialogProps {
   open: boolean
   onClose: () => void
-  onSave: (data: Omit<EscalaSalarial, 'id'>) => Promise<void>
+  onSave: (data: Omit<EscalaSalarial, 'id' | 'puesto_nombre'>) => Promise<void>
   saving: boolean
   initial: EscalaSalarial | null
   defaultMes: number
   defaultAnio: number
+  sucursalId: number
 }
 
 export function EscalaFormDialog({
@@ -33,23 +36,33 @@ export function EscalaFormDialog({
   initial,
   defaultMes,
   defaultAnio,
+  sucursalId,
 }: EscalaFormDialogProps) {
-  const [puesto, setPuesto] = useState('')
+  const [puestoId, setPuestoId] = useState('')
   const [sueldoBase, setSueldoBase] = useState('')
   const [valorHora, setValorHora] = useState('')
   const [mes, setMes] = useState(String(defaultMes))
   const [anio, setAnio] = useState(String(defaultAnio))
+  const [puestos, setPuestos] = useState<Puesto[]>([])
+
+  useEffect(() => {
+    if (!open) return
+    apiFetch(API_ENDPOINTS.PUESTOS.GET_BY_SUCURSAL(sucursalId))
+      .then(r => r.json())
+      .then(d => setPuestos(d.data ?? d))
+      .catch(() => setPuestos([]))
+  }, [open, sucursalId])
 
   useEffect(() => {
     if (!open) return
     if (initial) {
-      setPuesto(initial.puesto)
+      setPuestoId(String(initial.puesto_id))
       setSueldoBase(String(initial.sueldo_base))
       setValorHora(initial.valor_hora !== null ? String(initial.valor_hora) : '')
       setMes(String(initial.mes))
       setAnio(String(initial.anio))
     } else {
-      setPuesto('')
+      setPuestoId('')
       setSueldoBase('')
       setValorHora('')
       setMes(String(defaultMes))
@@ -59,9 +72,9 @@ export function EscalaFormDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!puesto.trim() || !sueldoBase) return
+    if (!puestoId || !sueldoBase) return
     await onSave({
-      puesto: puesto.trim(),
+      puesto_id: Number(puestoId),
       sueldo_base: Number(sueldoBase),
       mes: Number(mes),
       anio: Number(anio),
@@ -115,14 +128,21 @@ export function EscalaFormDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="puesto">Puesto</Label>
-              <Input
-                id="puesto"
-                placeholder="Ej: Operario, Supervisor..."
-                value={puesto}
-                onChange={e => setPuesto(e.target.value)}
-                required
-              />
+              <Label>Puesto</Label>
+              <Select value={puestoId} onValueChange={setPuestoId}>
+                <SelectTrigger className="cursor-pointer">
+                  <SelectValue placeholder="Seleccioná un puesto..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {puestos.length === 0 ? (
+                    <SelectItem value="__empty__" disabled>No hay puestos cargados</SelectItem>
+                  ) : (
+                    puestos.map(p => (
+                      <SelectItem key={p.id} value={String(p.id)}>{p.nombre}</SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -166,7 +186,7 @@ export function EscalaFormDialog({
             </Button>
             <Button
               type="submit"
-              disabled={saving || !puesto.trim() || !sueldoBase}
+              disabled={saving || !puestoId || !sueldoBase}
               className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white"
             >
               {saving
