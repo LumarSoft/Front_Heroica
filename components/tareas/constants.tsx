@@ -1,5 +1,12 @@
 import { Bug, Sparkles, Rocket, Circle, Clock, Loader2, FlaskConical, CheckCheck } from 'lucide-react'
-import type { Tipo, Prioridad, Estado } from './types'
+import type { Tipo, Prioridad, Estado, Modulo } from './types'
+
+export const MODULO_CONFIG: Record<Modulo, { label: string; prefix: string; badge: string }> = {
+  tesoreria: { label: 'Tesorería', prefix: 'TES', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+  rh: { label: 'RH', prefix: 'RH', badge: 'bg-violet-50 text-violet-800 border-violet-200' },
+}
+
+export const MODULOS = Object.keys(MODULO_CONFIG) as Modulo[]
 
 export const TIPO_CONFIG: Record<Tipo, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
   bug: { label: 'Bug', icon: <Bug className="w-3 h-3" />, color: 'text-rose-600', bg: 'bg-rose-50 border-rose-200' },
