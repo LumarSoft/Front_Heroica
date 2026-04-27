@@ -179,6 +179,12 @@ export const API_ENDPOINTS = {
     CREATE_COMENTARIO: (id: number) => `${API_URL}/api/tareas/${id}/comentarios`,
     DELETE_COMENTARIO: (id: number, comentarioId: number) => `${API_URL}/api/tareas/${id}/comentarios/${comentarioId}`,
   },
+  RRHH_CALENDARIO: {
+    GET_ALL: `${API_URL}/api/rrhh/calendario`,
+    CREATE: `${API_URL}/api/rrhh/calendario`,
+    UPDATE: (id: number) => `${API_URL}/api/rrhh/calendario/${id}`,
+    DELETE: (id: number) => `${API_URL}/api/rrhh/calendario/${id}`,
+  },
   NOTIFICACIONES: {
     MIS: `${API_URL}/api/notificaciones/mis`,
     CREATE: `${API_URL}/api/notificaciones`,
