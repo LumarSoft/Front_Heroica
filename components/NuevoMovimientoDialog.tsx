@@ -23,6 +23,7 @@ import type { Categoria, Subcategoria, SelectOption, BancoParcial, DescripcionOp
 import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles'
 import { movimientoBaseSchema, movimientoBancoSchema } from '@/lib/schemas'
 import { parseInputMonto, formatInputMonto } from '@/lib/formatters'
+import { isMedioPagoChequeLike, tieneNumeroChequeCargado } from '@/lib/cheque'
 
 interface InitialValues {
   concepto?: string
@@ -517,6 +518,7 @@ export default function NuevoMovimientoDialog({
             comprobante: formData.comprobante || null,
             banco_id: formData.banco_id ? Number(formData.banco_id) : null,
             medio_pago_id: formData.medio_pago_id ? Number(formData.medio_pago_id) : null,
+            numero_cheque: formData.numero_cheque?.trim() || null,
           }),
         })
         const aprobarData = await aprobarRes.json()
@@ -616,6 +618,12 @@ export default function NuevoMovimientoDialog({
       setIsSaving(false)
     }
   }
+
+  const muestraCamposBanco = cajaTipo === 'banco' || formData.tipo_movimiento === 'banco'
+  const selectedMedioForm = mediosPago.find(m => m.id.toString() === formData.medio_pago_id)
+  const formMedioEsCheque = muestraCamposBanco && isMedioPagoChequeLike(selectedMedioForm?.nombre)
+  const formChequeConNumero = formMedioEsCheque && tieneNumeroChequeCargado(formData.numero_cheque)
+  const formChequePendienteSinNumero = formMedioEsCheque && !tieneNumeroChequeCargado(formData.numero_cheque)
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -1139,7 +1147,13 @@ export default function NuevoMovimientoDialog({
                           name="medio_pago_id"
                           value={formData.medio_pago_id}
                           onChange={handleInputChange}
-                          className={selectClasses}
+                          className={`${selectClasses}${
+                            formMedioEsCheque
+                              ? formChequeConNumero
+                                ? ' ring-2 ring-emerald-200'
+                                : ' ring-2 ring-amber-200'
+                              : ''
+                          }`}
                         >
                           <option value="">Seleccione medio de pago</option>
                           {mediosPago.map(m => (
@@ -1150,25 +1164,27 @@ export default function NuevoMovimientoDialog({
                         </select>
                       </div>
                     </div>
-                    {(() => {
-                      const selectedMedio = mediosPago.find(m => m.id.toString() === formData.medio_pago_id)
-                      const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre)
-                      return isCheque ? (
-                        <div className="space-y-1.5">
-                          <Label htmlFor="numero_cheque" className={labelClasses}>
-                            N° de Cheque
-                          </Label>
-                          <Input
-                            id="numero_cheque"
-                            name="numero_cheque"
-                            placeholder="Ej: 00012345"
-                            value={formData.numero_cheque}
-                            onChange={handleInputChange}
-                            className={inputClasses}
-                          />
-                        </div>
-                      ) : null
-                    })()}
+                    {formMedioEsCheque ? (
+                      <div className="space-y-1.5">
+                        <Label htmlFor="numero_cheque" className={labelClasses}>
+                          N° de Cheque <span className="font-normal text-[#8A8F9C]">(opcional hasta emitir)</span>
+                        </Label>
+                        <Input
+                          id="numero_cheque"
+                          name="numero_cheque"
+                          placeholder="Ej: 00012345 — cargalo cuando lo tengas del banco"
+                          value={formData.numero_cheque}
+                          onChange={handleInputChange}
+                          className={inputClasses}
+                        />
+                      </div>
+                    ) : null}
+                    {formChequePendienteSinNumero ? (
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+                        Podés confirmar sin N°. En el listado, el medio de pago se verá en <strong>amarillo</strong>{' '}
+                        hasta que cargues el número; después pasará a <strong>verde</strong>.
+                      </div>
+                    ) : null}
                   </>
                 )}
               </section>

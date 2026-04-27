@@ -19,6 +19,7 @@ import { Lightbulb, CheckCircle2, Upload, X, FileText, Download } from 'lucide-r
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { formatInputMonto } from '@/lib/formatters'
+import { isMedioPagoChequeLike, tieneNumeroChequeCargado } from '@/lib/cheque'
 
 // =============================================
 // Dialog de Detalles (edición de movimiento)
@@ -87,6 +88,10 @@ export function DetailsDialog({
   movimientoId,
   cajaTipo = 'efectivo',
 }: DetailsDialogProps) {
+  const selectedMedioPago = mediosPago.find(m => m.id.toString() === formData.medio_pago_id)
+  const medioPagoEsCheque = showBancoFields && isMedioPagoChequeLike(selectedMedioPago?.nombre)
+  const chequeTieneNumero = tieneNumeroChequeCargado(formData.numero_cheque)
+
   const [documentos, setDocumentos] = useState<Documento[]>([])
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [isLoadingDocs, setIsLoadingDocs] = useState(false)
@@ -187,7 +192,7 @@ export function DetailsDialog({
     }
   }
 
-  const handleDownloadDocumento = (docId: number) => {
+  const handleDownloadDocumento = async (docId: number) => {
     if (!movimientoId) return
 
     const endpoint =
@@ -195,7 +200,23 @@ export function DetailsDialog({
         ? API_ENDPOINTS.CAJA_BANCO.DOWNLOAD_DOCUMENTO(movimientoId, docId)
         : API_ENDPOINTS.MOVIMIENTOS.DOWNLOAD_DOCUMENTO(movimientoId, docId)
 
-    window.open(endpoint, '_blank')
+    try {
+      const response = await apiFetch(endpoint)
+      if (!response.ok) throw new Error('Error al descargar documento')
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      const disposition = response.headers.get('Content-Disposition')
+      const match = disposition?.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+      a.download = match?.[1]?.replace(/['"]/g, '') ?? 'documento'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(blobUrl)
+    } catch {
+      // silently fail — caller has no toast context here
+    }
   }
 
   return (
@@ -373,7 +394,13 @@ export function DetailsDialog({
                       value={formData.medio_pago_id}
                       onChange={onInputChange}
                       disabled={!canEditInfo}
-                      className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+                      className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}${
+                        medioPagoEsCheque
+                          ? chequeTieneNumero
+                            ? ' ring-2 ring-emerald-200'
+                            : ' ring-2 ring-amber-200'
+                          : ''
+                      }`}
                     >
                       <option value="">Seleccione medio de pago</option>
                       {mediosPago.map(m => (
@@ -382,28 +409,35 @@ export function DetailsDialog({
                         </option>
                       ))}
                     </select>
+                    {medioPagoEsCheque ? (
+                      <p
+                        className={`text-xs font-medium mt-1 ${
+                          chequeTieneNumero ? 'text-emerald-700' : 'text-amber-800'
+                        }`}
+                      >
+                        {chequeTieneNumero
+                          ? `N° registrado: ${formData.numero_cheque?.trim()}`
+                          : 'Sin N° aún — el listado marca este medio en amarillo hasta que lo cargues.'}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
-                {(() => {
-                  const selectedMedio = mediosPago.find(m => m.id.toString() === formData.medio_pago_id)
-                  const isCheque = selectedMedio && /cheque|echeq/i.test(selectedMedio.nombre)
-                  return isCheque ? (
-                    <div className="space-y-1.5">
-                      <Label htmlFor="numero_cheque" className={labelClasses}>
-                        N° de Cheque
-                      </Label>
-                      <Input
-                        id="numero_cheque"
-                        name="numero_cheque"
-                        placeholder="Ej: 00012345"
-                        value={formData.numero_cheque}
-                        onChange={onInputChange}
-                        disabled={!canEditInfo}
-                        className={`${inputClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      />
-                    </div>
-                  ) : null
-                })()}
+                {medioPagoEsCheque ? (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="numero_cheque" className={labelClasses}>
+                      N° de Cheque <span className="font-normal text-[#8A8F9C]">(opcional hasta emitir)</span>
+                    </Label>
+                    <Input
+                      id="numero_cheque"
+                      name="numero_cheque"
+                      placeholder="Ej: 00012345"
+                      value={formData.numero_cheque}
+                      onChange={onInputChange}
+                      disabled={!canEditInfo}
+                      className={`${inputClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    />
+                  </div>
+                ) : null}
               </>
             )}
 
@@ -538,13 +572,7 @@ export function DetailsDialog({
                               type="button"
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
-                                const endpoint =
-                                  cajaTipo === 'banco'
-                                    ? API_ENDPOINTS.CAJA_BANCO.DOWNLOAD_DOCUMENTO(movimientoId, doc.id)
-                                    : API_ENDPOINTS.MOVIMIENTOS.DOWNLOAD_DOCUMENTO(movimientoId, doc.id)
-                                window.open(endpoint, '_blank')
-                              }}
+                              onClick={() => handleDownloadDocumento(doc.id)}
                               className="h-6 w-6 p-0 hover:bg-green-50 hover:text-green-600 cursor-pointer"
                               title="Ver documento"
                             >
