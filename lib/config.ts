@@ -209,6 +209,7 @@ export const API_ENDPOINTS = {
   },
   PERSONAL: {
     GET_ALL: `${API_URL}/api/personal`,
+    GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/personal?sucursal_id=${sucursalId}`,
     GET_BY_ID: (id: number) => `${API_URL}/api/personal/${id}`,
     CREATE: `${API_URL}/api/personal`,
     UPDATE: (id: number) => `${API_URL}/api/personal/${id}`,

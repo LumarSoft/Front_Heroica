@@ -16,16 +16,19 @@ const PRIMARY_SECTIONS = [
     label: 'Legajos',
     description: 'Documentación y datos del personal.',
     icon: FileText,
+    href: (id: number) => `/recursos-humanos/${id}/legajos`,
   },
   {
     label: 'Sueldos',
     description: 'Liquidaciones, haberes y novedades.',
     icon: Wallet,
+    href: undefined,
   },
   {
     label: 'Solicitudes',
     description: 'Pedidos y gestión administrativa.',
     icon: ClipboardList,
+    href: undefined,
   },
 ] as const
 
@@ -170,9 +173,11 @@ export default function RecursosHumanosSucursalPage() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-8">
           {PRIMARY_SECTIONS.map(section => {
             const Icon = section.icon
+            const href = section.href?.(sucursalId)
             return (
               <Card
                 key={section.label}
+                onClick={() => href && router.push(href)}
                 className="group border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer overflow-hidden relative"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#002868]/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500" />
@@ -186,10 +191,12 @@ export default function RecursosHumanosSucursalPage() {
                   </h3>
                   <p className="text-[#666666] text-base leading-relaxed">{section.description}</p>
 
-                  <div className="mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#9AA0AC]">
-                    <Layers3 className="w-4 h-4" />
-                    Próximamente
-                  </div>
+                  {!href && (
+                    <div className="mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#9AA0AC]">
+                      <Layers3 className="w-4 h-4" />
+                      Próximamente
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )
