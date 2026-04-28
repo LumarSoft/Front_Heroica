@@ -202,7 +202,7 @@ export const API_ENDPOINTS = {
     LEER: `${API_URL}/api/notificaciones/leer`,
   },
   ESCALAS_SALARIALES: {
-    GET_ALL: `${API_URL}/api/escalas-salariales`,
+    GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/escalas-salariales?sucursal_id=${sucursalId}`,
     CREATE: `${API_URL}/api/escalas-salariales`,
     UPDATE: (id: number) => `${API_URL}/api/escalas-salariales/${id}`,
     DELETE: (id: number) => `${API_URL}/api/escalas-salariales/${id}`,
