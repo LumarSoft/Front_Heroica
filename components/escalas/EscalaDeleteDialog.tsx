@@ -23,7 +23,7 @@ export function EscalaDeleteDialog({ target, onClose, onConfirm, deleting }: Esc
           <DialogTitle className="text-xl font-bold text-[#1A1A1A]">Eliminar Escala</DialogTitle>
           <DialogDescription className="text-slate-500">
             ¿Estás seguro que querés eliminar el puesto{' '}
-            <span className="font-semibold text-[#1A1A1A]">{target?.puesto}</span>?
+            <span className="font-semibold text-[#1A1A1A]">{target?.puesto_nombre}</span>?
             Esta acción no se puede deshacer.
           </DialogDescription>
         </DialogHeader>
