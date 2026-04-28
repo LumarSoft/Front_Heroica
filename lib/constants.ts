@@ -21,4 +21,6 @@ export const PERMISOS = {
   VER_CONFIGURACION: 'ver_configuracion',
   VER_INCENTIVOS: 'ver_incentivos',
   GESTIONAR_INCENTIVOS: 'gestionar_incentivos',
+  VER_SOLICITUDES: 'ver_solicitudes',
+  GESTIONAR_SOLICITUDES: 'gestionar_solicitudes',
 } as const
