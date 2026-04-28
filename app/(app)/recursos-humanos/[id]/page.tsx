@@ -43,7 +43,7 @@ const SECONDARY_SECTIONS = [
     label: 'Incentivos',
     description: 'Premios y objetivos por desempeño.',
     icon: BadgePercent,
-    href: undefined,
+    href: (id: number) => `/recursos-humanos/${id}/incentivos`,
   },
   {
     label: 'Escala',
@@ -146,7 +146,9 @@ export default function RecursosHumanosSucursalPage() {
               <Card
                 key={section.label}
                 onClick={() => href && router.push(href)}
-                className="group border-2 border-[#D8E3F8] bg-white shadow-sm transition-all duration-300 hover:border-[#002868] hover:shadow-lg cursor-pointer overflow-hidden"
+                className={`group border-2 border-[#D8E3F8] bg-white shadow-sm transition-all duration-300 overflow-hidden ${
+                  href ? 'hover:border-[#002868] hover:shadow-lg cursor-pointer' : 'opacity-90 cursor-default'
+                }`}
               >
                 <CardContent className="p-6 flex items-center gap-4">
                   <div className="w-14 h-14 rotate-45 rounded-2xl bg-[#EAF0FF] flex items-center justify-center transition-transform group-hover:scale-110">
@@ -155,6 +157,12 @@ export default function RecursosHumanosSucursalPage() {
                   <div>
                     <h3 className="text-lg font-bold text-[#002868]">{section.label}</h3>
                     <p className="text-sm text-[#666666] mt-1">{section.description}</p>
+                    {!href && (
+                      <div className="mt-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#9AA0AC]">
+                        <Layers3 className="w-4 h-4" />
+                        Próximamente
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
