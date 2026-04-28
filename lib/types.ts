@@ -149,6 +149,21 @@ export interface RhCalendarioEvento {
   updated_at: string
 }
 
+export interface Personal {
+  id: number
+  legajo: string
+  nombre: string
+  dni: string
+  puesto_id: number
+  puesto_nombre: string
+  sucursal_id: number
+  fecha_incorporacion: string
+  carnet_manipulacion_alimentos: boolean
+  activo: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface DescripcionOption {
   id: number
   nombre: string
