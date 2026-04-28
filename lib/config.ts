@@ -185,6 +185,17 @@ export const API_ENDPOINTS = {
     UPDATE: (id: number) => `${API_URL}/api/rrhh/calendario/${id}`,
     DELETE: (id: number) => `${API_URL}/api/rrhh/calendario/${id}`,
   },
+  RRHH_INCENTIVOS: {
+    GET_BY_SUCURSAL: (sucursalId: number, mes?: number, anio?: number) => {
+      const params = new URLSearchParams({ sucursal_id: String(sucursalId) })
+      if (mes) params.append('mes', String(mes))
+      if (anio) params.append('anio', String(anio))
+      return `${API_URL}/api/rrhh/incentivos?${params.toString()}`
+    },
+    CREATE: `${API_URL}/api/rrhh/incentivos`,
+    UPDATE: (id: number) => `${API_URL}/api/rrhh/incentivos/${id}`,
+    DELETE: (id: number) => `${API_URL}/api/rrhh/incentivos/${id}`,
+  },
   NOTIFICACIONES: {
     MIS: `${API_URL}/api/notificaciones/mis`,
     CREATE: `${API_URL}/api/notificaciones`,

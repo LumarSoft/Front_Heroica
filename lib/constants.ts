@@ -19,4 +19,6 @@ export const PERMISOS = {
   GESTIONAR_USUARIOS: 'gestionar_usuarios',
   GESTIONAR_ROLES: 'gestionar_roles',
   VER_CONFIGURACION: 'ver_configuracion',
+  VER_INCENTIVOS: 'ver_incentivos',
+  GESTIONAR_INCENTIVOS: 'gestionar_incentivos',
 } as const
