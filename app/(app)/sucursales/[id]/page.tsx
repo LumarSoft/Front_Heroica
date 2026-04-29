@@ -396,6 +396,8 @@ export default function SucursalDetailPage() {
     'Constancia de CBU',
     'Habilitación del local',
     'Balance',
+    'Contrato social',
+    'Contrato de alquiler',
   ]
 
   const missingDocsCount = MANDATORY_DOC_TYPES.filter(tipo => !documentos.find(d => d.tipo_documento === tipo)).length
