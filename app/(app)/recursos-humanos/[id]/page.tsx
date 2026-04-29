@@ -28,7 +28,7 @@ const PRIMARY_SECTIONS = [
     label: 'Solicitudes',
     description: 'Pedidos y gestión administrativa.',
     icon: ClipboardList,
-    href: undefined,
+    href: (id: number) => `/recursos-humanos/${id}/solicitudes`,
   },
 ] as const
 

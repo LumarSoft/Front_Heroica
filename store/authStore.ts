@@ -38,6 +38,8 @@ interface AuthState {
   canGestionarSucursales: () => boolean
   canVerIncentivos: () => boolean
   canGestionarIncentivos: () => boolean
+  canVerSolicitudes: () => boolean
+  canGestionarSolicitudes: () => boolean
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -84,6 +86,8 @@ export const useAuthStore = create<AuthState>()(
       canGestionarSucursales: () => get().hasPermiso('gestionar_sucursales'),
       canVerIncentivos: () => get().hasPermiso('ver_incentivos'),
       canGestionarIncentivos: () => get().hasPermiso('gestionar_incentivos'),
+      canVerSolicitudes: () => get().hasPermiso('ver_solicitudes'),
+      canGestionarSolicitudes: () => get().hasPermiso('gestionar_solicitudes'),
     }),
     {
       name: 'auth-storage',

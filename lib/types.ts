@@ -199,3 +199,25 @@ export interface DescripcionOption {
   subcategoria_nombre?: string | null
   activo?: boolean
 }
+
+export type RhSolicitudTipo = 'Altas' | 'Bajas' | 'Novedades de sueldo' | 'Incentivos y premios' | 'Licencias' | 'Vacaciones' | 'Suspensiones' | 'Apercibimientos' | 'Capacitaciones' | 'Pedido de uniforme' | 'Adelantos'
+export type RhSolicitudEstado = 'Pendiente' | 'Aprobada' | 'Rechazada' | 'Cancelada'
+
+export interface RhSolicitud {
+  id: number
+  sucursal_id: number
+  sucursal_nombre: string
+  personal_id: number | null
+  personal_nombre: string | null
+  legajo: string | null
+  dni: string | null
+  usuario_id: number
+  usuario_nombre: string
+  tipo: RhSolicitudTipo
+  estado: RhSolicitudEstado
+  fecha_solicitud: string
+  detalles: Record<string, any> | null
+  observaciones: string | null
+  created_at: string
+  updated_at: string
+}
