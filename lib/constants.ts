@@ -22,5 +22,10 @@ export const PERMISOS = {
   VER_INCENTIVOS: 'ver_incentivos',
   GESTIONAR_INCENTIVOS: 'gestionar_incentivos',
   VER_SOLICITUDES: 'ver_solicitudes',
-  GESTIONAR_SOLICITUDES: 'gestionar_solicitudes',
+  CREAR_SOLICITUDES: 'crear_solicitudes',
+  EDITAR_SOLICITUDES: 'editar_solicitudes',
+  CANCELAR_SOLICITUDES: 'cancelar_solicitudes',
+  APROBAR_SOLICITUDES: 'aprobar_solicitudes',
+  VER_HISTORIAL_SOLICITUDES_GLOBAL: 'ver_historial_solicitudes_global',
+  VER_SOLICITUDES_TODAS_SUCURSALES: 'ver_solicitudes_todas_sucursales',
 } as const
