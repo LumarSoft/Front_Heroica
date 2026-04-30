@@ -165,7 +165,7 @@ export default function LegajosPage() {
 
         <LegajosTable
           personal={personalFiltrado}
-          onSelect={() => {}}
+          onSelect={(persona) => router.push(`/recursos-humanos/${sucursalId}/legajos/${persona.id}`)}
         />
       </main>
     </div>
