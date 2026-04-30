@@ -197,9 +197,12 @@ export const API_ENDPOINTS = {
     DELETE: (id: number) => `${API_URL}/api/rrhh/incentivos/${id}`,
   },
   RRHH_SOLICITUDES: {
+    GET_ALL: `${API_URL}/api/rrhh/solicitudes`,
     GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/rrhh/solicitudes?sucursal_id=${sucursalId}`,
     CREATE: `${API_URL}/api/rrhh/solicitudes`,
+    UPDATE: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}/estado`,
+    CANCEL: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}/cancelar`,
     DELETE: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}`,
   },
   NOTIFICACIONES: {
