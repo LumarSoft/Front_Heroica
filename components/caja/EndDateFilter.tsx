@@ -25,6 +25,8 @@ interface EndDateFilterProps {
   onViewModeChange?: (mode: 'tabla' | 'calendario') => void
   filtroDeuda?: 'todos' | 'solo_deudas' | 'sin_deudas'
   onFiltroDeudeChange?: (v: 'todos' | 'solo_deudas' | 'sin_deudas') => void
+  filtroChequesPendientes?: boolean
+  onFiltroChequesPendientesChange?: (value: boolean) => void
 }
 
 export function EndDateFilter({
@@ -41,6 +43,8 @@ export function EndDateFilter({
   onViewModeChange,
   filtroDeuda = 'todos',
   onFiltroDeudeChange,
+  filtroChequesPendientes = false,
+  onFiltroChequesPendientesChange,
 }: EndDateFilterProps) {
   const showBancoFilter = Boolean(bancos?.length && onBancosChange)
   const [isOpen, setIsOpen] = useState(false)
@@ -215,8 +219,8 @@ export function EndDateFilter({
         )}
       </div>
 
-      {/* Row 2: Search + filtro deuda + limpiar */}
-      {(onSearchTextChange || onFiltroDeudeChange) && (
+      {/* Row 2: Search + filtro deuda + cheque pendiente + limpiar */}
+      {(onSearchTextChange || onFiltroDeudeChange || onFiltroChequesPendientesChange) && (
         <div className="flex flex-wrap items-center gap-2">
           {onSearchTextChange && (
             <div className="relative flex items-center flex-1 min-w-[160px]">
@@ -257,6 +261,20 @@ export function EndDateFilter({
               ))}
             </div>
           )}
+          {onFiltroChequesPendientesChange && (
+            <button
+              type="button"
+              onClick={() => onFiltroChequesPendientesChange(!filtroChequesPendientes)}
+              className={cn(
+                'h-9 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all border cursor-pointer flex-shrink-0',
+                filtroChequesPendientes
+                  ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                  : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 hover:border-amber-300',
+              )}
+            >
+              Cheques pendientes
+            </button>
+          )}
           <Button
             variant="ghost"
             onClick={onLimpiar}
@@ -276,7 +294,7 @@ export function EndDateFilter({
       )}
 
       {/* Botón Limpiar (cuando no hay buscador ni filtro deuda) */}
-      {!onSearchTextChange && !onFiltroDeudeChange && hayFiltro && (
+      {!onSearchTextChange && !onFiltroDeudeChange && !onFiltroChequesPendientesChange && hayFiltro && (
         <Button
           variant="ghost"
           onClick={onLimpiar}
