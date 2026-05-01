@@ -154,6 +154,7 @@ export interface Personal {
   legajo: string
   nombre: string
   dni: string
+  email?: string | null
   puesto_id: number
   puesto_nombre: string
   sucursal_id: number
@@ -229,6 +230,7 @@ export interface RhSolicitudHistorialItem {
 export interface RhSolicitudAltaDetalles {
   nombre: string
   dni: string
+  email?: string | null
   puesto_id: number
   fecha_incorporacion: string
   periodo_prueba: boolean

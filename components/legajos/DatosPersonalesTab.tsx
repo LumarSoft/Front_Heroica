@@ -22,6 +22,7 @@ interface DatosPersonalesTabProps {
 interface FormState {
   nombre: string
   dni: string
+  email: string
   puesto_id: number
   fecha_incorporacion: string
   carnet_manipulacion_alimentos: boolean
@@ -41,6 +42,7 @@ function buildInitialForm(personal: Personal): FormState {
   return {
     nombre: personal.nombre,
     dni: personal.dni,
+    email: personal.email ?? '',
     puesto_id: personal.puesto_id,
     fecha_incorporacion: normalizeFecha(personal.fecha_incorporacion),
     carnet_manipulacion_alimentos: personal.carnet_manipulacion_alimentos,
@@ -126,6 +128,10 @@ function ViewMode({
 
         <FieldCard label="DNI">
           <span className="text-sm font-medium text-[#1A1A1A]">{personal.dni}</span>
+        </FieldCard>
+
+        <FieldCard label="Email">
+          <span className="text-sm font-medium text-[#1A1A1A]">{personal.email || '—'}</span>
         </FieldCard>
 
         <FieldCard label="Puesto">
@@ -259,6 +265,16 @@ function EditMode({
           />
         </FormField>
 
+        <FormField label="Email">
+          <Input
+            type="email"
+            value={form.email}
+            onChange={e => onChange({ email: e.target.value })}
+            placeholder="correo@ejemplo.com"
+            maxLength={255}
+          />
+        </FormField>
+
         {/* Puesto */}
         <FormField label="Puesto" required>
           <select
@@ -364,6 +380,10 @@ export function DatosPersonalesTab({
       toast.error('La fecha de incorporación es requerida')
       return
     }
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      toast.error('Ingresá un email válido')
+      return
+    }
 
     setSaving(true)
     try {
@@ -372,9 +392,12 @@ export function DatosPersonalesTab({
         body: JSON.stringify({
           nombre: form.nombre.trim(),
           dni: form.dni.trim(),
+          email: form.email.trim() || null,
           puesto_id: form.puesto_id,
           sucursal_id: personal.sucursal_id,
           fecha_incorporacion: form.fecha_incorporacion,
+          periodo_prueba: personal.periodo_prueba ?? false,
+          periodo_prueba_dias: personal.periodo_prueba_dias ?? null,
           carnet_manipulacion_alimentos: form.carnet_manipulacion_alimentos,
           activo: form.activo,
         }),

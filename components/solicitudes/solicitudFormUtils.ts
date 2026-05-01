@@ -7,6 +7,7 @@ export interface SolicitudFormState {
   observaciones: string
   alta_nombre: string
   alta_dni: string
+  alta_email: string
   alta_puesto_id: string
   alta_fecha_incorporacion: string
   alta_periodo_prueba: boolean
@@ -47,6 +48,7 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
     observaciones: '',
     alta_nombre: '',
     alta_dni: '',
+    alta_email: '',
     alta_puesto_id: '',
     alta_fecha_incorporacion: today,
     alta_periodo_prueba: false,
@@ -90,6 +92,7 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
     observaciones: solicitud.observaciones ?? '',
     alta_nombre: String(detalles.nombre ?? ''),
     alta_dni: String(detalles.dni ?? ''),
+    alta_email: String(detalles.email ?? ''),
     alta_puesto_id: detalles.puesto_id ? String(detalles.puesto_id) : '',
     alta_fecha_incorporacion: String(detalles.fecha_incorporacion ?? today),
     alta_periodo_prueba: detalles.periodo_prueba === true,
@@ -127,6 +130,7 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
       return {
         nombre: form.alta_nombre.trim(),
         dni: form.alta_dni.trim(),
+        email: form.alta_email.trim() || null,
         puesto_id: Number(form.alta_puesto_id),
         fecha_incorporacion: form.alta_fecha_incorporacion,
         periodo_prueba: form.alta_periodo_prueba,
@@ -190,6 +194,7 @@ export function validateSolicitudForm(form: SolicitudFormState): string | null {
     case 'Altas':
       if (!form.alta_nombre.trim()) return 'Ingrese el nombre del colaborador'
       if (!form.alta_dni.trim()) return 'Ingrese el DNI del colaborador'
+      if (form.alta_email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.alta_email.trim())) return 'Ingrese un email válido'
       if (!form.alta_puesto_id) return 'Seleccione un puesto'
       if (!form.alta_fecha_incorporacion) return 'Ingrese la fecha de incorporación'
       if (form.alta_periodo_prueba && (!form.alta_periodo_prueba_dias || Number(form.alta_periodo_prueba_dias) <= 0)) {
