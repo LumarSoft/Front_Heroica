@@ -199,6 +199,7 @@ export const API_ENDPOINTS = {
   RRHH_SOLICITUDES: {
     GET_ALL: `${API_URL}/api/rrhh/solicitudes`,
     GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/rrhh/solicitudes?sucursal_id=${sucursalId}`,
+    GET_BY_PERSONAL: (personalId: number) => `${API_URL}/api/rrhh/solicitudes?personal_id=${personalId}`,
     CREATE: `${API_URL}/api/rrhh/solicitudes`,
     UPDATE: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}/estado`,
