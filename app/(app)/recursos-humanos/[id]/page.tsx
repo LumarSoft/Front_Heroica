@@ -2,7 +2,17 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, BadgePercent, Briefcase, ClipboardList, FileText, Layers3, Scale, Users, Wallet } from 'lucide-react'
+import {
+  ArrowLeft,
+  BadgePercent,
+  Briefcase,
+  ClipboardList,
+  FileText,
+  Layers3,
+  Scale,
+  Users,
+  Wallet,
+} from 'lucide-react'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -22,7 +32,7 @@ const PRIMARY_SECTIONS = [
     label: 'Sueldos',
     description: 'Liquidaciones, haberes y novedades.',
     icon: Wallet,
-    href: undefined,
+    href: (id: number) => `/recursos-humanos/${id}/sueldos`,
   },
   {
     label: 'Solicitudes',
@@ -90,7 +100,10 @@ export default function RecursosHumanosSucursalPage() {
       <div className="min-h-full bg-white flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-[#1A1A1A] text-xl mb-4">Sucursal no encontrada</p>
-          <Button onClick={() => router.push('/recursos-humanos')} className="bg-[#002868] text-white hover:bg-[#003d8f]">
+          <Button
+            onClick={() => router.push('/recursos-humanos')}
+            className="bg-[#002868] text-white hover:bg-[#003d8f]"
+          >
             Volver a Recursos Humanos
           </Button>
         </div>

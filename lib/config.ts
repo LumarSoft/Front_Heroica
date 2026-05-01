@@ -236,4 +236,8 @@ export const API_ENDPOINTS = {
     UPDATE: (id: number) => `${API_URL}/api/puestos/${id}`,
     DELETE: (id: number) => `${API_URL}/api/puestos/${id}`,
   },
+  RRHH_SUELDOS: {
+    GET_PERIODO: (sucursalId: number, mes: number, anio: number) =>
+      `${API_URL}/api/rrhh/sueldos?sucursal_id=${sucursalId}&mes=${mes}&anio=${anio}`,
+  },
 }

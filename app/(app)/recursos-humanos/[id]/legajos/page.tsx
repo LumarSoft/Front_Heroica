@@ -94,9 +94,7 @@ export default function LegajosPage() {
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC] leading-none mb-1">
                 Recursos Humanos · {sucursal?.nombre ?? ''}
               </p>
-              <h1 className="text-sm sm:text-base font-semibold text-[#002868] truncate leading-none">
-                Legajos
-              </h1>
+              <h1 className="text-sm sm:text-base font-semibold text-[#002868] truncate leading-none">Legajos</h1>
             </div>
           </div>
         </div>
@@ -110,7 +108,8 @@ export default function LegajosPage() {
           <div>
             <h2 className="text-xl sm:text-3xl font-bold text-[#002868]">Legajos</h2>
             <p className="text-xs sm:text-sm text-[#666666] mt-1">
-              Personal de {sucursal?.nombre ?? 'la sucursal'} · {personalFiltrado.length} colaborador{personalFiltrado.length !== 1 ? 'es' : ''}
+              Personal de {sucursal?.nombre ?? 'la sucursal'} · {personalFiltrado.length} colaborador
+              {personalFiltrado.length !== 1 ? 'es' : ''}
             </p>
           </div>
         </div>
@@ -126,9 +125,10 @@ export default function LegajosPage() {
                   key={opt.value}
                   onClick={() => setFilterEstado(opt.value)}
                   className={`px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer
-                    ${filterEstado === opt.value
-                      ? 'bg-[#002868] text-white'
-                      : 'bg-white text-[#5A6070] hover:bg-[#EEF3FF] hover:text-[#002868]'
+                    ${
+                      filterEstado === opt.value
+                        ? 'bg-[#002868] text-white'
+                        : 'bg-white text-[#5A6070] hover:bg-[#EEF3FF] hover:text-[#002868]'
                     }`}
                 >
                   {opt.label}
@@ -147,7 +147,9 @@ export default function LegajosPage() {
               >
                 <option value="">Todos los puestos</option>
                 {puestos.map(p => (
-                  <option key={p.id} value={p.id}>{p.nombre}</option>
+                  <option key={p.id} value={p.id}>
+                    {p.nombre}
+                  </option>
                 ))}
               </select>
             </div>
@@ -155,7 +157,10 @@ export default function LegajosPage() {
 
           {(filterEstado !== 'activos' || filterPuestoId !== '') && (
             <button
-              onClick={() => { setFilterEstado('activos'); setFilterPuestoId('') }}
+              onClick={() => {
+                setFilterEstado('activos')
+                setFilterPuestoId('')
+              }}
               className="text-xs text-[#002868] underline underline-offset-2 hover:text-[#003d8f] cursor-pointer ml-auto"
             >
               Limpiar filtros
@@ -165,7 +170,7 @@ export default function LegajosPage() {
 
         <LegajosTable
           personal={personalFiltrado}
-          onSelect={(persona) => router.push(`/recursos-humanos/${sucursalId}/legajos/${persona.id}`)}
+          onSelect={persona => router.push(`/recursos-humanos/${sucursalId}/legajos/${persona.id}`)}
         />
       </main>
     </div>
