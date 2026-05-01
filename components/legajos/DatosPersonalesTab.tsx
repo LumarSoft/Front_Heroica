@@ -50,7 +50,13 @@ function buildInitialForm(personal: Personal): FormState {
 
 // ─── Sub-componentes ─────────────────────────────────────────────────────────
 
-function FieldCard({ label, children }: { label: string; children: ReactNode }) {
+function FieldCard({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}) {
   return (
     <div className="bg-white rounded-xl border border-[#E5E9F0] p-4 min-h-[72px] flex flex-col justify-between">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC] mb-2">{label}</p>
@@ -59,7 +65,15 @@ function FieldCard({ label, children }: { label: string; children: ReactNode }) 
   )
 }
 
-function FormField({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
+function FormField({
+  label,
+  required,
+  children,
+}: {
+  label: string
+  required?: boolean
+  children: ReactNode
+}) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label className="text-xs font-semibold text-[#444]">
@@ -150,7 +164,10 @@ function ViewMode({
                 : 'bg-rose-50 text-rose-600 border-rose-200'
               }`}
           >
-            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${personal.activo ? 'bg-emerald-500' : 'bg-rose-400'}`} />
+            <span
+              className={`w-1.5 h-1.5 rounded-full flex-shrink-0
+                ${personal.activo ? 'bg-emerald-500' : 'bg-rose-400'}`}
+            />
             {personal.activo ? 'Activo' : 'Inactivo'}
           </span>
         </FieldCard>
@@ -306,7 +323,13 @@ function EditMode({
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-export function DatosPersonalesTab({ personal, puestos, sucursalNombre, canEditar, onUpdate }: DatosPersonalesTabProps) {
+export function DatosPersonalesTab({
+  personal,
+  puestos,
+  sucursalNombre,
+  canEditar,
+  onUpdate,
+}: DatosPersonalesTabProps) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState<FormState>(() => buildInitialForm(personal))
@@ -325,10 +348,22 @@ export function DatosPersonalesTab({ personal, puestos, sucursalNombre, canEdita
   }
 
   async function handleSave() {
-    if (!form.nombre.trim()) { toast.error('El nombre es requerido'); return }
-    if (!form.dni.trim())    { toast.error('El DNI es requerido'); return }
-    if (!form.puesto_id)     { toast.error('El puesto es requerido'); return }
-    if (!form.fecha_incorporacion) { toast.error('La fecha de incorporación es requerida'); return }
+    if (!form.nombre.trim()) {
+      toast.error('El nombre es requerido')
+      return
+    }
+    if (!form.dni.trim()) {
+      toast.error('El DNI es requerido')
+      return
+    }
+    if (!form.puesto_id) {
+      toast.error('El puesto es requerido')
+      return
+    }
+    if (!form.fecha_incorporacion) {
+      toast.error('La fecha de incorporación es requerida')
+      return
+    }
 
     setSaving(true)
     try {
@@ -344,8 +379,14 @@ export function DatosPersonalesTab({ personal, puestos, sucursalNombre, canEdita
           activo: form.activo,
         }),
       })
+
       const data = await res.json()
-      if (!res.ok) { toast.error(data.message || 'Error al guardar los cambios'); return }
+
+      if (!res.ok) {
+        toast.error(data.message || 'Error al guardar los cambios')
+        return
+      }
+
       toast.success('Datos actualizados correctamente')
       onUpdate(data.data)
       setEditing(false)

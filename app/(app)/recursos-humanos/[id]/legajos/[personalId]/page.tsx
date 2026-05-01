@@ -59,8 +59,8 @@ export default function FichaPersonalPage() {
         ])
 
         if (!personalRes.ok) throw new Error(personalData.message || 'Error al cargar colaborador')
-        if (!puestosRes.ok)  throw new Error(puestosData.message  || 'Error al cargar puestos')
-        if (!sucursalRes.ok) throw new Error(sucursalData.message  || 'Error al cargar sucursal')
+        if (!puestosRes.ok) throw new Error(puestosData.message || 'Error al cargar puestos')
+        if (!sucursalRes.ok) throw new Error(sucursalData.message || 'Error al cargar sucursal')
 
         setPersonal(personalData.data)
         setPuestos(puestosData.data ?? puestosData)
@@ -144,7 +144,9 @@ export default function FichaPersonalPage() {
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#666]">
-              <span className="font-mono font-semibold text-[#002868]/70">Legajo #{personal.legajo}</span>
+              <span className="font-mono font-semibold text-[#002868]/70">
+                Legajo #{personal.legajo}
+              </span>
               {personal.puesto_nombre && (
                 <>
                   <span className="text-[#D0D5DD]">·</span>
@@ -154,12 +156,15 @@ export default function FichaPersonalPage() {
               {personal.fecha_incorporacion && (
                 <>
                   <span className="text-[#D0D5DD]">·</span>
-                  <span className="text-[#888]">Desde {formatFechaShort(personal.fecha_incorporacion)}</span>
+                  <span className="text-[#888]">
+                    Desde {formatFechaShort(personal.fecha_incorporacion)}
+                  </span>
                 </>
               )}
             </div>
           </div>
 
+          {/* Ícono decorativo */}
           <UserCircle2 className="w-8 h-8 text-[#D0D5DD] hidden sm:block flex-shrink-0" />
         </div>
 
