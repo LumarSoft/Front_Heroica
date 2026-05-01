@@ -21,30 +21,62 @@ interface AuthState {
   logout: () => void
   isSuperAdmin: () => boolean
   hasPermiso: (clave: string) => boolean
+
+  // Configuración
   canVerConfiguracion: () => boolean
   canGestionarUsuarios: () => boolean
   canGestionarRoles: () => boolean
+
+  // Movimientos de caja
   canVerMovimientos: () => boolean
   canCrearMovimientos: () => boolean
   canEditarMovimientos: () => boolean
   canEliminarMovimientos: () => boolean
   canComentarMovimientos: () => boolean
   canAprobarMovimientos: () => boolean
+
+  // Pagos pendientes
   canVerPendientes: () => boolean
   canCargarPendientes: () => boolean
   canAprobarPendientes: () => boolean
+
+  // Reportes
   canVerReportes: () => boolean
+
+  // Sucursales
   canVerSucursales: () => boolean
   canGestionarSucursales: () => boolean
+
+  // RRHH — Personal / Legajos
+  canVerPersonal: () => boolean
+  canCrearPersonal: () => boolean
+  canGestionarPersonal: () => boolean
+  canEliminarPersonal: () => boolean
+
+  // RRHH — Puestos
+  canVerPuestos: () => boolean
+  canGestionarPuestos: () => boolean
+
+  // RRHH — Escalas salariales
+  canVerEscalas: () => boolean
+  canGestionarEscalas: () => boolean
+
+  // RRHH — Incentivos y premios
   canVerIncentivos: () => boolean
   canGestionarIncentivos: () => boolean
+
+  // RRHH — Calendario
+  canVerCalendario: () => boolean
+  canGestionarCalendario: () => boolean
+
+  // RRHH — Solicitudes
   canVerSolicitudes: () => boolean
   canCrearSolicitudes: () => boolean
   canEditarSolicitudes: () => boolean
   canCancelarSolicitudes: () => boolean
   canAprobarSolicitudes: () => boolean
+  canVerHistorialSolicitudesGlobal: () => boolean
   canVerSolicitudesTodasSucursales: () => boolean
-  canGestionarPersonal: () => boolean
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -74,30 +106,61 @@ export const useAuthStore = create<AuthState>()(
         return user.permisos?.includes(clave) ?? false
       },
 
+      // Configuración
       canVerConfiguracion: () => get().hasPermiso('ver_configuracion'),
       canGestionarUsuarios: () => get().hasPermiso('gestionar_usuarios'),
       canGestionarRoles: () => get().hasPermiso('gestionar_roles'),
+
+      // Movimientos de caja
       canVerMovimientos: () => get().hasPermiso('ver_movimientos'),
       canCrearMovimientos: () => get().hasPermiso('crear_movimientos'),
       canEditarMovimientos: () => get().hasPermiso('editar_movimientos'),
       canEliminarMovimientos: () => get().hasPermiso('eliminar_movimientos'),
       canComentarMovimientos: () => get().hasPermiso('agregar_comentarios'),
       canAprobarMovimientos: () => get().hasPermiso('aprobar_movimientos'),
+
+      // Pagos pendientes
       canVerPendientes: () => get().hasPermiso('ver_pendientes'),
       canCargarPendientes: () => get().hasPermiso('cargar_pendientes'),
       canAprobarPendientes: () => get().hasPermiso('aprobar_pendientes'),
+
+      // Reportes
       canVerReportes: () => get().hasPermiso('ver_reportes'),
+
+      // Sucursales
       canVerSucursales: () => get().hasPermiso('ver_sucursales'),
       canGestionarSucursales: () => get().hasPermiso('gestionar_sucursales'),
+
+      // RRHH — Personal / Legajos
+      canVerPersonal: () => get().hasPermiso('ver_personal'),
+      canCrearPersonal: () => get().hasPermiso('crear_personal'),
+      canGestionarPersonal: () => get().hasPermiso('gestionar_personal'),
+      canEliminarPersonal: () => get().hasPermiso('eliminar_personal'),
+
+      // RRHH — Puestos
+      canVerPuestos: () => get().hasPermiso('ver_puestos'),
+      canGestionarPuestos: () => get().hasPermiso('gestionar_puestos'),
+
+      // RRHH — Escalas salariales
+      canVerEscalas: () => get().hasPermiso('ver_escalas'),
+      canGestionarEscalas: () => get().hasPermiso('gestionar_escalas'),
+
+      // RRHH — Incentivos y premios
       canVerIncentivos: () => get().hasPermiso('ver_incentivos'),
       canGestionarIncentivos: () => get().hasPermiso('gestionar_incentivos'),
+
+      // RRHH — Calendario
+      canVerCalendario: () => get().hasPermiso('ver_calendario'),
+      canGestionarCalendario: () => get().hasPermiso('gestionar_calendario'),
+
+      // RRHH — Solicitudes
       canVerSolicitudes: () => get().hasPermiso('ver_solicitudes'),
       canCrearSolicitudes: () => get().hasPermiso('crear_solicitudes'),
       canEditarSolicitudes: () => get().hasPermiso('editar_solicitudes'),
       canCancelarSolicitudes: () => get().hasPermiso('cancelar_solicitudes'),
       canAprobarSolicitudes: () => get().hasPermiso('aprobar_solicitudes'),
+      canVerHistorialSolicitudesGlobal: () => get().hasPermiso('ver_historial_solicitudes_global'),
       canVerSolicitudesTodasSucursales: () => get().hasPermiso('ver_solicitudes_todas_sucursales'),
-      canGestionarPersonal: () => get().hasPermiso('gestionar_personal'),
     }),
     {
       name: 'auth-storage',
