@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { DatosPersonalesTab } from '@/components/legajos/DatosPersonalesTab'
 import { HistorialTab } from '@/components/legajos/HistorialTab'
 import { ProfesionalTab } from '@/components/legajos/ProfesionalTab'
+import { AnaliticoTab } from '@/components/legajos/AnaliticoTab'
 import type { Personal, Puesto, Sucursal } from '@/lib/types'
 
 function getInitials(nombre: string): string {
@@ -135,9 +136,10 @@ export default function FichaPersonalPage() {
               <h2 className="text-xl sm:text-2xl font-bold text-[#002868] truncate">{personal.nombre}</h2>
               <span
                 className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border flex-shrink-0
-                  ${personal.activo
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    : 'bg-rose-50 text-rose-600 border-rose-200'
+                  ${
+                    personal.activo
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-rose-50 text-rose-600 border-rose-200'
                   }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${personal.activo ? 'bg-emerald-500' : 'bg-rose-400'}`} />
@@ -145,9 +147,7 @@ export default function FichaPersonalPage() {
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#666]">
-              <span className="font-mono font-semibold text-[#002868]/70">
-                Legajo #{personal.legajo}
-              </span>
+              <span className="font-mono font-semibold text-[#002868]/70">Legajo #{personal.legajo}</span>
               {personal.puesto_nombre && (
                 <>
                   <span className="text-[#D0D5DD]">·</span>
@@ -157,9 +157,7 @@ export default function FichaPersonalPage() {
               {personal.fecha_incorporacion && (
                 <>
                   <span className="text-[#D0D5DD]">·</span>
-                  <span className="text-[#888]">
-                    Desde {formatFechaShort(personal.fecha_incorporacion)}
-                  </span>
+                  <span className="text-[#888]">Desde {formatFechaShort(personal.fecha_incorporacion)}</span>
                 </>
               )}
             </div>
@@ -185,6 +183,12 @@ export default function FichaPersonalPage() {
               Profesional
             </TabsTrigger>
             <TabsTrigger
+              value="analitico"
+              className="text-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[#002868] data-[state=active]:font-semibold"
+            >
+              Analítico
+            </TabsTrigger>
+            <TabsTrigger
               value="historial"
               className="text-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[#002868] data-[state=active]:font-semibold"
             >
@@ -206,6 +210,10 @@ export default function FichaPersonalPage() {
 
           <TabsContent value="profesional">
             <ProfesionalTab personalId={personal.id} />
+          </TabsContent>
+
+          <TabsContent value="analitico">
+            <AnaliticoTab personalId={personal.id} />
           </TabsContent>
 
           <TabsContent value="historial">

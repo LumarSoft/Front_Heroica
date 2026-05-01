@@ -225,6 +225,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: number) => `${API_URL}/api/personal/${id}`,
     DELETE: (id: number) => `${API_URL}/api/personal/${id}`,
     GET_PROFESIONAL: (id: number) => `${API_URL}/api/personal/${id}/profesional`,
+    GET_ANALITICO: (id: number) => `${API_URL}/api/personal/${id}/analitico`,
     GET_NOTAS: (id: number) => `${API_URL}/api/personal/${id}/notas`,
     CREATE_NOTA: (id: number) => `${API_URL}/api/personal/${id}/notas`,
     DELETE_NOTA: (id: number, notaId: number) => `${API_URL}/api/personal/${id}/notas/${notaId}`,
