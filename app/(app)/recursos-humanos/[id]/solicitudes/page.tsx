@@ -203,6 +203,7 @@ export default function SolicitudesPage() {
             puestos={puestos}
             onSuccess={fetchAll}
             solicitud={editingSolicitud}
+            tipoInicial={selectedTipo}
           />
         )}
       </main>

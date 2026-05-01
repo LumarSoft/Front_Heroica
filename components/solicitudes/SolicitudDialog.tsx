@@ -36,6 +36,7 @@ interface SolicitudDialogProps {
   puestos: Puesto[]
   onSuccess: () => void
   solicitud?: RhSolicitud | null
+  tipoInicial?: RhSolicitudTipo | null
 }
 
 const TIPOS_OPCIONES: RhSolicitudTipo[] = [
@@ -52,7 +53,7 @@ const TIPOS_OPCIONES: RhSolicitudTipo[] = [
   'Adelantos',
 ]
 
-export function SolicitudDialog({ open, onOpenChange, sucursalId, personal, puestos, onSuccess, solicitud }: SolicitudDialogProps) {
+export function SolicitudDialog({ open, onOpenChange, sucursalId, personal, puestos, onSuccess, solicitud, tipoInicial }: SolicitudDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState<SolicitudFormState>(createInitialSolicitudFormState)
@@ -69,9 +70,12 @@ export function SolicitudDialog({ open, onOpenChange, sucursalId, personal, pues
     if (solicitud) {
       setForm(createSolicitudFormStateFromSolicitud(solicitud))
     } else {
-      setForm(createInitialSolicitudFormState())
+      setForm({
+        ...createInitialSolicitudFormState(),
+        tipo: tipoInicial ?? '',
+      })
     }
-  }, [open, solicitud])
+  }, [open, solicitud, tipoInicial])
 
   async function handleSave() {
     const validationError = validateSolicitudForm(form)
