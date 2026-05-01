@@ -200,7 +200,7 @@ export interface DescripcionOption {
   activo?: boolean
 }
 
-export type RhSolicitudTipo = 'Altas' | 'Bajas' | 'Novedades de sueldo' | 'Incentivos y premios' | 'Licencias' | 'Vacaciones' | 'Suspensiones' | 'Apercibimientos' | 'Capacitaciones' | 'Pedido de uniforme' | 'Adelantos'
+export type RhSolicitudTipo = 'Altas' | 'Bajas' | 'Novedades de sueldo' | 'Incentivos y premios' | 'Licencias' | 'Vacaciones' | 'Suspensiones' | 'Apercibimientos' | 'Capacitaciones' | 'Pedido de uniforme' | 'Adelantos' | 'Descuentos' | 'Horas extras'
 export type RhSolicitudEstado = 'Pendiente' | 'Aprobada' | 'Rechazada' | 'Cancelada'
 export type RhSolicitudHistorialEvento =
   | 'Creada'
