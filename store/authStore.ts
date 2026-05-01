@@ -44,6 +44,7 @@ interface AuthState {
   canCancelarSolicitudes: () => boolean
   canAprobarSolicitudes: () => boolean
   canVerSolicitudesTodasSucursales: () => boolean
+  canGestionarPersonal: () => boolean
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -96,6 +97,7 @@ export const useAuthStore = create<AuthState>()(
       canCancelarSolicitudes: () => get().hasPermiso('cancelar_solicitudes'),
       canAprobarSolicitudes: () => get().hasPermiso('aprobar_solicitudes'),
       canVerSolicitudesTodasSucursales: () => get().hasPermiso('ver_solicitudes_todas_sucursales'),
+      canGestionarPersonal: () => get().hasPermiso('gestionar_personal'),
     }),
     {
       name: 'auth-storage',
