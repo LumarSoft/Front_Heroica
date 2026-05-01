@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import {
   ArrowLeft,
+  Calculator,
   ChevronLeft,
   ChevronRight,
   DollarSign,
@@ -56,11 +57,19 @@ interface PorPuesto {
 
 interface Liquidacion {
   id: number
+  solicitud_id: number
+  personal_id: number
   nombre: string
   legajo: string
   puesto: string
   fecha_solicitud: string
   estado: string
+  detalle?: string
+  sueldo_base: number
+  detalles?: {
+    fecha_baja?: string
+    motivo_baja?: string
+  }
 }
 
 interface Colaborador {
@@ -108,14 +117,6 @@ const MESES_LABEL = [
   'Octubre',
   'Noviembre',
   'Diciembre',
-]
-
-const CAUSAS_LIQUIDACION = [
-  'Renuncia',
-  'Despido sin causa',
-  'Despido con causa',
-  'Acuerdo mutuo',
-  'Vencimiento de contrato',
 ]
 
 function fmtCurrency(v: number): string {
@@ -291,8 +292,8 @@ function LiquidacionesSection({ liquidaciones, onNueva }: { liquidaciones: Liqui
             size="sm"
             className="ml-auto h-7 text-xs bg-rose-600 hover:bg-rose-700 text-white gap-1.5 cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5" />
-            Nueva liquidación
+            <Calculator className="w-3.5 h-3.5" />
+            Iniciar simu
           </Button>
         </div>
       </CardHeader>
@@ -302,7 +303,7 @@ function LiquidacionesSection({ liquidaciones, onNueva }: { liquidaciones: Liqui
             <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center">
               <FileX2 className="w-5 h-5 text-slate-300" />
             </div>
-            <p className="text-sm text-[#9AA0AC]">Sin liquidaciones finales este período.</p>
+            <p className="text-sm text-[#9AA0AC]">Sin bajas para liquidar este período.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -327,7 +328,9 @@ function LiquidacionesSection({ liquidaciones, onNueva }: { liquidaciones: Liqui
                       <p className="text-xs text-[#9AA0AC]">Leg. {l.legajo}</p>
                     </td>
                     <td className="px-5 py-3 text-[#5A6070]">{l.puesto}</td>
-                    <td className="px-5 py-3 text-[#5A6070] tabular-nums">{fmtDate(l.fecha_solicitud)}</td>
+                    <td className="px-5 py-3 text-[#5A6070] tabular-nums">
+                      {l.detalles?.fecha_baja ? fmtDate(l.detalles.fecha_baja) : fmtDate(l.fecha_solicitud)}
+                    </td>
                     <td className="px-5 py-3">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
                         {l.estado}
@@ -552,146 +555,6 @@ function NuevoSueldoDialog({ open, colaboradores, sucursalId, onClose, onSuccess
   )
 }
 
-interface LiquidacionDialogProps {
-  open: boolean
-  colaboradores: Colaborador[]
-  sucursalId: number
-  onClose: () => void
-  onSuccess: () => void
-}
-
-function NuevaLiquidacionDialog({ open, colaboradores, sucursalId, onClose, onSuccess }: LiquidacionDialogProps) {
-  const [personalId, setPersonalId] = useState('')
-  const [causa, setCausa] = useState('')
-  const [descripcion, setDescripcion] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
-
-  const reset = () => {
-    setPersonalId('')
-    setCausa('')
-    setDescripcion('')
-    setError('')
-  }
-
-  const handleClose = () => {
-    reset()
-    onClose()
-  }
-
-  const handleSubmit = async () => {
-    if (!personalId) {
-      setError('Seleccioná un colaborador.')
-      return
-    }
-    if (!causa) {
-      setError('Seleccioná la causa de la liquidación.')
-      return
-    }
-
-    setSubmitting(true)
-    setError('')
-    try {
-      const res = await apiFetch(API_ENDPOINTS.RRHH_SOLICITUDES.CREATE, {
-        method: 'POST',
-        body: JSON.stringify({
-          tipo: 'Liquidación Final',
-          personal_id: Number(personalId),
-          sucursal_id: sucursalId,
-          detalles: { causa, descripcion },
-          fecha_solicitud: new Date().toISOString().split('T')[0],
-        }),
-      })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.message || 'Error al registrar')
-      reset()
-      onSuccess()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al registrar')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={v => !v && handleClose()}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-rose-600">
-            <FileX2 className="w-5 h-5" />
-            Liquidación final
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4 py-2">
-          <div className="rounded-lg bg-rose-50 border border-rose-100 px-3 py-2.5 text-xs text-rose-700">
-            Esto registrará una solicitud de liquidación final para el colaborador seleccionado.
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Colaborador</Label>
-            <Select value={personalId} onValueChange={setPersonalId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccioná un colaborador..." />
-              </SelectTrigger>
-              <SelectContent>
-                {colaboradores.map(c => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.nombre} — {c.puesto}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Causa</Label>
-            <Select value={causa} onValueChange={setCausa}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccioná la causa..." />
-              </SelectTrigger>
-              <SelectContent>
-                {CAUSAS_LIQUIDACION.map(c => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>
-              Observaciones <span className="text-[#9AA0AC] font-normal">(opcional)</span>
-            </Label>
-            <Textarea
-              placeholder="Detalles adicionales..."
-              value={descripcion}
-              onChange={e => setDescripcion(e.target.value)}
-              rows={3}
-            />
-          </div>
-
-          {error && <p className="text-xs text-rose-600">{error}</p>}
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={handleClose} disabled={submitting} className="cursor-pointer">
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="bg-rose-600 hover:bg-rose-700 text-white cursor-pointer"
-          >
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Registrar liquidación'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function SueldosPage() {
@@ -709,8 +572,6 @@ export default function SueldosPage() {
   const [error, setError] = useState('')
 
   const [dialogoSueldo, setDialogoSueldo] = useState(false)
-  const [dialogoLiquidacion, setDialogoLiquidacion] = useState(false)
-
   // Carga nombre de sucursal (una sola vez)
   useEffect(() => {
     apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId))
@@ -757,9 +618,11 @@ export default function SueldosPage() {
 
   const isActual = mes === hoy.getMonth() + 1 && anio === hoy.getFullYear()
   const periodoLabel = `${MESES_LABEL[mes - 1]} ${anio}`
-  const isEmpty = !isLoading && !error && data?.resumen.total_colaboradores === 0
+  const isEmpty =
+    !isLoading && !error && data?.resumen.total_colaboradores === 0 && (data?.liquidaciones.length ?? 0) === 0
 
   const colaboradores = data?.colaboradores ?? []
+  const liquidacionFinalHref = `/recursos-humanos/${sucursalId}/sueldos/liquidacion-final?mes=${mes}&anio=${anio}`
 
   return (
     <div className="min-h-full bg-gradient-to-br from-[#F8F9FA] to-[#EEF3FF]">
@@ -794,7 +657,7 @@ export default function SueldosPage() {
               Sueldo
             </Button>
             <Button
-              onClick={() => setDialogoLiquidacion(true)}
+              onClick={() => router.push(liquidacionFinalHref)}
               size="sm"
               variant="outline"
               className="hidden sm:flex h-8 text-xs border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 gap-1.5 cursor-pointer"
@@ -857,7 +720,7 @@ export default function SueldosPage() {
                   Sueldo
                 </Button>
                 <Button
-                  onClick={() => setDialogoLiquidacion(true)}
+                  onClick={() => router.push(liquidacionFinalHref)}
                   size="sm"
                   variant="outline"
                   className="h-8 text-xs border-rose-200 text-rose-600 hover:bg-rose-50 gap-1 cursor-pointer"
@@ -940,7 +803,7 @@ export default function SueldosPage() {
                   </Card>
                   <LiquidacionesSection
                     liquidaciones={data.liquidaciones}
-                    onNueva={() => setDialogoLiquidacion(true)}
+                    onNueva={() => router.push(liquidacionFinalHref)}
                   />
                 </div>
               </>
@@ -957,16 +820,6 @@ export default function SueldosPage() {
         onClose={() => setDialogoSueldo(false)}
         onSuccess={() => {
           setDialogoSueldo(false)
-          loadData()
-        }}
-      />
-      <NuevaLiquidacionDialog
-        open={dialogoLiquidacion}
-        colaboradores={colaboradores}
-        sucursalId={sucursalId}
-        onClose={() => setDialogoLiquidacion(false)}
-        onSuccess={() => {
-          setDialogoLiquidacion(false)
           loadData()
         }}
       />
