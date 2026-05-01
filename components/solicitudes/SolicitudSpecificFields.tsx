@@ -18,6 +18,7 @@ export function SolicitudSpecificFields({ form, puestos, onChange }: SolicitudSp
       <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
         <Input placeholder="Nombre del colaborador" value={form.alta_nombre} onChange={event => onChange({ alta_nombre: event.target.value })} />
         <Input placeholder="DNI" value={form.alta_dni} onChange={event => onChange({ alta_dni: event.target.value })} />
+        <Input className="col-span-2" type="email" placeholder="Email del colaborador (para notificaciones)" value={form.alta_email} onChange={event => onChange({ alta_email: event.target.value })} />
         <Select value={form.alta_puesto_id} onValueChange={value => onChange({ alta_puesto_id: value })}>
           <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
             <SelectValue placeholder="Seleccione un puesto" />
