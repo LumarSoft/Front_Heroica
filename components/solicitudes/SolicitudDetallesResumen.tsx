@@ -34,6 +34,7 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
       { label: 'DNI', value: String(detalles.dni ?? '-') },
       { label: 'Puesto ID', value: String(detalles.puesto_id ?? '-') },
       { label: 'Incorporación', value: String(detalles.fecha_incorporacion ?? '-') },
+      { label: 'Período de prueba', value: detalles.periodo_prueba === true ? `${String(detalles.periodo_prueba_dias ?? 90)} días` : 'No' },
     ])
   }
 

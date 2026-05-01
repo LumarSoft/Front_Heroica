@@ -32,6 +32,20 @@ export function SolicitudSpecificFields({ form, puestos, onChange }: SolicitudSp
         </Select>
         <Input type="date" value={form.alta_fecha_incorporacion} onChange={event => onChange({ alta_fecha_incorporacion: event.target.value })} />
         <label className="col-span-2 flex items-center gap-2 text-sm text-[#444]">
+          <Checkbox checked={form.alta_periodo_prueba} onCheckedChange={checked => onChange({ alta_periodo_prueba: checked === true })} />
+          Ingresa con período de prueba
+        </label>
+        {form.alta_periodo_prueba && (
+          <Input
+            className="col-span-2"
+            type="number"
+            min={1}
+            placeholder="Duración del período de prueba en días"
+            value={form.alta_periodo_prueba_dias}
+            onChange={event => onChange({ alta_periodo_prueba_dias: event.target.value })}
+          />
+        )}
+        <label className="col-span-2 flex items-center gap-2 text-sm text-[#444]">
           <Checkbox checked={form.alta_carnet} onCheckedChange={checked => onChange({ alta_carnet: checked === true })} />
           Posee carnet de manipulación de alimentos
         </label>
