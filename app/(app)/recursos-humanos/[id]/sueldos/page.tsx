@@ -10,6 +10,7 @@ import {
   FileX2,
   Landmark,
   Loader2,
+  MessageSquare,
   Plus,
   TrendingUp,
   Users,
@@ -69,10 +70,25 @@ interface Colaborador {
   puesto: string
 }
 
+interface TablaMensualRow {
+  personal_id: number
+  nombre: string
+  legajo: string
+  puesto: string
+  escala: number
+  banco: number
+  efectivo: number
+  comentarios_count: number
+  tiene_comentarios: boolean
+  fa: string
+  fb: string
+}
+
 interface SueldosData {
   periodo: { mes: number; anio: number; label: string }
   resumen: ResumenSueldos
   por_puesto: PorPuesto[]
+  tabla_mensual: TablaMensualRow[]
   liquidaciones: Liquidacion[]
   colaboradores: Colaborador[]
 }
@@ -323,6 +339,81 @@ function LiquidacionesSection({ liquidaciones, onNueva }: { liquidaciones: Liqui
             </table>
           </div>
         )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function TablaMensualSection({ rows, sucursalId }: { rows: TablaMensualRow[]; sucursalId: number }) {
+  const router = useRouter()
+
+  return (
+    <Card className="border border-slate-100 shadow-sm overflow-hidden">
+      <div className="h-1 w-full bg-gradient-to-r from-[#002868] via-[#1a5fb4] to-emerald-500" />
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-2">
+          <DollarSign className="w-4 h-4 text-[#002868]" />
+          <CardTitle className="text-xs font-semibold text-[#9AA0AC] uppercase tracking-widest">
+            Tabla mensual de sueldos
+          </CardTitle>
+          <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">
+            {rows.length} registro{rows.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[920px] text-sm">
+            <thead>
+              <tr className="border-b border-[#F0F0F0] bg-[#FAFAFA]">
+                {['Nombre', 'Puesto', 'Escala', 'Banco', 'Efectivo', 'Comentarios', 'FA', 'FB'].map(h => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC]"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F5F5F5]">
+              {rows.map(row => (
+                <tr key={row.personal_id} className="hover:bg-[#F8FAFF] transition-colors">
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/recursos-humanos/${sucursalId}/legajos/${row.personal_id}`)}
+                      className="text-left cursor-pointer"
+                    >
+                      <p className="font-semibold text-[#1A1A1A] hover:text-[#002868]">{row.nombre}</p>
+                      <p className="text-xs text-[#9AA0AC]">Leg. {row.legajo}</p>
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-[#5A6070]">{row.puesto}</td>
+                  <td className="px-4 py-3 font-medium text-[#1A1A1A] tabular-nums">{fmtCurrency(row.escala)}</td>
+                  <td className="px-4 py-3 text-[#002868] tabular-nums">{fmtCurrency(row.banco)}</td>
+                  <td className="px-4 py-3 text-emerald-700 tabular-nums">{fmtCurrency(row.efectivo)}</td>
+                  <td className="px-4 py-3">
+                    {row.tiene_comentarios ? (
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/recursos-humanos/${sucursalId}/legajos/${row.personal_id}`)}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 cursor-pointer"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        {row.comentarios_count}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-[#B0B8C4]">Sin comentarios</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-[#9AA0AC]">{row.fa ?? '—'}</td>
+                  <td className="px-4 py-3 text-[#9AA0AC]">{row.fb ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </CardContent>
     </Card>
   )
@@ -794,7 +885,7 @@ export default function SueldosPage() {
               </div>
             ) : data ? (
               <>
-                {/* KPI cards */}
+                {/* KPI cards originales */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <SummaryCard
                     label="Colaboradores pagos"
@@ -829,24 +920,29 @@ export default function SueldosPage() {
                 {/* Banco / Efectivo */}
                 <BancoEfectivoSplit resumen={data.resumen} />
 
-                {/* Por puesto */}
-                <Card className="border border-slate-100 shadow-sm overflow-hidden">
-                  <div className="h-1 w-full bg-[#002868]" />
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-[#5A6070]" />
-                      <CardTitle className="text-xs font-semibold text-[#9AA0AC] uppercase tracking-widest">
-                        Sueldos por puesto
-                      </CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <PorPuestoChart data={data.por_puesto} />
-                  </CardContent>
-                </Card>
+                <TablaMensualSection rows={data.tabla_mensual} sucursalId={sucursalId} />
 
-                {/* Liquidaciones finales */}
-                <LiquidacionesSection liquidaciones={data.liquidaciones} onNueva={() => setDialogoLiquidacion(true)} />
+                {/* Por puesto + liquidaciones */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <Card className="border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="h-1 w-full bg-[#002868]" />
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-[#5A6070]" />
+                        <CardTitle className="text-xs font-semibold text-[#9AA0AC] uppercase tracking-widest">
+                          Sueldos por puesto
+                        </CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <PorPuestoChart data={data.por_puesto} />
+                    </CardContent>
+                  </Card>
+                  <LiquidacionesSection
+                    liquidaciones={data.liquidaciones}
+                    onNueva={() => setDialogoLiquidacion(true)}
+                  />
+                </div>
               </>
             ) : null}
           </>
