@@ -69,6 +69,9 @@ interface AuthState {
   canVerCalendario: () => boolean
   canGestionarCalendario: () => boolean
 
+  // RRHH — Sueldos
+  canVerSueldos: () => boolean
+
   // RRHH — Solicitudes
   canVerSolicitudes: () => boolean
   canCrearSolicitudes: () => boolean
@@ -152,6 +155,9 @@ export const useAuthStore = create<AuthState>()(
       // RRHH — Calendario
       canVerCalendario: () => get().hasPermiso('ver_calendario'),
       canGestionarCalendario: () => get().hasPermiso('gestionar_calendario'),
+
+      // RRHH — Sueldos
+      canVerSueldos: () => get().hasPermiso('ver_sueldos'),
 
       // RRHH — Solicitudes
       canVerSolicitudes: () => get().hasPermiso('ver_solicitudes'),
