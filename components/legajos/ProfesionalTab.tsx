@@ -37,7 +37,7 @@ interface EscalaActual {
 interface SolicitudItem {
   id: number
   tipo: string
-  detalles: Record<string, unknown>
+  detalles: Record<string, string | number | boolean | null | undefined>
   estado: string
   fecha_solicitud: string
   created_at: string
