@@ -9,6 +9,8 @@ export interface SolicitudFormState {
   alta_dni: string
   alta_puesto_id: string
   alta_fecha_incorporacion: string
+  alta_periodo_prueba: boolean
+  alta_periodo_prueba_dias: string
   alta_carnet: boolean
   baja_motivo: string
   baja_fecha: string
@@ -40,6 +42,8 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
     alta_dni: '',
     alta_puesto_id: '',
     alta_fecha_incorporacion: today,
+    alta_periodo_prueba: false,
+    alta_periodo_prueba_dias: '90',
     alta_carnet: false,
     baja_motivo: '',
     baja_fecha: today,
@@ -74,6 +78,8 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
     alta_dni: String(detalles.dni ?? ''),
     alta_puesto_id: detalles.puesto_id ? String(detalles.puesto_id) : '',
     alta_fecha_incorporacion: String(detalles.fecha_incorporacion ?? today),
+    alta_periodo_prueba: detalles.periodo_prueba === true,
+    alta_periodo_prueba_dias: detalles.periodo_prueba_dias ? String(detalles.periodo_prueba_dias) : '90',
     alta_carnet: detalles.carnet_manipulacion_alimentos === true,
     baja_motivo: String(detalles.motivo_baja ?? ''),
     baja_fecha: String(detalles.fecha_baja ?? today),
@@ -102,6 +108,8 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
         dni: form.alta_dni.trim(),
         puesto_id: Number(form.alta_puesto_id),
         fecha_incorporacion: form.alta_fecha_incorporacion,
+        periodo_prueba: form.alta_periodo_prueba,
+        periodo_prueba_dias: form.alta_periodo_prueba ? Number(form.alta_periodo_prueba_dias) : null,
         carnet_manipulacion_alimentos: form.alta_carnet,
       }
     case 'Bajas':
@@ -150,6 +158,9 @@ export function validateSolicitudForm(form: SolicitudFormState): string | null {
       if (!form.alta_dni.trim()) return 'Ingrese el DNI del colaborador'
       if (!form.alta_puesto_id) return 'Seleccione un puesto'
       if (!form.alta_fecha_incorporacion) return 'Ingrese la fecha de incorporación'
+      if (form.alta_periodo_prueba && (!form.alta_periodo_prueba_dias || Number(form.alta_periodo_prueba_dias) <= 0)) {
+        return 'Ingrese la duración del período de prueba'
+      }
       return null
     case 'Bajas':
       if (form.personal_id === 'general') return 'Seleccione el colaborador a desvincular'

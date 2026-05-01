@@ -47,8 +47,6 @@ export default function SolicitudesPage() {
   const canEditarSolicitudes = useAuthStore(state => state.canEditarSolicitudes())
   const canCancelarSolicitudes = useAuthStore(state => state.canCancelarSolicitudes())
   const canAprobarSolicitudes = useAuthStore(state => state.canAprobarSolicitudes())
-  const canVerTodasSucursales = useAuthStore(state => state.canVerSolicitudesTodasSucursales())
-  const isSuperAdmin = useAuthStore(state => state.isSuperAdmin())
 
   const [sucursal, setSucursal] = useState<Sucursal | null>(null)
   const [sucursales, setSucursales] = useState<Sucursal[]>([])
@@ -63,8 +61,6 @@ export default function SolicitudesPage() {
   const [selectedSolicitud, setSelectedSolicitud] = useState<RhSolicitud | null>(null)
   const [editingSolicitud, setEditingSolicitud] = useState<RhSolicitud | null>(null)
 
-  const isGlobalView = isSuperAdmin || canVerTodasSucursales
-
   const pendingCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     solicitudes.forEach(solicitud => {
@@ -76,36 +72,30 @@ export default function SolicitudesPage() {
   async function fetchAll() {
     try {
       setError('')
-      const solicitudesUrl = isGlobalView ? API_ENDPOINTS.RRHH_SOLICITUDES.GET_ALL : API_ENDPOINTS.RRHH_SOLICITUDES.GET_BY_SUCURSAL(sucursalId)
-      const personalUrl = isGlobalView ? API_ENDPOINTS.PERSONAL.GET_ALL : API_ENDPOINTS.PERSONAL.GET_BY_SUCURSAL(sucursalId)
-      const sucursalesUrl = API_ENDPOINTS.SUCURSALES.GET_ALL
-      const [sucursalRes, solicitudesRes, personalRes, puestosRes, sucursalesRes] = await Promise.all([
+      const [sucursalRes, solicitudesRes, personalRes, puestosRes] = await Promise.all([
         apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId)),
-        apiFetch(solicitudesUrl),
-        apiFetch(personalUrl),
+        apiFetch(API_ENDPOINTS.RRHH_SOLICITUDES.GET_BY_SUCURSAL(sucursalId)),
+        apiFetch(API_ENDPOINTS.PERSONAL.GET_BY_SUCURSAL(sucursalId)),
         apiFetch(API_ENDPOINTS.PUESTOS.GET_BY_SUCURSAL(sucursalId)),
-        apiFetch(sucursalesUrl),
       ])
 
-      const [sucursalData, solicitudesData, personalData, puestosData, sucursalesData] = await Promise.all([
+      const [sucursalData, solicitudesData, personalData, puestosData] = await Promise.all([
         sucursalRes.json(),
         solicitudesRes.json(),
         personalRes.json(),
         puestosRes.json(),
-        sucursalesRes.json(),
       ])
 
       if (!sucursalRes.ok) throw new Error(sucursalData.message || 'Error al cargar sucursal')
       if (!solicitudesRes.ok) throw new Error(solicitudesData.message || 'Error al cargar solicitudes')
       if (!personalRes.ok) throw new Error(personalData.message || 'Error al cargar personal')
       if (!puestosRes.ok) throw new Error(puestosData.message || 'Error al cargar puestos')
-      if (!sucursalesRes.ok) throw new Error(sucursalesData.message || 'Error al cargar sucursales')
 
       setSucursal(sucursalData.data)
       setSolicitudes(solicitudesData.data ?? [])
       setPersonal(personalData.data ?? [])
       setPuestos(puestosData.data ?? [])
-      setSucursales(sucursalesData.data ?? [])
+      setSucursales(sucursalData.data ? [sucursalData.data] : [])
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al cargar datos')
     } finally {
@@ -115,20 +105,19 @@ export default function SolicitudesPage() {
 
   useEffect(() => {
     void fetchAll()
-  }, [sucursalId, isGlobalView])
+  }, [sucursalId])
 
   const solicitudesFiltradas = useMemo(() => {
     return solicitudes.filter(solicitud => {
       if (selectedTipo && solicitud.tipo !== selectedTipo) return false
       if (filters.estado !== 'todos' && solicitud.estado !== filters.estado) return false
       if (filters.personalId !== 'todos' && String(solicitud.personal_id ?? solicitud.personal_creado_id ?? '') !== filters.personalId) return false
-      if (isGlobalView && filters.sucursalId !== 'todas' && String(solicitud.sucursal_id) !== filters.sucursalId) return false
       if (filters.solicitante && !solicitud.usuario_nombre.toLowerCase().includes(filters.solicitante.toLowerCase())) return false
       if (filters.fechaDesde && solicitud.fecha_solicitud.split('T')[0] < filters.fechaDesde) return false
       if (filters.fechaHasta && solicitud.fecha_solicitud.split('T')[0] > filters.fechaHasta) return false
       return true
     })
-  }, [filters, isGlobalView, selectedTipo, solicitudes])
+  }, [filters, selectedTipo, solicitudes])
 
   if (isLoading) return <PageLoadingSpinner />
 
@@ -143,7 +132,7 @@ export default function SolicitudesPage() {
               </Button>
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC] leading-none mb-1">
-                  Recursos Humanos · {isGlobalView ? 'Vista global' : sucursal?.nombre ?? ''}
+                  Recursos Humanos · {sucursal?.nombre ?? ''}
                 </p>
                 <h1 className="text-sm sm:text-base font-semibold text-[#002868] truncate leading-none">Solicitudes</h1>
               </div>
@@ -169,7 +158,7 @@ export default function SolicitudesPage() {
               Solicitudes
             </h2>
             <p className="text-xs sm:text-sm text-[#666666] mt-1">
-              {isGlobalView ? 'Bandeja global de revisión, seguimiento y auditoría' : 'Carga y seguimiento de solicitudes de la sucursal'} · {solicitudesFiltradas.length} registro{solicitudesFiltradas.length !== 1 ? 's' : ''}
+              Carga, revisión y seguimiento de solicitudes de la sucursal · {solicitudesFiltradas.length} registro{solicitudesFiltradas.length !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
@@ -185,8 +174,8 @@ export default function SolicitudesPage() {
               </Button>
             </div>
 
-            <SolicitudesFilters filters={filters} onChange={setFilters} personal={personal.filter(colaborador => colaborador.activo)} sucursales={sucursales} showSucursalFilter={isGlobalView} />
-            <SolicitudesTable solicitudes={solicitudesFiltradas} onSelect={setSelectedSolicitud} showSucursal={isGlobalView} />
+            <SolicitudesFilters filters={filters} onChange={setFilters} personal={personal.filter(colaborador => colaborador.activo)} sucursales={sucursales} showSucursalFilter={false} />
+            <SolicitudesTable solicitudes={solicitudesFiltradas} onSelect={setSelectedSolicitud} showSucursal={false} />
           </div>
         )}
 

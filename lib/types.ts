@@ -158,6 +158,8 @@ export interface Personal {
   puesto_nombre: string
   sucursal_id: number
   fecha_incorporacion: string
+  periodo_prueba?: boolean
+  periodo_prueba_dias?: number | null
   carnet_manipulacion_alimentos: boolean
   activo: boolean
   created_at: string
@@ -229,6 +231,8 @@ export interface RhSolicitudAltaDetalles {
   dni: string
   puesto_id: number
   fecha_incorporacion: string
+  periodo_prueba: boolean
+  periodo_prueba_dias: number | null
   carnet_manipulacion_alimentos: boolean
 }
 
