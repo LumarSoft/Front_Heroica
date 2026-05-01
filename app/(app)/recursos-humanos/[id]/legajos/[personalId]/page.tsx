@@ -12,6 +12,7 @@ import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { DatosPersonalesTab } from '@/components/legajos/DatosPersonalesTab'
 import { HistorialTab } from '@/components/legajos/HistorialTab'
+import { ProfesionalTab } from '@/components/legajos/ProfesionalTab'
 import type { Personal, Puesto, Sucursal } from '@/lib/types'
 
 function getInitials(nombre: string): string {
@@ -178,6 +179,12 @@ export default function FichaPersonalPage() {
               Datos Personales
             </TabsTrigger>
             <TabsTrigger
+              value="profesional"
+              className="text-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[#002868] data-[state=active]:font-semibold"
+            >
+              Profesional
+            </TabsTrigger>
+            <TabsTrigger
               value="historial"
               className="text-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[#002868] data-[state=active]:font-semibold"
             >
@@ -195,6 +202,10 @@ export default function FichaPersonalPage() {
                 onUpdate={setPersonal}
               />
             </div>
+          </TabsContent>
+
+          <TabsContent value="profesional">
+            <ProfesionalTab personalId={personal.id} />
           </TabsContent>
 
           <TabsContent value="historial">

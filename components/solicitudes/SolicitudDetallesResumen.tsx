@@ -79,6 +79,23 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
     ])
   }
 
+  if (solicitud.tipo === 'Descuentos') {
+    return renderRows([
+      { label: 'Fecha', value: String(detalles.fecha ?? '-') },
+      { label: 'Monto', value: formatCurrency(detalles.monto) },
+      { label: 'Motivo', value: String(detalles.motivo ?? '-') },
+    ])
+  }
+
+  if (solicitud.tipo === 'Horas extras') {
+    return renderRows([
+      { label: 'Fecha', value: String(detalles.fecha ?? '-') },
+      { label: 'Horas', value: String(detalles.cantidad_horas ?? '-') },
+      ...(detalles.valor_hora != null ? [{ label: 'Valor hora', value: formatCurrency(detalles.valor_hora) }] : []),
+      ...(detalles.descripcion ? [{ label: 'Descripción', value: String(detalles.descripcion) }] : []),
+    ])
+  }
+
   if (!solicitud.detalles) return null
 
   return (

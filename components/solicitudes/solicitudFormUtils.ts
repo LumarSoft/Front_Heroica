@@ -28,6 +28,13 @@ export interface SolicitudFormState {
   apercibimiento_fecha: string
   apercibimiento_severidad: 'Leve' | 'Moderada' | 'Grave'
   apercibimiento_motivo: string
+  descuento_motivo: string
+  descuento_monto: string
+  descuento_fecha: string
+  horas_extras_cantidad: string
+  horas_extras_fecha: string
+  horas_extras_valor_hora: string
+  horas_extras_descripcion: string
 }
 
 const today = new Date().toISOString().split('T')[0]
@@ -61,6 +68,13 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
     apercibimiento_fecha: today,
     apercibimiento_severidad: 'Leve',
     apercibimiento_motivo: '',
+    descuento_motivo: '',
+    descuento_monto: '',
+    descuento_fecha: today,
+    horas_extras_cantidad: '',
+    horas_extras_fecha: today,
+    horas_extras_valor_hora: '',
+    horas_extras_descripcion: '',
   }
 }
 
@@ -97,6 +111,13 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
     apercibimiento_fecha: String(detalles.fecha ?? today),
     apercibimiento_severidad: (detalles.severidad as 'Leve' | 'Moderada' | 'Grave') ?? 'Leve',
     apercibimiento_motivo: String(detalles.motivo ?? ''),
+    descuento_motivo: String(detalles.motivo ?? ''),
+    descuento_monto: detalles.monto ? String(detalles.monto) : '',
+    descuento_fecha: String(detalles.fecha ?? today),
+    horas_extras_cantidad: detalles.cantidad_horas ? String(detalles.cantidad_horas) : '',
+    horas_extras_fecha: String(detalles.fecha ?? today),
+    horas_extras_valor_hora: detalles.valor_hora ? String(detalles.valor_hora) : '',
+    horas_extras_descripcion: String(detalles.descripcion ?? ''),
   }
 }
 
@@ -143,6 +164,19 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
         severidad: form.apercibimiento_severidad,
         motivo: form.apercibimiento_motivo.trim(),
       }
+    case 'Descuentos':
+      return {
+        motivo: form.descuento_motivo.trim(),
+        monto: Number(form.descuento_monto),
+        fecha: form.descuento_fecha,
+      }
+    case 'Horas extras':
+      return {
+        cantidad_horas: Number(form.horas_extras_cantidad),
+        fecha: form.horas_extras_fecha,
+        ...(form.horas_extras_valor_hora && { valor_hora: Number(form.horas_extras_valor_hora) }),
+        ...(form.horas_extras_descripcion.trim() && { descripcion: form.horas_extras_descripcion.trim() }),
+      }
     default:
       return null
   }
@@ -187,6 +221,18 @@ export function validateSolicitudForm(form: SolicitudFormState): string | null {
       if (form.personal_id === 'general') return 'Seleccione el colaborador para el apercibimiento'
       if (!form.apercibimiento_fecha || !form.apercibimiento_motivo.trim()) {
         return 'Complete fecha y motivo del apercibimiento'
+      }
+      return null
+    case 'Descuentos':
+      if (form.personal_id === 'general') return 'Seleccione el colaborador para el descuento'
+      if (!form.descuento_motivo.trim() || !form.descuento_monto || !form.descuento_fecha) {
+        return 'Complete motivo, monto y fecha del descuento'
+      }
+      return null
+    case 'Horas extras':
+      if (form.personal_id === 'general') return 'Seleccione el colaborador para las horas extras'
+      if (!form.horas_extras_cantidad || !form.horas_extras_fecha) {
+        return 'Complete la cantidad de horas y la fecha'
       }
       return null
     default:

@@ -113,5 +113,26 @@ export function SolicitudSpecificFields({ form, puestos, onChange }: SolicitudSp
     )
   }
 
+  if (form.tipo === 'Descuentos') {
+    return (
+      <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
+        <Input type="date" value={form.descuento_fecha} onChange={event => onChange({ descuento_fecha: event.target.value })} />
+        <Input type="number" placeholder="Monto ($)" min={0} value={form.descuento_monto} onChange={event => onChange({ descuento_monto: event.target.value })} />
+        <Input className="col-span-2" placeholder="Motivo del descuento" value={form.descuento_motivo} onChange={event => onChange({ descuento_motivo: event.target.value })} />
+      </div>
+    )
+  }
+
+  if (form.tipo === 'Horas extras') {
+    return (
+      <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
+        <Input type="date" value={form.horas_extras_fecha} onChange={event => onChange({ horas_extras_fecha: event.target.value })} />
+        <Input type="number" placeholder="Cantidad de horas" min={0} step={0.5} value={form.horas_extras_cantidad} onChange={event => onChange({ horas_extras_cantidad: event.target.value })} />
+        <Input type="number" placeholder="Valor por hora (opcional)" min={0} value={form.horas_extras_valor_hora} onChange={event => onChange({ horas_extras_valor_hora: event.target.value })} />
+        <Input placeholder="Descripción (opcional)" value={form.horas_extras_descripcion} onChange={event => onChange({ horas_extras_descripcion: event.target.value })} />
+      </div>
+    )
+  }
+
   return null
 }
