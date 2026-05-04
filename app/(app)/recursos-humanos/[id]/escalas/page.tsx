@@ -37,7 +37,7 @@ export default function EscalasSalarialesPage() {
 
   const fetchEscalas = async () => {
     try {
-      const res = await apiFetch(API_ENDPOINTS.ESCALAS_SALARIALES.GET_BY_SUCURSAL(sucursalId))
+      const res = await apiFetch(API_ENDPOINTS.ESCALAS_SALARIALES.GET_ALL)
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Error al cargar escalas salariales')
       setEscalas(data.data ?? data)
@@ -169,7 +169,6 @@ export default function EscalasSalarialesPage() {
         initial={editTarget}
         defaultMes={filterMes}
         defaultAnio={filterAnio}
-        sucursalId={sucursalId}
       />
 
       <EscalaDeleteDialog

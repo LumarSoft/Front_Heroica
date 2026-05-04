@@ -35,6 +35,10 @@ export const PERMISOS = {
   GESTIONAR_PERSONAL: 'gestionar_personal',
   ELIMINAR_PERSONAL: 'eliminar_personal',
 
+  // RRHH — Áreas
+  VER_AREAS: 'ver_areas',
+  GESTIONAR_AREAS: 'gestionar_areas',
+
   // RRHH — Puestos
   VER_PUESTOS: 'ver_puestos',
   GESTIONAR_PUESTOS: 'gestionar_puestos',

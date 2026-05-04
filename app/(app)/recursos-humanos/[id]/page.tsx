@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation'
 import {
   ArrowLeft,
   BadgePercent,
-  Briefcase,
   ClipboardList,
   FileText,
   Layers3,
@@ -44,12 +43,6 @@ const PRIMARY_SECTIONS = [
 
 const SECONDARY_SECTIONS = [
   {
-    label: 'Puestos',
-    description: 'Puestos de trabajo de la sucursal.',
-    icon: Briefcase,
-    href: (id: number) => `/recursos-humanos/${id}/puestos`,
-  },
-  {
     label: 'Incentivos',
     description: 'Premios y objetivos por desempeño.',
     icon: BadgePercent,
@@ -76,20 +69,14 @@ export default function RecursosHumanosSucursalPage() {
       try {
         const response = await apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId))
         const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.message || 'Error al cargar sucursal')
-        }
-
+        if (!response.ok) throw new Error(data.message || 'Error al cargar sucursal')
         setSucursal(data.data)
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Error al cargar sucursal'
-        setError(message)
+        setError(err instanceof Error ? err.message : 'Error al cargar sucursal')
       } finally {
         setIsLoading(false)
       }
     }
-
     fetchSucursal()
   }, [sucursalId])
 
@@ -125,7 +112,6 @@ export default function RecursosHumanosSucursalPage() {
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
-
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC] leading-none mb-1">
                 Recursos Humanos
@@ -151,50 +137,18 @@ export default function RecursosHumanosSucursalPage() {
           </p>
         </div>
 
-        <div className="max-w-5xl mx-auto mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {SECONDARY_SECTIONS.map(section => {
-            const Icon = section.icon
-            const href = section.href?.(sucursalId)
-            return (
-              <Card
-                key={section.label}
-                onClick={() => href && router.push(href)}
-                className={`group border-2 border-[#D8E3F8] bg-white shadow-sm transition-all duration-300 overflow-hidden ${
-                  href ? 'hover:border-[#002868] hover:shadow-lg cursor-pointer' : 'opacity-90 cursor-default'
-                }`}
-              >
-                <CardContent className="p-6 flex items-center gap-4">
-                  <div className="w-14 h-14 rotate-45 rounded-2xl bg-[#EAF0FF] flex items-center justify-center transition-transform group-hover:scale-110">
-                    <Icon className="w-6 h-6 -rotate-45 text-[#002868]" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-[#002868]">{section.label}</h3>
-                    <p className="text-sm text-[#666666] mt-1">{section.description}</p>
-                    {!href && (
-                      <div className="mt-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#9AA0AC]">
-                        <Layers3 className="w-4 h-4" />
-                        Próximamente
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-8">
+        {/* Primary — 3 cards grandes */}
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-8 mb-5 md:mb-8">
           {PRIMARY_SECTIONS.map(section => {
             const Icon = section.icon
-            const href = section.href?.(sucursalId)
+            const href = section.href(sucursalId)
             return (
               <Card
                 key={section.label}
-                onClick={() => href && router.push(href)}
+                onClick={() => router.push(href)}
                 className="group border-2 border-[#E0E0E0] bg-white hover:border-[#002868] hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer overflow-hidden relative"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#002868]/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500" />
-
                 <CardContent className="p-8 md:p-10 text-center relative z-10">
                   <div className="w-24 h-24 md:w-28 md:h-28 mx-auto mb-5 rounded-full bg-gradient-to-br from-[#002868]/10 to-[#002868]/5 flex items-center justify-center group-hover:from-[#002868]/20 group-hover:to-[#002868]/10 transition-all duration-300 group-hover:scale-110">
                     <Icon className="w-10 h-10 md:w-12 md:h-12 text-[#002868]" />
@@ -203,18 +157,38 @@ export default function RecursosHumanosSucursalPage() {
                     {section.label}
                   </h3>
                   <p className="text-[#666666] text-base leading-relaxed">{section.description}</p>
-
-                  {!href && (
-                    <div className="mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#9AA0AC]">
-                      <Layers3 className="w-4 h-4" />
-                      Próximamente
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             )
           })}
         </div>
+
+        {/* Secondary — 2 cards centradas */}
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-center gap-5 md:gap-8">
+          {SECONDARY_SECTIONS.map(section => {
+            const Icon = section.icon
+            const href = section.href(sucursalId)
+            return (
+              <Card
+                key={section.label}
+                onClick={() => router.push(href)}
+                className="group w-full sm:w-80 border-2 border-[#D8E3F8] bg-white hover:border-[#002868] hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden relative"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-[#002868]/5 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-500" />
+                <CardContent className="p-6 flex items-center gap-4 relative z-10">
+                  <div className="w-14 h-14 rotate-45 rounded-2xl bg-[#EAF0FF] flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110">
+                    <Icon className="w-6 h-6 -rotate-45 text-[#002868]" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-[#002868]">{section.label}</h3>
+                    <p className="text-sm text-[#666666] mt-1">{section.description}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+
       </main>
     </div>
   )

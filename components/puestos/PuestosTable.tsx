@@ -20,14 +20,17 @@ export function PuestosTable({ puestos, onEdit, onDelete }: PuestosTableProps) {
             <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">
               Nombre
             </TableHead>
+            <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">
+              Área
+            </TableHead>
             <TableHead className="w-12" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {puestos.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={2} className="text-center text-[#666666] py-16">
-                <p className="font-medium">No hay puestos cargados para esta sucursal.</p>
+              <TableCell colSpan={3} className="text-center text-[#666666] py-16">
+                <p className="font-medium">No hay puestos cargados.</p>
               </TableCell>
             </TableRow>
           ) : (
@@ -38,6 +41,7 @@ export function PuestosTable({ puestos, onEdit, onDelete }: PuestosTableProps) {
                 className="hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50 cursor-pointer"
               >
                 <TableCell className="font-medium text-[#1A1A1A]">{puesto.nombre}</TableCell>
+                <TableCell className="text-[#5A6070] text-sm">{puesto.area_nombre}</TableCell>
                 <TableCell className="text-center">
                   <Button
                     size="sm"

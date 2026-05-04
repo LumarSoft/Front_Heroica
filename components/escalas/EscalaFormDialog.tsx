@@ -25,7 +25,6 @@ interface EscalaFormDialogProps {
   initial: EscalaSalarial | null
   defaultMes: number
   defaultAnio: number
-  sucursalId: number
 }
 
 export function EscalaFormDialog({
@@ -36,7 +35,6 @@ export function EscalaFormDialog({
   initial,
   defaultMes,
   defaultAnio,
-  sucursalId,
 }: EscalaFormDialogProps) {
   const [puestoId, setPuestoId] = useState('')
   const [sueldoBase, setSueldoBase] = useState('')
@@ -47,11 +45,11 @@ export function EscalaFormDialog({
 
   useEffect(() => {
     if (!open) return
-    apiFetch(API_ENDPOINTS.PUESTOS.GET_BY_SUCURSAL(sucursalId))
+    apiFetch(API_ENDPOINTS.PUESTOS.GET_ALL)
       .then(r => r.json())
       .then(d => setPuestos(d.data ?? d))
       .catch(() => setPuestos([]))
-  }, [open, sucursalId])
+  }, [open])
 
   useEffect(() => {
     if (!open) return

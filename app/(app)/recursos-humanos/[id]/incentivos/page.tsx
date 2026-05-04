@@ -171,7 +171,7 @@ export default function RecursosHumanosIncentivosPage() {
     try {
       const [sucursalRes, escalasRes] = await Promise.all([
         apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId)),
-        apiFetch(API_ENDPOINTS.ESCALAS_SALARIALES.GET_BY_SUCURSAL(sucursalId)),
+        apiFetch(API_ENDPOINTS.ESCALAS_SALARIALES.GET_ALL),
       ])
       const [sucursalData, escalasData] = await Promise.all([sucursalRes.json(), escalasRes.json()])
       if (!sucursalRes.ok) throw new Error(sucursalData.message || 'Error al cargar sucursal')

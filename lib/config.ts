@@ -212,7 +212,8 @@ export const API_ENDPOINTS = {
     LEER: `${API_URL}/api/notificaciones/leer`,
   },
   ESCALAS_SALARIALES: {
-    GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/escalas-salariales?sucursal_id=${sucursalId}`,
+    GET_ALL: `${API_URL}/api/escalas-salariales`,
+    GET_BY_PUESTO: (puestoId: number) => `${API_URL}/api/escalas-salariales?puesto_id=${puestoId}`,
     CREATE: `${API_URL}/api/escalas-salariales`,
     UPDATE: (id: number) => `${API_URL}/api/escalas-salariales/${id}`,
     DELETE: (id: number) => `${API_URL}/api/escalas-salariales/${id}`,
@@ -231,10 +232,18 @@ export const API_ENDPOINTS = {
     DELETE_NOTA: (id: number, notaId: number) => `${API_URL}/api/personal/${id}/notas/${notaId}`,
   },
   PUESTOS: {
-    GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/puestos?sucursal_id=${sucursalId}`,
+    GET_ALL: `${API_URL}/api/puestos`,
+    GET_BY_AREA: (areaId: number) => `${API_URL}/api/puestos?area_id=${areaId}`,
     CREATE: `${API_URL}/api/puestos`,
     UPDATE: (id: number) => `${API_URL}/api/puestos/${id}`,
     DELETE: (id: number) => `${API_URL}/api/puestos/${id}`,
+  },
+  AREAS: {
+    GET_ALL: `${API_URL}/api/areas`,
+    GET_ACTIVAS: `${API_URL}/api/areas?activo=1`,
+    CREATE: `${API_URL}/api/areas`,
+    UPDATE: (id: number) => `${API_URL}/api/areas/${id}`,
+    DELETE: (id: number) => `${API_URL}/api/areas/${id}`,
   },
   RRHH_SUELDOS: {
     GET_PERIODO: (sucursalId: number, mes: number, anio: number) =>
