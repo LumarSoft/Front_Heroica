@@ -118,10 +118,20 @@ export interface EscalaSalarial {
   valor_hora: number | null
 }
 
+export interface Area {
+  id: number
+  nombre: string
+  descripcion: string | null
+  activo: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface Puesto {
   id: number
   nombre: string
-  sucursal_id: number
+  area_id: number
+  area_nombre: string
   created_at: string
   updated_at: string
 }

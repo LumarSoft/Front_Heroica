@@ -16,6 +16,8 @@ import {
   Truck,
   FileText,
   ChevronDown,
+  Briefcase,
+  Layers3,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
@@ -29,6 +31,8 @@ import { CambiarPasswordSection } from '@/components/configuracion/CambiarPasswo
 import { DispositivosConfianzaSection } from '@/components/configuracion/DispositivosConfianzaSection'
 import { DescripcionesSection } from '@/components/configuracion/DescripcionesSection'
 import { ProveedoresSection } from '@/components/configuracion/ProveedoresSection'
+import { AreasSection } from '@/components/configuracion/AreasSection'
+import { PuestosSection } from '@/components/configuracion/PuestosSection'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
@@ -39,6 +43,8 @@ type ActiveTab =
   | 'proveedores'
   | 'bancos'
   | 'medios'
+  | 'areas'
+  | 'puestos'
   | 'usuarios'
   | 'roles'
   | 'mi-cuenta'
@@ -54,6 +60,7 @@ interface TabDef {
 const GROUPS = [
   { key: 'catalogo', label: 'Catálogo' },
   { key: 'financiero', label: 'Financiero' },
+  { key: 'rrhh', label: 'RRHH' },
   { key: 'equipo', label: 'Equipo' },
   { key: 'cuenta', label: 'Mi Cuenta' },
 ]
@@ -65,6 +72,8 @@ export default function ConfiguracionPage() {
   const canVerConfiguracion = useAuthStore(state => state.canVerConfiguracion())
   const canGestionarUsuarios = useAuthStore(state => state.canGestionarUsuarios())
   const canGestionarRoles = useAuthStore(state => state.canGestionarRoles())
+  const canVerAreas = useAuthStore(state => state.canVerAreas())
+  const canVerPuestos = useAuthStore(state => state.canVerPuestos())
 
   const [isHydrated, setIsHydrated] = useState(false)
   const [activeTab, setActiveTab] = useState<ActiveTab>('mi-cuenta')
@@ -88,6 +97,8 @@ export default function ConfiguracionPage() {
     { id: 'proveedores',  label: 'Proveedores',    Icon: Truck,     visible: isSuperAdmin,          group: 'catalogo'   },
     { id: 'bancos',       label: 'Bancos',         Icon: Building2, visible: isSuperAdmin,          group: 'financiero' },
     { id: 'medios',       label: 'Medios de Pago', Icon: CreditCard,visible: isSuperAdmin,          group: 'financiero' },
+    { id: 'areas',        label: 'Áreas',          Icon: Layers3,   visible: isSuperAdmin || canVerAreas,  group: 'rrhh'  },
+    { id: 'puestos',      label: 'Puestos',        Icon: Briefcase, visible: isSuperAdmin || canVerPuestos, group: 'rrhh' },
     { id: 'usuarios',     label: 'Usuarios',       Icon: Users,     visible: canGestionarUsuarios,  group: 'equipo'     },
     { id: 'roles',        label: 'Roles y Permisos',Icon: Shield,   visible: canGestionarRoles,     group: 'equipo'     },
     { id: 'mi-cuenta',    label: 'Mi Cuenta',      Icon: KeyRound,  visible: true,                  group: 'cuenta'     },
@@ -241,6 +252,8 @@ export default function ConfiguracionPage() {
             {activeTab === 'proveedores'   && <ProveedoresSection />}
             {activeTab === 'bancos'        && <BancosSection />}
             {activeTab === 'medios'        && <MediosPagoSection />}
+            {activeTab === 'areas'         && <AreasSection />}
+            {activeTab === 'puestos'       && <PuestosSection />}
             {activeTab === 'usuarios'      && <UsuariosSection />}
             {activeTab === 'roles'         && <RolesSection />}
             {activeTab === 'mi-cuenta'     && (

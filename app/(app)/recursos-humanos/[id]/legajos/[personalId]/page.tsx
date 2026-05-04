@@ -50,7 +50,7 @@ export default function FichaPersonalPage() {
       try {
         const [personalRes, puestosRes, sucursalRes] = await Promise.all([
           apiFetch(API_ENDPOINTS.PERSONAL.GET_BY_ID(personalId)),
-          apiFetch(API_ENDPOINTS.PUESTOS.GET_BY_SUCURSAL(sucursalId)),
+          apiFetch(API_ENDPOINTS.PUESTOS.GET_ALL),
           apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId)),
         ])
 

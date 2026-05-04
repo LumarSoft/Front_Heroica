@@ -53,6 +53,10 @@ interface AuthState {
   canGestionarPersonal: () => boolean
   canEliminarPersonal: () => boolean
 
+  // RRHH — Áreas
+  canVerAreas: () => boolean
+  canGestionarAreas: () => boolean
+
   // RRHH — Puestos
   canVerPuestos: () => boolean
   canGestionarPuestos: () => boolean
@@ -139,6 +143,10 @@ export const useAuthStore = create<AuthState>()(
       canCrearPersonal: () => get().hasPermiso('crear_personal'),
       canGestionarPersonal: () => get().hasPermiso('gestionar_personal'),
       canEliminarPersonal: () => get().hasPermiso('eliminar_personal'),
+
+      // RRHH — Áreas
+      canVerAreas: () => get().hasPermiso('ver_areas'),
+      canGestionarAreas: () => get().hasPermiso('gestionar_areas'),
 
       // RRHH — Puestos
       canVerPuestos: () => get().hasPermiso('ver_puestos'),

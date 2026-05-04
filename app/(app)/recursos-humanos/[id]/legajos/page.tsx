@@ -39,7 +39,7 @@ export default function LegajosPage() {
         const [sucursalRes, personalRes, puestosRes] = await Promise.all([
           apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId)),
           apiFetch(API_ENDPOINTS.PERSONAL.GET_BY_SUCURSAL(sucursalId)),
-          apiFetch(API_ENDPOINTS.PUESTOS.GET_BY_SUCURSAL(sucursalId)),
+          apiFetch(API_ENDPOINTS.PUESTOS.GET_ALL),
         ])
 
         const [sucursalData, personalData, puestosData] = await Promise.all([

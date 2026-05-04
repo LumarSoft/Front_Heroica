@@ -76,7 +76,7 @@ export default function SolicitudesPage() {
         apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId)),
         apiFetch(API_ENDPOINTS.RRHH_SOLICITUDES.GET_BY_SUCURSAL(sucursalId)),
         apiFetch(API_ENDPOINTS.PERSONAL.GET_BY_SUCURSAL(sucursalId)),
-        apiFetch(API_ENDPOINTS.PUESTOS.GET_BY_SUCURSAL(sucursalId)),
+        apiFetch(API_ENDPOINTS.PUESTOS.GET_ALL),
       ])
 
       const [sucursalData, solicitudesData, personalData, puestosData] = await Promise.all([
