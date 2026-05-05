@@ -141,9 +141,24 @@ export interface SelectOption {
   nombre: string
 }
 
-export type RhCalendarioEventoTipo = 'Capacitación' | 'Reunión' | 'Comunicado' | 'Vencimiento' | 'Evento interno' | 'Ministerio' | 'Otro'
+export type RhCalendarioEventoTipo =
+  | 'Capacitación'
+  | 'Reunión'
+  | 'Comunicado'
+  | 'Vencimiento'
+  | 'Evento interno'
+  | 'Ministerio'
+  | 'Otro'
 export type RhCalendarioTipoNotion = 'General' | 'Invitación' | 'Comunicado' | 'Recordatorio'
-export type RhCalendarioPeriodicidad = 'Ninguna' | 'Cada día' | 'Lun-Vie' | 'Cada semana' | 'Cada 2 semanas' | 'Cada mes' | 'Primero de cada mes' | 'Cada año'
+export type RhCalendarioPeriodicidad =
+  | 'Ninguna'
+  | 'Cada día'
+  | 'Lun-Vie'
+  | 'Cada semana'
+  | 'Cada 2 semanas'
+  | 'Cada mes'
+  | 'Primero de cada mes'
+  | 'Cada año'
 
 export interface RhCalendarioEvento {
   id: number
@@ -215,7 +230,20 @@ export interface DescripcionOption {
   activo?: boolean
 }
 
-export type RhSolicitudTipo = 'Altas' | 'Bajas' | 'Novedades de sueldo' | 'Incentivos y premios' | 'Licencias' | 'Vacaciones' | 'Suspensiones' | 'Apercibimientos' | 'Capacitaciones' | 'Pedido de uniforme' | 'Adelantos' | 'Descuentos' | 'Horas extras'
+export type RhSolicitudTipo =
+  | 'Altas'
+  | 'Bajas'
+  | 'Novedades de sueldo'
+  | 'Incentivos y premios'
+  | 'Licencias'
+  | 'Vacaciones'
+  | 'Suspensiones'
+  | 'Apercibimientos'
+  | 'Capacitaciones'
+  | 'Pedido de uniforme'
+  | 'Adelantos'
+  | 'Descuentos'
+  | 'Horas extras'
 export type RhSolicitudEstado = 'Pendiente' | 'Aprobada' | 'Rechazada' | 'Cancelada'
 export type RhSolicitudHistorialEvento =
   | 'Creada'
@@ -281,9 +309,14 @@ export interface RhEmpleadoNovedad {
   incentivos: Array<{ incentivo_id: number; nombre: string; aplica: boolean }>
   apercibimiento: { tiene: boolean; motivo: string | null; archivo_url: string | null; archivo_nombre: string | null }
   suspension: { tiene: boolean; motivo: string | null; archivo_url: string | null; archivo_nombre: string | null }
-  descuento: { tiene: boolean; motivo: string | null }
-  ausencias_justificadas: { tiene: boolean; cantidad: number | null; unidad: 'horas' | 'minutos'; motivo: string | null }
-  ausencias_injustificadas: { motivo: string | null }
+  descuento: { tiene: boolean; monto: number | null; motivo: string | null }
+  ausencias_justificadas: {
+    tiene: boolean
+    cantidad: number | null
+    unidad: 'horas' | 'minutos'
+    motivo: string | null
+  }
+  ausencias_injustificadas: { cantidad: number | null; unidad: 'horas' | 'minutos'; motivo: string | null }
   tardanzas: { tiene: boolean; cantidad: number | null; unidad: 'horas' | 'minutos'; motivo: string | null }
   observaciones: string | null
 }
