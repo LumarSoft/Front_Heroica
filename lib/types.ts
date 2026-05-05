@@ -268,11 +268,31 @@ export interface RhSolicitudLicenciaDetalles {
   motivo: string
 }
 
+export interface RhEmpleadoNovedad {
+  personal_id: number
+  personal_nombre: string
+  cambio_puesto: boolean
+  nuevo_puesto_id: number | null
+  fecha_alta_puesto: string | null
+  horas_trabajadas: number | null
+  horas_feriados: number | null
+  horas_extras_autorizadas: boolean
+  horas_extras_cantidad: number | null
+  incentivos: Array<{ incentivo_id: number; nombre: string; aplica: boolean }>
+  apercibimiento: { tiene: boolean; motivo: string | null; archivo_url: string | null; archivo_nombre: string | null }
+  suspension: { tiene: boolean; motivo: string | null; archivo_url: string | null; archivo_nombre: string | null }
+  descuento: { tiene: boolean; motivo: string | null }
+  ausencias_justificadas: { tiene: boolean; cantidad: number | null; unidad: 'horas' | 'minutos'; motivo: string | null }
+  ausencias_injustificadas: { motivo: string | null }
+  tardanzas: { tiene: boolean; cantidad: number | null; unidad: 'horas' | 'minutos'; motivo: string | null }
+  observaciones: string | null
+}
+
 export interface RhSolicitudNovedadSueldoDetalles {
-  sueldo_actual: number
-  sueldo_nuevo: number
-  fecha_vigencia: string
-  motivo: string
+  area_id: number
+  mes: number
+  anio: number
+  empleados: RhEmpleadoNovedad[]
 }
 
 export interface RhSolicitudApercibimientoDetalles {

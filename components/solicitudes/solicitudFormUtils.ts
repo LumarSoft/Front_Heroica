@@ -1,5 +1,81 @@
 import type { RhSolicitud, RhSolicitudTipo } from '@/lib/types'
 
+function getPrevMonthDefaults(): { mes: string; anio: string } {
+  const d = new Date()
+  const prev = new Date(d.getFullYear(), d.getMonth() - 1, 1)
+  return { mes: String(prev.getMonth() + 1), anio: String(prev.getFullYear()) }
+}
+
+const todayStr = new Date().toISOString().split('T')[0]
+
+export interface EmpleadoNovedadData {
+  personal_id: number
+  personal_nombre: string
+  cambio_puesto: boolean
+  nuevo_puesto_id: string
+  fecha_alta_puesto: string
+  horas_trabajadas: string
+  horas_feriados: string
+  horas_extras_autorizadas: boolean
+  horas_extras_cantidad: string
+  incentivos: Array<{ incentivo_id: number; nombre: string; aplica: boolean }>
+  apercibimiento: boolean
+  apercibimiento_motivo: string
+  apercibimiento_archivo_url: string
+  apercibimiento_archivo_nombre: string
+  suspension: boolean
+  suspension_motivo: string
+  suspension_archivo_url: string
+  suspension_archivo_nombre: string
+  descuento: boolean
+  descuento_motivo: string
+  aus_just_tiene: boolean
+  aus_just_cantidad: string
+  aus_just_unidad: 'horas' | 'minutos'
+  aus_just_motivo: string
+  aus_injust_motivo: string
+  observaciones: string
+  tardanzas_tiene: boolean
+  tardanzas_cantidad: string
+  tardanzas_unidad: 'horas' | 'minutos'
+  tardanzas_motivo: string
+}
+
+export function createEmpleadoVacio(personalId: number, personalNombre: string): EmpleadoNovedadData {
+  return {
+    personal_id: personalId,
+    personal_nombre: personalNombre,
+    cambio_puesto: false,
+    nuevo_puesto_id: '',
+    fecha_alta_puesto: todayStr,
+    horas_trabajadas: '',
+    horas_feriados: '',
+    horas_extras_autorizadas: false,
+    horas_extras_cantidad: '',
+    incentivos: [],
+    apercibimiento: false,
+    apercibimiento_motivo: '',
+    apercibimiento_archivo_url: '',
+    apercibimiento_archivo_nombre: '',
+    suspension: false,
+    suspension_motivo: '',
+    suspension_archivo_url: '',
+    suspension_archivo_nombre: '',
+    descuento: false,
+    descuento_motivo: '',
+    aus_just_tiene: false,
+    aus_just_cantidad: '',
+    aus_just_unidad: 'horas',
+    aus_just_motivo: '',
+    aus_injust_motivo: '',
+    observaciones: '',
+    tardanzas_tiene: false,
+    tardanzas_cantidad: '',
+    tardanzas_unidad: 'horas',
+    tardanzas_motivo: '',
+  }
+}
+
 export interface SolicitudFormState {
   personal_id: string
   tipo: RhSolicitudTipo | ''
@@ -22,10 +98,6 @@ export interface SolicitudFormState {
   licencia_desde: string
   licencia_hasta: string
   licencia_motivo: string
-  sueldo_actual: string
-  sueldo_nuevo: string
-  sueldo_vigencia: string
-  sueldo_motivo: string
   apercibimiento_fecha: string
   apercibimiento_severidad: 'Leve' | 'Moderada' | 'Grave'
   apercibimiento_motivo: string
@@ -36,11 +108,17 @@ export interface SolicitudFormState {
   horas_extras_fecha: string
   horas_extras_valor_hora: string
   horas_extras_descripcion: string
+  // Novedades de sueldo
+  nov_area_id: string
+  nov_mes: string
+  nov_anio: string
+  nov_empleados: EmpleadoNovedadData[]
 }
 
 const today = new Date().toISOString().split('T')[0]
 
 export function createInitialSolicitudFormState(): SolicitudFormState {
+  const { mes, anio } = getPrevMonthDefaults()
   return {
     personal_id: 'general',
     tipo: '',
@@ -63,10 +141,6 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
     licencia_desde: today,
     licencia_hasta: today,
     licencia_motivo: '',
-    sueldo_actual: '',
-    sueldo_nuevo: '',
-    sueldo_vigencia: today,
-    sueldo_motivo: '',
     apercibimiento_fecha: today,
     apercibimiento_severidad: 'Leve',
     apercibimiento_motivo: '',
@@ -77,14 +151,61 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
     horas_extras_fecha: today,
     horas_extras_valor_hora: '',
     horas_extras_descripcion: '',
+    nov_area_id: '',
+    nov_mes: mes,
+    nov_anio: anio,
+    nov_empleados: [],
   }
+}
+
+function parseEmpleadosFromDetalles(raw: unknown[]): EmpleadoNovedadData[] {
+  return raw.map((e: any) => {
+    const aperc = e.apercibimiento ?? {}
+    const susp = e.suspension ?? {}
+    const desc = e.descuento ?? {}
+    const ausJ = e.ausencias_justificadas ?? {}
+    const ausI = e.ausencias_injustificadas ?? {}
+    const tard = e.tardanzas ?? {}
+    return {
+      personal_id: Number(e.personal_id),
+      personal_nombre: String(e.personal_nombre ?? ''),
+      cambio_puesto: Boolean(e.cambio_puesto),
+      nuevo_puesto_id: e.nuevo_puesto_id ? String(e.nuevo_puesto_id) : '',
+      fecha_alta_puesto: String(e.fecha_alta_puesto ?? todayStr),
+      horas_trabajadas: e.horas_trabajadas != null ? String(e.horas_trabajadas) : '',
+      horas_feriados: e.horas_feriados != null ? String(e.horas_feriados) : '',
+      horas_extras_autorizadas: Boolean(e.horas_extras_autorizadas),
+      horas_extras_cantidad: e.horas_extras_cantidad != null ? String(e.horas_extras_cantidad) : '',
+      incentivos: Array.isArray(e.incentivos) ? e.incentivos : [],
+      apercibimiento: Boolean(aperc.tiene),
+      apercibimiento_motivo: String(aperc.motivo ?? ''),
+      apercibimiento_archivo_url: String(aperc.archivo_url ?? ''),
+      apercibimiento_archivo_nombre: String(aperc.archivo_nombre ?? ''),
+      suspension: Boolean(susp.tiene),
+      suspension_motivo: String(susp.motivo ?? ''),
+      suspension_archivo_url: String(susp.archivo_url ?? ''),
+      suspension_archivo_nombre: String(susp.archivo_nombre ?? ''),
+      descuento: Boolean(desc.tiene),
+      descuento_motivo: String(desc.motivo ?? ''),
+      aus_just_tiene: Boolean(ausJ.tiene),
+      aus_just_cantidad: ausJ.cantidad != null ? String(ausJ.cantidad) : '',
+      aus_just_unidad: (ausJ.unidad ?? 'horas') as 'horas' | 'minutos',
+      aus_just_motivo: String(ausJ.motivo ?? ''),
+      aus_injust_motivo: String(ausI.motivo ?? ''),
+      observaciones: String(e.observaciones ?? ''),
+      tardanzas_tiene: Boolean(tard.tiene),
+      tardanzas_cantidad: tard.cantidad != null ? String(tard.cantidad) : '',
+      tardanzas_unidad: (tard.unidad ?? 'horas') as 'horas' | 'minutos',
+      tardanzas_motivo: String(tard.motivo ?? ''),
+    }
+  })
 }
 
 export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): SolicitudFormState {
   const form = createInitialSolicitudFormState()
   const detalles = (solicitud.detalles ?? {}) as Record<string, unknown>
 
-  return {
+  const base: SolicitudFormState = {
     ...form,
     personal_id: solicitud.personal_id ? String(solicitud.personal_id) : 'general',
     tipo: solicitud.tipo,
@@ -107,10 +228,6 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
     licencia_desde: String(detalles.fecha_desde ?? today),
     licencia_hasta: String(detalles.fecha_hasta ?? today),
     licencia_motivo: String(detalles.motivo ?? ''),
-    sueldo_actual: detalles.sueldo_actual ? String(detalles.sueldo_actual) : '',
-    sueldo_nuevo: detalles.sueldo_nuevo ? String(detalles.sueldo_nuevo) : '',
-    sueldo_vigencia: String(detalles.fecha_vigencia ?? today),
-    sueldo_motivo: String(detalles.motivo ?? ''),
     apercibimiento_fecha: String(detalles.fecha ?? today),
     apercibimiento_severidad: (detalles.severidad as 'Leve' | 'Moderada' | 'Grave') ?? 'Leve',
     apercibimiento_motivo: String(detalles.motivo ?? ''),
@@ -122,6 +239,19 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
     horas_extras_valor_hora: detalles.valor_hora ? String(detalles.valor_hora) : '',
     horas_extras_descripcion: String(detalles.descripcion ?? ''),
   }
+
+  if (solicitud.tipo === 'Novedades de sueldo') {
+    const d = detalles as any
+    return {
+      ...base,
+      nov_area_id: d.area_id ? String(d.area_id) : '',
+      nov_mes: d.mes ? String(d.mes) : form.nov_mes,
+      nov_anio: d.anio ? String(d.anio) : form.nov_anio,
+      nov_empleados: Array.isArray(d.empleados) ? parseEmpleadosFromDetalles(d.empleados) : [],
+    }
+  }
+
+  return base
 }
 
 export function buildSolicitudDetalles(form: SolicitudFormState) {
@@ -157,10 +287,53 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
       }
     case 'Novedades de sueldo':
       return {
-        sueldo_actual: Number(form.sueldo_actual),
-        sueldo_nuevo: Number(form.sueldo_nuevo),
-        fecha_vigencia: form.sueldo_vigencia,
-        motivo: form.sueldo_motivo.trim(),
+        area_id: Number(form.nov_area_id),
+        mes: Number(form.nov_mes),
+        anio: Number(form.nov_anio),
+        empleados: form.nov_empleados.map(emp => ({
+          personal_id: emp.personal_id,
+          personal_nombre: emp.personal_nombre,
+          cambio_puesto: emp.cambio_puesto,
+          nuevo_puesto_id: emp.cambio_puesto && emp.nuevo_puesto_id ? Number(emp.nuevo_puesto_id) : null,
+          fecha_alta_puesto: emp.cambio_puesto && emp.fecha_alta_puesto ? emp.fecha_alta_puesto : null,
+          horas_trabajadas: emp.horas_trabajadas ? Number(emp.horas_trabajadas) : null,
+          horas_feriados: emp.horas_feriados ? Number(emp.horas_feriados) : null,
+          horas_extras_autorizadas: emp.horas_extras_autorizadas,
+          horas_extras_cantidad: emp.horas_extras_autorizadas && emp.horas_extras_cantidad ? Number(emp.horas_extras_cantidad) : null,
+          incentivos: emp.incentivos,
+          apercibimiento: {
+            tiene: emp.apercibimiento,
+            motivo: emp.apercibimiento ? emp.apercibimiento_motivo.trim() || null : null,
+            archivo_url: emp.apercibimiento ? emp.apercibimiento_archivo_url || null : null,
+            archivo_nombre: emp.apercibimiento ? emp.apercibimiento_archivo_nombre || null : null,
+          },
+          suspension: {
+            tiene: emp.suspension,
+            motivo: emp.suspension ? emp.suspension_motivo.trim() || null : null,
+            archivo_url: emp.suspension ? emp.suspension_archivo_url || null : null,
+            archivo_nombre: emp.suspension ? emp.suspension_archivo_nombre || null : null,
+          },
+          descuento: {
+            tiene: emp.descuento,
+            motivo: emp.descuento ? emp.descuento_motivo.trim() || null : null,
+          },
+          ausencias_justificadas: {
+            tiene: emp.aus_just_tiene,
+            cantidad: emp.aus_just_tiene && emp.aus_just_cantidad ? Number(emp.aus_just_cantidad) : null,
+            unidad: emp.aus_just_unidad,
+            motivo: emp.aus_just_tiene ? emp.aus_just_motivo.trim() || null : null,
+          },
+          ausencias_injustificadas: {
+            motivo: emp.aus_injust_motivo.trim() || null,
+          },
+          observaciones: emp.observaciones.trim() || null,
+          tardanzas: {
+            tiene: emp.tardanzas_tiene,
+            cantidad: emp.tardanzas_tiene && emp.tardanzas_cantidad ? Number(emp.tardanzas_cantidad) : null,
+            unidad: emp.tardanzas_unidad,
+            motivo: emp.tardanzas_tiene ? emp.tardanzas_motivo.trim() || null : null,
+          },
+        })),
       }
     case 'Apercibimientos':
       return {
@@ -217,9 +390,15 @@ export function validateSolicitudForm(form: SolicitudFormState): string | null {
       }
       return null
     case 'Novedades de sueldo':
-      if (form.personal_id === 'general') return 'Seleccione el colaborador para la novedad de sueldo'
-      if (!form.sueldo_actual || !form.sueldo_nuevo || !form.sueldo_vigencia || !form.sueldo_motivo.trim()) {
-        return 'Complete importes, vigencia y motivo de la novedad de sueldo'
+      if (!form.nov_area_id) return 'Seleccione el área'
+      if (!form.nov_mes || !form.nov_anio) return 'Seleccione el período (mes y año)'
+      if (form.nov_empleados.length === 0) return 'Agregue al menos un empleado'
+      for (const emp of form.nov_empleados) {
+        if (emp.cambio_puesto && !emp.nuevo_puesto_id) return `Seleccione el nuevo puesto de ${emp.personal_nombre}`
+        if (emp.apercibimiento && !emp.apercibimiento_motivo.trim()) return `Ingrese el motivo del apercibimiento de ${emp.personal_nombre}`
+        if (emp.suspension && !emp.suspension_motivo.trim()) return `Ingrese el motivo de la suspensión de ${emp.personal_nombre}`
+        if (emp.descuento && !emp.descuento_motivo.trim()) return `Ingrese el motivo del descuento de ${emp.personal_nombre}`
+        if (emp.tardanzas_tiene && !emp.tardanzas_cantidad) return `Ingrese la cantidad de tardanza de ${emp.personal_nombre}`
       }
       return null
     case 'Apercibimientos':
