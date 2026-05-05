@@ -182,6 +182,7 @@ export const API_ENDPOINTS = {
   RRHH_CALENDARIO: {
     GET_ALL: `${API_URL}/api/rrhh/calendario`,
     CREATE: `${API_URL}/api/rrhh/calendario`,
+    CREATE_BATCH: `${API_URL}/api/rrhh/calendario/batch`,
     UPDATE: (id: number) => `${API_URL}/api/rrhh/calendario/${id}`,
     DELETE: (id: number) => `${API_URL}/api/rrhh/calendario/${id}`,
   },

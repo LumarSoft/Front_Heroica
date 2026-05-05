@@ -141,8 +141,9 @@ export interface SelectOption {
   nombre: string
 }
 
-export type RhCalendarioEventoTipo = 'Capacitación' | 'Reunión' | 'Comunicado' | 'Vencimiento' | 'Evento interno' | 'Otro'
+export type RhCalendarioEventoTipo = 'Capacitación' | 'Reunión' | 'Comunicado' | 'Vencimiento' | 'Evento interno' | 'Ministerio' | 'Otro'
 export type RhCalendarioTipoNotion = 'General' | 'Invitación' | 'Comunicado' | 'Recordatorio'
+export type RhCalendarioPeriodicidad = 'Ninguna' | 'Cada día' | 'Lun-Vie' | 'Cada semana' | 'Cada 2 semanas' | 'Cada mes' | 'Primero de cada mes' | 'Cada año'
 
 export interface RhCalendarioEvento {
   id: number
@@ -153,6 +154,7 @@ export interface RhCalendarioEvento {
   participantes: string | null
   comentarios: string | null
   tipo_notion: RhCalendarioTipoNotion
+  periodicidad: RhCalendarioPeriodicidad | null
   creado_por: number | null
   creado_por_nombre: string | null
   created_at: string
