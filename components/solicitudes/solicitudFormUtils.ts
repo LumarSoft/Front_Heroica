@@ -28,11 +28,14 @@ export interface EmpleadoNovedadData {
   suspension_archivo_url: string
   suspension_archivo_nombre: string
   descuento: boolean
+  descuento_monto: string
   descuento_motivo: string
   aus_just_tiene: boolean
   aus_just_cantidad: string
   aus_just_unidad: 'horas' | 'minutos'
   aus_just_motivo: string
+  aus_injust_cantidad: string
+  aus_injust_unidad: 'horas' | 'minutos'
   aus_injust_motivo: string
   observaciones: string
   tardanzas_tiene: boolean
@@ -62,11 +65,14 @@ export function createEmpleadoVacio(personalId: number, personalNombre: string):
     suspension_archivo_url: '',
     suspension_archivo_nombre: '',
     descuento: false,
+    descuento_monto: '',
     descuento_motivo: '',
     aus_just_tiene: false,
     aus_just_cantidad: '',
     aus_just_unidad: 'horas',
     aus_just_motivo: '',
+    aus_injust_cantidad: '',
+    aus_injust_unidad: 'horas',
     aus_injust_motivo: '',
     observaciones: '',
     tardanzas_tiene: false,
@@ -186,11 +192,14 @@ function parseEmpleadosFromDetalles(raw: unknown[]): EmpleadoNovedadData[] {
       suspension_archivo_url: String(susp.archivo_url ?? ''),
       suspension_archivo_nombre: String(susp.archivo_nombre ?? ''),
       descuento: Boolean(desc.tiene),
+      descuento_monto: desc.monto != null ? String(desc.monto) : '',
       descuento_motivo: String(desc.motivo ?? ''),
       aus_just_tiene: Boolean(ausJ.tiene),
       aus_just_cantidad: ausJ.cantidad != null ? String(ausJ.cantidad) : '',
       aus_just_unidad: (ausJ.unidad ?? 'horas') as 'horas' | 'minutos',
       aus_just_motivo: String(ausJ.motivo ?? ''),
+      aus_injust_cantidad: ausI.cantidad != null ? String(ausI.cantidad) : '',
+      aus_injust_unidad: (ausI.unidad ?? 'horas') as 'horas' | 'minutos',
       aus_injust_motivo: String(ausI.motivo ?? ''),
       observaciones: String(e.observaciones ?? ''),
       tardanzas_tiene: Boolean(tard.tiene),
@@ -299,7 +308,8 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
           horas_trabajadas: emp.horas_trabajadas ? Number(emp.horas_trabajadas) : null,
           horas_feriados: emp.horas_feriados ? Number(emp.horas_feriados) : null,
           horas_extras_autorizadas: emp.horas_extras_autorizadas,
-          horas_extras_cantidad: emp.horas_extras_autorizadas && emp.horas_extras_cantidad ? Number(emp.horas_extras_cantidad) : null,
+          horas_extras_cantidad:
+            emp.horas_extras_autorizadas && emp.horas_extras_cantidad ? Number(emp.horas_extras_cantidad) : null,
           incentivos: emp.incentivos,
           apercibimiento: {
             tiene: emp.apercibimiento,
@@ -315,6 +325,7 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
           },
           descuento: {
             tiene: emp.descuento,
+            monto: emp.descuento && emp.descuento_monto ? Number(emp.descuento_monto) : null,
             motivo: emp.descuento ? emp.descuento_motivo.trim() || null : null,
           },
           ausencias_justificadas: {
@@ -324,6 +335,8 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
             motivo: emp.aus_just_tiene ? emp.aus_just_motivo.trim() || null : null,
           },
           ausencias_injustificadas: {
+            cantidad: emp.aus_injust_cantidad ? Number(emp.aus_injust_cantidad) : null,
+            unidad: emp.aus_injust_unidad,
             motivo: emp.aus_injust_motivo.trim() || null,
           },
           observaciones: emp.observaciones.trim() || null,
@@ -367,7 +380,8 @@ export function validateSolicitudForm(form: SolicitudFormState): string | null {
     case 'Altas':
       if (!form.alta_nombre.trim()) return 'Ingrese el nombre del colaborador'
       if (!form.alta_dni.trim()) return 'Ingrese el DNI del colaborador'
-      if (form.alta_email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.alta_email.trim())) return 'Ingrese un email válido'
+      if (form.alta_email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.alta_email.trim()))
+        return 'Ingrese un email válido'
       if (!form.alta_puesto_id) return 'Seleccione un puesto'
       if (!form.alta_fecha_incorporacion) return 'Ingrese la fecha de incorporación'
       if (form.alta_periodo_prueba && (!form.alta_periodo_prueba_dias || Number(form.alta_periodo_prueba_dias) <= 0)) {
@@ -381,7 +395,8 @@ export function validateSolicitudForm(form: SolicitudFormState): string | null {
       return null
     case 'Vacaciones':
       if (form.personal_id === 'general') return 'Seleccione el colaborador para las vacaciones'
-      if (!form.vacaciones_desde || !form.vacaciones_hasta || !form.vacaciones_dias) return 'Complete las fechas y cantidad de días de vacaciones'
+      if (!form.vacaciones_desde || !form.vacaciones_hasta || !form.vacaciones_dias)
+        return 'Complete las fechas y cantidad de días de vacaciones'
       return null
     case 'Licencias':
       if (form.personal_id === 'general') return 'Seleccione el colaborador para la licencia'
@@ -395,10 +410,21 @@ export function validateSolicitudForm(form: SolicitudFormState): string | null {
       if (form.nov_empleados.length === 0) return 'Agregue al menos un empleado'
       for (const emp of form.nov_empleados) {
         if (emp.cambio_puesto && !emp.nuevo_puesto_id) return `Seleccione el nuevo puesto de ${emp.personal_nombre}`
-        if (emp.apercibimiento && !emp.apercibimiento_motivo.trim()) return `Ingrese el motivo del apercibimiento de ${emp.personal_nombre}`
-        if (emp.suspension && !emp.suspension_motivo.trim()) return `Ingrese el motivo de la suspensión de ${emp.personal_nombre}`
-        if (emp.descuento && !emp.descuento_motivo.trim()) return `Ingrese el motivo del descuento de ${emp.personal_nombre}`
-        if (emp.tardanzas_tiene && !emp.tardanzas_cantidad) return `Ingrese la cantidad de tardanza de ${emp.personal_nombre}`
+        if (emp.apercibimiento && !emp.apercibimiento_motivo.trim())
+          return `Ingrese el motivo del apercibimiento de ${emp.personal_nombre}`
+        if (emp.suspension && !emp.suspension_motivo.trim())
+          return `Ingrese el motivo de la suspensión de ${emp.personal_nombre}`
+        if (emp.descuento && !emp.descuento_motivo.trim())
+          return `Ingrese el motivo del descuento de ${emp.personal_nombre}`
+        if (emp.descuento && !emp.descuento_monto) return `Ingrese el monto del descuento de ${emp.personal_nombre}`
+        if (emp.descuento && Number(emp.descuento_monto) <= 0)
+          return `El monto del descuento de ${emp.personal_nombre} debe ser mayor a cero`
+        if (emp.aus_injust_motivo.trim() && !emp.aus_injust_cantidad)
+          return `Ingrese la cantidad de ausencia injustificada de ${emp.personal_nombre}`
+        if (emp.aus_injust_cantidad && Number(emp.aus_injust_cantidad) <= 0)
+          return `La ausencia injustificada de ${emp.personal_nombre} debe ser mayor a cero`
+        if (emp.tardanzas_tiene && !emp.tardanzas_cantidad)
+          return `Ingrese la cantidad de tardanza de ${emp.personal_nombre}`
       }
       return null
     case 'Apercibimientos':

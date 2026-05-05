@@ -9,7 +9,9 @@ interface SolicitudDetallesResumenProps {
 function formatCurrency(value: unknown): string {
   const numberValue = Number(value)
   if (!Number.isFinite(numberValue)) return '-'
-  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(numberValue)
+  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(
+    numberValue,
+  )
 }
 
 function renderRows(rows: Array<{ label: string; value: string }>) {
@@ -35,7 +37,10 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
       { label: 'Email', value: String(detalles.email ?? '-') },
       { label: 'Puesto ID', value: String(detalles.puesto_id ?? '-') },
       { label: 'Incorporación', value: String(detalles.fecha_incorporacion ?? '-') },
-      { label: 'Período de prueba', value: detalles.periodo_prueba === true ? `${String(detalles.periodo_prueba_dias ?? 90)} días` : 'No' },
+      {
+        label: 'Período de prueba',
+        value: detalles.periodo_prueba === true ? `${String(detalles.periodo_prueba_dias ?? 90)} días` : 'No',
+      },
     ])
   }
 
@@ -64,10 +69,24 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
   }
 
   if (solicitud.tipo === 'Novedades de sueldo') {
-    const MESES = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    const MESES = [
+      '',
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
+    ]
     const mes = Number(detalles.mes)
     const periodo = detalles.mes && detalles.anio ? `${MESES[mes] ?? mes} ${detalles.anio}` : '-'
-    const empleados = Array.isArray(detalles.empleados) ? detalles.empleados as Record<string, unknown>[] : []
+    const empleados = Array.isArray(detalles.empleados) ? (detalles.empleados as Record<string, unknown>[]) : []
     return (
       <div className="space-y-3">
         {renderRows([
@@ -84,15 +103,41 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
           const ausJ = emp.ausencias_justificadas as Record<string, unknown> | undefined
           return (
             <div key={idx} className="rounded-lg border border-[#E0E0E0] bg-[#FAFBFC] px-3 py-2">
-              <p className="text-xs font-semibold text-[#1A1A1A] mb-1.5">{String(emp.personal_nombre ?? `Empleado ${idx + 1}`)}</p>
+              <p className="text-xs font-semibold text-[#1A1A1A] mb-1.5">
+                {String(emp.personal_nombre ?? `Empleado ${idx + 1}`)}
+              </p>
               <div className="flex flex-wrap gap-1">
-                {emp.horas_trabajadas != null && <span className="text-[10px] px-1.5 py-0.5 rounded border border-[#E0E0E0] bg-white text-[#5A6070]">{String(emp.horas_trabajadas)} hs</span>}
-                {Boolean(aperc?.tiene) && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Aperc.</span>}
-                {Boolean(susp?.tiene) && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700">Susp.</span>}
-                {Boolean(desc?.tiene) && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700">Desc.</span>}
-                {Boolean(tard?.tiene) && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">Tard. {String(tard?.cantidad ?? '')} {String(tard?.unidad ?? '')}</span>}
-                {Boolean(ausJ?.comentarios) && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">Aus. just.</span>}
-                {Boolean(ausI?.motivo) && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">Aus. injust.</span>}
+                {emp.horas_trabajadas != null && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded border border-[#E0E0E0] bg-white text-[#5A6070]">
+                    {String(emp.horas_trabajadas)} hs
+                  </span>
+                )}
+                {Boolean(aperc?.tiene) && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Aperc.</span>
+                )}
+                {Boolean(susp?.tiene) && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700">Susp.</span>
+                )}
+                {Boolean(desc?.tiene) && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                    Desc. {formatCurrency(desc?.monto)}
+                  </span>
+                )}
+                {Boolean(tard?.tiene) && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                    Tard. {String(tard?.cantidad ?? '')} {String(tard?.unidad ?? '')}
+                  </span>
+                )}
+                {Boolean(ausJ?.tiene) && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">
+                    Aus. just. {String(ausJ?.cantidad ?? '')} {String(ausJ?.unidad ?? '')}
+                  </span>
+                )}
+                {Boolean(ausI?.cantidad || ausI?.motivo) && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">
+                    Aus. injust. {String(ausI?.cantidad ?? '')} {String(ausI?.unidad ?? '')}
+                  </span>
+                )}
               </div>
             </div>
           )
