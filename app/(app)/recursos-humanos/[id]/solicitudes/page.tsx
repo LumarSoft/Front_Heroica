@@ -14,7 +14,7 @@ import { AprobarSolicitudDialog } from '@/components/solicitudes/AprobarSolicitu
 import { SolicitudesFilters, type SolicitudesFilterState } from '@/components/solicitudes/SolicitudesFilters'
 import { SolicitudTiposGrid } from '@/components/solicitudes/SolicitudTiposGrid'
 import { useAuthStore } from '@/store/authStore'
-import type { Personal, Puesto, RhSolicitud, RhSolicitudTipo, Sucursal } from '@/lib/types'
+import type { Area, Personal, Puesto, RhIncentivoPremio, RhSolicitud, RhSolicitudTipo, Sucursal } from '@/lib/types'
 
 const TIPOS_GRID: RhSolicitudTipo[] = [
   'Altas',
@@ -52,6 +52,8 @@ export default function SolicitudesPage() {
   const [sucursales, setSucursales] = useState<Sucursal[]>([])
   const [personal, setPersonal] = useState<Personal[]>([])
   const [puestos, setPuestos] = useState<Puesto[]>([])
+  const [areas, setAreas] = useState<Area[]>([])
+  const [incentivos, setIncentivos] = useState<RhIncentivoPremio[]>([])
   const [solicitudes, setSolicitudes] = useState<RhSolicitud[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -72,18 +74,22 @@ export default function SolicitudesPage() {
   async function fetchAll() {
     try {
       setError('')
-      const [sucursalRes, solicitudesRes, personalRes, puestosRes] = await Promise.all([
+      const [sucursalRes, solicitudesRes, personalRes, puestosRes, areasRes, incentivosRes] = await Promise.all([
         apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId)),
         apiFetch(API_ENDPOINTS.RRHH_SOLICITUDES.GET_BY_SUCURSAL(sucursalId)),
         apiFetch(API_ENDPOINTS.PERSONAL.GET_BY_SUCURSAL(sucursalId)),
         apiFetch(API_ENDPOINTS.PUESTOS.GET_ALL),
+        apiFetch(API_ENDPOINTS.AREAS.GET_ACTIVAS),
+        apiFetch(API_ENDPOINTS.RRHH_INCENTIVOS.GET_BY_SUCURSAL(sucursalId)),
       ])
 
-      const [sucursalData, solicitudesData, personalData, puestosData] = await Promise.all([
+      const [sucursalData, solicitudesData, personalData, puestosData, areasData, incentivosData] = await Promise.all([
         sucursalRes.json(),
         solicitudesRes.json(),
         personalRes.json(),
         puestosRes.json(),
+        areasRes.json(),
+        incentivosRes.json(),
       ])
 
       if (!sucursalRes.ok) throw new Error(sucursalData.message || 'Error al cargar sucursal')
@@ -95,6 +101,8 @@ export default function SolicitudesPage() {
       setSolicitudes(solicitudesData.data ?? [])
       setPersonal(personalData.data ?? [])
       setPuestos(puestosData.data ?? [])
+      setAreas(areasData.data ?? [])
+      setIncentivos(incentivosData.data ?? [])
       setSucursales(sucursalData.data ? [sucursalData.data] : [])
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al cargar datos')
@@ -138,7 +146,7 @@ export default function SolicitudesPage() {
               </div>
             </div>
 
-            {canCrearSolicitudes && (
+            {canCrearSolicitudes && selectedTipo && (
               <Button onClick={() => { setEditingSolicitud(null); setIsDialogOpen(true) }} className="bg-gradient-to-r from-[#002868] to-[#003d8f] hover:shadow-lg text-white gap-2 transition-all cursor-pointer" size="sm">
                 <Plus className="w-4 h-4" />
                 Nueva Solicitud
@@ -201,6 +209,8 @@ export default function SolicitudesPage() {
             sucursalId={editingSolicitud?.sucursal_id ?? sucursalId}
             personal={personal}
             puestos={puestos}
+            areas={areas}
+            incentivos={incentivos}
             onSuccess={fetchAll}
             solicitud={editingSolicitud}
             tipoInicial={selectedTipo}

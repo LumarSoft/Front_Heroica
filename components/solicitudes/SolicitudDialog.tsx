@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
-import type { Personal, Puesto, RhSolicitud, RhSolicitudTipo } from '@/lib/types'
+import type { Area, Personal, Puesto, RhIncentivoPremio, RhSolicitud, RhSolicitudTipo } from '@/lib/types'
 import { SolicitudSpecificFields } from './SolicitudSpecificFields'
 import {
   buildSolicitudDetalles,
@@ -34,6 +34,8 @@ interface SolicitudDialogProps {
   sucursalId: number
   personal: Personal[]
   puestos: Puesto[]
+  areas: Area[]
+  incentivos: RhIncentivoPremio[]
   onSuccess: () => void
   solicitud?: RhSolicitud | null
   tipoInicial?: RhSolicitudTipo | null
@@ -53,7 +55,7 @@ const TIPOS_OPCIONES: RhSolicitudTipo[] = [
   'Adelantos',
 ]
 
-export function SolicitudDialog({ open, onOpenChange, sucursalId, personal, puestos, onSuccess, solicitud, tipoInicial }: SolicitudDialogProps) {
+export function SolicitudDialog({ open, onOpenChange, sucursalId, personal, puestos, areas, incentivos, onSuccess, solicitud, tipoInicial }: SolicitudDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState<SolicitudFormState>(createInitialSolicitudFormState)
@@ -90,7 +92,7 @@ export function SolicitudDialog({ open, onOpenChange, sucursalId, personal, pues
     try {
       const payload = {
         sucursal_id: sucursalId,
-        personal_id: form.personal_id === 'general' ? null : Number(form.personal_id),
+        personal_id: form.tipo === 'Novedades de sueldo' ? null : (form.personal_id === 'general' ? null : Number(form.personal_id)),
         tipo: form.tipo,
         fecha_solicitud: form.fecha_solicitud,
         observaciones: form.observaciones,
@@ -117,7 +119,7 @@ export function SolicitudDialog({ open, onOpenChange, sucursalId, personal, pues
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[620px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
+      <DialogContent className={`${form.tipo === 'Novedades de sueldo' ? 'sm:max-w-[760px]' : 'sm:max-w-[620px]'} bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden`}>
         <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
           <DialogHeader className="p-0 border-0">
             <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight flex items-center gap-2">
@@ -147,41 +149,51 @@ export function SolicitudDialog({ open, onOpenChange, sucursalId, personal, pues
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Colaborador</Label>
-              <Select value={form.personal_id} onValueChange={value => setForm({ ...form, personal_id: value })}>
-                <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
-                  <SelectValue placeholder="General" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="general">-- General / Sin asignar --</SelectItem>
-                  {personalActivo.map(colaborador => (
-                    <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
-                      {colaborador.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {form.tipo !== 'Novedades de sueldo' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Colaborador</Label>
+                <Select value={form.personal_id} onValueChange={value => setForm({ ...form, personal_id: value })}>
+                  <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                    <SelectValue placeholder="General" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general">-- General / Sin asignar --</SelectItem>
+                    {personalActivo.map(colaborador => (
+                      <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
+                        {colaborador.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Fecha *</Label>
+                <Input type="date" value={form.fecha_solicitud} onChange={event => setForm({ ...form, fecha_solicitud: event.target.value })} className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]" />
+              </div>
             </div>
+          )}
 
+          <SolicitudSpecificFields
+            form={form}
+            puestos={puestos}
+            areas={areas}
+            incentivos={incentivos}
+            personal={personal}
+            onChange={patch => setForm(prev => ({ ...prev, ...patch }))}
+          />
+
+          {form.tipo !== 'Novedades de sueldo' && (
             <div>
-              <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Fecha *</Label>
-              <Input type="date" value={form.fecha_solicitud} onChange={event => setForm({ ...form, fecha_solicitud: event.target.value })} className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]" />
+              <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Observaciones</Label>
+              <Textarea
+                placeholder="Detalles adicionales..."
+                className="min-h-[80px] resize-none rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+                value={form.observaciones}
+                onChange={event => setForm({ ...form, observaciones: event.target.value })}
+              />
             </div>
-          </div>
-
-          <SolicitudSpecificFields form={form} puestos={puestos} onChange={patch => setForm(prev => ({ ...prev, ...patch }))} />
-
-          <div>
-            <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">Observaciones</Label>
-            <Textarea
-              placeholder="Detalles adicionales..."
-              className="min-h-[80px] resize-none rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
-              value={form.observaciones}
-              onChange={event => setForm({ ...form, observaciones: event.target.value })}
-            />
-          </div>
+          )}
 
           {error && <p className="text-sm text-rose-600">{error}</p>}
         </div>

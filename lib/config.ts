@@ -205,6 +205,7 @@ export const API_ENDPOINTS = {
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}/estado`,
     CANCEL: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}/cancelar`,
     DELETE: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}`,
+    UPLOAD_ARCHIVO: `${API_URL}/api/rrhh/solicitudes/archivos`,
   },
   NOTIFICACIONES: {
     MIS: `${API_URL}/api/notificaciones/mis`,

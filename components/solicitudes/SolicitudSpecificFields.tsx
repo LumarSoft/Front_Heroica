@@ -3,16 +3,20 @@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import type { Puesto } from '@/lib/types'
+import type { Area, Personal, Puesto, RhIncentivoPremio } from '@/lib/types'
 import type { SolicitudFormState } from './solicitudFormUtils'
+import { NovedadSueldoFields } from './NovedadSueldoFields'
 
 interface SolicitudSpecificFieldsProps {
   form: SolicitudFormState
   puestos: Puesto[]
+  areas?: Area[]
+  incentivos?: RhIncentivoPremio[]
+  personal?: Personal[]
   onChange: (patch: Partial<SolicitudFormState>) => void
 }
 
-export function SolicitudSpecificFields({ form, puestos, onChange }: SolicitudSpecificFieldsProps) {
+export function SolicitudSpecificFields({ form, puestos, areas = [], incentivos = [], personal = [], onChange }: SolicitudSpecificFieldsProps) {
   if (form.tipo === 'Altas') {
     return (
       <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
@@ -86,12 +90,14 @@ export function SolicitudSpecificFields({ form, puestos, onChange }: SolicitudSp
 
   if (form.tipo === 'Novedades de sueldo') {
     return (
-      <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
-        <Input type="number" placeholder="Sueldo actual" value={form.sueldo_actual} onChange={event => onChange({ sueldo_actual: event.target.value })} />
-        <Input type="number" placeholder="Sueldo nuevo" value={form.sueldo_nuevo} onChange={event => onChange({ sueldo_nuevo: event.target.value })} />
-        <Input type="date" value={form.sueldo_vigencia} onChange={event => onChange({ sueldo_vigencia: event.target.value })} />
-        <Input placeholder="Motivo" value={form.sueldo_motivo} onChange={event => onChange({ sueldo_motivo: event.target.value })} />
-      </div>
+      <NovedadSueldoFields
+        form={form}
+        areas={areas}
+        puestos={puestos}
+        incentivos={incentivos}
+        personal={personal}
+        onChange={onChange}
+      />
     )
   }
 

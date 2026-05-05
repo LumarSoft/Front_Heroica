@@ -232,14 +232,15 @@ function DetallesChips({ solicitud }: { solicitud: RhSolicitud }) {
     if (d.fecha_hasta) chips.push(<Chip key="fh">Hasta: {formatFecha(String(d.fecha_hasta))}</Chip>)
     if (d.motivo) chips.push(<Chip key="m">{String(d.motivo)}</Chip>)
   } else if (solicitud.tipo === 'Novedades de sueldo') {
-    if (d.sueldo_actual !== undefined && d.sueldo_nuevo !== undefined)
-      chips.push(
-        <Chip key="s">
-          {formatCurrency(d.sueldo_actual)} → {formatCurrency(d.sueldo_nuevo)}
-        </Chip>,
-      )
-    if (d.fecha_vigencia) chips.push(<Chip key="fv">Desde: {formatFecha(String(d.fecha_vigencia))}</Chip>)
-    if (d.motivo) chips.push(<Chip key="m">{String(d.motivo)}</Chip>)
+    const MESES = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+    const mes = Number(d.mes)
+    if (d.mes && d.anio) chips.push(<Chip key="periodo">Período: {MESES[mes] ?? mes}/{String(d.anio)}</Chip>)
+    const empleados = Array.isArray(d.empleados) ? d.empleados as Record<string, unknown>[] : []
+    if (empleados.length > 0) chips.push(<Chip key="emps">{empleados.length} empleado{empleados.length !== 1 ? 's' : ''}</Chip>)
+    const hasAperc = empleados.some(e => Boolean((e.apercibimiento as Record<string, unknown> | undefined)?.tiene))
+    const hasSusp = empleados.some(e => Boolean((e.suspension as Record<string, unknown> | undefined)?.tiene))
+    if (hasAperc) chips.push(<Chip key="ap" highlight="amber">Apercibimiento</Chip>)
+    if (hasSusp) chips.push(<Chip key="su" highlight="red">Suspensión</Chip>)
   } else if (solicitud.tipo === 'Apercibimientos') {
     const sev = String(d.severidad ?? '')
     const sevHighlight = sev === 'Grave' ? 'red' : sev === 'Moderada' ? 'orange' : sev === 'Leve' ? 'amber' : undefined
