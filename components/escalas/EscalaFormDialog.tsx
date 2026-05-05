@@ -38,10 +38,11 @@ export function EscalaFormDialog({
 }: EscalaFormDialogProps) {
   const [puestoId, setPuestoId] = useState('')
   const [sueldoBase, setSueldoBase] = useState('')
-  const [valorHora, setValorHora] = useState('')
   const [mes, setMes] = useState(String(defaultMes))
   const [anio, setAnio] = useState(String(defaultAnio))
   const [puestos, setPuestos] = useState<Puesto[]>([])
+
+  const valorHora = sueldoBase !== '' ? Number(sueldoBase) / 26 / 8 : null
 
   useEffect(() => {
     if (!open) return
@@ -56,13 +57,11 @@ export function EscalaFormDialog({
     if (initial) {
       setPuestoId(String(initial.puesto_id))
       setSueldoBase(String(initial.sueldo_base))
-      setValorHora(initial.valor_hora !== null ? String(initial.valor_hora) : '')
       setMes(String(initial.mes))
       setAnio(String(initial.anio))
     } else {
       setPuestoId('')
       setSueldoBase('')
-      setValorHora('')
       setMes(String(defaultMes))
       setAnio(String(defaultAnio))
     }
@@ -76,7 +75,7 @@ export function EscalaFormDialog({
       sueldo_base: Number(sueldoBase),
       mes: Number(mes),
       anio: Number(anio),
-      valor_hora: valorHora !== '' ? Number(valorHora) : null,
+      valor_hora: valorHora,
     })
   }
 
@@ -161,13 +160,12 @@ export function EscalaFormDialog({
                 <Label htmlFor="valor_hora">Valor / Hora (ARS)</Label>
                 <Input
                   id="valor_hora"
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  placeholder="Ej: 1500"
-                  value={valorHora}
-                  onChange={e => setValorHora(e.target.value)}
+                  readOnly
+                  tabIndex={-1}
+                  value={valorHora !== null ? valorHora.toFixed(2) : '—'}
+                  className="bg-[#F5F5F5] text-[#5A6070] cursor-default select-none"
                 />
+                <p className="text-[10px] text-[#9AA0AC]">Sueldo ÷ 26 días ÷ 8 hs</p>
               </div>
             </div>
           </div>
