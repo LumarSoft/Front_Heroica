@@ -508,6 +508,7 @@ function DetailModal({
   }, [open, row])
 
   if (!row) return null
+  const detailRow = row
 
   const identityColumns = SUELDOS_COLUMNS.slice(0, 3)
   const earningColumns = SUELDOS_COLUMNS.filter(column =>
@@ -532,7 +533,7 @@ function DetailModal({
   async function handleSaveComment() {
     setSavingComment(true)
     try {
-      await onSaveComment(row, commentDraft)
+      await onSaveComment(detailRow, commentDraft)
     } finally {
       setSavingComment(false)
     }
