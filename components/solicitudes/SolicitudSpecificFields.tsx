@@ -1,69 +1,54 @@
 'use client'
 
-import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Area, Personal, Puesto, RhIncentivoPremio } from '@/lib/types'
 import type { SolicitudFormState } from './solicitudFormUtils'
+import { AltaColaboradorFields } from './AltaColaboradorFields'
+import { BajaColaboradorFields } from './BajaColaboradorFields'
 import { NovedadSueldoFields } from './NovedadSueldoFields'
 
 interface SolicitudSpecificFieldsProps {
   form: SolicitudFormState
+  sucursalId: number
   puestos: Puesto[]
+  sucursalNombre?: string
   areas?: Area[]
   incentivos?: RhIncentivoPremio[]
   personal?: Personal[]
+  isEditing?: boolean
   onChange: (patch: Partial<SolicitudFormState>) => void
 }
 
-export function SolicitudSpecificFields({ form, puestos, areas = [], incentivos = [], personal = [], onChange }: SolicitudSpecificFieldsProps) {
+export function SolicitudSpecificFields({
+  form,
+  sucursalId,
+  puestos,
+  sucursalNombre = '',
+  areas = [],
+  incentivos = [],
+  personal = [],
+  isEditing = false,
+  onChange,
+}: SolicitudSpecificFieldsProps) {
   if (form.tipo === 'Altas') {
     return (
-      <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
-        <Input placeholder="Nombre del colaborador" value={form.alta_nombre} onChange={event => onChange({ alta_nombre: event.target.value })} />
-        <Input placeholder="DNI" value={form.alta_dni} onChange={event => onChange({ alta_dni: event.target.value })} />
-        <Input className="col-span-2" type="email" placeholder="Email del colaborador (para notificaciones)" value={form.alta_email} onChange={event => onChange({ alta_email: event.target.value })} />
-        <Select value={form.alta_puesto_id} onValueChange={value => onChange({ alta_puesto_id: value })}>
-          <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
-            <SelectValue placeholder="Seleccione un puesto" />
-          </SelectTrigger>
-          <SelectContent>
-            {puestos.map(puesto => (
-              <SelectItem key={puesto.id} value={puesto.id.toString()}>
-                {puesto.nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input type="date" value={form.alta_fecha_incorporacion} onChange={event => onChange({ alta_fecha_incorporacion: event.target.value })} />
-        <label className="col-span-2 flex items-center gap-2 text-sm text-[#444]">
-          <Checkbox checked={form.alta_periodo_prueba} onCheckedChange={checked => onChange({ alta_periodo_prueba: checked === true })} />
-          Ingresa con período de prueba
-        </label>
-        {form.alta_periodo_prueba && (
-          <Input
-            className="col-span-2"
-            type="number"
-            min={1}
-            placeholder="Duración del período de prueba en días"
-            value={form.alta_periodo_prueba_dias}
-            onChange={event => onChange({ alta_periodo_prueba_dias: event.target.value })}
-          />
-        )}
-        <label className="col-span-2 flex items-center gap-2 text-sm text-[#444]">
-          <Checkbox checked={form.alta_carnet} onCheckedChange={checked => onChange({ alta_carnet: checked === true })} />
-          Posee carnet de manipulación de alimentos
-        </label>
-      </div>
+      <AltaColaboradorFields form={form} puestos={puestos} sucursalNombre={sucursalNombre} onChange={onChange} />
     )
   }
 
   if (form.tipo === 'Bajas') {
     return (
-      <div className="rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4 space-y-4">
-        <Input placeholder="Motivo de la baja" value={form.baja_motivo} onChange={event => onChange({ baja_motivo: event.target.value })} />
-        <Input type="date" value={form.baja_fecha} onChange={event => onChange({ baja_fecha: event.target.value })} />
-      </div>
+      <BajaColaboradorFields
+        form={form}
+        sucursalId={sucursalId}
+        sucursalNombre={sucursalNombre}
+        personal={personal}
+        puestos={puestos}
+        incentivos={incentivos}
+        isEditing={isEditing}
+        onChange={onChange}
+      />
     )
   }
 
@@ -137,6 +122,55 @@ export function SolicitudSpecificFields({ form, puestos, areas = [], incentivos 
         <Input type="number" placeholder="Cantidad de horas" min={0} step={0.5} value={form.horas_extras_cantidad} onChange={event => onChange({ horas_extras_cantidad: event.target.value })} />
         <Input type="number" placeholder="Valor por hora (opcional)" min={0} value={form.horas_extras_valor_hora} onChange={event => onChange({ horas_extras_valor_hora: event.target.value })} />
         <Input placeholder="Descripción (opcional)" value={form.horas_extras_descripcion} onChange={event => onChange({ horas_extras_descripcion: event.target.value })} />
+      </div>
+    )
+  }
+
+  if (form.tipo === 'Suspensiones') {
+    return (
+      <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
+        <Input type="date" value={form.suspension_fecha_desde} onChange={event => onChange({ suspension_fecha_desde: event.target.value })} />
+        <Input type="date" value={form.suspension_fecha_hasta} onChange={event => onChange({ suspension_fecha_hasta: event.target.value })} />
+        <Input className="col-span-2" placeholder="Motivo de la suspensión" value={form.suspension_motivo} onChange={event => onChange({ suspension_motivo: event.target.value })} />
+      </div>
+    )
+  }
+
+  if (form.tipo === 'Capacitaciones') {
+    return (
+      <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
+        <Input className="col-span-2" placeholder="Tema de la capacitación" value={form.capacitacion_tema} onChange={event => onChange({ capacitacion_tema: event.target.value })} />
+        <Input type="date" value={form.capacitacion_fecha} onChange={event => onChange({ capacitacion_fecha: event.target.value })} />
+        <Input placeholder="Descripción (opcional)" value={form.capacitacion_descripcion} onChange={event => onChange({ capacitacion_descripcion: event.target.value })} />
+      </div>
+    )
+  }
+
+  if (form.tipo === 'Pedido de uniforme') {
+    return (
+      <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
+        <Input placeholder="Talle" value={form.uniforme_talle} onChange={event => onChange({ uniforme_talle: event.target.value })} />
+        <Input placeholder="Items solicitados (ej.: remera, pantalón)" value={form.uniforme_items} onChange={event => onChange({ uniforme_items: event.target.value })} />
+      </div>
+    )
+  }
+
+  if (form.tipo === 'Adelantos') {
+    return (
+      <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
+        <Input type="number" placeholder="Monto ($)" min={0} value={form.adelanto_monto} onChange={event => onChange({ adelanto_monto: event.target.value })} />
+        <Input type="date" value={form.adelanto_fecha} onChange={event => onChange({ adelanto_fecha: event.target.value })} />
+        <Input className="col-span-2" placeholder="Motivo del adelanto" value={form.adelanto_motivo} onChange={event => onChange({ adelanto_motivo: event.target.value })} />
+      </div>
+    )
+  }
+
+  if (form.tipo === 'Incentivos y premios') {
+    return (
+      <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
+        <Input className="col-span-2" placeholder="Descripción del incentivo o premio" value={form.incentivo_descripcion} onChange={event => onChange({ incentivo_descripcion: event.target.value })} />
+        <Input type="date" value={form.incentivo_fecha} onChange={event => onChange({ incentivo_fecha: event.target.value })} />
+        <Input type="number" placeholder="Monto (opcional)" min={0} value={form.incentivo_monto} onChange={event => onChange({ incentivo_monto: event.target.value })} />
       </div>
     )
   }

@@ -181,14 +181,33 @@ export interface Personal {
   legajo: string
   nombre: string
   dni: string
+  cuil?: string | null
   email?: string | null
+  telefono?: string | null
+  fecha_nacimiento?: string | null
+  domicilio_real?: string | null
+  domicilio_dni?: string | null
   puesto_id: number
   puesto_nombre: string
   sucursal_id: number
   fecha_incorporacion: string
+  fecha_inicio_cobro?: string | null
   periodo_prueba?: boolean
   periodo_prueba_dias?: number | null
+  jornada_semanal_dias?: number | null
+  jornada_diaria_horas?: string | null
+  propuesta_economica?: number | string | null
+  beneficios?: string | null
+  condicion_laboral?: number | null
+  fecha_alta_temprana?: string | null
+  banco?: string | null
+  cbu?: string | null
   carnet_manipulacion_alimentos: boolean
+  carnet_archivo_url?: string | null
+  carnet_archivo_nombre?: string | null
+  carnet_vencimiento?: string | null
+  solicitud_alta_id?: number | null
+  datos_alta_json?: unknown
   activo: boolean
   created_at: string
   updated_at: string
@@ -267,21 +286,49 @@ export interface RhSolicitudHistorialItem {
   created_at: string
 }
 
+export interface RhSolicitudAltaAdjuntoSlot {
+  url: string
+  nombre_original?: string | null
+}
+
 export interface RhSolicitudAltaDetalles {
   nombre: string
   dni: string
+  cuil?: string
+  domicilio?: string
+  /** Domicilio según consta en el DNI */
+  domicilio_dni?: string
+  fecha_nacimiento?: string
+  telefono?: string
   email?: string | null
+  banco?: string | null
+  cbu?: string | null
   puesto_id: number
   fecha_incorporacion: string
-  periodo_prueba: boolean
-  periodo_prueba_dias: number | null
-  carnet_manipulacion_alimentos: boolean
+  fecha_inicio_cobro_oficina?: string
+  jornada_semanal_dias?: number | null
+  jornada_diaria_horas_texto?: string | null
+  propuesta_economica?: number | null
+  beneficios?: string | null
+  otras_observaciones_alta?: string | null
+  /** 1 o 2 según condición contractual interna */
+  condicion_laboral?: 1 | 2
+  /** Obligatoria si condicion_laboral === 1 */
+  fecha_alta_temprana?: string | null
+  periodo_prueba?: boolean
+  periodo_prueba_dias?: number | null
+  carnet_manipulacion_alimentos?: boolean
+  carnet_adjunto?: RhSolicitudAltaAdjuntoSlot | null
+  carnet_fecha_vencimiento?: string | null
+  adjuntos?: {
+    dni_frente_dorso?: RhSolicitudAltaAdjuntoSlot | null
+    ddjj_domicilio?: RhSolicitudAltaAdjuntoSlot | null
+    descripcion_puesto_firmada?: RhSolicitudAltaAdjuntoSlot | null
+    foto_colaborador?: RhSolicitudAltaAdjuntoSlot | null
+  } | null
 }
 
-export interface RhSolicitudBajaDetalles {
-  motivo_baja: string
-  fecha_baja: string
-}
+
 
 export interface RhSolicitudVacacionesDetalles {
   fecha_desde: string
@@ -319,6 +366,31 @@ export interface RhEmpleadoNovedad {
   ausencias_injustificadas: { cantidad: number | null; unidad: 'horas' | 'minutos'; motivo: string | null }
   tardanzas: { tiene: boolean; cantidad: number | null; unidad: 'horas' | 'minutos'; motivo: string | null }
   observaciones: string | null
+}
+
+export interface RhMotivoBajaCatalogoItem {
+  id: number
+  sucursal_id: number
+  nombre: string
+  orden?: number
+}
+
+export interface RhSolicitudBajaDetalles {
+  motivo_baja_id?: number | null
+  motivo_baja_nombre?: string | null
+  motivo_baja_detalle?: string | null
+  fecha_baja: string
+  liquidacion_empleado?: RhEmpleadoNovedad | Record<string, unknown> | null
+  carta_documento_adjunto?: RhSolicitudAltaAdjuntoSlot | null
+  /** Histórico (antes de liquidación tipo novedad) */
+  motivo_baja?: string
+  dias_horas_trabajadas_mes?: string
+  feriados_trabajados_mes?: string | null
+  horas_extras_mes?: string | null
+  incentivos?: string | null
+  descuentos_aplicados?: string | null
+  ausencias_justificadas?: string | null
+  ausencias_injustificadas?: string | null
 }
 
 export interface RhSolicitudNovedadSueldoDetalles {

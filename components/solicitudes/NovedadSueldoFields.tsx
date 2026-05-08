@@ -1,20 +1,17 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   AlertTriangle,
   ChevronDown,
   Clock,
   DollarSign,
   FileText,
-  Loader2,
   MessageSquare,
-  Paperclip,
   Plus,
   Star,
   Trash2,
   User,
-  X,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,9 +19,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { apiFetch } from '@/lib/api'
-import { API_ENDPOINTS } from '@/lib/config'
-import { toast } from 'sonner'
+import { SolicitudArchivoAdjunto } from './SolicitudArchivoAdjunto'
 import type { Area, Personal, Puesto, RhIncentivoPremio } from '@/lib/types'
 import { type EmpleadoNovedadData, type SolicitudFormState, createEmpleadoVacio } from './solicitudFormUtils'
 
@@ -103,85 +98,17 @@ function SubSection({ title, icon, children, badge, badgeColor = 'bg-rose-100 te
   )
 }
 
-interface FileFieldProps {
-  label: string
-  url: string
-  nombre: string
-  onUpload: (url: string, nombre: string) => void
-  onRemove: () => void
-}
-
-function FileField({ label, url, nombre, onUpload, onRemove }: FileFieldProps) {
-  const [uploading, setUploading] = useState(false)
-  const ref = useRef<HTMLInputElement>(null)
-
-  async function handleFile(file: File) {
-    setUploading(true)
-    try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await apiFetch(API_ENDPOINTS.RRHH_SOLICITUDES.UPLOAD_ARCHIVO, {
-        method: 'POST',
-        body: fd,
-        headers: {},
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Error al subir archivo')
-      onUpload(data.data.url, data.data.nombre_original)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error al subir el archivo')
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  return (
-    <div className="space-y-1">
-      <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">{label}</Label>
-      {url ? (
-        <div className="flex items-center gap-2 rounded-lg border border-[#E0E0E0] bg-[#F8F9FA] px-3 py-1.5">
-          <FileText className="w-3.5 h-3.5 text-[#002868] shrink-0" />
-          <span className="text-xs text-[#1A1A1A] truncate flex-1">{nombre}</span>
-          <button type="button" onClick={onRemove} className="text-[#8A8F9C] hover:text-rose-600">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          disabled={uploading}
-          onClick={() => ref.current?.click()}
-          className="flex items-center gap-2 w-full rounded-lg border border-dashed border-[#C0C8D8] bg-[#F8F9FA] px-3 py-1.5 text-xs text-[#5A6070] hover:border-[#002868] hover:text-[#002868] transition-colors disabled:opacity-50"
-        >
-          {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Paperclip className="w-3.5 h-3.5" />}
-          {uploading ? 'Subiendo...' : 'Adjuntar PDF'}
-        </button>
-      )}
-      <input
-        ref={ref}
-        type="file"
-        accept="application/pdf"
-        className="hidden"
-        onChange={e => {
-          const f = e.target.files?.[0]
-          if (f) handleFile(f)
-        }}
-      />
-    </div>
-  )
-}
-
 // ── Tarjeta de empleado ───────────────────────────────────────────────────────
 
-interface EmpleadoCardProps {
+export interface EmpleadoCardProps {
   emp: EmpleadoNovedadData
   puestos: Puesto[]
   incentivos: RhIncentivoPremio[]
   onUpdate: (patch: Partial<EmpleadoNovedadData>) => void
-  onRemove: () => void
+  onRemove?: () => void
 }
 
-function EmpleadoCard({ emp, puestos, incentivos, onUpdate, onRemove }: EmpleadoCardProps) {
+export function EmpleadoCard({ emp, puestos, incentivos, onUpdate, onRemove }: EmpleadoCardProps) {
   const [open, setOpen] = useState(true)
 
   function toggleIncentivo(id: number, nombre: string, aplica: boolean) {
@@ -235,13 +162,16 @@ function EmpleadoCard({ emp, puestos, incentivos, onUpdate, onRemove }: Empleado
             className={`w-3.5 h-3.5 text-[#5A6070] ml-auto shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           />
         </button>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="p-1 rounded text-[#8A8F9C] hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
+        {onRemove ? (
+          <button
+            type="button"
+            onClick={onRemove}
+            aria-label="Quitar empleado"
+            className="p-1 rounded text-[#8A8F9C] hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        ) : null}
       </div>
 
       {/* Contenido expandible */}
@@ -407,13 +337,12 @@ function EmpleadoCard({ emp, puestos, incentivos, onUpdate, onRemove }: Empleado
                     className="h-9 rounded-lg border border-[#E0E0E0] bg-white text-sm"
                   />
                 </div>
-                <FileField
+                <SolicitudArchivoAdjunto
                   label="Documento adjunto (PDF)"
+                  accept="application/pdf,.pdf"
                   url={emp.apercibimiento_archivo_url}
                   nombre={emp.apercibimiento_archivo_nombre}
-                  onUpload={(url, nombre) =>
-                    onUpdate({ apercibimiento_archivo_url: url, apercibimiento_archivo_nombre: nombre })
-                  }
+                  onUpload={(url, nombre) => onUpdate({ apercibimiento_archivo_url: url, apercibimiento_archivo_nombre: nombre })}
                   onRemove={() => onUpdate({ apercibimiento_archivo_url: '', apercibimiento_archivo_nombre: '' })}
                 />
               </div>
@@ -444,13 +373,12 @@ function EmpleadoCard({ emp, puestos, incentivos, onUpdate, onRemove }: Empleado
                     className="h-9 rounded-lg border border-[#E0E0E0] bg-white text-sm"
                   />
                 </div>
-                <FileField
+                <SolicitudArchivoAdjunto
                   label="Documento adjunto (PDF)"
+                  accept="application/pdf,.pdf"
                   url={emp.suspension_archivo_url}
                   nombre={emp.suspension_archivo_nombre}
-                  onUpload={(url, nombre) =>
-                    onUpdate({ suspension_archivo_url: url, suspension_archivo_nombre: nombre })
-                  }
+                  onUpload={(url, nombre) => onUpdate({ suspension_archivo_url: url, suspension_archivo_nombre: nombre })}
                   onRemove={() => onUpdate({ suspension_archivo_url: '', suspension_archivo_nombre: '' })}
                 />
               </div>
