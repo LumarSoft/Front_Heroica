@@ -197,6 +197,11 @@ export const API_ENDPOINTS = {
     UPDATE: (id: number) => `${API_URL}/api/rrhh/incentivos/${id}`,
     DELETE: (id: number) => `${API_URL}/api/rrhh/incentivos/${id}`,
   },
+  RRHH_MOTIVOS_BAJA: {
+    LIST: (sucursalId: number) =>
+      `${API_URL}/api/rrhh/motivos-baja?sucursal_id=${sucursalId}`,
+    CREATE: `${API_URL}/api/rrhh/motivos-baja`,
+  },
   RRHH_SOLICITUDES: {
     GET_ALL: `${API_URL}/api/rrhh/solicitudes`,
     GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/rrhh/solicitudes?sucursal_id=${sucursalId}`,

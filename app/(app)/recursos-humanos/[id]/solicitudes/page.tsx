@@ -207,6 +207,7 @@ export default function SolicitudesPage() {
             open={isDialogOpen}
             onOpenChange={setIsDialogOpen}
             sucursalId={editingSolicitud?.sucursal_id ?? sucursalId}
+            sucursalNombre={sucursal?.nombre ?? ''}
             personal={personal}
             puestos={puestos}
             areas={areas}
