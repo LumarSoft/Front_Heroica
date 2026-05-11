@@ -25,6 +25,7 @@ import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
+import { downloadBlob, toDateOnly } from '@/lib/downloadBlob'
 
 const columns = getBancoColumns()
 
@@ -40,6 +41,7 @@ export default function CajaBancoPage() {
   const [viewMode, setViewMode] = useState<'tabla' | 'calendario'>('tabla')
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null)
   const [sucursalNombre, setSucursalNombre] = useState('')
+  const [isExporting, setIsExporting] = useState(false)
   const [isBulkMoverDialogOpen, setIsBulkMoverDialogOpen] = useState(false)
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false)
   const [bulkSelectedIds, setBulkSelectedIds] = useState<number[]>([])
@@ -75,6 +77,29 @@ export default function CajaBancoPage() {
   const handleBulkMove = (ids: number[]) => {
     setBulkSelectedIds(ids)
     setIsBulkMoverDialogOpen(true)
+  }
+
+  const handleExport = async () => {
+    setIsExporting(true)
+    try {
+      const qp = new URLSearchParams({ moneda })
+      if (caja.dateRange?.from) qp.set('fechaInicio', toDateOnly(caja.dateRange.from))
+      if (caja.dateRange?.to) qp.set('fechaFin', toDateOnly(caja.dateRange.to))
+      if (caja.searchText) qp.set('searchText', caja.searchText)
+      if (caja.filtroDeuda !== 'todos') qp.set('filtroDeuda', caja.filtroDeuda)
+      if (caja.bancosFiltro.length > 0) qp.set('bancos', caja.bancosFiltro.join(','))
+      if (caja.filtroChequesPendientes) qp.set('filtroChequesPendientes', 'true')
+
+      const url = `${API_ENDPOINTS.CAJA_BANCO.EXPORT_EXCEL(Number(params.id))}?${qp.toString()}`
+      const res = await apiFetch(url)
+      if (!res.ok) throw new Error('Error en la respuesta del servidor')
+      const blob = await res.blob()
+      downloadBlob(blob, `${sucursalNombre}.xlsx`)
+    } catch {
+      toast.error('Error al exportar el Excel.')
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   // Verificar si la sucursal está activa
@@ -144,6 +169,8 @@ export default function CajaBancoPage() {
               title={`Caja Bancos — ${moneda}`}
               subtitle={`Gestión de saldos y movimientos bancarios (${moneda})`}
               onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
+              onExport={handleExport}
+              isExporting={isExporting}
               isReadOnly={!canCrear}
               sucursalId={Number(params.id)}
             />

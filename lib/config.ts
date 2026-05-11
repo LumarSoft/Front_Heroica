@@ -49,6 +49,7 @@ export const API_ENDPOINTS = {
     DELETE: (id: number) => `${API_URL}/api/movimientos/${id}`,
     BULK_DELETE: `${API_URL}/api/movimientos/bulk`,
     BULK_MOVER: `${API_URL}/api/movimientos/bulk/mover`,
+    EXPORT_EXCEL: (sucursalId: number) => `${API_URL}/api/movimientos/${sucursalId}/export`,
     // Documentos
     GET_DOCUMENTOS: (id: number) => `${API_URL}/api/movimientos/${id}/documentos`,
     UPLOAD_DOCUMENTO: (id: number) => `${API_URL}/api/movimientos/${id}/documentos`,
@@ -79,6 +80,7 @@ export const API_ENDPOINTS = {
     BULK_DELETE: `${API_URL}/api/caja-banco/bulk`,
     BULK_MOVER: `${API_URL}/api/caja-banco/bulk/mover`,
     TRANSFERENCIA_INTERNA: `${API_URL}/api/caja-banco/transferencia-interna`,
+    EXPORT_EXCEL: (sucursalId: number) => `${API_URL}/api/caja-banco/${sucursalId}/export`,
     // Documentos
     GET_DOCUMENTOS: (id: number) => `${API_URL}/api/caja-banco/${id}/documentos`,
     UPLOAD_DOCUMENTO: (id: number) => `${API_URL}/api/caja-banco/${id}/documentos`,
