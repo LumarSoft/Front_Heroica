@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { parseInputMonto } from '@/lib/formatters'
+import { isMedioPagoChequeLike, tieneNumeroChequeCargado } from '@/lib/cheque'
 import { DateRange } from 'react-day-picker'
 import { useAuthStore } from '@/store/authStore'
 import type { Transaction, BancoParcial, Categoria, Subcategoria, SelectOption, DescripcionOption } from '@/lib/types'
@@ -146,6 +147,8 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
   const [searchText, setSearchText] = useState('')
   // --- Filtro por deuda ---
   const [filtroDeuda, setFiltroDeuda] = useState<'todos' | 'solo_deudas' | 'sin_deudas'>('todos')
+  // --- Filtro por cheques pendientes (cheque físico / eCheq sin número) ---
+  const [filtroChequesPendientes, setFiltroChequesPendientes] = useState(false)
 
   // --- Catálogos ---
   const [categorias, setCategorias] = useState<Categoria[]>([])
@@ -602,10 +605,15 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
           })
 
     const filteredBySearch = searchText.trim() ? filteredByBanco.filter(m => matchesSearch(m, searchText.trim())) : filteredByBanco
-    if (filtroDeuda === 'solo_deudas') return filteredBySearch.filter(m => m.es_deuda)
-    if (filtroDeuda === 'sin_deudas') return filteredBySearch.filter(m => !m.es_deuda)
-    return filteredBySearch
-  }, [saldoReal, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda])
+    const filteredByChequePendiente = filtroChequesPendientes
+      ? filteredBySearch.filter(
+          m => isMedioPagoChequeLike(m.medio_pago_nombre) && !tieneNumeroChequeCargado(m.numero_cheque),
+        )
+      : filteredBySearch
+    if (filtroDeuda === 'solo_deudas') return filteredByChequePendiente.filter(m => m.es_deuda)
+    if (filtroDeuda === 'sin_deudas') return filteredByChequePendiente.filter(m => !m.es_deuda)
+    return filteredByChequePendiente
+  }, [saldoReal, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda, filtroChequesPendientes])
 
   const { saldoNecesarioFiltrado, saldoNecesarioSinDeudaFiltrado } = useMemo(() => {
     let filteredByDate = saldoNecesario
@@ -637,15 +645,21 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
       ? filteredByBanco.filter(m => matchesSearch(m, searchText.trim()))
       : filteredByBanco
 
-    let filtered = filteredBySearch
-    if (filtroDeuda === 'solo_deudas') filtered = filteredBySearch.filter(m => m.es_deuda)
-    else if (filtroDeuda === 'sin_deudas') filtered = filteredBySearch.filter(m => !m.es_deuda)
+    const filteredByChequePendiente = filtroChequesPendientes
+      ? filteredBySearch.filter(
+          m => isMedioPagoChequeLike(m.medio_pago_nombre) && !tieneNumeroChequeCargado(m.numero_cheque),
+        )
+      : filteredBySearch
+
+    let filtered = filteredByChequePendiente
+    if (filtroDeuda === 'solo_deudas') filtered = filteredByChequePendiente.filter(m => m.es_deuda)
+    else if (filtroDeuda === 'sin_deudas') filtered = filteredByChequePendiente.filter(m => !m.es_deuda)
 
     return {
       saldoNecesarioFiltrado: filtered,
       saldoNecesarioSinDeudaFiltrado: filtered.filter(m => !m.es_deuda),
     }
-  }, [saldoNecesario, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda])
+  }, [saldoNecesario, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda, filtroChequesPendientes])
 
   // Parciales filtrados: agrupar saldoReal + saldoNecesarioSinDeudaFiltrado por banco_id
   const parcialesFiltrados = useMemo<BancoParcial[]>(() => {
@@ -674,6 +688,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     setBancosFiltro([])
     setSearchText('')
     setFiltroDeuda('todos')
+    setFiltroChequesPendientes(false)
   }
 
   return {
@@ -710,8 +725,15 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     setSearchText,
     filtroDeuda,
     setFiltroDeuda,
+    filtroChequesPendientes,
+    setFiltroChequesPendientes,
     limpiarFiltros,
-    hayFiltroActivo: dateRange !== undefined || bancosFiltro.length > 0 || searchText !== '' || filtroDeuda !== 'todos',
+    hayFiltroActivo:
+      dateRange !== undefined ||
+      bancosFiltro.length > 0 ||
+      searchText !== '' ||
+      filtroDeuda !== 'todos' ||
+      filtroChequesPendientes,
 
     // Estado de dialogs
     isDetailsDialogOpen,
