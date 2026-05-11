@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { ArrowRightLeft } from 'lucide-react'
+import { ArrowRightLeft, FileSpreadsheet } from 'lucide-react'
 import { DeudasInterSucursalDialog } from './DeudasInterSucursalDialog'
 
 interface PageHeaderProps {
@@ -10,6 +10,8 @@ interface PageHeaderProps {
   subtitle: string
   onNewMovimiento: () => void
   onCompraVentaDivisas?: () => void
+  onExport?: () => void
+  isExporting?: boolean
   isReadOnly?: boolean
   sucursalId: number
 }
@@ -19,6 +21,8 @@ export function PageHeader({
   subtitle,
   onNewMovimiento,
   onCompraVentaDivisas,
+  onExport,
+  isExporting = false,
   isReadOnly = false,
   sucursalId,
 }: PageHeaderProps) {
@@ -49,6 +53,18 @@ export function PageHeader({
             </svg>
             Deudas
           </Button>
+          {onExport && (
+            <Button
+              onClick={isExporting ? undefined : onExport}
+              disabled={isExporting}
+              variant="outline"
+              className="cursor-pointer border-emerald-600 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-700 font-semibold px-3 sm:px-5 py-2 sm:py-3 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              <span className="hidden sm:inline">{isExporting ? 'Exportando...' : 'Exportar Excel'}</span>
+              <span className="sm:hidden">Excel</span>
+            </Button>
+          )}
           {onCompraVentaDivisas && (
             <Button
               onClick={!isReadOnly ? onCompraVentaDivisas : undefined}
