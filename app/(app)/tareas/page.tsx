@@ -275,7 +275,13 @@ export default function TareasPage() {
   )
 
   const hasActiveFilters =
-    filterModulo !== 'all' || filterTipo !== 'all' || filterPrioridad !== 'all' || filterVersion !== 'all' || !!searchQuery
+    filterModulo !== 'all' ||
+    filterTipo !== 'all' ||
+    filterPrioridad !== 'all' ||
+    filterVersion !== 'all' ||
+    !!searchQuery
+
+  if (isGuardLoading) return <PageLoadingSpinner />
 
   return (
     <div className="min-h-full bg-slate-100 flex flex-col">
