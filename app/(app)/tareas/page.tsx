@@ -281,8 +281,6 @@ export default function TareasPage() {
     filterVersion !== 'all' ||
     !!searchQuery
 
-  if (isGuardLoading) return <PageLoadingSpinner />
-
   return (
     <div className="min-h-full bg-slate-100 flex flex-col">
       {/* Page Header */}
