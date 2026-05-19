@@ -181,9 +181,85 @@ export const API_ENDPOINTS = {
     CREATE_COMENTARIO: (id: number) => `${API_URL}/api/tareas/${id}/comentarios`,
     DELETE_COMENTARIO: (id: number, comentarioId: number) => `${API_URL}/api/tareas/${id}/comentarios/${comentarioId}`,
   },
+  RRHH_CALENDARIO: {
+    GET_ALL: `${API_URL}/api/rrhh/calendario`,
+    CREATE: `${API_URL}/api/rrhh/calendario`,
+    CREATE_BATCH: `${API_URL}/api/rrhh/calendario/batch`,
+    UPDATE: (id: number) => `${API_URL}/api/rrhh/calendario/${id}`,
+    DELETE: (id: number) => `${API_URL}/api/rrhh/calendario/${id}`,
+  },
+  RRHH_INCENTIVOS: {
+    GET_BY_SUCURSAL: (sucursalId: number, mes?: number, anio?: number) => {
+      const params = new URLSearchParams({ sucursal_id: String(sucursalId) })
+      if (mes) params.append('mes', String(mes))
+      if (anio) params.append('anio', String(anio))
+      return `${API_URL}/api/rrhh/incentivos?${params.toString()}`
+    },
+    CREATE: `${API_URL}/api/rrhh/incentivos`,
+    UPDATE: (id: number) => `${API_URL}/api/rrhh/incentivos/${id}`,
+    DELETE: (id: number) => `${API_URL}/api/rrhh/incentivos/${id}`,
+  },
+  RRHH_MOTIVOS_BAJA: {
+    LIST: (sucursalId: number) =>
+      `${API_URL}/api/rrhh/motivos-baja?sucursal_id=${sucursalId}`,
+    CREATE: `${API_URL}/api/rrhh/motivos-baja`,
+  },
+  RRHH_SOLICITUDES: {
+    GET_ALL: `${API_URL}/api/rrhh/solicitudes`,
+    GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/rrhh/solicitudes?sucursal_id=${sucursalId}`,
+    GET_BY_PERSONAL: (personalId: number) => `${API_URL}/api/rrhh/solicitudes?personal_id=${personalId}`,
+    CREATE: `${API_URL}/api/rrhh/solicitudes`,
+    UPDATE: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}`,
+    UPDATE_ESTADO: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}/estado`,
+    CANCEL: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}/cancelar`,
+    DELETE: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}`,
+    UPLOAD_ARCHIVO: `${API_URL}/api/rrhh/solicitudes/archivos`,
+  },
   NOTIFICACIONES: {
     MIS: `${API_URL}/api/notificaciones/mis`,
     CREATE: `${API_URL}/api/notificaciones`,
     LEER: `${API_URL}/api/notificaciones/leer`,
+  },
+  ESCALAS_SALARIALES: {
+    GET_ALL: `${API_URL}/api/escalas-salariales`,
+    GET_BY_PUESTO: (puestoId: number) => `${API_URL}/api/escalas-salariales?puesto_id=${puestoId}`,
+    CREATE: `${API_URL}/api/escalas-salariales`,
+    UPDATE: (id: number) => `${API_URL}/api/escalas-salariales/${id}`,
+    DELETE: (id: number) => `${API_URL}/api/escalas-salariales/${id}`,
+  },
+  PERSONAL: {
+    GET_ALL: `${API_URL}/api/personal`,
+    GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/personal?sucursal_id=${sucursalId}`,
+    GET_BY_ID: (id: number) => `${API_URL}/api/personal/${id}`,
+    CREATE: `${API_URL}/api/personal`,
+    UPDATE: (id: number) => `${API_URL}/api/personal/${id}`,
+    DELETE: (id: number) => `${API_URL}/api/personal/${id}`,
+    GET_PROFESIONAL: (id: number) => `${API_URL}/api/personal/${id}/profesional`,
+    GET_ANALITICO: (id: number) => `${API_URL}/api/personal/${id}/analitico`,
+    GET_NOTAS: (id: number) => `${API_URL}/api/personal/${id}/notas`,
+    CREATE_NOTA: (id: number) => `${API_URL}/api/personal/${id}/notas`,
+    DELETE_NOTA: (id: number, notaId: number) => `${API_URL}/api/personal/${id}/notas/${notaId}`,
+  },
+  PUESTOS: {
+    GET_ALL: `${API_URL}/api/puestos`,
+    GET_BY_AREA: (areaId: number) => `${API_URL}/api/puestos?area_id=${areaId}`,
+    CREATE: `${API_URL}/api/puestos`,
+    UPDATE: (id: number) => `${API_URL}/api/puestos/${id}`,
+    DELETE: (id: number) => `${API_URL}/api/puestos/${id}`,
+  },
+  AREAS: {
+    GET_ALL: `${API_URL}/api/areas`,
+    GET_ACTIVAS: `${API_URL}/api/areas?activo=1`,
+    CREATE: `${API_URL}/api/areas`,
+    UPDATE: (id: number) => `${API_URL}/api/areas/${id}`,
+    DELETE: (id: number) => `${API_URL}/api/areas/${id}`,
+  },
+  RRHH_SUELDOS: {
+    GET_PERIODO: (sucursalId: number, mes: number, anio: number) =>
+      `${API_URL}/api/rrhh/sueldos?sucursal_id=${sucursalId}&mes=${mes}&anio=${anio}`,
+    UPDATE_PERIODO: (personalId: number, sucursalId: number, mes: number, anio: number) =>
+      `${API_URL}/api/rrhh/sueldos/${personalId}/periodo?sucursal_id=${sucursalId}&mes=${mes}&anio=${anio}`,
+    UPDATE_PERIODO_META: (personalId: number, sucursalId: number, mes: number, anio: number) =>
+      `${API_URL}/api/rrhh/sueldos/${personalId}/periodo/meta?sucursal_id=${sucursalId}&mes=${mes}&anio=${anio}`,
   },
 }

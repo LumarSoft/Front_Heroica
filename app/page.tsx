@@ -81,7 +81,7 @@ export default function LoginPage() {
       }
 
       login(data.data.token, data.data.user)
-      router.push('/sucursales')
+      router.push('/home')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al conectar con el servidor'
       setError(message)
@@ -116,7 +116,7 @@ export default function LoginPage() {
       }
 
       login(data.data.token, data.data.user)
-      router.push('/sucursales')
+      router.push('/home')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al verificar código'
       setError(message)
