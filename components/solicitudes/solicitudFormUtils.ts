@@ -99,8 +99,7 @@ export function validateEmpleadoNovedadForSolicitud(emp: EmpleadoNovedadData): s
     return `Ingrese el motivo del apercibimiento de ${emp.personal_nombre}`
   if (emp.suspension && !emp.suspension_motivo.trim())
     return `Ingrese el motivo de la suspensión de ${emp.personal_nombre}`
-  if (emp.descuento && !emp.descuento_motivo.trim())
-    return `Ingrese el motivo del descuento de ${emp.personal_nombre}`
+  if (emp.descuento && !emp.descuento_motivo.trim()) return `Ingrese el motivo del descuento de ${emp.personal_nombre}`
   if (emp.tardanzas_tiene && !emp.tardanzas_cantidad) return `Ingrese la cantidad de tardanza de ${emp.personal_nombre}`
   return null
 }
@@ -376,7 +375,8 @@ function readAdjuntoIndividual(detalles: Record<string, unknown>, slotKey: strin
   if (!slot || typeof slot !== 'object' || typeof slot.url !== 'string' || !slot.url.trim()) {
     return { url: '', nombre: '' }
   }
-  const nombre_original = typeof slot.nombre_original === 'string' && slot.nombre_original.trim() ? slot.nombre_original.trim() : ''
+  const nombre_original =
+    typeof slot.nombre_original === 'string' && slot.nombre_original.trim() ? slot.nombre_original.trim() : ''
   return { url: String(slot.url).trim(), nombre: nombre_original }
 }
 
@@ -402,10 +402,7 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
     observaciones: solicitud.observaciones ?? '',
     alta_nombre: String(detalles.nombre ?? ''),
     alta_dni: String(detalles.dni ?? ''),
-    alta_cuil:
-      typeof detalles.cuil === 'number'
-        ? String(detalles.cuil)
-        : String(detalles.cuil ?? ''),
+    alta_cuil: typeof detalles.cuil === 'number' ? String(detalles.cuil) : String(detalles.cuil ?? ''),
     alta_domicilio: String(detalles.domicilio ?? ''),
     alta_direccion_dni: String(detalles.domicilio_dni ?? ''),
     alta_fecha_nacimiento: String(detalles.fecha_nacimiento ?? ''),
@@ -421,11 +418,9 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
         ? (String(detalles.condicion_laboral) as '1' | '2')
         : '',
     alta_fecha_alta_temprana: String(detalles.fecha_alta_temprana ?? ''),
-    alta_jornada_dias_semanales:
-      detalles.jornada_semanal_dias != null ? String(detalles.jornada_semanal_dias) : '',
+    alta_jornada_dias_semanales: detalles.jornada_semanal_dias != null ? String(detalles.jornada_semanal_dias) : '',
     alta_jornada_horas_diarias: String(detalles.jornada_diaria_horas_texto ?? ''),
-    alta_propuesta_economica:
-      detalles.propuesta_economica != null ? String(detalles.propuesta_economica) : '',
+    alta_propuesta_economica: detalles.propuesta_economica != null ? String(detalles.propuesta_economica) : '',
     alta_beneficios: String(detalles.beneficios ?? ''),
     alta_otras_observaciones: String(detalles.otras_observaciones_alta ?? ''),
     alta_doc_dni_url: '',
@@ -465,11 +460,30 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
   }
 
   if (solicitud.tipo === 'Altas') {
-    const carnetSlot = detalles.carnet_adjunto as { url?: string; nombre_original?: string } | null | undefined
-    const dniS = readAltaAdjuntoSlot(detalles, 'dni_frente_dorso')
-    const ddjjS = readAltaAdjuntoSlot(detalles, 'ddjj_domicilio')
-    const puestoS = readAltaAdjuntoSlot(detalles, 'descripcion_puesto_firmada')
-    const fotoS = readAltaAdjuntoSlot(detalles, 'foto_colaborador')
+    const archivos = solicitud.archivos ?? []
+    const findArchivo = (tipoDoc: string) => archivos.find(a => a.tipo_doc === tipoDoc)
+    // Fallback a adjuntos del JSON para registros anteriores a RH-60
+    const fallbackAdj = (key: string) => readAltaAdjuntoSlot(detalles, key)
+
+    const dniA = findArchivo('dni_frente_dorso')
+    const ddjjA = findArchivo('ddjj_domicilio')
+    const puestoA = findArchivo('descripcion_puesto_firmada')
+    const fotoA = findArchivo('foto_colaborador')
+    const carnetA = findArchivo('carnet_manipulacion_alimentos')
+
+    const dniS = dniA ? { url: dniA.url, nombre: dniA.nombre_original ?? '' } : fallbackAdj('dni_frente_dorso')
+    const ddjjS = ddjjA ? { url: ddjjA.url, nombre: ddjjA.nombre_original ?? '' } : fallbackAdj('ddjj_domicilio')
+    const puestoS = puestoA
+      ? { url: puestoA.url, nombre: puestoA.nombre_original ?? '' }
+      : fallbackAdj('descripcion_puesto_firmada')
+    const fotoS = fotoA ? { url: fotoA.url, nombre: fotoA.nombre_original ?? '' } : fallbackAdj('foto_colaborador')
+
+    // carnet_adjunto legacy desde JSON
+    const carnetSlotLegacy = detalles.carnet_adjunto as { url?: string; nombre_original?: string } | null | undefined
+    const carnetUrl = carnetA?.url ?? (carnetSlotLegacy?.url ? String(carnetSlotLegacy.url) : '')
+    const carnetNombre =
+      carnetA?.nombre_original ?? (carnetSlotLegacy?.nombre_original ? String(carnetSlotLegacy.nombre_original) : '')
+
     return {
       ...base,
       alta_doc_dni_url: dniS.url,
@@ -480,18 +494,30 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
       alta_doc_puesto_nombre: puestoS.nombre,
       alta_doc_foto_url: fotoS.url,
       alta_doc_foto_nombre: fotoS.nombre,
-      alta_carnet_archivo_url: carnetSlot?.url ? String(carnetSlot.url) : '',
-      alta_carnet_archivo_nombre: carnetSlot?.nombre_original ? String(carnetSlot.nombre_original) : '',
+      alta_carnet_archivo_url: carnetUrl,
+      alta_carnet_archivo_nombre: carnetNombre,
     }
   }
 
   if (solicitud.tipo === 'Bajas') {
-    const carta = readAdjuntoIndividual(detalles, 'carta_documento_adjunto')
+    // Carta documento desde tabla archivos; fallback a JSON para registros anteriores
+    const cartaA = solicitud.archivos?.find(a => a.tipo_doc === 'carta_documento')
+    const cartaFallback = readAdjuntoIndividual(detalles, 'carta_documento_adjunto')
+    const cartaUrl = cartaA?.url ?? cartaFallback.url
+    const cartaNombre = cartaA?.nombre_original ?? cartaFallback.nombre
+
+    // Empleado de liquidación desde tabla empleados; fallback a JSON para registros anteriores
     let liq: EmpleadoNovedadData | null = null
-    const liqRaw = detalles.liquidacion_empleado
-    if (liqRaw && typeof liqRaw === 'object' && !Array.isArray(liqRaw)) {
-      liq = parseEmpleadosFromDetalles([liqRaw as unknown])[0] ?? null
+    const empDesdeTabla = solicitud.empleados?.[0]
+    if (empDesdeTabla) {
+      liq = parseEmpleadosFromDetalles([empDesdeTabla])[0] ?? null
+    } else {
+      const liqRaw = detalles.liquidacion_empleado
+      if (liqRaw && typeof liqRaw === 'object' && !Array.isArray(liqRaw)) {
+        liq = parseEmpleadosFromDetalles([liqRaw as unknown])[0] ?? null
+      }
     }
+
     const pid = solicitud.personal_id
     const pname = solicitud.personal_nombre ?? ''
     if (!liq && pid) {
@@ -507,18 +533,25 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
       ...base,
       baja_motivo_detalle: detalleDesdeDetalle || textoMotivoViejo,
       baja_empleado_liquidacion: liq,
-      baja_carta_url: carta.url,
-      baja_carta_nombre: carta.nombre,
+      baja_carta_url: cartaUrl,
+      baja_carta_nombre: cartaNombre,
     }
   }
   if (solicitud.tipo === 'Novedades de sueldo') {
-    const d = detalles as any
+    const d = detalles as Record<string, unknown>
+    // Empleados desde tabla; fallback a JSON para registros anteriores
+    const empSource =
+      solicitud.empleados && solicitud.empleados.length > 0
+        ? solicitud.empleados
+        : Array.isArray(d.empleados)
+          ? d.empleados
+          : []
     return {
       ...base,
       nov_area_id: d.area_id ? String(d.area_id) : '',
       nov_mes: d.mes ? String(d.mes) : form.nov_mes,
       nov_anio: d.anio ? String(d.anio) : form.nov_anio,
-      nov_empleados: Array.isArray(d.empleados) ? parseEmpleadosFromDetalles(d.empleados) : [],
+      nov_empleados: parseEmpleadosFromDetalles(empSource as unknown[]),
     }
   }
 
@@ -592,8 +625,7 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
         beneficios: form.alta_beneficios.trim(),
         otras_observaciones_alta: form.alta_otras_observaciones.trim() || null,
         condicion_laboral: Number(form.alta_condicion_laboral) as 1 | 2,
-        fecha_alta_temprana:
-          form.alta_condicion_laboral === '1' ? form.alta_fecha_alta_temprana : null,
+        fecha_alta_temprana: form.alta_condicion_laboral === '1' ? form.alta_fecha_alta_temprana : null,
         periodo_prueba: form.alta_periodo_prueba,
         periodo_prueba_dias: form.alta_periodo_prueba ? Number(form.alta_periodo_prueba_dias) : null,
         carnet_manipulacion_alimentos: form.alta_carnet,
@@ -757,7 +789,8 @@ export function validateSolicitudForm(form: SolicitudFormState, options?: { isEd
       }
       if (form.alta_carnet) {
         if (!form.alta_carnet_vencimiento) return 'Indique la fecha de vencimiento del carnet de manipulación'
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(form.alta_carnet_vencimiento)) return 'La fecha de vencimiento del carnet no es válida'
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(form.alta_carnet_vencimiento))
+          return 'La fecha de vencimiento del carnet no es válida'
         if (!isEditing && !form.alta_carnet_archivo_url.trim()) {
           return 'Adjunte el archivo del carnet de manipulación de alimentos'
         }

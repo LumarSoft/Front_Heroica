@@ -46,7 +46,10 @@ function filasLiquidaResumen(liq: RhEmpleadoNovedad): Array<{ label: string; val
           .join(', ') || '(ninguno marcado)'
       : '—'
   return [
-    { label: 'Cambio de puesto', value: liq.cambio_puesto ? `Sí (#${liq.nuevo_puesto_id ?? '—'}) · ${text(liq.fecha_alta_puesto)}` : 'No' },
+    {
+      label: 'Cambio de puesto',
+      value: liq.cambio_puesto ? `Sí (#${liq.nuevo_puesto_id ?? '—'}) · ${text(liq.fecha_alta_puesto)}` : 'No',
+    },
     { label: 'Horas trabajadas', value: formatoNumOGuion(liq.horas_trabajadas) },
     { label: 'Horas en feriados', value: formatoNumOGuion(liq.horas_feriados) },
     {
@@ -76,10 +79,13 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
   const detalles = (solicitud.detalles ?? {}) as Record<string, unknown>
 
   if (solicitud.tipo === 'Altas') {
-    const adj = detalles.adjuntos as Record<string, { url?: string; nombre_original?: string } | null> | undefined
-    const tieneAdj = (k: string) => Boolean(adj?.[k]?.url)
-    const carnetAdj = detalles.carnet_adjunto as { url?: string } | undefined
-    const tieneCarnetArchivo = Boolean(carnetAdj?.url)
+    // Archivos desde tabla; fallback a JSON para registros anteriores a RH-60
+    const archivosTabla = solicitud.archivos ?? []
+    const adjLegacy = detalles.adjuntos as Record<string, { url?: string; nombre_original?: string } | null> | undefined
+    const carnetAdjLegacy = detalles.carnet_adjunto as { url?: string } | undefined
+    const tieneAdj = (k: string) => archivosTabla.some(a => a.tipo_doc === k) || Boolean(adjLegacy?.[k]?.url)
+    const tieneCarnetArchivo =
+      archivosTabla.some(a => a.tipo_doc === 'carnet_manipulacion_alimentos') || Boolean(carnetAdjLegacy?.url)
     return (
       <div className="space-y-4">
         <div>
@@ -132,10 +138,7 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
             { label: 'Beneficios', value: detalles.beneficios ? String(detalles.beneficios) : '-' },
             {
               label: 'Período de prueba',
-              value:
-                detalles.periodo_prueba === true
-                  ? `${String(detalles.periodo_prueba_dias ?? '')} días`
-                  : 'No',
+              value: detalles.periodo_prueba === true ? `${String(detalles.periodo_prueba_dias ?? '')} días` : 'No',
             },
             {
               label: 'Carnet manip.',
@@ -164,7 +167,9 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
               <span
                 key={key}
                 className={`text-[10px] px-2 py-1 rounded-full font-medium border ${
-                  tieneAdj(key) ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-[#F8F9FA] text-[#9AA0AC] border-[#E0E0E0]'
+                  tieneAdj(key)
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-[#F8F9FA] text-[#9AA0AC] border-[#E0E0E0]'
                 }`}
               >
                 {short}
@@ -173,7 +178,9 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
             {detalles.carnet_manipulacion_alimentos === true ? (
               <span
                 className={`text-[10px] px-2 py-1 rounded-full font-medium border ${
-                  tieneCarnetArchivo ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-[#F8F9FA] text-[#9AA0AC] border-[#E0E0E0]'
+                  tieneCarnetArchivo
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-[#F8F9FA] text-[#9AA0AC] border-[#E0E0E0]'
                 }`}
               >
                 Carnet
@@ -191,26 +198,31 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
       const s = String(v).trim()
       return s.length > 0 ? s : '—'
     }
-    const carta = detalles.carta_documento_adjunto as { url?: string; nombre_original?: string | null } | undefined
-    const tieneCartaDoc = Boolean(carta?.url?.trim())
+    // Carta desde tabla; fallback a JSON para registros anteriores a RH-60
+    const cartaArchivo = solicitud.archivos?.find(a => a.tipo_doc === 'carta_documento')
+    const cartaLegacy = detalles.carta_documento_adjunto as
+      | { url?: string; nombre_original?: string | null }
+      | undefined
+    const cartaUrl = cartaArchivo?.url ?? cartaLegacy?.url
+    const tieneCartaDoc = Boolean(cartaUrl?.trim())
     const nombreMotivoCatalogo = dash(detalles.motivo_baja_nombre)
     const motivoMostrar = nombreMotivoCatalogo !== '—' ? nombreMotivoCatalogo : dash(detalles.motivo_baja)
 
-    const liqRaw = detalles.liquidacion_empleado
+    // Empleado de liquidación desde tabla; fallback a JSON para registros anteriores a RH-61
+    const liqRaw = solicitud.empleados?.[0] ?? detalles.liquidacion_empleado
     const liqFmt = isLiquidacionNovedadEmp(liqRaw)
 
-    const filasLaborales =
-      liqFmt
-        ? filasLiquidaResumen(liqRaw)
-        : [
-            { label: 'Días u horas trabajadas', value: dash(detalles.dias_horas_trabajadas_mes) },
-            { label: 'Feriados trabajados', value: dash(detalles.feriados_trabajados_mes) },
-            { label: 'Horas extras', value: dash(detalles.horas_extras_mes) },
-            { label: 'Incentivos', value: dash(detalles.incentivos) },
-            { label: 'Descuentos aplicados', value: dash(detalles.descuentos_aplicados) },
-            { label: 'Ausencias justificadas', value: dash(detalles.ausencias_justificadas) },
-            { label: 'Ausencias injustificadas', value: dash(detalles.ausencias_injustificadas) },
-          ]
+    const filasLaborales = liqFmt
+      ? filasLiquidaResumen(liqRaw)
+      : [
+          { label: 'Días u horas trabajadas', value: dash(detalles.dias_horas_trabajadas_mes) },
+          { label: 'Feriados trabajados', value: dash(detalles.feriados_trabajados_mes) },
+          { label: 'Horas extras', value: dash(detalles.horas_extras_mes) },
+          { label: 'Incentivos', value: dash(detalles.incentivos) },
+          { label: 'Descuentos aplicados', value: dash(detalles.descuentos_aplicados) },
+          { label: 'Ausencias justificadas', value: dash(detalles.ausencias_justificadas) },
+          { label: 'Ausencias injustificadas', value: dash(detalles.ausencias_injustificadas) },
+        ]
 
     const filasBasicas: Array<{ label: string; value: string }> = [
       { label: 'Nombre y apellido', value: solicitud.personal_nombre ?? '—' },
@@ -241,14 +253,16 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={`text-[10px] px-2 py-1 rounded-full font-medium border ${
-                tieneCartaDoc ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-[#F8F9FA] text-[#9AA0AC] border-[#E0E0E0]'
+                tieneCartaDoc
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                  : 'bg-[#F8F9FA] text-[#9AA0AC] border-[#E0E0E0]'
               }`}
             >
               Carta documento
             </span>
-            {tieneCartaDoc && carta?.url ? (
+            {tieneCartaDoc && cartaUrl ? (
               <a
-                href={carta.url}
+                href={cartaUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[11px] text-[#002868] underline font-medium truncate max-w-[240px]"
@@ -303,7 +317,13 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
     ]
     const mes = Number(detalles.mes)
     const periodo = detalles.mes && detalles.anio ? `${MESES[mes] ?? mes} ${detalles.anio}` : '-'
-    const empleados = Array.isArray(detalles.empleados) ? (detalles.empleados as Record<string, unknown>[]) : []
+    // Empleados desde tabla; fallback a JSON para registros anteriores a RH-61
+    const empleados: Record<string, unknown>[] =
+      solicitud.empleados && solicitud.empleados.length > 0
+        ? (solicitud.empleados as unknown as Record<string, unknown>[])
+        : Array.isArray(detalles.empleados)
+          ? (detalles.empleados as Record<string, unknown>[])
+          : []
     return (
       <div className="space-y-3">
         {renderRows([
