@@ -286,6 +286,12 @@ export interface RhSolicitudHistorialItem {
   created_at: string
 }
 
+export interface RhSolicitudArchivo {
+  tipo_doc: string
+  url: string
+  nombre_original: string | null
+}
+
 export interface RhSolicitudAltaAdjuntoSlot {
   url: string
   nombre_original?: string | null
@@ -318,17 +324,8 @@ export interface RhSolicitudAltaDetalles {
   periodo_prueba?: boolean
   periodo_prueba_dias?: number | null
   carnet_manipulacion_alimentos?: boolean
-  carnet_adjunto?: RhSolicitudAltaAdjuntoSlot | null
   carnet_fecha_vencimiento?: string | null
-  adjuntos?: {
-    dni_frente_dorso?: RhSolicitudAltaAdjuntoSlot | null
-    ddjj_domicilio?: RhSolicitudAltaAdjuntoSlot | null
-    descripcion_puesto_firmada?: RhSolicitudAltaAdjuntoSlot | null
-    foto_colaborador?: RhSolicitudAltaAdjuntoSlot | null
-  } | null
 }
-
-
 
 export interface RhSolicitudVacacionesDetalles {
   fecha_desde: string
@@ -380,24 +377,17 @@ export interface RhSolicitudBajaDetalles {
   motivo_baja_nombre?: string | null
   motivo_baja_detalle?: string | null
   fecha_baja: string
-  liquidacion_empleado?: RhEmpleadoNovedad | Record<string, unknown> | null
-  carta_documento_adjunto?: RhSolicitudAltaAdjuntoSlot | null
   /** Histórico (antes de liquidación tipo novedad) */
   motivo_baja?: string
   dias_horas_trabajadas_mes?: string
   feriados_trabajados_mes?: string | null
   horas_extras_mes?: string | null
-  incentivos?: string | null
-  descuentos_aplicados?: string | null
-  ausencias_justificadas?: string | null
-  ausencias_injustificadas?: string | null
 }
 
 export interface RhSolicitudNovedadSueldoDetalles {
   area_id: number
   mes: number
   anio: number
-  empleados: RhEmpleadoNovedad[]
 }
 
 export interface RhSolicitudApercibimientoDetalles {
@@ -437,6 +427,8 @@ export interface RhSolicitud {
   observaciones: string | null
   motivo_resolucion: string | null
   liquidacion_final_estado: 'Pendiente' | 'Generada' | 'No aplica' | 'Error'
+  archivos?: RhSolicitudArchivo[]
+  empleados?: RhEmpleadoNovedad[]
   historial?: RhSolicitudHistorialItem[]
   created_at: string
   updated_at: string
