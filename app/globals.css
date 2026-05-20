@@ -61,7 +61,7 @@
   --secondary-foreground: #1a1a1a; /* Texto oscuro en fondos secundarios */
   --muted: #f5f5f5; /* Gris claro para elementos apagados */
   --muted-foreground: #666666; /* Gris medio para texto secundario */
-  --accent: #EEF2FF; /* Azul muy claro para fondos de hover/acento */
+  --accent: #eef2ff; /* Azul muy claro para fondos de hover/acento */
   --accent-foreground: #002868; /* Texto azul marino sobre fondo claro */
   --destructive: #dc2626; /* Rojo para acciones destructivas */
   --border: #e0e0e0; /* Gris claro para bordes */
@@ -123,6 +123,14 @@
   body {
     @apply bg-background text-foreground;
   }
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
 }
 
 /* Animación de entrada para celdas del calendario de pagos */
@@ -150,4 +158,3 @@
   background-image: radial-gradient(circle, #ffffff 1px, transparent 1px);
   background-size: 30px 30px;
 }
-
