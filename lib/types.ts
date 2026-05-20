@@ -220,10 +220,6 @@ export interface RhIncentivoPremio {
   id: number
   sucursal_id: number
   sucursal_nombre: string
-  escala_salarial_id: number | null
-  escala_puesto: string | null
-  escala_sueldo_base: number | null
-  escala_valor_hora: number | null
   nombre: string
   tipo: RhIncentivoTipo
   descripcion: string | null
@@ -232,7 +228,6 @@ export interface RhIncentivoPremio {
   metodo_calculo: RhIncentivoMetodoCalculo
   valor: number
   activo: boolean | number
-  monto_calculado: number
   fecha_ultima_actualizacion: string
   created_at: string
   updated_at: string

@@ -877,7 +877,7 @@ export function TablaMensualSection({
                                       </div>
                                       {row.incentivos_items.length === 0 ? (
                                         <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-[#9AA0AC]">
-                                          Sin incentivos configurados para el puesto.
+                                          Sin incentivos activos para este período.
                                         </p>
                                       ) : (
                                         <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
