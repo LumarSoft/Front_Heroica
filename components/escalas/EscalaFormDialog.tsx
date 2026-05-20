@@ -4,18 +4,25 @@ import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog, DialogContent, DialogDescription,
-  DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { MontoInput } from '@/components/ui/monto-input'
+import { formatInputMonto } from '@/lib/formatters'
 import { Label } from '@/components/ui/label'
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 import { MESES, YEAR_OPTIONS } from './constants'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import type { EscalaSalarial, Puesto } from '@/lib/types'
+
+type TipoCalculo = 'fijo' | 'por_hora'
 
 interface EscalaFormDialogProps {
   open: boolean
@@ -36,13 +43,16 @@ export function EscalaFormDialog({
   defaultMes,
   defaultAnio,
 }: EscalaFormDialogProps) {
+  const [tipoCalculo, setTipoCalculo] = useState<TipoCalculo>('fijo')
   const [puestoId, setPuestoId] = useState('')
   const [sueldoBase, setSueldoBase] = useState('')
+  const [valorHoraManual, setValorHoraManual] = useState('')
   const [mes, setMes] = useState(String(defaultMes))
   const [anio, setAnio] = useState(String(defaultAnio))
   const [puestos, setPuestos] = useState<Puesto[]>([])
 
-  const valorHora = sueldoBase !== '' ? Number(sueldoBase) / 26 / 8 : null
+  const valorHoraCalculado = sueldoBase !== '' ? Number(sueldoBase) / 26 / 8 : null
+  const sueldoBaseCalculado = valorHoraManual !== '' ? Number(valorHoraManual) * 26 * 8 : null
 
   useEffect(() => {
     if (!open) return
@@ -56,30 +66,67 @@ export function EscalaFormDialog({
     if (!open) return
     if (initial) {
       setPuestoId(String(initial.puesto_id))
-      setSueldoBase(String(initial.sueldo_base))
       setMes(String(initial.mes))
       setAnio(String(initial.anio))
+
+      if (initial.valor_hora !== null) {
+        const esperado = initial.sueldo_base / 26 / 8
+        if (Math.abs(initial.valor_hora - esperado) > 0.01) {
+          setTipoCalculo('por_hora')
+          setValorHoraManual(String(initial.valor_hora))
+          setSueldoBase('')
+        } else {
+          setTipoCalculo('fijo')
+          setSueldoBase(String(initial.sueldo_base))
+          setValorHoraManual('')
+        }
+      } else {
+        setTipoCalculo('fijo')
+        setSueldoBase(String(initial.sueldo_base))
+        setValorHoraManual('')
+      }
     } else {
+      setTipoCalculo('fijo')
       setPuestoId('')
       setSueldoBase('')
+      setValorHoraManual('')
       setMes(String(defaultMes))
       setAnio(String(defaultAnio))
     }
   }, [open, initial, defaultMes, defaultAnio])
 
+  const handleTipoCalculo = (tipo: TipoCalculo) => {
+    setTipoCalculo(tipo)
+    setSueldoBase('')
+    setValorHoraManual('')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!puestoId || !sueldoBase) return
-    await onSave({
-      puesto_id: Number(puestoId),
-      sueldo_base: Number(sueldoBase),
-      mes: Number(mes),
-      anio: Number(anio),
-      valor_hora: valorHora,
-    })
+    if (!puestoId) return
+    if (tipoCalculo === 'fijo') {
+      if (!sueldoBase) return
+      await onSave({
+        puesto_id: Number(puestoId),
+        sueldo_base: Number(sueldoBase),
+        mes: Number(mes),
+        anio: Number(anio),
+        valor_hora: valorHoraCalculado,
+      })
+    } else {
+      if (!valorHoraManual) return
+      await onSave({
+        puesto_id: Number(puestoId),
+        sueldo_base: sueldoBaseCalculado ?? 0,
+        mes: Number(mes),
+        anio: Number(anio),
+        valor_hora: Number(valorHoraManual),
+      })
+    }
   }
 
   const isEdit = initial !== null
+  const isSubmitDisabled = saving || !puestoId || (tipoCalculo === 'fijo' ? !sueldoBase : !valorHoraManual)
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
@@ -104,7 +151,9 @@ export function EscalaFormDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {MESES.map((m, i) => (
-                      <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>
+                      <SelectItem key={i + 1} value={String(i + 1)}>
+                        {m}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -117,7 +166,9 @@ export function EscalaFormDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {YEAR_OPTIONS.map(y => (
-                      <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -132,62 +183,118 @@ export function EscalaFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {puestos.length === 0 ? (
-                    <SelectItem value="__empty__" disabled>No hay puestos cargados</SelectItem>
+                    <SelectItem value="__empty__" disabled>
+                      No hay puestos cargados
+                    </SelectItem>
                   ) : (
                     puestos.map(p => (
-                      <SelectItem key={p.id} value={String(p.id)}>{p.nombre}</SelectItem>
+                      <SelectItem key={p.id} value={String(p.id)}>
+                        {p.nombre}
+                      </SelectItem>
                     ))
                   )}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="sueldo">Sueldo Base (ARS)</Label>
-                <Input
-                  id="sueldo"
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  placeholder="Ej: 250000"
-                  value={sueldoBase}
-                  onChange={e => setSueldoBase(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="valor_hora">Valor / Hora (ARS)</Label>
-                <Input
-                  id="valor_hora"
-                  readOnly
-                  tabIndex={-1}
-                  value={valorHora !== null ? valorHora.toFixed(2) : '—'}
-                  className="bg-[#F5F5F5] text-[#5A6070] cursor-default select-none"
-                />
-                <p className="text-[10px] text-[#9AA0AC]">Sueldo ÷ 26 días ÷ 8 hs</p>
+            <div className="space-y-1.5">
+              <Label>Tipo de Cálculo</Label>
+              <div className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 w-fit">
+                <button
+                  type="button"
+                  onClick={() => handleTipoCalculo('fijo')}
+                  className={cn(
+                    'px-4 py-1.5 text-sm font-medium rounded-md transition-all',
+                    tipoCalculo === 'fijo'
+                      ? 'bg-[#002868] text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 cursor-pointer',
+                  )}
+                >
+                  Fijo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleTipoCalculo('por_hora')}
+                  className={cn(
+                    'px-4 py-1.5 text-sm font-medium rounded-md transition-all',
+                    tipoCalculo === 'por_hora'
+                      ? 'bg-[#002868] text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 cursor-pointer',
+                  )}
+                >
+                  Por Hora
+                </button>
               </div>
             </div>
+
+            {tipoCalculo === 'fijo' ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="sueldo">Sueldo Base (ARS)</Label>
+                  <MontoInput
+                    id="sueldo"
+                    placeholder="Ej: 250.000"
+                    value={sueldoBase}
+                    onChange={setSueldoBase}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="valor_hora">Valor / Hora (ARS)</Label>
+                  <Input
+                    id="valor_hora"
+                    readOnly
+                    tabIndex={-1}
+                    value={valorHoraCalculado !== null ? formatInputMonto(valorHoraCalculado.toFixed(2)) : '—'}
+                    className="bg-[#F5F5F5] text-[#5A6070] cursor-default select-none"
+                  />
+                  <p className="text-[10px] text-[#9AA0AC]">Sueldo ÷ 26 días ÷ 8 hs</p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="valor_hora_manual">Valor / Hora (ARS)</Label>
+                  <MontoInput
+                    id="valor_hora_manual"
+                    placeholder="Ej: 1.201,92"
+                    value={valorHoraManual}
+                    onChange={setValorHoraManual}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="sueldo_calculado">Sueldo Base (ARS)</Label>
+                  <Input
+                    id="sueldo_calculado"
+                    readOnly
+                    tabIndex={-1}
+                    value={sueldoBaseCalculado !== null ? formatInputMonto(sueldoBaseCalculado.toFixed(2)) : '—'}
+                    className="bg-[#F5F5F5] text-[#5A6070] cursor-default select-none"
+                  />
+                  <p className="text-[10px] text-[#9AA0AC]">Valor/hs × 26 días × 8 hs</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter className="mt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={saving}
-              className="cursor-pointer"
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="cursor-pointer">
               Cancelar
             </Button>
             <Button
               type="submit"
-              disabled={saving || !puestoId || !sueldoBase}
+              disabled={isSubmitDisabled}
               className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white"
             >
-              {saving
-                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Guardando...</>
-                : 'Guardar'}
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                'Guardar'
+              )}
             </Button>
           </DialogFooter>
         </form>
