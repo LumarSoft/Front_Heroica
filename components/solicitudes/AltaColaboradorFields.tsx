@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import type { Puesto } from '@/lib/types'
+import { CbuInput } from '@/components/ui/cbu-input'
+import { CBU_DIGITOS } from '@/lib/schemas'
 import type { SolicitudFormState } from './solicitudFormUtils'
 import { SolicitudArchivoAdjunto } from './SolicitudArchivoAdjunto'
 
@@ -48,7 +50,11 @@ interface AltaColaboradorFieldsProps {
 export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange }: AltaColaboradorFieldsProps) {
   return (
     <div className="space-y-4">
-      <SectionCard title="Datos personales" icon={<User className="w-4 h-4" />} subtitle="Tal como figura en la ficha RRHH 001">
+      <SectionCard
+        title="Datos personales"
+        icon={<User className="w-4 h-4" />}
+        subtitle="Tal como figura en la ficha RRHH 001"
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2 space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Nombres y apellidos *</Label>
@@ -61,7 +67,11 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">DNI *</Label>
-            <Input className="h-10 rounded-lg border-[#E0E0E0]" value={form.alta_dni} onChange={e => onChange({ alta_dni: e.target.value })} />
+            <Input
+              className="h-10 rounded-lg border-[#E0E0E0]"
+              value={form.alta_dni}
+              onChange={e => onChange({ alta_dni: e.target.value })}
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">CUIL o CUIT *</Label>
@@ -92,15 +102,30 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Fecha de nacimiento *</Label>
-            <Input type="date" className="h-10 rounded-lg border-[#E0E0E0]" value={form.alta_fecha_nacimiento} onChange={e => onChange({ alta_fecha_nacimiento: e.target.value })} />
+            <Input
+              type="date"
+              className="h-10 rounded-lg border-[#E0E0E0]"
+              value={form.alta_fecha_nacimiento}
+              onChange={e => onChange({ alta_fecha_nacimiento: e.target.value })}
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Teléfono *</Label>
-            <Input className="h-10 rounded-lg border-[#E0E0E0]" placeholder="Ej.: 351 6123456" value={form.alta_telefono} onChange={e => onChange({ alta_telefono: e.target.value })} />
+            <Input
+              className="h-10 rounded-lg border-[#E0E0E0]"
+              placeholder="Ej.: 351 6123456"
+              value={form.alta_telefono}
+              onChange={e => onChange({ alta_telefono: e.target.value })}
+            />
           </div>
           <div className="sm:col-span-2 space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Correo electrónico *</Label>
-            <Input type="email" className="h-10 rounded-lg border-[#E0E0E0]" value={form.alta_email} onChange={e => onChange({ alta_email: e.target.value })} />
+            <Input
+              type="email"
+              className="h-10 rounded-lg border-[#E0E0E0]"
+              value={form.alta_email}
+              onChange={e => onChange({ alta_email: e.target.value })}
+            />
           </div>
         </div>
       </SectionCard>
@@ -108,21 +133,34 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
       <SectionCard
         title="Datos bancarios"
         icon={<Landmark className="w-4 h-4" />}
-        subtitle="Completar solo si el colaborador posee cuenta (CBU o CVU de 22 dígitos)"
+        subtitle={`Completar solo si el colaborador posee cuenta (CBU o CVU de ${CBU_DIGITOS} dígitos)`}
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Cuenta bancaria / entidad</Label>
-            <Input className="h-10 rounded-lg border-[#E0E0E0]" placeholder="Ej.: Banco Galicia" value={form.alta_banco} onChange={e => onChange({ alta_banco: e.target.value })} />
+            <Input
+              className="h-10 rounded-lg border-[#E0E0E0]"
+              placeholder="Ej.: Banco Galicia"
+              value={form.alta_banco}
+              onChange={e => onChange({ alta_banco: e.target.value })}
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">CBU o CVU</Label>
-            <Input className="h-10 rounded-lg border-[#E0E0E0]" placeholder="22 dígitos" value={form.alta_cbu} onChange={e => onChange({ alta_cbu: e.target.value })} />
+            <CbuInput
+              className="h-10 rounded-lg border-[#E0E0E0]"
+              value={form.alta_cbu}
+              onChange={cbu => onChange({ alta_cbu: cbu })}
+            />
           </div>
         </div>
       </SectionCard>
 
-      <SectionCard title="Datos laborales" subtitle="Coinciden con lo acordado con el colaborador" icon={<BriefcaseBusiness className="w-4 h-4" />}>
+      <SectionCard
+        title="Datos laborales"
+        subtitle="Coinciden con lo acordado con el colaborador"
+        icon={<BriefcaseBusiness className="w-4 h-4" />}
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Condición laboral *</Label>
@@ -143,7 +181,9 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
                 <SelectItem value="2">Condición 2</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-[11px] text-[#8A8F9C] leading-snug">Condición contractual interna según política RRHH.</p>
+            <p className="text-[11px] text-[#8A8F9C] leading-snug">
+              Condición contractual interna según política RRHH.
+            </p>
           </div>
           {form.alta_condicion_laboral === '1' && (
             <div className="space-y-1.5">
@@ -192,7 +232,12 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Jornada diaria (horas) *</Label>
-            <Input className="h-10 rounded-lg border-[#E0E0E0]" placeholder="Ej.: 7 a 8 horas" value={form.alta_jornada_horas_diarias} onChange={e => onChange({ alta_jornada_horas_diarias: e.target.value })} />
+            <Input
+              className="h-10 rounded-lg border-[#E0E0E0]"
+              placeholder="Ej.: 7 a 8 horas"
+              value={form.alta_jornada_horas_diarias}
+              onChange={e => onChange({ alta_jornada_horas_diarias: e.target.value })}
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Propuesta económica ($) *</Label>
@@ -208,15 +253,30 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Fecha de inicio de cobro en oficina *</Label>
-            <Input type="date" className="h-10 rounded-lg border-[#E0E0E0]" value={form.alta_fecha_inicio_cobro} onChange={e => onChange({ alta_fecha_inicio_cobro: e.target.value })} />
+            <Input
+              type="date"
+              className="h-10 rounded-lg border-[#E0E0E0]"
+              value={form.alta_fecha_inicio_cobro}
+              onChange={e => onChange({ alta_fecha_inicio_cobro: e.target.value })}
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Fecha de inicio relación laboral *</Label>
-            <Input type="date" className="h-10 rounded-lg border-[#E0E0E0]" value={form.alta_fecha_incorporacion} onChange={e => onChange({ alta_fecha_incorporacion: e.target.value })} />
+            <Input
+              type="date"
+              className="h-10 rounded-lg border-[#E0E0E0]"
+              value={form.alta_fecha_incorporacion}
+              onChange={e => onChange({ alta_fecha_incorporacion: e.target.value })}
+            />
           </div>
           <div className="sm:col-span-2 space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Beneficios otorgados *</Label>
-            <Textarea className="min-h-[72px] rounded-lg border-[#E0E0E0] resize-none" placeholder="Ej.: Desayuno o merienda" value={form.alta_beneficios} onChange={e => onChange({ alta_beneficios: e.target.value })} />
+            <Textarea
+              className="min-h-[72px] rounded-lg border-[#E0E0E0] resize-none"
+              placeholder="Ej.: Desayuno o merienda"
+              value={form.alta_beneficios}
+              onChange={e => onChange({ alta_beneficios: e.target.value })}
+            />
           </div>
           <div className="sm:col-span-2 space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Otras observaciones</Label>
@@ -228,13 +288,22 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
             />
           </div>
           <label className="sm:col-span-2 flex items-center gap-2 text-sm text-[#444] cursor-pointer select-none">
-            <Checkbox checked={form.alta_periodo_prueba} onCheckedChange={checked => onChange({ alta_periodo_prueba: checked === true })} />
+            <Checkbox
+              checked={form.alta_periodo_prueba}
+              onCheckedChange={checked => onChange({ alta_periodo_prueba: checked === true })}
+            />
             Ingresa con período de prueba
           </label>
           {form.alta_periodo_prueba && (
             <div className="sm:col-span-2 space-y-1.5">
               <Label className="text-xs font-semibold text-[#5A6070]">Duración (días)</Label>
-              <Input type="number" min={1} className="h-10 rounded-lg border-[#E0E0E0]" value={form.alta_periodo_prueba_dias} onChange={e => onChange({ alta_periodo_prueba_dias: e.target.value })} />
+              <Input
+                type="number"
+                min={1}
+                className="h-10 rounded-lg border-[#E0E0E0]"
+                value={form.alta_periodo_prueba_dias}
+                onChange={e => onChange({ alta_periodo_prueba_dias: e.target.value })}
+              />
             </div>
           )}
           <label className="sm:col-span-2 flex items-center gap-2 text-sm text-[#444] cursor-pointer select-none">
@@ -264,7 +333,9 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
                 accept={ACCEPT_IMG_PDF}
                 url={form.alta_carnet_archivo_url}
                 nombre={form.alta_carnet_archivo_nombre}
-                onUpload={(url, nombre) => onChange({ alta_carnet_archivo_url: url, alta_carnet_archivo_nombre: nombre })}
+                onUpload={(url, nombre) =>
+                  onChange({ alta_carnet_archivo_url: url, alta_carnet_archivo_nombre: nombre })
+                }
                 onRemove={() => onChange({ alta_carnet_archivo_url: '', alta_carnet_archivo_nombre: '' })}
               />
               <div className="space-y-1.5">
@@ -327,7 +398,8 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
 
         <p className="text-[11px] text-[#8A8F9C] flex items-start gap-2 pt-2">
           <ShieldCheck className="w-4 h-4 shrink-0 text-[#002868]" />
-          Los datos de esta ficha replican el modelo oficial de alta; la información se guarda junto al legajo cuando la solicitud se aprueba.
+          Los datos de esta ficha replican el modelo oficial de alta; la información se guarda junto al legajo cuando la
+          solicitud se aprueba.
         </p>
       </SectionCard>
     </div>

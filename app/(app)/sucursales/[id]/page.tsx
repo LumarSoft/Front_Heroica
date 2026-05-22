@@ -19,6 +19,7 @@ import { ErrorBanner } from '@/components/ui/error-banner'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/store/authStore'
 import { CBU_DIGITOS } from '@/lib/schemas'
+import { CbuInput } from '@/components/ui/cbu-input'
 
 export default function SucursalDetailPage() {
   const router = useRouter()
@@ -1286,34 +1287,11 @@ export default function SucursalDetailPage() {
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">CBU / CVU *</Label>
-                        <Input
+                        <CbuInput
+                          className="h-8 text-sm"
                           value={nuevaCuenta.cbu}
-                          onChange={e => {
-                            const onlyDigits = e.target.value.replace(/\D/g, '').slice(0, CBU_DIGITOS)
-                            setNuevaCuenta({ ...nuevaCuenta, cbu: onlyDigits })
-                          }}
-                          maxLength={CBU_DIGITOS}
-                          inputMode="numeric"
-                          className={`h-8 text-sm ${
-                            nuevaCuenta.cbu.length > 0 && nuevaCuenta.cbu.length !== CBU_DIGITOS
-                              ? 'border-red-400 focus-visible:ring-red-400'
-                              : nuevaCuenta.cbu.length === CBU_DIGITOS
-                                ? 'border-green-400 focus-visible:ring-green-400'
-                                : ''
-                          }`}
-                          placeholder={`${CBU_DIGITOS} dígitos`}
+                          onChange={cbu => setNuevaCuenta({ ...nuevaCuenta, cbu })}
                         />
-                        <p
-                          className={`text-xs text-right ${
-                            nuevaCuenta.cbu.length === CBU_DIGITOS
-                              ? 'text-green-600'
-                              : nuevaCuenta.cbu.length > 0
-                                ? 'text-red-500'
-                                : 'text-gray-400'
-                          }`}
-                        >
-                          {nuevaCuenta.cbu.length}/{CBU_DIGITOS}
-                        </p>
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Alias</Label>
