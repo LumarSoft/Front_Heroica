@@ -18,6 +18,7 @@ import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
 import { ErrorBanner } from '@/components/ui/error-banner'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/store/authStore'
+import { CBU_DIGITOS } from '@/lib/schemas'
 
 export default function SucursalDetailPage() {
   const router = useRouter()
@@ -28,10 +29,8 @@ export default function SucursalDetailPage() {
   const canVerReportes = useAuthStore(state => state.canVerReportes())
   const canAprobarPendientes = useAuthStore(state => state.canAprobarPendientes())
   const canVerMovimientos = useAuthStore(state => state.canVerMovimientos())
-  const canVerPendientes = useAuthStore(state => state.canVerPendientes())
   const canGestionarSucursales = useAuthStore(state => state.canGestionarSucursales())
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
-  const dateInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const [pendingCount, setPendingCount] = useState(0)
   const searchParams = useSearchParams()
   const [moneda, setMoneda] = useState<'ARS' | 'USD'>((searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS')
@@ -82,7 +81,6 @@ export default function SucursalDetailPage() {
   // Estados para documentos (múltiples)
   const [documentos, setDocumentos] = useState<Documento[]>([])
   const [loadingDocumentos, setLoadingDocumentos] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [docToDelete, setDocToDelete] = useState<{
     id: number
     nombre: string
@@ -200,7 +198,8 @@ export default function SucursalDetailPage() {
   }, [user?.rol])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let { name, value } = e.target
+    const { name } = e.target
+    let { value } = e.target
 
     if (name === 'cuit') {
       const digits = value.replace(/\D/g, '')
@@ -293,8 +292,8 @@ export default function SucursalDetailPage() {
       setError('El CBU es obligatorio')
       return
     }
-    if (nuevaCuenta.cbu.length !== 22) {
-      setError(`El CBU debe tener exactamente 22 dígitos (actualmente tiene ${nuevaCuenta.cbu.length})`)
+    if (nuevaCuenta.cbu.length !== CBU_DIGITOS) {
+      setError(`El CBU debe tener exactamente ${CBU_DIGITOS} dígitos (actualmente tiene ${nuevaCuenta.cbu.length})`)
       return
     }
     setIsSavingCuenta(true)
@@ -1290,30 +1289,30 @@ export default function SucursalDetailPage() {
                         <Input
                           value={nuevaCuenta.cbu}
                           onChange={e => {
-                            const onlyDigits = e.target.value.replace(/\D/g, '').slice(0, 22)
+                            const onlyDigits = e.target.value.replace(/\D/g, '').slice(0, CBU_DIGITOS)
                             setNuevaCuenta({ ...nuevaCuenta, cbu: onlyDigits })
                           }}
-                          maxLength={22}
+                          maxLength={CBU_DIGITOS}
                           inputMode="numeric"
                           className={`h-8 text-sm ${
-                            nuevaCuenta.cbu.length > 0 && nuevaCuenta.cbu.length !== 22
+                            nuevaCuenta.cbu.length > 0 && nuevaCuenta.cbu.length !== CBU_DIGITOS
                               ? 'border-red-400 focus-visible:ring-red-400'
-                              : nuevaCuenta.cbu.length === 22
+                              : nuevaCuenta.cbu.length === CBU_DIGITOS
                                 ? 'border-green-400 focus-visible:ring-green-400'
                                 : ''
                           }`}
-                          placeholder="22 dígitos"
+                          placeholder={`${CBU_DIGITOS} dígitos`}
                         />
                         <p
                           className={`text-xs text-right ${
-                            nuevaCuenta.cbu.length === 22
+                            nuevaCuenta.cbu.length === CBU_DIGITOS
                               ? 'text-green-600'
                               : nuevaCuenta.cbu.length > 0
                                 ? 'text-red-500'
                                 : 'text-gray-400'
                           }`}
                         >
-                          {nuevaCuenta.cbu.length}/22
+                          {nuevaCuenta.cbu.length}/{CBU_DIGITOS}
                         </p>
                       </div>
                       <div className="space-y-1">
@@ -1335,7 +1334,7 @@ export default function SucursalDetailPage() {
                       type="button"
                       size="sm"
                       onClick={handleAddCuenta}
-                      disabled={nuevaCuenta.cbu.length !== 22 || isSavingCuenta}
+                      disabled={nuevaCuenta.cbu.length !== CBU_DIGITOS || isSavingCuenta}
                       className="w-full h-8 bg-[#002868] text-white"
                     >
                       Guardar Cuenta

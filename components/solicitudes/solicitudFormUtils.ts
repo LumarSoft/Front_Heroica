@@ -1,4 +1,5 @@
 import type { RhSolicitud, RhSolicitudTipo } from '@/lib/types'
+import { CBU_DIGITOS } from '@/lib/schemas'
 
 function getPrevMonthDefaults(): { mes: string; anio: string } {
   const d = new Date()
@@ -325,24 +326,25 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
 }
 
 function parseEmpleadosFromDetalles(raw: unknown[]): EmpleadoNovedadData[] {
-  return raw.map((e: any) => {
-    const aperc = e.apercibimiento ?? {}
-    const susp = e.suspension ?? {}
-    const desc = e.descuento ?? {}
-    const ausJ = e.ausencias_justificadas ?? {}
-    const ausI = e.ausencias_injustificadas ?? {}
-    const tard = e.tardanzas ?? {}
+  return raw.map((e: unknown) => {
+    const row = e as Record<string, unknown>
+    const aperc = (row.apercibimiento ?? {}) as Record<string, unknown>
+    const susp = (row.suspension ?? {}) as Record<string, unknown>
+    const desc = (row.descuento ?? {}) as Record<string, unknown>
+    const ausJ = (row.ausencias_justificadas ?? {}) as Record<string, unknown>
+    const ausI = (row.ausencias_injustificadas ?? {}) as Record<string, unknown>
+    const tard = (row.tardanzas ?? {}) as Record<string, unknown>
     return {
-      personal_id: Number(e.personal_id),
-      personal_nombre: String(e.personal_nombre ?? ''),
-      cambio_puesto: Boolean(e.cambio_puesto),
-      nuevo_puesto_id: e.nuevo_puesto_id ? String(e.nuevo_puesto_id) : '',
-      fecha_alta_puesto: String(e.fecha_alta_puesto ?? todayStr),
-      horas_trabajadas: e.horas_trabajadas != null ? String(e.horas_trabajadas) : '',
-      horas_feriados: e.horas_feriados != null ? String(e.horas_feriados) : '',
-      horas_extras_autorizadas: Boolean(e.horas_extras_autorizadas),
-      horas_extras_cantidad: e.horas_extras_cantidad != null ? String(e.horas_extras_cantidad) : '',
-      incentivos: Array.isArray(e.incentivos) ? e.incentivos : [],
+      personal_id: Number(row.personal_id),
+      personal_nombre: String(row.personal_nombre ?? ''),
+      cambio_puesto: Boolean(row.cambio_puesto),
+      nuevo_puesto_id: row.nuevo_puesto_id ? String(row.nuevo_puesto_id) : '',
+      fecha_alta_puesto: String(row.fecha_alta_puesto ?? todayStr),
+      horas_trabajadas: row.horas_trabajadas != null ? String(row.horas_trabajadas) : '',
+      horas_feriados: row.horas_feriados != null ? String(row.horas_feriados) : '',
+      horas_extras_autorizadas: Boolean(row.horas_extras_autorizadas),
+      horas_extras_cantidad: row.horas_extras_cantidad != null ? String(row.horas_extras_cantidad) : '',
+      incentivos: Array.isArray(row.incentivos) ? row.incentivos : [],
       apercibimiento: Boolean(aperc.tiene),
       apercibimiento_motivo: String(aperc.motivo ?? ''),
       apercibimiento_archivo_url: String(aperc.archivo_url ?? ''),
@@ -361,7 +363,7 @@ function parseEmpleadosFromDetalles(raw: unknown[]): EmpleadoNovedadData[] {
       aus_injust_cantidad: ausI.cantidad != null ? String(ausI.cantidad) : '',
       aus_injust_unidad: (ausI.unidad ?? 'horas') as 'horas' | 'minutos',
       aus_injust_motivo: String(ausI.motivo ?? ''),
-      observaciones: String(e.observaciones ?? ''),
+      observaciones: String(row.observaciones ?? ''),
       tardanzas_tiene: Boolean(tard.tiene),
       tardanzas_cantidad: tard.cantidad != null ? String(tard.cantidad) : '',
       tardanzas_unidad: (tard.unidad ?? 'horas') as 'horas' | 'minutos',
@@ -761,7 +763,7 @@ export function validateSolicitudForm(form: SolicitudFormState, options?: { isEd
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.alta_email.trim())) return 'Ingrese un correo electrónico válido'
       if (form.alta_cbu.trim()) {
         const cbuDigits = form.alta_cbu.replace(/\D/g, '')
-        if (cbuDigits.length !== 22) return 'El CBU o CVU debe tener 22 dígitos'
+        if (cbuDigits.length !== CBU_DIGITOS) return `El CBU o CVU debe tener ${CBU_DIGITOS} dígitos`
         if (!form.alta_banco.trim()) return 'Indique la entidad bancaria si informa CBU o CVU'
       }
       if (!form.alta_puesto_id) return 'Seleccione un puesto de trabajo'
