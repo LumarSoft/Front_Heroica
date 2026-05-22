@@ -216,6 +216,7 @@ export interface SolicitudFormState {
   suspension_fecha_hasta: string
   suspension_motivo: string
   // Capacitaciones
+  capacitacion_area_id: string
   capacitacion_tema: string
   capacitacion_fecha: string
   capacitacion_descripcion: string
@@ -311,6 +312,7 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
     suspension_fecha_desde: today,
     suspension_fecha_hasta: today,
     suspension_motivo: '',
+    capacitacion_area_id: '',
     capacitacion_tema: '',
     capacitacion_fecha: today,
     capacitacion_descripcion: '',
@@ -569,6 +571,7 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
   if (solicitud.tipo === 'Capacitaciones') {
     return {
       ...base,
+      capacitacion_area_id: detalles.area_id ? String(detalles.area_id) : '',
       capacitacion_tema: String(detalles.tema ?? ''),
       capacitacion_fecha: String(detalles.fecha ?? today),
       capacitacion_descripcion: String(detalles.descripcion ?? ''),
@@ -714,6 +717,7 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
       }
     case 'Capacitaciones':
       return {
+        area_id: Number(form.capacitacion_area_id),
         tema: form.capacitacion_tema.trim(),
         fecha: form.capacitacion_fecha,
         ...(form.capacitacion_descripcion.trim() && { descripcion: form.capacitacion_descripcion.trim() }),
@@ -864,6 +868,7 @@ export function validateSolicitudForm(form: SolicitudFormState, options?: { isEd
       if (!form.suspension_motivo.trim()) return 'Ingrese el motivo de la suspensión'
       return null
     case 'Capacitaciones':
+      if (!form.capacitacion_area_id) return 'Seleccione el área para la capacitación'
       if (!form.capacitacion_tema.trim()) return 'Ingrese el tema de la capacitación'
       if (!form.capacitacion_fecha) return 'Ingrese la fecha de la capacitación'
       return null
