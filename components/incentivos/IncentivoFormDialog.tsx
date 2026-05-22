@@ -261,17 +261,6 @@ export function IncentivoFormDialog({
             {metodoActual && <p className="text-xs text-[#9AA0AC]">{metodoActual.hint}</p>}
           </div>
 
-          <div className="sm:col-span-2 rounded-2xl bg-[#F8FAFF] border border-[#D8E3F8] p-4 flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#EAF0FF] flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-[#002868] text-sm font-bold">i</span>
-            </div>
-            <p className="text-sm text-[#5A6070] leading-relaxed">
-              Este incentivo aplica de forma <strong className="text-[#002868]">global</strong>. Al liquidar el sueldo
-              de cada empleado podrás activarlo individualmente con un check, y el monto se calculará según la escala de
-              ese trabajador.
-            </p>
-          </div>
-
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="descripcion">Detalle informativo</Label>
             <Textarea
