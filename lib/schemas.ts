@@ -1,5 +1,21 @@
 import { z } from 'zod'
 
+// ── CBU / CVU ─────────────────────────────────────────────────────────────
+export const CBU_DIGITOS = 22
+
+// Para campos CBU obligatorios (ej: cuentas bancarias de sucursal)
+export const cbuRequeridoSchema = z
+  .string()
+  .regex(/^\d+$/, 'El CBU o CVU solo debe contener dígitos')
+  .length(CBU_DIGITOS, `El CBU o CVU debe tener exactamente ${CBU_DIGITOS} dígitos`)
+
+// Para campos CBU opcionales (ej: datos bancarios de un empleado)
+export const cbuOpcionalSchema = z
+  .string()
+  .refine(val => val === '' || (val.length === CBU_DIGITOS && /^\d+$/.test(val)), {
+    message: `El CBU o CVU debe tener exactamente ${CBU_DIGITOS} dígitos`,
+  })
+
 // ── Login ──────────────────────────────────────────────────────────────────
 export const loginSchema = z.object({
   email: z.string().email('Ingresá un email válido'),
