@@ -38,10 +38,6 @@ function currentPeriod() {
   return { mes: now.getMonth() + 1, anio: now.getFullYear() }
 }
 
-function isActive(incentivo: RhIncentivoPremio) {
-  return incentivo.activo === true || incentivo.activo === 1
-}
-
 export default function RecursosHumanosIncentivosPage() {
   const router = useRouter()
   const params = useParams()
@@ -97,8 +93,6 @@ export default function RecursosHumanosIncentivosPage() {
       toast.error(message)
     }
   }
-
-  const totalActivo = useMemo(() => incentivos.filter(isActive).length, [incentivos])
 
   function openCreateDialog() {
     setEditing(null)
@@ -204,7 +198,7 @@ export default function RecursosHumanosIncentivosPage() {
               </p>
               <h2 className="text-3xl sm:text-4xl font-bold text-[#002868]">Incentivos y premios</h2>
               <p className="text-[#666666] text-base sm:text-lg mt-1">
-                Uso informativo y cálculo automático de incentivos vinculados a la escala salarial.
+                Catálogo global de reglas de incentivos y premios.
               </p>
             </div>
           </div>
@@ -247,12 +241,6 @@ export default function RecursosHumanosIncentivosPage() {
                     <Label>Año</Label>
                     <Input type="number" value={anio} onChange={e => setAnio(Number(e.target.value))} />
                   </div>
-                </div>
-
-                <div className="rounded-2xl bg-[#F8FAFF] border border-[#D8E3F8] p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-[#9AA0AC] mb-1">Incentivos activos</p>
-                  <p className="text-2xl font-bold text-[#002868]">{totalActivo}</p>
-                  <p className="text-xs text-[#666666] mt-1">El monto se calcula por empleado al liquidar.</p>
                 </div>
               </CardContent>
             </Card>
