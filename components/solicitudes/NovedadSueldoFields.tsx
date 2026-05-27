@@ -111,6 +111,18 @@ export interface EmpleadoCardProps {
 export function EmpleadoCard({ emp, puestos, incentivos, onUpdate, onRemove }: EmpleadoCardProps) {
   const [open, setOpen] = useState(true)
 
+  const empleadoAreaId = puestos.find(p => p.id === emp.puesto_id)?.area_id ?? null
+
+  const incentivosAplicables =
+    emp.puesto_id === null
+      ? incentivos
+      : incentivos.filter(
+          inc =>
+            (inc.area_id === null && inc.puesto_id === null) ||
+            (inc.puesto_id !== null && inc.puesto_id === emp.puesto_id) ||
+            (inc.area_id !== null && inc.area_id === empleadoAreaId),
+        )
+
   function toggleIncentivo(id: number, nombre: string, aplica: boolean) {
     const existing = emp.incentivos.find(i => i.incentivo_id === id)
     onUpdate({
@@ -284,11 +296,11 @@ export function EmpleadoCard({ emp, puestos, incentivos, onUpdate, onRemove }: E
 
           {/* Incentivos */}
           <SubSection title="Incentivos" icon={<Star className="w-3.5 h-3.5" />}>
-            {incentivos.length === 0 ? (
+            {incentivosAplicables.length === 0 ? (
               <p className="text-xs text-[#8A8F9C] italic">No hay incentivos registrados.</p>
             ) : (
               <div className="space-y-1.5">
-                {incentivos.map(inc => (
+                {incentivosAplicables.map(inc => (
                   <div
                     key={inc.id}
                     className="flex items-center justify-between rounded-lg border border-[#E0E0E0] px-3 py-2"
@@ -342,7 +354,9 @@ export function EmpleadoCard({ emp, puestos, incentivos, onUpdate, onRemove }: E
                   accept="application/pdf,.pdf"
                   url={emp.apercibimiento_archivo_url}
                   nombre={emp.apercibimiento_archivo_nombre}
-                  onUpload={(url, nombre) => onUpdate({ apercibimiento_archivo_url: url, apercibimiento_archivo_nombre: nombre })}
+                  onUpload={(url, nombre) =>
+                    onUpdate({ apercibimiento_archivo_url: url, apercibimiento_archivo_nombre: nombre })
+                  }
                   onRemove={() => onUpdate({ apercibimiento_archivo_url: '', apercibimiento_archivo_nombre: '' })}
                 />
               </div>
@@ -378,7 +392,9 @@ export function EmpleadoCard({ emp, puestos, incentivos, onUpdate, onRemove }: E
                   accept="application/pdf,.pdf"
                   url={emp.suspension_archivo_url}
                   nombre={emp.suspension_archivo_nombre}
-                  onUpload={(url, nombre) => onUpdate({ suspension_archivo_url: url, suspension_archivo_nombre: nombre })}
+                  onUpload={(url, nombre) =>
+                    onUpdate({ suspension_archivo_url: url, suspension_archivo_nombre: nombre })
+                  }
                   onRemove={() => onUpdate({ suspension_archivo_url: '', suspension_archivo_nombre: '' })}
                 />
               </div>
@@ -634,7 +650,7 @@ export function NovedadSueldoFields({
     if (!selectedPersonalId) return
     const emp = personal.find(p => p.id === Number(selectedPersonalId))
     if (!emp) return
-    onChange({ nov_empleados: [...form.nov_empleados, createEmpleadoVacio(emp.id, emp.nombre)] })
+    onChange({ nov_empleados: [...form.nov_empleados, createEmpleadoVacio(emp.id, emp.nombre, emp.puesto_id)] })
     setSelectedPersonalId('')
   }
 

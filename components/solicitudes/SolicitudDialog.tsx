@@ -129,9 +129,11 @@ export function SolicitudDialog({
       const personalIdPayload =
         form.tipo === 'Novedades de sueldo' || form.tipo === 'Altas'
           ? null
-          : form.personal_id === 'general'
+          : form.tipo === 'Incentivos y premios' && form.incentivo_scope !== 'colaborador'
             ? null
-            : Number(form.personal_id)
+            : form.personal_id === 'general'
+              ? null
+              : Number(form.personal_id)
 
       const payload = {
         sucursal_id: sucursalId,
@@ -263,41 +265,150 @@ export function SolicitudDialog({
             </div>
           )}
 
-          {form.tipo !== 'Novedades de sueldo' && form.tipo !== 'Altas' && form.tipo !== 'Capacitaciones' && (
-            <div className={form.tipo === 'Bajas' ? 'flex flex-col gap-4' : 'grid grid-cols-2 gap-4'}>
+          {form.tipo !== 'Novedades de sueldo' &&
+            form.tipo !== 'Altas' &&
+            form.tipo !== 'Capacitaciones' &&
+            form.tipo !== 'Incentivos y premios' && (
+              <div className={form.tipo === 'Bajas' ? 'flex flex-col gap-4' : 'grid grid-cols-2 gap-4'}>
+                <div>
+                  <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                    Colaborador{ocultarOpcionSinColaborador ? ' *' : ''}
+                  </Label>
+                  <Select value={form.personal_id} onValueChange={value => setForm({ ...form, personal_id: value })}>
+                    <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                      <SelectValue placeholder={ocultarOpcionSinColaborador ? 'Seleccionar…' : 'General'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {!ocultarOpcionSinColaborador ? (
+                        <SelectItem value="general">-- General / Sin asignar --</SelectItem>
+                      ) : null}
+                      {personalActivo.map(colaborador => (
+                        <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
+                          {colaborador.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {form.tipo !== 'Bajas' ? (
+                  <div>
+                    <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                      Fecha *
+                    </Label>
+                    <Input
+                      type="date"
+                      value={form.fecha_solicitud}
+                      onChange={event => setForm({ ...form, fecha_solicitud: event.target.value })}
+                      className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+                    />
+                  </div>
+                ) : null}
+              </div>
+            )}
+
+          {form.tipo === 'Incentivos y premios' && (
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
-                  Colaborador{ocultarOpcionSinColaborador ? ' *' : ''}
+                  Aplicar a *
                 </Label>
-                <Select value={form.personal_id} onValueChange={value => setForm({ ...form, personal_id: value })}>
+                <Select
+                  value={form.incentivo_scope}
+                  onValueChange={value =>
+                    setForm(prev => ({
+                      ...prev,
+                      incentivo_scope: value as 'colaborador' | 'area' | 'puesto',
+                      personal_id: 'general',
+                      incentivo_area_id: '',
+                      incentivo_puesto_id: '',
+                    }))
+                  }
+                >
                   <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
-                    <SelectValue placeholder={ocultarOpcionSinColaborador ? 'Seleccionar…' : 'General'} />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {!ocultarOpcionSinColaborador ? (
-                      <SelectItem value="general">-- General / Sin asignar --</SelectItem>
-                    ) : null}
-                    {personalActivo.map(colaborador => (
-                      <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
-                        {colaborador.nombre}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="colaborador">Colaborador individual</SelectItem>
+                    <SelectItem value="area">Área</SelectItem>
+                    <SelectItem value="puesto">Puesto</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              {form.tipo !== 'Bajas' ? (
-                <div>
+              <div>
+                <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                  Fecha *
+                </Label>
+                <Input
+                  type="date"
+                  value={form.fecha_solicitud}
+                  onChange={event => setForm({ ...form, fecha_solicitud: event.target.value })}
+                  className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+                />
+              </div>
+              {form.incentivo_scope === 'colaborador' && (
+                <div className="col-span-2">
                   <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
-                    Fecha *
+                    Colaborador *
                   </Label>
-                  <Input
-                    type="date"
-                    value={form.fecha_solicitud}
-                    onChange={event => setForm({ ...form, fecha_solicitud: event.target.value })}
-                    className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
-                  />
+                  <Select value={form.personal_id} onValueChange={value => setForm({ ...form, personal_id: value })}>
+                    <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                      <SelectValue placeholder="Seleccionar…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {personalActivo.map(colaborador => (
+                        <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
+                          {colaborador.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              ) : null}
+              )}
+              {form.incentivo_scope === 'area' && (
+                <div className="col-span-2">
+                  <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                    Área *
+                  </Label>
+                  <Select
+                    value={form.incentivo_area_id}
+                    onValueChange={value => setForm({ ...form, incentivo_area_id: value })}
+                  >
+                    <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                      <SelectValue placeholder="Seleccionar área…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {areas.map(area => (
+                        <SelectItem key={area.id} value={area.id.toString()}>
+                          {area.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {form.incentivo_scope === 'puesto' && (
+                <div className="col-span-2">
+                  <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                    Puesto *
+                  </Label>
+                  <Select
+                    value={form.incentivo_puesto_id}
+                    onValueChange={value => setForm({ ...form, incentivo_puesto_id: value })}
+                  >
+                    <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                      <SelectValue placeholder="Seleccionar puesto…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {puestos.map(p => (
+                        <SelectItem key={p.id} value={p.id.toString()}>
+                          {p.nombre}
+                          <span className="text-[#9AA0AC] ml-1">· {p.area_nombre}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           )}
 

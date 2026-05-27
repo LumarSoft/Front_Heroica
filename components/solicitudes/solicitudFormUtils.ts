@@ -12,6 +12,7 @@ const todayStr = new Date().toISOString().split('T')[0]
 export interface EmpleadoNovedadData {
   personal_id: number
   personal_nombre: string
+  puesto_id: number | null
   cambio_puesto: boolean
   nuevo_puesto_id: string
   fecha_alta_puesto: string
@@ -105,10 +106,15 @@ export function validateEmpleadoNovedadForSolicitud(emp: EmpleadoNovedadData): s
   return null
 }
 
-export function createEmpleadoVacio(personalId: number, personalNombre: string): EmpleadoNovedadData {
+export function createEmpleadoVacio(
+  personalId: number,
+  personalNombre: string,
+  puestoId: number | null = null,
+): EmpleadoNovedadData {
   return {
     personal_id: personalId,
     personal_nombre: personalNombre,
+    puesto_id: puestoId,
     cambio_puesto: false,
     nuevo_puesto_id: '',
     fecha_alta_puesto: todayStr,
@@ -228,6 +234,9 @@ export interface SolicitudFormState {
   adelanto_fecha: string
   adelanto_motivo: string
   // Incentivos y premios
+  incentivo_scope: 'colaborador' | 'area' | 'puesto'
+  incentivo_area_id: string
+  incentivo_puesto_id: string
   incentivo_descripcion: string
   incentivo_monto: string
   incentivo_fecha: string
@@ -321,6 +330,9 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
     adelanto_monto: '',
     adelanto_fecha: today,
     adelanto_motivo: '',
+    incentivo_scope: 'colaborador',
+    incentivo_area_id: '',
+    incentivo_puesto_id: '',
     incentivo_descripcion: '',
     incentivo_monto: '',
     incentivo_fecha: today,
@@ -339,6 +351,7 @@ function parseEmpleadosFromDetalles(raw: unknown[]): EmpleadoNovedadData[] {
     return {
       personal_id: Number(row.personal_id),
       personal_nombre: String(row.personal_nombre ?? ''),
+      puesto_id: row.puesto_id != null ? Number(row.puesto_id) : null,
       cambio_puesto: Boolean(row.cambio_puesto),
       nuevo_puesto_id: row.nuevo_puesto_id ? String(row.nuevo_puesto_id) : '',
       fecha_alta_puesto: String(row.fecha_alta_puesto ?? todayStr),
@@ -596,8 +609,12 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
   }
 
   if (solicitud.tipo === 'Incentivos y premios') {
+    const scope = (detalles.scope as 'colaborador' | 'area' | 'puesto') ?? 'colaborador'
     return {
       ...base,
+      incentivo_scope: scope,
+      incentivo_area_id: detalles.area_id != null ? String(detalles.area_id) : '',
+      incentivo_puesto_id: detalles.puesto_id != null ? String(detalles.puesto_id) : '',
       incentivo_descripcion: String(detalles.descripcion ?? ''),
       incentivo_fecha: String(detalles.fecha ?? today),
       incentivo_monto: detalles.monto != null ? String(detalles.monto) : '',
@@ -735,6 +752,13 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
       }
     case 'Incentivos y premios':
       return {
+        scope: form.incentivo_scope,
+        ...(form.incentivo_scope === 'area' && form.incentivo_area_id
+          ? { area_id: Number(form.incentivo_area_id) }
+          : {}),
+        ...(form.incentivo_scope === 'puesto' && form.incentivo_puesto_id
+          ? { puesto_id: Number(form.incentivo_puesto_id) }
+          : {}),
         descripcion: form.incentivo_descripcion.trim(),
         fecha: form.incentivo_fecha,
         ...(form.incentivo_monto && { monto: Number(form.incentivo_monto) }),
@@ -884,7 +908,12 @@ export function validateSolicitudForm(form: SolicitudFormState, options?: { isEd
       if (!form.adelanto_motivo.trim()) return 'Ingrese el motivo del adelanto'
       return null
     case 'Incentivos y premios':
-      if (form.personal_id === 'general') return 'Seleccione el colaborador para el incentivo o premio'
+      if (form.incentivo_scope === 'colaborador' && form.personal_id === 'general')
+        return 'Seleccione el colaborador para el incentivo o premio'
+      if (form.incentivo_scope === 'area' && !form.incentivo_area_id)
+        return 'Seleccione el área para el incentivo o premio'
+      if (form.incentivo_scope === 'puesto' && !form.incentivo_puesto_id)
+        return 'Seleccione el puesto para el incentivo o premio'
       if (!form.incentivo_descripcion.trim()) return 'Ingrese la descripción del incentivo o premio'
       if (!form.incentivo_fecha) return 'Ingrese la fecha del incentivo o premio'
       return null
