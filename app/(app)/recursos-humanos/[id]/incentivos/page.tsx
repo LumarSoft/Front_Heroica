@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { IncentivoCard } from '@/components/incentivos/IncentivoCard'
 import { IncentivoFormDialog } from '@/components/incentivos/IncentivoFormDialog'
 import type { IncentivoPayload } from '@/components/incentivos/IncentivoFormDialog'
-import type { RhIncentivoPremio, Sucursal } from '@/lib/types'
+import type { Area, Puesto, RhIncentivoPremio, Sucursal } from '@/lib/types'
 
 const MESES = [
   'Enero',
@@ -46,6 +46,8 @@ export default function RecursosHumanosIncentivosPage() {
 
   const [sucursal, setSucursal] = useState<Sucursal | null>(null)
   const [incentivos, setIncentivos] = useState<RhIncentivoPremio[]>([])
+  const [areas, setAreas] = useState<Area[]>([])
+  const [puestos, setPuestos] = useState<Puesto[]>([])
   const [mes, setMes] = useState(initialPeriod.mes)
   const [anio, setAnio] = useState(initialPeriod.anio)
   const [isLoading, setIsLoading] = useState(true)
@@ -67,10 +69,20 @@ export default function RecursosHumanosIncentivosPage() {
     setIsLoading(true)
     setError('')
     try {
-      const res = await apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId))
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Error al cargar sucursal')
-      setSucursal(data.data)
+      const [resSucursal, resAreas, resPuestos] = await Promise.all([
+        apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId)),
+        apiFetch(API_ENDPOINTS.AREAS.GET_ACTIVAS),
+        apiFetch(API_ENDPOINTS.PUESTOS.GET_ALL),
+      ])
+      const [dataSucursal, dataAreas, dataPuestos] = await Promise.all([
+        resSucursal.json(),
+        resAreas.json(),
+        resPuestos.json(),
+      ])
+      if (!resSucursal.ok) throw new Error(dataSucursal.message || 'Error al cargar sucursal')
+      setSucursal(dataSucursal.data)
+      if (resAreas.ok) setAreas(dataAreas.data ?? [])
+      if (resPuestos.ok) setPuestos(dataPuestos.data ?? [])
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al cargar datos'
       setError(message)
@@ -311,6 +323,8 @@ export default function RecursosHumanosIncentivosPage() {
         initial={editing}
         defaultMes={mes}
         defaultAnio={anio}
+        areas={areas}
+        puestos={puestos}
       />
     </div>
   )

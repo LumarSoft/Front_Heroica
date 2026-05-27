@@ -10,7 +10,9 @@ import { MontoInput } from '@/components/ui/monto-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import type { RhIncentivoMetodoCalculo, RhIncentivoPremio, RhIncentivoTipo } from '@/lib/types'
+import type { Area, Puesto, RhIncentivoMetodoCalculo, RhIncentivoPremio, RhIncentivoTipo } from '@/lib/types'
+
+type ScopeType = 'sucursal' | 'area' | 'puesto'
 
 const MESES = [
   'Enero',
@@ -46,6 +48,8 @@ export interface IncentivoPayload {
   metodo_calculo: RhIncentivoMetodoCalculo
   valor: number
   activo: boolean
+  area_id: number | null
+  puesto_id: number | null
 }
 
 interface IncentivoForm {
@@ -57,6 +61,9 @@ interface IncentivoForm {
   metodo_calculo: RhIncentivoMetodoCalculo
   valor: string
   activo: boolean
+  scope: ScopeType
+  area_id: string
+  puesto_id: string
 }
 
 interface IncentivoFormDialogProps {
@@ -67,6 +74,8 @@ interface IncentivoFormDialogProps {
   initial: RhIncentivoPremio | null
   defaultMes: number
   defaultAnio: number
+  areas: Area[]
+  puestos: Puesto[]
 }
 
 function formatArMoney(n: number) {
@@ -102,12 +111,16 @@ function emptyForm(mes: number, anio: number): IncentivoForm {
     metodo_calculo: 'porcentaje_escala',
     valor: '',
     activo: true,
+    scope: 'sucursal',
+    area_id: '',
+    puesto_id: '',
   }
 }
 
 function toForm(incentivo: RhIncentivoPremio): IncentivoForm {
   const valorStr =
     incentivo.metodo_calculo === 'monto_fijo' ? formatArMoney(Number(incentivo.valor)) : String(incentivo.valor)
+  const scope: ScopeType = incentivo.area_id ? 'area' : incentivo.puesto_id ? 'puesto' : 'sucursal'
   return {
     nombre: incentivo.nombre,
     tipo: incentivo.tipo,
@@ -117,6 +130,9 @@ function toForm(incentivo: RhIncentivoPremio): IncentivoForm {
     metodo_calculo: incentivo.metodo_calculo,
     valor: valorStr,
     activo: typeof incentivo.activo === 'boolean' ? incentivo.activo : incentivo.activo === 1,
+    scope,
+    area_id: incentivo.area_id ? String(incentivo.area_id) : '',
+    puesto_id: incentivo.puesto_id ? String(incentivo.puesto_id) : '',
   }
 }
 
@@ -128,6 +144,8 @@ export function IncentivoFormDialog({
   initial,
   defaultMes,
   defaultAnio,
+  areas,
+  puestos,
 }: IncentivoFormDialogProps) {
   const [form, setForm] = useState<IncentivoForm>(() => emptyForm(defaultMes, defaultAnio))
 
@@ -164,6 +182,14 @@ export function IncentivoFormDialog({
       toast.error('Ingresá un valor válido')
       return
     }
+    if (form.scope === 'area' && !form.area_id) {
+      toast.error('Seleccioná un área')
+      return
+    }
+    if (form.scope === 'puesto' && !form.puesto_id) {
+      toast.error('Seleccioná un puesto')
+      return
+    }
     await onSave({
       nombre: form.nombre,
       tipo: form.tipo,
@@ -173,6 +199,8 @@ export function IncentivoFormDialog({
       metodo_calculo: form.metodo_calculo,
       valor: valorNum,
       activo: form.activo,
+      area_id: form.scope === 'area' && form.area_id ? Number(form.area_id) : null,
+      puesto_id: form.scope === 'puesto' && form.puesto_id ? Number(form.puesto_id) : null,
     })
   }
 
@@ -192,6 +220,60 @@ export function IncentivoFormDialog({
             <Label htmlFor="nombre">Nombre</Label>
             <Input id="nombre" value={form.nombre} onChange={e => setField('nombre', e.target.value)} />
           </div>
+
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Aplicar a</Label>
+            <Select
+              value={form.scope}
+              onValueChange={v => setForm(prev => ({ ...prev, scope: v as ScopeType, area_id: '', puesto_id: '' }))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sucursal">Toda la sucursal</SelectItem>
+                <SelectItem value="area">Área específica</SelectItem>
+                <SelectItem value="puesto">Puesto específico</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {form.scope === 'area' && (
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Área</Label>
+              <Select value={form.area_id} onValueChange={v => setField('area_id', v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccione un área" />
+                </SelectTrigger>
+                <SelectContent>
+                  {areas.map(a => (
+                    <SelectItem key={a.id} value={String(a.id)}>
+                      {a.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {form.scope === 'puesto' && (
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Puesto</Label>
+              <Select value={form.puesto_id} onValueChange={v => setField('puesto_id', v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccione un puesto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {puestos.map(p => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.nombre}
+                      <span className="text-[#9AA0AC] ml-1">· {p.area_nombre}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Tipo</Label>

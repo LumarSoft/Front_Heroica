@@ -220,6 +220,10 @@ export interface RhIncentivoPremio {
   id: number
   sucursal_id: number
   sucursal_nombre: string
+  area_id: number | null
+  area_nombre: string | null
+  puesto_id: number | null
+  puesto_nombre: string | null
   nombre: string
   tipo: RhIncentivoTipo
   descripcion: string | null

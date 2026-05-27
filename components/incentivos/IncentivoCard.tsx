@@ -49,6 +49,16 @@ export function IncentivoCard({ incentivo, onEdit, onDeactivate, deactivatingId 
             >
               {active ? 'Activo' : 'Inactivo'}
             </span>
+            {incentivo.area_id && incentivo.area_nombre && (
+              <span className="inline-flex rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+                Área: {incentivo.area_nombre}
+              </span>
+            )}
+            {incentivo.puesto_id && incentivo.puesto_nombre && (
+              <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                Puesto: {incentivo.puesto_nombre}
+              </span>
+            )}
           </div>
           <h3 className="text-xl font-bold text-[#002868]">{incentivo.nombre}</h3>
           <p className="text-sm text-[#666666] mt-1">Actualizado {formatDate(incentivo.fecha_ultima_actualizacion)}</p>

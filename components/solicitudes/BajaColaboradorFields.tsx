@@ -46,7 +46,9 @@ function ReadonlyField({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-1">
       <p className="text-xs font-semibold text-[#5A6070]">{label}</p>
-      <div className="min-h-[2.5rem] rounded-lg border border-[#E8EDF4] bg-[#F8FAFC] px-3 py-2 text-sm text-[#1A1A1A]">{value}</div>
+      <div className="min-h-[2.5rem] rounded-lg border border-[#E8EDF4] bg-[#F8FAFC] px-3 py-2 text-sm text-[#1A1A1A]">
+        {value}
+      </div>
     </div>
   )
 }
@@ -85,8 +87,7 @@ export function BajaColaboradorFields({
   )
   const prevColaboradorRef = useRef<string | null>(null)
 
-  const colaborador =
-    form.personal_id !== 'general' ? personal.find(c => String(c.id) === form.personal_id) : undefined
+  const colaborador = form.personal_id !== 'general' ? personal.find(c => String(c.id) === form.personal_id) : undefined
 
   useEffect(() => {
     let cancelled = false
@@ -117,7 +118,7 @@ export function BajaColaboradorFields({
       const id = Number(pid)
       const p = personal.find(c => c.id === id)
       if (!p) return
-      onChange({ baja_empleado_liquidacion: createEmpleadoVacio(id, p.nombre) })
+      onChange({ baja_empleado_liquidacion: createEmpleadoVacio(id, p.nombre, p.puesto_id) })
     }
 
     if (prevColaboradorRef.current === null) {
@@ -153,8 +154,9 @@ export function BajaColaboradorFields({
       if (!res.ok) throw new Error(data.message || 'No se pudo crear el motivo')
       const creado = data.data as { id: number; nombre: string }
       setMotivos(prev =>
-        [...prev, { id: creado.id, sucursal_id: sucursalId, nombre: creado.nombre }]
-          .sort((a, b) => (a.nombre ?? '').localeCompare(b.nombre ?? '', 'es', { sensitivity: 'base' })),
+        [...prev, { id: creado.id, sucursal_id: sucursalId, nombre: creado.nombre }].sort((a, b) =>
+          (a.nombre ?? '').localeCompare(b.nombre ?? '', 'es', { sensitivity: 'base' }),
+        ),
       )
       onChange({ baja_motivo_id: String(creado.id) })
       toast.success('Motivo guardado en el catálogo')
@@ -169,7 +171,11 @@ export function BajaColaboradorFields({
 
   return (
     <div className="space-y-4">
-      <SectionCard title="Datos básicos" icon={<Building2 className="w-4 h-4" />} subtitle="Colaborador y sucursal según RRHH 002">
+      <SectionCard
+        title="Datos básicos"
+        icon={<Building2 className="w-4 h-4" />}
+        subtitle="Colaborador y sucursal según RRHH 002"
+      >
         <ReadonlyField label="Nombre y apellido" value={colaborador?.nombre ?? 'Seleccione un colaborador arriba'} />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <ReadonlyField label="Sucursal" value={sucursalNombre || '—'} />
@@ -216,7 +222,9 @@ export function BajaColaboradorFields({
         icon={<BriefcaseBusiness className="w-4 h-4" />}
       >
         {form.personal_id === 'general' ? (
-          <p className="text-sm text-[#8A8F9C] text-center py-2">Seleccione un colaborador arriba para completar esta sección.</p>
+          <p className="text-sm text-[#8A8F9C] text-center py-2">
+            Seleccione un colaborador arriba para completar esta sección.
+          </p>
         ) : empLiq ? (
           <EmpleadoCard
             emp={empLiq}
@@ -244,7 +252,9 @@ export function BajaColaboradorFields({
       <div className="flex gap-2 rounded-lg border border-dashed border-[#C9D6E8] bg-[#F8FAFC]/80 px-3 py-2 text-[11px] text-[#5A6070]">
         <User className="w-4 h-4 shrink-0 text-[#002868] mt-0.5" aria-hidden />
         <p>
-          {isEditing ? 'Las observaciones amplían el contenido formal de carta documento y figuran en la solicitud junto con el nombre del solicitante.' : 'Las observaciones de la solicitud se completan más abajo; use ese campo para el texto largo tipo acta/comentarios de RRHH.'}
+          {isEditing
+            ? 'Las observaciones amplían el contenido formal de carta documento y figuran en la solicitud junto con el nombre del solicitante.'
+            : 'Las observaciones de la solicitud se completan más abajo; use ese campo para el texto largo tipo acta/comentarios de RRHH.'}
         </p>
       </div>
     </div>
