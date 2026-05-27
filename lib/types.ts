@@ -262,6 +262,7 @@ export type RhSolicitudTipo =
   | 'Adelantos'
   | 'Descuentos'
   | 'Horas extras'
+  | 'Cambio de puesto/sucursal'
 export type RhSolicitudEstado = 'Pendiente' | 'Aprobada' | 'Rechazada' | 'Cancelada'
 export type RhSolicitudHistorialEvento =
   | 'Creada'
@@ -395,6 +396,13 @@ export interface RhSolicitudApercibimientoDetalles {
   motivo: string
 }
 
+export interface RhSolicitudCambioPuestoSucursalDetalles {
+  puesto_id_nuevo: number | null
+  sucursal_id_nueva: number | null
+  fecha_efectiva: string
+  motivo: string | null
+}
+
 export type RhSolicitudDetalles =
   | Record<string, unknown>
   | RhSolicitudAltaDetalles
@@ -403,6 +411,7 @@ export type RhSolicitudDetalles =
   | RhSolicitudLicenciaDetalles
   | RhSolicitudNovedadSueldoDetalles
   | RhSolicitudApercibimientoDetalles
+  | RhSolicitudCambioPuestoSucursalDetalles
   | null
 
 export interface RhSolicitud {

@@ -408,6 +408,20 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
     ])
   }
 
+  if (solicitud.tipo === 'Cambio de puesto/sucursal') {
+    const dash = (value: unknown): string => {
+      if (value == null) return '—'
+      const text = String(value).trim()
+      return text.length > 0 ? text : '—'
+    }
+    return renderRows([
+      { label: 'Fecha efectiva', value: dash(detalles.fecha_efectiva) },
+      { label: 'Nuevo puesto (ID)', value: dash(detalles.puesto_id_nuevo) },
+      { label: 'Nueva sucursal (ID)', value: dash(detalles.sucursal_id_nueva) },
+      { label: 'Motivo', value: dash(detalles.motivo) },
+    ])
+  }
+
   if (!solicitud.detalles) return null
 
   return (

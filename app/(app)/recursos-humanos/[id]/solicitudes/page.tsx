@@ -28,6 +28,7 @@ const TIPOS_GRID: RhSolicitudTipo[] = [
   'Capacitaciones',
   'Pedido de uniforme',
   'Adelantos',
+  'Cambio de puesto/sucursal',
 ]
 
 const initialFilters: SolicitudesFilterState = {
@@ -74,23 +75,27 @@ export default function SolicitudesPage() {
   async function fetchAll() {
     try {
       setError('')
-      const [sucursalRes, solicitudesRes, personalRes, puestosRes, areasRes, incentivosRes] = await Promise.all([
-        apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId)),
-        apiFetch(API_ENDPOINTS.RRHH_SOLICITUDES.GET_BY_SUCURSAL(sucursalId)),
-        apiFetch(API_ENDPOINTS.PERSONAL.GET_BY_SUCURSAL(sucursalId)),
-        apiFetch(API_ENDPOINTS.PUESTOS.GET_ALL),
-        apiFetch(API_ENDPOINTS.AREAS.GET_ACTIVAS),
-        apiFetch(API_ENDPOINTS.RRHH_INCENTIVOS.GET_BY_SUCURSAL(sucursalId)),
-      ])
+      const [sucursalRes, sucursalesRes, solicitudesRes, personalRes, puestosRes, areasRes, incentivosRes] =
+        await Promise.all([
+          apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId)),
+          apiFetch(API_ENDPOINTS.SUCURSALES.GET_ALL),
+          apiFetch(API_ENDPOINTS.RRHH_SOLICITUDES.GET_BY_SUCURSAL(sucursalId)),
+          apiFetch(API_ENDPOINTS.PERSONAL.GET_BY_SUCURSAL(sucursalId)),
+          apiFetch(API_ENDPOINTS.PUESTOS.GET_ALL),
+          apiFetch(API_ENDPOINTS.AREAS.GET_ACTIVAS),
+          apiFetch(API_ENDPOINTS.RRHH_INCENTIVOS.GET_BY_SUCURSAL(sucursalId)),
+        ])
 
-      const [sucursalData, solicitudesData, personalData, puestosData, areasData, incentivosData] = await Promise.all([
-        sucursalRes.json(),
-        solicitudesRes.json(),
-        personalRes.json(),
-        puestosRes.json(),
-        areasRes.json(),
-        incentivosRes.json(),
-      ])
+      const [sucursalData, sucursalesData, solicitudesData, personalData, puestosData, areasData, incentivosData] =
+        await Promise.all([
+          sucursalRes.json(),
+          sucursalesRes.json(),
+          solicitudesRes.json(),
+          personalRes.json(),
+          puestosRes.json(),
+          areasRes.json(),
+          incentivosRes.json(),
+        ])
 
       if (!sucursalRes.ok) throw new Error(sucursalData.message || 'Error al cargar sucursal')
       if (!solicitudesRes.ok) throw new Error(solicitudesData.message || 'Error al cargar solicitudes')
@@ -103,7 +108,7 @@ export default function SolicitudesPage() {
       setPuestos(puestosData.data ?? [])
       setAreas(areasData.data ?? [])
       setIncentivos(incentivosData.data ?? [])
-      setSucursales(sucursalData.data ? [sucursalData.data] : [])
+      setSucursales(sucursalesData.data ?? (sucursalData.data ? [sucursalData.data] : []))
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al cargar datos')
     } finally {
@@ -119,8 +124,13 @@ export default function SolicitudesPage() {
     return solicitudes.filter(solicitud => {
       if (selectedTipo && solicitud.tipo !== selectedTipo) return false
       if (filters.estado !== 'todos' && solicitud.estado !== filters.estado) return false
-      if (filters.personalId !== 'todos' && String(solicitud.personal_id ?? solicitud.personal_creado_id ?? '') !== filters.personalId) return false
-      if (filters.solicitante && !solicitud.usuario_nombre.toLowerCase().includes(filters.solicitante.toLowerCase())) return false
+      if (
+        filters.personalId !== 'todos' &&
+        String(solicitud.personal_id ?? solicitud.personal_creado_id ?? '') !== filters.personalId
+      )
+        return false
+      if (filters.solicitante && !solicitud.usuario_nombre.toLowerCase().includes(filters.solicitante.toLowerCase()))
+        return false
       if (filters.fechaDesde && solicitud.fecha_solicitud.split('T')[0] < filters.fechaDesde) return false
       if (filters.fechaHasta && solicitud.fecha_solicitud.split('T')[0] > filters.fechaHasta) return false
       return true
@@ -135,7 +145,13 @@ export default function SolicitudesPage() {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-14 gap-3">
             <div className="flex items-center gap-3">
-              <Button onClick={() => router.push(`/recursos-humanos/${sucursalId}`)} variant="ghost" size="icon" className="w-9 h-9 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 cursor-pointer rounded-lg" aria-label="Volver">
+              <Button
+                onClick={() => router.push(`/recursos-humanos/${sucursalId}`)}
+                variant="ghost"
+                size="icon"
+                className="w-9 h-9 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 cursor-pointer rounded-lg"
+                aria-label="Volver"
+              >
                 <ArrowLeft className="w-4 h-4" />
               </Button>
               <div className="min-w-0">
@@ -147,7 +163,14 @@ export default function SolicitudesPage() {
             </div>
 
             {canCrearSolicitudes && selectedTipo && (
-              <Button onClick={() => { setEditingSolicitud(null); setIsDialogOpen(true) }} className="bg-gradient-to-r from-[#002868] to-[#003d8f] hover:shadow-lg text-white gap-2 transition-all cursor-pointer" size="sm">
+              <Button
+                onClick={() => {
+                  setEditingSolicitud(null)
+                  setIsDialogOpen(true)
+                }}
+                className="bg-gradient-to-r from-[#002868] to-[#003d8f] hover:shadow-lg text-white gap-2 transition-all cursor-pointer"
+                size="sm"
+              >
                 <Plus className="w-4 h-4" />
                 Nueva Solicitud
               </Button>
@@ -166,23 +189,43 @@ export default function SolicitudesPage() {
               Solicitudes
             </h2>
             <p className="text-xs sm:text-sm text-[#666666] mt-1">
-              Carga, revisión y seguimiento de solicitudes de la sucursal · {solicitudesFiltradas.length} registro{solicitudesFiltradas.length !== 1 ? 's' : ''}
+              Carga, revisión y seguimiento de solicitudes de la sucursal · {solicitudesFiltradas.length} registro
+              {solicitudesFiltradas.length !== 1 ? 's' : ''}
             </p>
           </div>
         </div>
 
         {!selectedTipo ? (
-          <SolicitudTiposGrid tipos={TIPOS_GRID} pendingCounts={pendingCounts} onSelect={setSelectedTipo} showBadges={canAprobarSolicitudes} />
+          <SolicitudTiposGrid
+            tipos={TIPOS_GRID}
+            pendingCounts={pendingCounts}
+            onSelect={setSelectedTipo}
+            showBadges={canAprobarSolicitudes}
+          />
         ) : (
           <div className="mt-4">
             <div className="flex items-center justify-between mb-4">
-              <Button variant="outline" size="sm" onClick={() => { setSelectedTipo(null); setFilters(initialFilters) }} className="text-[#5A6070] border-[#D8E3F8]">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSelectedTipo(null)
+                  setFilters(initialFilters)
+                }}
+                className="text-[#5A6070] border-[#D8E3F8]"
+              >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Volver a Categorías
               </Button>
             </div>
 
-            <SolicitudesFilters filters={filters} onChange={setFilters} personal={personal.filter(colaborador => colaborador.activo)} sucursales={sucursales} showSucursalFilter={false} />
+            <SolicitudesFilters
+              filters={filters}
+              onChange={setFilters}
+              personal={personal.filter(colaborador => colaborador.activo)}
+              sucursales={sucursales}
+              showSucursalFilter={false}
+            />
             <SolicitudesTable solicitudes={solicitudesFiltradas} onSelect={setSelectedSolicitud} showSucursal={false} />
           </div>
         )}
@@ -212,6 +255,7 @@ export default function SolicitudesPage() {
             puestos={puestos}
             areas={areas}
             incentivos={incentivos}
+            sucursales={sucursales}
             onSuccess={fetchAll}
             solicitud={editingSolicitud}
             tipoInicial={selectedTipo}
