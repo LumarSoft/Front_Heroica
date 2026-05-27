@@ -3,7 +3,7 @@
 import { Input } from '@/components/ui/input'
 import { MontoInput } from '@/components/ui/monto-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import type { Area, Personal, Puesto, RhIncentivoPremio } from '@/lib/types'
+import type { Area, Personal, Puesto, RhIncentivoPremio, Sucursal } from '@/lib/types'
 import type { SolicitudFormState } from './solicitudFormUtils'
 import { AltaColaboradorFields } from './AltaColaboradorFields'
 import { BajaColaboradorFields } from './BajaColaboradorFields'
@@ -17,6 +17,7 @@ interface SolicitudSpecificFieldsProps {
   areas?: Area[]
   incentivos?: RhIncentivoPremio[]
   personal?: Personal[]
+  sucursales?: Sucursal[]
   isEditing?: boolean
   onChange: (patch: Partial<SolicitudFormState>) => void
 }
@@ -29,6 +30,7 @@ export function SolicitudSpecificFields({
   areas = [],
   incentivos = [],
   personal = [],
+  sucursales = [],
   isEditing = false,
   onChange,
 }: SolicitudSpecificFieldsProps) {
@@ -297,6 +299,69 @@ export function SolicitudSpecificFields({
           value={form.incentivo_monto}
           onChange={v => onChange({ incentivo_monto: v })}
         />
+      </div>
+    )
+  }
+
+  if (form.tipo === 'Cambio de puesto/sucursal') {
+    const sucursalesDestino = sucursales.filter(s => s.activo && s.id !== sucursalId)
+    return (
+      <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#5A6070] mb-1">Nuevo puesto</p>
+          <Select
+            value={form.cambio_nuevo_puesto_id || 'none'}
+            onValueChange={value => onChange({ cambio_nuevo_puesto_id: value === 'none' ? '' : value })}
+          >
+            <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+              <SelectValue placeholder="Sin cambio" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Sin cambio</SelectItem>
+              {puestos.map(p => (
+                <SelectItem key={p.id} value={String(p.id)}>
+                  {p.nombre}
+                  <span className="text-[#9AA0AC] ml-1">· {p.area_nombre}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#5A6070] mb-1">Nueva sucursal</p>
+          <Select
+            value={form.cambio_nueva_sucursal_id || 'none'}
+            onValueChange={value => onChange({ cambio_nueva_sucursal_id: value === 'none' ? '' : value })}
+          >
+            <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+              <SelectValue placeholder="Sin cambio" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Sin cambio</SelectItem>
+              {sucursalesDestino.map(s => (
+                <SelectItem key={s.id} value={String(s.id)}>
+                  {s.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#5A6070] mb-1">Fecha efectiva *</p>
+          <Input
+            type="date"
+            value={form.cambio_fecha_efectiva}
+            onChange={event => onChange({ cambio_fecha_efectiva: event.target.value })}
+          />
+        </div>
+        <div className="col-span-2">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#5A6070] mb-1">Motivo (opcional)</p>
+          <Input
+            placeholder="Motivo del cambio"
+            value={form.cambio_motivo}
+            onChange={event => onChange({ cambio_motivo: event.target.value })}
+          />
+        </div>
       </div>
     )
   }

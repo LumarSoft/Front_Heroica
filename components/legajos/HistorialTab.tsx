@@ -128,6 +128,13 @@ const TIPO_CONFIG: Record<RhSolicitudTipo, TipoConfig> = {
     bgColor: 'bg-purple-50',
     borderColor: 'border-l-purple-400',
   },
+  'Cambio de puesto/sucursal': {
+    label: 'Cambio de puesto/sucursal',
+    icon: <TrendingUp className="w-4 h-4" />,
+    textColor: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-l-blue-400',
+  },
 }
 
 const TIPOS_FILTRO: Array<{ value: RhSolicitudTipo | ''; label: string }> = [
@@ -143,6 +150,7 @@ const TIPOS_FILTRO: Array<{ value: RhSolicitudTipo | ''; label: string }> = [
   { value: 'Adelantos', label: 'Adelantos' },
   { value: 'Descuentos', label: 'Descuentos' },
   { value: 'Horas extras', label: 'Horas extras' },
+  { value: 'Cambio de puesto/sucursal', label: 'Cambio de puesto/sucursal' },
   { value: 'Bajas', label: 'Bajas' },
   { value: 'Altas', label: 'Altas' },
 ]
@@ -234,13 +242,33 @@ function DetallesChips({ solicitud }: { solicitud: RhSolicitud }) {
   } else if (solicitud.tipo === 'Novedades de sueldo') {
     const MESES = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
     const mes = Number(d.mes)
-    if (d.mes && d.anio) chips.push(<Chip key="periodo">Período: {MESES[mes] ?? mes}/{String(d.anio)}</Chip>)
-    const empleados = Array.isArray(d.empleados) ? d.empleados as Record<string, unknown>[] : []
-    if (empleados.length > 0) chips.push(<Chip key="emps">{empleados.length} empleado{empleados.length !== 1 ? 's' : ''}</Chip>)
+    if (d.mes && d.anio)
+      chips.push(
+        <Chip key="periodo">
+          Período: {MESES[mes] ?? mes}/{String(d.anio)}
+        </Chip>,
+      )
+    const empleados = Array.isArray(d.empleados) ? (d.empleados as Record<string, unknown>[]) : []
+    if (empleados.length > 0)
+      chips.push(
+        <Chip key="emps">
+          {empleados.length} empleado{empleados.length !== 1 ? 's' : ''}
+        </Chip>,
+      )
     const hasAperc = empleados.some(e => Boolean((e.apercibimiento as Record<string, unknown> | undefined)?.tiene))
     const hasSusp = empleados.some(e => Boolean((e.suspension as Record<string, unknown> | undefined)?.tiene))
-    if (hasAperc) chips.push(<Chip key="ap" highlight="amber">Apercibimiento</Chip>)
-    if (hasSusp) chips.push(<Chip key="su" highlight="red">Suspensión</Chip>)
+    if (hasAperc)
+      chips.push(
+        <Chip key="ap" highlight="amber">
+          Apercibimiento
+        </Chip>,
+      )
+    if (hasSusp)
+      chips.push(
+        <Chip key="su" highlight="red">
+          Suspensión
+        </Chip>,
+      )
   } else if (solicitud.tipo === 'Apercibimientos') {
     const sev = String(d.severidad ?? '')
     const sevHighlight = sev === 'Grave' ? 'red' : sev === 'Moderada' ? 'orange' : sev === 'Leve' ? 'amber' : undefined

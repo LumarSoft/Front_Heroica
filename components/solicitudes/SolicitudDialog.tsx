@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
-import type { Area, Personal, Puesto, RhIncentivoPremio, RhSolicitud, RhSolicitudTipo } from '@/lib/types'
+import type { Area, Personal, Puesto, RhIncentivoPremio, RhSolicitud, RhSolicitudTipo, Sucursal } from '@/lib/types'
 import { SolicitudSpecificFields } from './SolicitudSpecificFields'
 import {
   buildSolicitudDetalles,
@@ -38,6 +38,7 @@ interface SolicitudDialogProps {
   puestos: Puesto[]
   areas: Area[]
   incentivos: RhIncentivoPremio[]
+  sucursales?: Sucursal[]
   onSuccess: () => void
   solicitud?: RhSolicitud | null
   tipoInicial?: RhSolicitudTipo | null
@@ -50,6 +51,7 @@ const TIPOS_CON_COLABORADOR_EXCLUYENTE: RhSolicitudTipo[] = [
   'Apercibimientos',
   'Descuentos',
   'Horas extras',
+  'Cambio de puesto/sucursal',
 ]
 
 const TIPOS_OPCIONES: RhSolicitudTipo[] = [
@@ -64,6 +66,7 @@ const TIPOS_OPCIONES: RhSolicitudTipo[] = [
   'Capacitaciones',
   'Pedido de uniforme',
   'Adelantos',
+  'Cambio de puesto/sucursal',
 ]
 
 export function SolicitudDialog({
@@ -75,6 +78,7 @@ export function SolicitudDialog({
   puestos,
   areas,
   incentivos,
+  sucursales = [],
   onSuccess,
   solicitud,
   tipoInicial,
@@ -420,6 +424,7 @@ export function SolicitudDialog({
             areas={areas}
             incentivos={incentivos}
             personal={personal}
+            sucursales={sucursales}
             isEditing={isEditMode}
             onChange={patch => setForm(prev => ({ ...prev, ...patch }))}
           />

@@ -240,6 +240,11 @@ export interface SolicitudFormState {
   incentivo_descripcion: string
   incentivo_monto: string
   incentivo_fecha: string
+  // Cambio de puesto/sucursal
+  cambio_nuevo_puesto_id: string
+  cambio_nueva_sucursal_id: string
+  cambio_fecha_efectiva: string
+  cambio_motivo: string
 }
 
 const today = new Date().toISOString().split('T')[0]
@@ -336,6 +341,10 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
     incentivo_descripcion: '',
     incentivo_monto: '',
     incentivo_fecha: today,
+    cambio_nuevo_puesto_id: '',
+    cambio_nueva_sucursal_id: '',
+    cambio_fecha_efectiva: today,
+    cambio_motivo: '',
   }
 }
 
@@ -621,6 +630,16 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
     }
   }
 
+  if (solicitud.tipo === 'Cambio de puesto/sucursal') {
+    return {
+      ...base,
+      cambio_nuevo_puesto_id: detalles.puesto_id_nuevo != null ? String(detalles.puesto_id_nuevo) : '',
+      cambio_nueva_sucursal_id: detalles.sucursal_id_nueva != null ? String(detalles.sucursal_id_nueva) : '',
+      cambio_fecha_efectiva: String(detalles.fecha_efectiva ?? today),
+      cambio_motivo: String(detalles.motivo ?? ''),
+    }
+  }
+
   return base
 }
 
@@ -762,6 +781,13 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
         descripcion: form.incentivo_descripcion.trim(),
         fecha: form.incentivo_fecha,
         ...(form.incentivo_monto && { monto: Number(form.incentivo_monto) }),
+      }
+    case 'Cambio de puesto/sucursal':
+      return {
+        puesto_id_nuevo: form.cambio_nuevo_puesto_id ? Number(form.cambio_nuevo_puesto_id) : null,
+        sucursal_id_nueva: form.cambio_nueva_sucursal_id ? Number(form.cambio_nueva_sucursal_id) : null,
+        fecha_efectiva: form.cambio_fecha_efectiva,
+        motivo: form.cambio_motivo.trim() || null,
       }
     default:
       return null
@@ -916,6 +942,13 @@ export function validateSolicitudForm(form: SolicitudFormState, options?: { isEd
         return 'Seleccione el puesto para el incentivo o premio'
       if (!form.incentivo_descripcion.trim()) return 'Ingrese la descripción del incentivo o premio'
       if (!form.incentivo_fecha) return 'Ingrese la fecha del incentivo o premio'
+      return null
+    case 'Cambio de puesto/sucursal':
+      if (form.personal_id === 'general') return 'Seleccione el colaborador para el cambio'
+      if (!form.cambio_nuevo_puesto_id && !form.cambio_nueva_sucursal_id) {
+        return 'Seleccione el nuevo puesto o la nueva sucursal'
+      }
+      if (!form.cambio_fecha_efectiva) return 'Ingrese la fecha efectiva del cambio'
       return null
     default:
       return null
