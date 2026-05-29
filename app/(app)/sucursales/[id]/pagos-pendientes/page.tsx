@@ -15,6 +15,7 @@ import { PagosPendientesTable } from '@/components/pagos-pendientes/PagosPendien
 import { AprobarDialog } from '@/components/pagos-pendientes/AprobarDialog'
 import { RechazarDialog } from '@/components/pagos-pendientes/RechazarDialog'
 import { HistorialFiltros } from '@/components/pagos-pendientes/HistorialFiltros'
+import { NotificarEventoDialog, type NotificarEventoData } from '@/components/notificaciones/NotificarEventoDialog'
 import type { PagoPendiente } from '@/lib/types'
 
 export default function PagosPendientesPage() {
@@ -41,6 +42,7 @@ export default function PagosPendientesPage() {
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'aprobado' | 'rechazado'>('todos')
   const [filtroUsuario, setFiltroUsuario] = useState<string>('')
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null)
+  const [notifyData, setNotifyData] = useState<NotificarEventoData | null>(null)
 
   useEffect(() => {
     if (!params.id) return
@@ -130,7 +132,9 @@ export default function PagosPendientesPage() {
       if (!response.ok) throw new Error(data.message || 'Error al rechazar pago')
       toast.success('Pago rechazado exitosamente')
       setIsRechazarDialogOpen(false)
+      const pagoId = selectedPago.id
       fetchPagosPendientes()
+      setNotifyData({ tipo: 'pago_pendiente_rechazado', entidadId: pagoId })
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al rechazar pago'
       setError(message)
@@ -261,10 +265,11 @@ export default function PagosPendientesPage() {
         sucursalId={Number(params.id)}
         moneda={moneda}
         isPagoPendiente={true}
-        onSuccess={() => {
+        onSuccess={notify => {
           toast.success('Solicitud de movimiento creada correctamente')
           if (activeTab === 'pendientes') fetchPagosPendientes()
           else fetchHistorial()
+          if (notify) setNotifyData(notify)
         }}
       />
 
@@ -291,14 +296,17 @@ export default function PagosPendientesPage() {
               : undefined,
             prioridad: selectedPago.prioridad as 'baja' | 'media' | 'alta' | undefined,
           }}
-          onSuccess={() => {
+          onSuccess={notify => {
             toast.success('Pago aprobado y movimiento registrado correctamente')
             setIsAprobacionMovimientoOpen(false)
             setSelectedPago(null)
             fetchPagosPendientes()
+            if (notify) setNotifyData(notify)
           }}
         />
       )}
+
+      <NotificarEventoDialog data={notifyData} onClose={() => setNotifyData(null)} />
     </div>
   )
 }

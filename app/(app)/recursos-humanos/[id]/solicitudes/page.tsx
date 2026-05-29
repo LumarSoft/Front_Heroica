@@ -11,6 +11,7 @@ import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
 import { SolicitudesTable } from '@/components/solicitudes/SolicitudesTable'
 import { SolicitudDialog } from '@/components/solicitudes/SolicitudDialog'
 import { AprobarSolicitudDialog } from '@/components/solicitudes/AprobarSolicitudDialog'
+import { NotificarEventoDialog, type NotificarEventoData } from '@/components/notificaciones/NotificarEventoDialog'
 import { SolicitudesFilters, type SolicitudesFilterState } from '@/components/solicitudes/SolicitudesFilters'
 import { SolicitudTiposGrid } from '@/components/solicitudes/SolicitudTiposGrid'
 import { useAuthStore } from '@/store/authStore'
@@ -62,6 +63,12 @@ export default function SolicitudesPage() {
   const [selectedTipo, setSelectedTipo] = useState<RhSolicitudTipo | null>(null)
   const [selectedSolicitud, setSelectedSolicitud] = useState<RhSolicitud | null>(null)
   const [editingSolicitud, setEditingSolicitud] = useState<RhSolicitud | null>(null)
+  const [notifyData, setNotifyData] = useState<NotificarEventoData | null>(null)
+
+  function handleSuccess(notify?: NotificarEventoData) {
+    void fetchAll()
+    if (notify) setNotifyData(notify)
+  }
 
   const pendingCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -233,7 +240,7 @@ export default function SolicitudesPage() {
           solicitud={selectedSolicitud}
           open={Boolean(selectedSolicitud)}
           onOpenChange={open => !open && setSelectedSolicitud(null)}
-          onSuccess={fetchAll}
+          onSuccess={handleSuccess}
           canAprobar={canAprobarSolicitudes}
           canEditar={canEditarSolicitudes}
           onEdit={solicitud => {
@@ -254,11 +261,13 @@ export default function SolicitudesPage() {
             areas={areas}
             incentivos={incentivos}
             sucursales={sucursales}
-            onSuccess={fetchAll}
+            onSuccess={handleSuccess}
             solicitud={editingSolicitud}
             tipoInicial={selectedTipo}
           />
         )}
+
+        <NotificarEventoDialog data={notifyData} onClose={() => setNotifyData(null)} />
       </main>
     </div>
   )
