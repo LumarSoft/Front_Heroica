@@ -252,28 +252,15 @@ export function EscalaFormDialog({
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="valor_hora_manual">Valor / Hora (ARS)</Label>
-                  <MontoInput
-                    id="valor_hora_manual"
-                    placeholder="Ej: 1.201,92"
-                    value={valorHoraManual}
-                    onChange={setValorHoraManual}
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="sueldo_calculado">Sueldo Base (ARS)</Label>
-                  <Input
-                    id="sueldo_calculado"
-                    readOnly
-                    tabIndex={-1}
-                    value={sueldoBaseCalculado !== null ? formatInputMonto(sueldoBaseCalculado.toFixed(2)) : '—'}
-                    className="bg-[#F5F5F5] text-[#5A6070] cursor-default select-none"
-                  />
-                  <p className="text-[10px] text-[#9AA0AC]">Valor/hs × 26 días × 8 hs</p>
-                </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="valor_hora_manual">Valor / Hora (ARS)</Label>
+                <MontoInput
+                  id="valor_hora_manual"
+                  placeholder="Ej: 1.201,92"
+                  value={valorHoraManual}
+                  onChange={setValorHoraManual}
+                  required
+                />
               </div>
             )}
           </div>

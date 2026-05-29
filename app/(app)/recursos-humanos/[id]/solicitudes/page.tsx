@@ -46,7 +46,6 @@ export default function SolicitudesPage() {
   const sucursalId = Number(params.id)
   const canCrearSolicitudes = useAuthStore(state => state.canCrearSolicitudes())
   const canEditarSolicitudes = useAuthStore(state => state.canEditarSolicitudes())
-  const canCancelarSolicitudes = useAuthStore(state => state.canCancelarSolicitudes())
   const canAprobarSolicitudes = useAuthStore(state => state.canAprobarSolicitudes())
 
   const [sucursal, setSucursal] = useState<Sucursal | null>(null)
@@ -237,7 +236,6 @@ export default function SolicitudesPage() {
           onSuccess={fetchAll}
           canAprobar={canAprobarSolicitudes}
           canEditar={canEditarSolicitudes}
-          canCancelar={canCancelarSolicitudes}
           onEdit={solicitud => {
             setSelectedSolicitud(null)
             setEditingSolicitud(solicitud)

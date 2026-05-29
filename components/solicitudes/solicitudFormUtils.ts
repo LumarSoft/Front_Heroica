@@ -899,6 +899,11 @@ export function validateSolicitudForm(form: SolicitudFormState, options?: { isEd
       if (!form.alta_domicilio.trim()) return 'Ingrese la dirección real'
       if (!form.alta_direccion_dni.trim()) return 'Ingrese la dirección según consta en el DNI'
       if (!form.alta_fecha_nacimiento) return 'Ingrese la fecha de nacimiento'
+      {
+        const añoNac = new Date(form.alta_fecha_nacimiento).getFullYear()
+        const hoy = new Date().toISOString().split('T')[0]
+        if (añoNac < 1900 || form.alta_fecha_nacimiento > hoy) return 'La fecha de nacimiento no es válida'
+      }
       if (!form.alta_telefono.trim()) return 'Ingrese el teléfono'
       if (!form.alta_email.trim()) return 'Ingrese el correo electrónico'
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.alta_email.trim())) return 'Ingrese un correo electrónico válido'
@@ -915,7 +920,19 @@ export function validateSolicitudForm(form: SolicitudFormState, options?: { isEd
         if (!/^\d{4}-\d{2}-\d{2}$/.test(form.alta_fecha_alta_temprana)) return 'La fecha de alta temprana no es válida'
       }
       if (!form.alta_fecha_incorporacion) return 'Ingrese la fecha de inicio de la relación laboral'
+      {
+        const añoInc = new Date(form.alta_fecha_incorporacion).getFullYear()
+        const hoy = new Date().toISOString().split('T')[0]
+        if (añoInc < 1900 || form.alta_fecha_incorporacion > hoy)
+          return 'La fecha de inicio de la relación laboral no es válida'
+      }
       if (!form.alta_fecha_inicio_cobro) return 'Ingrese la fecha de inicio de cobro en oficina'
+      {
+        const añoCobro = new Date(form.alta_fecha_inicio_cobro).getFullYear()
+        const hoy = new Date().toISOString().split('T')[0]
+        if (añoCobro < 1900 || form.alta_fecha_inicio_cobro > hoy)
+          return 'La fecha de inicio de cobro en oficina no es válida'
+      }
       {
         const dias = Number(form.alta_jornada_dias_semanales)
         if (!Number.isFinite(dias) || dias < 1 || dias > 7) return 'La jornada semanal debe ser entre 1 y 7 días'
