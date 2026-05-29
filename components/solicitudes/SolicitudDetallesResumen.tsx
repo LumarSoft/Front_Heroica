@@ -163,6 +163,8 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
               ['ddjj_domicilio', 'DDJJ dom.'],
               ['descripcion_puesto_firmada', 'Desc. puesto'],
               ['foto_colaborador', 'Foto'],
+              ['normas_convivencia', 'Normas conv.'],
+              ['constancia_uniforme', 'Constancia uniforme'],
             ].map(([key, short]) => (
               <span
                 key={key}
@@ -384,11 +386,53 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
   }
 
   if (solicitud.tipo === 'Apercibimientos') {
-    return renderRows([
-      { label: 'Fecha', value: String(detalles.fecha ?? '-') },
-      { label: 'Severidad', value: String(detalles.severidad ?? '-') },
-      { label: 'Motivo', value: String(detalles.motivo ?? '-') },
-    ])
+    const adjArchivo = solicitud.archivos?.find(a => a.tipo_doc === 'apercibimiento_adjunto')
+    const adjLegacy = detalles.archivo_adjunto as { url?: string } | undefined
+    const adjUrl = adjArchivo?.url ?? adjLegacy?.url
+    return (
+      <div className="space-y-3">
+        {renderRows([
+          { label: 'Fecha', value: String(detalles.fecha ?? '-') },
+          { label: 'Severidad', value: String(detalles.severidad ?? '-') },
+          { label: 'Motivo', value: String(detalles.motivo ?? '-') },
+        ])}
+        {adjUrl ? (
+          <a
+            href={adjUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-[#002868] underline font-medium"
+          >
+            Abrir archivo adjunto
+          </a>
+        ) : null}
+      </div>
+    )
+  }
+
+  if (solicitud.tipo === 'Suspensiones') {
+    const adjArchivo = solicitud.archivos?.find(a => a.tipo_doc === 'suspension_adjunto')
+    const adjLegacy = detalles.archivo_adjunto as { url?: string } | undefined
+    const adjUrl = adjArchivo?.url ?? adjLegacy?.url
+    return (
+      <div className="space-y-3">
+        {renderRows([
+          { label: 'Desde', value: String(detalles.fecha_desde ?? '-') },
+          { label: 'Hasta', value: String(detalles.fecha_hasta ?? '-') },
+          { label: 'Motivo', value: String(detalles.motivo ?? '-') },
+        ])}
+        {adjUrl ? (
+          <a
+            href={adjUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-[#002868] underline font-medium"
+          >
+            Abrir archivo adjunto
+          </a>
+        ) : null}
+      </div>
+    )
   }
 
   if (solicitud.tipo === 'Descuentos') {
@@ -406,6 +450,31 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
       ...(detalles.valor_hora != null ? [{ label: 'Valor hora', value: formatCurrency(detalles.valor_hora) }] : []),
       ...(detalles.descripcion ? [{ label: 'Descripción', value: String(detalles.descripcion) }] : []),
     ])
+  }
+
+  if (solicitud.tipo === 'Incentivos y premios') {
+    const adjArchivo = solicitud.archivos?.find(a => a.tipo_doc === 'incentivo_adjunto')
+    const adjLegacy = detalles.archivo_adjunto as { url?: string } | undefined
+    const adjUrl = adjArchivo?.url ?? adjLegacy?.url
+    return (
+      <div className="space-y-3">
+        {renderRows([
+          { label: 'Fecha', value: String(detalles.fecha ?? '-') },
+          { label: 'Descripción', value: String(detalles.descripcion ?? '-') },
+          ...(detalles.monto != null ? [{ label: 'Monto', value: formatCurrency(detalles.monto) }] : []),
+        ])}
+        {adjUrl ? (
+          <a
+            href={adjUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-[#002868] underline font-medium"
+          >
+            Abrir archivo adjunto
+          </a>
+        ) : null}
+      </div>
+    )
   }
 
   if (solicitud.tipo === 'Cambio de puesto/sucursal') {

@@ -1,20 +1,16 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { BriefcaseBusiness, Building2, FileStack, User } from 'lucide-react'
-import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Combobox } from '@/components/ui/combobox'
-import type { Personal, Puesto, RhIncentivoPremio, RhMotivoBajaCatalogoItem } from '@/lib/types'
-import { API_ENDPOINTS } from '@/lib/config'
-import { apiFetch } from '@/lib/api'
+import type { Personal, Puesto, RhIncentivoPremio } from '@/lib/types'
 import type { SolicitudFormState } from './solicitudFormUtils'
 import { createEmpleadoVacio } from './solicitudFormUtils'
 import { SolicitudArchivoAdjunto } from './SolicitudArchivoAdjunto'
 import { EmpleadoCard } from './NovedadSueldoFields'
+import { MotivoBajaSelector } from './MotivoBajaSelector'
 
 const ACCEPT_PDF = 'application/pdf,.pdf'
 
@@ -74,40 +70,9 @@ export function BajaColaboradorFields({
   isEditing = false,
   onChange,
 }: BajaColaboradorFieldsProps) {
-  const [motivos, setMotivos] = useState<RhMotivoBajaCatalogoItem[]>([])
-  const [motivosLoading, setMotivosLoading] = useState(false)
-  const [creandoMotivo, setCreandoMotivo] = useState(false)
-
-  const motivoOptions = useMemo(
-    () =>
-      [...motivos]
-        .sort((a, b) => (a.nombre ?? '').localeCompare(b.nombre ?? '', 'es', { sensitivity: 'base' }))
-        .map(m => ({ value: String(m.id), label: m.nombre })),
-    [motivos],
-  )
   const prevColaboradorRef = useRef<string | null>(null)
 
   const colaborador = form.personal_id !== 'general' ? personal.find(c => String(c.id) === form.personal_id) : undefined
-
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      setMotivosLoading(true)
-      try {
-        const res = await apiFetch(API_ENDPOINTS.RRHH_MOTIVOS_BAJA.LIST(sucursalId))
-        const data = await res.json()
-        if (!cancelled && data.success && Array.isArray(data.data)) setMotivos(data.data as RhMotivoBajaCatalogoItem[])
-      } catch {
-        if (!cancelled) toast.error('No se pudieron cargar los motivos de baja')
-      } finally {
-        if (!cancelled) setMotivosLoading(false)
-      }
-    }
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [sucursalId])
 
   useEffect(() => {
     function seedLiquidacion(pid: string) {
@@ -132,40 +97,6 @@ export function BajaColaboradorFields({
     prevColaboradorRef.current = form.personal_id
     seedLiquidacion(form.personal_id)
   }, [form.personal_id, personal, onChange])
-
-  async function crearMotivoDesdeEtiqueta(nombreSinTrim: string) {
-    const nombre = nombreSinTrim.trim()
-    if (nombre.length < 2) {
-      toast.error('El motivo debe tener al menos 2 caracteres')
-      return
-    }
-    const mismo = motivos.find(m => m.nombre.trim().toLowerCase() === nombre.toLowerCase())
-    if (mismo) {
-      onChange({ baja_motivo_id: String(mismo.id) })
-      return
-    }
-    setCreandoMotivo(true)
-    try {
-      const res = await apiFetch(API_ENDPOINTS.RRHH_MOTIVOS_BAJA.CREATE, {
-        method: 'POST',
-        body: JSON.stringify({ sucursal_id: sucursalId, nombre }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'No se pudo crear el motivo')
-      const creado = data.data as { id: number; nombre: string }
-      setMotivos(prev =>
-        [...prev, { id: creado.id, sucursal_id: sucursalId, nombre: creado.nombre }].sort((a, b) =>
-          (a.nombre ?? '').localeCompare(b.nombre ?? '', 'es', { sensitivity: 'base' }),
-        ),
-      )
-      onChange({ baja_motivo_id: String(creado.id) })
-      toast.success('Motivo guardado en el catálogo')
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Error al crear el motivo')
-    } finally {
-      setCreandoMotivo(false)
-    }
-  }
 
   const empLiq = form.baja_empleado_liquidacion
 
@@ -192,18 +123,17 @@ export function BajaColaboradorFields({
             />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
-            <Label className="text-xs font-semibold text-[#5A6070]">Motivo de baja *</Label>
-            <Combobox
-              options={motivoOptions}
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold text-[#5A6070]">Motivo de baja *</Label>
+              <span className="text-[10px] text-[#8A8F9C]">
+                Crea, renombra o eliminá motivos directamente desde la lista.
+              </span>
+            </div>
+            <MotivoBajaSelector
+              sucursalId={sucursalId}
               value={form.baja_motivo_id}
               onChange={v => onChange({ baja_motivo_id: v })}
-              placeholder={motivosLoading ? 'Cargando motivos…' : 'Buscar en el catálogo o crear uno nuevo'}
-              searchPlaceholder="Escribir para filtrar o crear…"
-              emptyText="Sin coincidencias. Seguí escribiendo y elegí Crear más abajo."
-              disabled={motivosLoading || creandoMotivo}
-              onCreateOption={label => void crearMotivoDesdeEtiqueta(label)}
             />
-            {creandoMotivo ? <p className="text-[11px] text-[#5A6070]">Guardando motivo nuevo…</p> : null}
 
             <Label className="text-xs font-semibold text-[#5A6070]">Detalle u observaciones (opcional)</Label>
             <Textarea
@@ -239,11 +169,11 @@ export function BajaColaboradorFields({
 
       <SectionCard title="Documentos adjuntos" subtitle="Escaneados en PDF" icon={<FileStack className="w-4 h-4" />}>
         <SolicitudArchivoAdjunto
-          label="Carta documento *"
+          label="Carta documento / telegrama"
           url={form.baja_carta_url}
           nombre={form.baja_carta_nombre}
           accept={ACCEPT_PDF}
-          uploadHint="Subir solo PDF escaneado, como la ficha de referencia RRHH 002."
+          uploadHint="Opcional. Subir PDF escaneado si corresponde."
           onUpload={(url, nombre) => onChange({ baja_carta_url: url, baja_carta_nombre: nombre })}
           onRemove={() => onChange({ baja_carta_url: '', baja_carta_nombre: '' })}
         />

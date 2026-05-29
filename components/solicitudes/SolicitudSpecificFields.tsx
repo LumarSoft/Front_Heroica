@@ -8,6 +8,9 @@ import type { SolicitudFormState } from './solicitudFormUtils'
 import { AltaColaboradorFields } from './AltaColaboradorFields'
 import { BajaColaboradorFields } from './BajaColaboradorFields'
 import { NovedadSueldoFields } from './NovedadSueldoFields'
+import { SolicitudArchivoAdjunto } from './SolicitudArchivoAdjunto'
+
+const ACCEPT_PDF = 'application/pdf,.pdf'
 
 interface SolicitudSpecificFieldsProps {
   form: SolicitudFormState
@@ -145,6 +148,19 @@ export function SolicitudSpecificFields({
           value={form.apercibimiento_motivo}
           onChange={event => onChange({ apercibimiento_motivo: event.target.value })}
         />
+        <div className="col-span-2">
+          <SolicitudArchivoAdjunto
+            label="Archivo adjunto"
+            url={form.apercibimiento_archivo_url}
+            nombre={form.apercibimiento_archivo_nombre}
+            accept={ACCEPT_PDF}
+            uploadHint="Opcional. Subir PDF si corresponde."
+            onUpload={(url, nombre) =>
+              onChange({ apercibimiento_archivo_url: url, apercibimiento_archivo_nombre: nombre })
+            }
+            onRemove={() => onChange({ apercibimiento_archivo_url: '', apercibimiento_archivo_nombre: '' })}
+          />
+        </div>
       </div>
     )
   }
@@ -217,6 +233,17 @@ export function SolicitudSpecificFields({
           value={form.suspension_motivo}
           onChange={event => onChange({ suspension_motivo: event.target.value })}
         />
+        <div className="col-span-2">
+          <SolicitudArchivoAdjunto
+            label="Archivo adjunto"
+            url={form.suspension_archivo_url}
+            nombre={form.suspension_archivo_nombre}
+            accept={ACCEPT_PDF}
+            uploadHint="Opcional. Subir PDF si corresponde."
+            onUpload={(url, nombre) => onChange({ suspension_archivo_url: url, suspension_archivo_nombre: nombre })}
+            onRemove={() => onChange({ suspension_archivo_url: '', suspension_archivo_nombre: '' })}
+          />
+        </div>
       </div>
     )
   }
@@ -299,6 +326,17 @@ export function SolicitudSpecificFields({
           value={form.incentivo_monto}
           onChange={v => onChange({ incentivo_monto: v })}
         />
+        <div className="col-span-2">
+          <SolicitudArchivoAdjunto
+            label="Archivo adjunto"
+            url={form.incentivo_archivo_url}
+            nombre={form.incentivo_archivo_nombre}
+            accept={ACCEPT_PDF}
+            uploadHint="Opcional. Subir PDF si corresponde."
+            onUpload={(url, nombre) => onChange({ incentivo_archivo_url: url, incentivo_archivo_nombre: nombre })}
+            onRemove={() => onChange({ incentivo_archivo_url: '', incentivo_archivo_nombre: '' })}
+          />
+        </div>
       </div>
     )
   }

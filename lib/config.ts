@@ -200,9 +200,10 @@ export const API_ENDPOINTS = {
     DELETE: (id: number) => `${API_URL}/api/rrhh/incentivos/${id}`,
   },
   RRHH_MOTIVOS_BAJA: {
-    LIST: (sucursalId: number) =>
-      `${API_URL}/api/rrhh/motivos-baja?sucursal_id=${sucursalId}`,
+    LIST: (sucursalId: number) => `${API_URL}/api/rrhh/motivos-baja?sucursal_id=${sucursalId}`,
     CREATE: `${API_URL}/api/rrhh/motivos-baja`,
+    UPDATE: (id: number) => `${API_URL}/api/rrhh/motivos-baja/${id}`,
+    DELETE: (id: number, sucursalId: number) => `${API_URL}/api/rrhh/motivos-baja/${id}?sucursal_id=${sucursalId}`,
   },
   RRHH_SOLICITUDES: {
     GET_ALL: `${API_URL}/api/rrhh/solicitudes`,
@@ -236,6 +237,7 @@ export const API_ENDPOINTS = {
     DELETE: (id: number) => `${API_URL}/api/personal/${id}`,
     GET_PROFESIONAL: (id: number) => `${API_URL}/api/personal/${id}/profesional`,
     GET_ANALITICO: (id: number) => `${API_URL}/api/personal/${id}/analitico`,
+    GET_ARCHIVOS: (id: number) => `${API_URL}/api/personal/${id}/archivos`,
     GET_NOTAS: (id: number) => `${API_URL}/api/personal/${id}/notas`,
     CREATE_NOTA: (id: number) => `${API_URL}/api/personal/${id}/notas`,
     DELETE_NOTA: (id: number, notaId: number) => `${API_URL}/api/personal/${id}/notas/${notaId}`,
