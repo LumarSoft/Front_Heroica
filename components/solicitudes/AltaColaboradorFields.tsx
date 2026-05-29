@@ -187,7 +187,7 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
           </div>
           {form.alta_condicion_laboral === '1' && (
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-[#5A6070]">Fecha de alta temprana *</Label>
+              <Label className="text-xs font-semibold text-[#5A6070]">Fecha de alta temprana</Label>
               <Input
                 type="date"
                 className="h-10 rounded-lg border-[#E0E0E0]"
@@ -393,6 +393,24 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
             nombre={form.alta_doc_foto_nombre}
             onUpload={(url, nombre) => onChange({ alta_doc_foto_url: url, alta_doc_foto_nombre: nombre })}
             onRemove={() => onChange({ alta_doc_foto_url: '', alta_doc_foto_nombre: '' })}
+          />
+          <SolicitudArchivoAdjunto
+            label="Normas de convivencia firmadas"
+            uploadHint="Archivo PDF"
+            accept={ACCEPT_PDF}
+            url={form.alta_doc_normas_url}
+            nombre={form.alta_doc_normas_nombre}
+            onUpload={(url, nombre) => onChange({ alta_doc_normas_url: url, alta_doc_normas_nombre: nombre })}
+            onRemove={() => onChange({ alta_doc_normas_url: '', alta_doc_normas_nombre: '' })}
+          />
+          <SolicitudArchivoAdjunto
+            label="Constancia de entrega de uniforme"
+            uploadHint="Archivo PDF"
+            accept={ACCEPT_PDF}
+            url={form.alta_doc_uniforme_url}
+            nombre={form.alta_doc_uniforme_nombre}
+            onUpload={(url, nombre) => onChange({ alta_doc_uniforme_url: url, alta_doc_uniforme_nombre: nombre })}
+            onRemove={() => onChange({ alta_doc_uniforme_url: '', alta_doc_uniforme_nombre: '' })}
           />
         </div>
 

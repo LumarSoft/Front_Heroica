@@ -27,6 +27,8 @@ interface FormState {
   fecha_incorporacion: string
   carnet_manipulacion_alimentos: boolean
   activo: boolean
+  condicion_laboral: '' | '1' | '2'
+  fecha_alta_temprana: string
 }
 
 function normalizeFecha(fecha: string): string {
@@ -47,18 +49,14 @@ function buildInitialForm(personal: Personal): FormState {
     fecha_incorporacion: normalizeFecha(personal.fecha_incorporacion),
     carnet_manipulacion_alimentos: personal.carnet_manipulacion_alimentos,
     activo: personal.activo,
+    condicion_laboral: personal.condicion_laboral === 1 ? '1' : personal.condicion_laboral === 2 ? '2' : '',
+    fecha_alta_temprana: personal.fecha_alta_temprana ? normalizeFecha(personal.fecha_alta_temprana) : '',
   }
 }
 
 // ─── Sub-componentes ─────────────────────────────────────────────────────────
 
-function FieldCard({
-  label,
-  children,
-}: {
-  label: string
-  children: ReactNode
-}) {
+function FieldCard({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="bg-white rounded-xl border border-[#E5E9F0] p-4 min-h-[72px] flex flex-col justify-between">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC] mb-2">{label}</p>
@@ -67,15 +65,7 @@ function FieldCard({
   )
 }
 
-function FormField({
-  label,
-  required,
-  children,
-}: {
-  label: string
-  required?: boolean
-  children: ReactNode
-}) {
+function FormField({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label className="text-xs font-semibold text-[#444]">
@@ -143,9 +133,7 @@ function ViewMode({
         </FieldCard>
 
         <FieldCard label="Fecha de incorporación">
-          <span className="text-sm font-medium text-[#1A1A1A]">
-            {formatFechaDisplay(personal.fecha_incorporacion)}
-          </span>
+          <span className="text-sm font-medium text-[#1A1A1A]">{formatFechaDisplay(personal.fecha_incorporacion)}</span>
         </FieldCard>
 
         <FieldCard label="Carnet Manip. Alimentos">
@@ -165,9 +153,10 @@ function ViewMode({
         <FieldCard label="Estado">
           <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border
-              ${personal.activo
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : 'bg-rose-50 text-rose-600 border-rose-200'
+              ${
+                personal.activo
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-rose-50 text-rose-600 border-rose-200'
               }`}
           >
             <span
@@ -177,6 +166,20 @@ function ViewMode({
             {personal.activo ? 'Activo' : 'Inactivo'}
           </span>
         </FieldCard>
+
+        <FieldCard label="Condición laboral">
+          <span className="text-sm font-medium text-[#1A1A1A]">
+            {personal.condicion_laboral === 1 ? 'Condición 1' : personal.condicion_laboral === 2 ? 'Condición 2' : '—'}
+          </span>
+        </FieldCard>
+
+        {personal.condicion_laboral === 1 && (
+          <FieldCard label="Fecha de alta temprana">
+            <span className="text-sm font-medium text-[#1A1A1A]">
+              {personal.fecha_alta_temprana ? formatFechaDisplay(personal.fecha_alta_temprana) : '—'}
+            </span>
+          </FieldCard>
+        )}
       </div>
 
       <p className="mt-5 text-[10px] text-[#B0B8C4]">
@@ -283,7 +286,9 @@ function EditMode({
             className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer"
           >
             {puestos.map(p => (
-              <option key={p.id} value={p.id}>{p.nombre}</option>
+              <option key={p.id} value={p.id}>
+                {p.nombre}
+              </option>
             ))}
           </select>
         </FormField>
@@ -318,20 +323,46 @@ function EditMode({
 
         {/* Estado */}
         <div className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E9F0] p-4">
-          <Switch
-            id="activo-edit"
-            checked={form.activo}
-            onCheckedChange={v => onChange({ activo: v })}
-          />
+          <Switch id="activo-edit" checked={form.activo} onCheckedChange={v => onChange({ activo: v })} />
           <Label htmlFor="activo-edit" className="text-sm cursor-pointer select-none">
             Colaborador activo
           </Label>
         </div>
+
+        {/* Condición laboral */}
+        <FormField label="Condición laboral">
+          <select
+            value={form.condicion_laboral}
+            onChange={e => {
+              const nueva = e.target.value as '' | '1' | '2'
+              onChange({
+                condicion_laboral: nueva,
+                ...(nueva !== '1' ? { fecha_alta_temprana: '' } : {}),
+              })
+            }}
+            className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer"
+          >
+            <option value="">Sin definir</option>
+            <option value="1">Condición 1</option>
+            <option value="2">Condición 2</option>
+          </select>
+        </FormField>
+
+        {/* Fecha de alta temprana — solo si condición 1 */}
+        {form.condicion_laboral === '1' && (
+          <FormField label="Fecha de alta temprana">
+            <Input
+              type="date"
+              value={form.fecha_alta_temprana}
+              onChange={e => onChange({ fecha_alta_temprana: e.target.value })}
+            />
+          </FormField>
+        )}
       </div>
 
       <p className="mt-4 text-[10px] text-[#B0B8C4]">
-        Los campos marcados con <span className="text-rose-500">*</span> son obligatorios.
-        El legajo y la sucursal no son editables directamente.
+        Los campos marcados con <span className="text-rose-500">*</span> son obligatorios. El legajo y la sucursal no
+        son editables directamente.
       </p>
     </div>
   )
@@ -384,6 +415,12 @@ export function DatosPersonalesTab({
       toast.error('Ingresá un email válido')
       return
     }
+    if (form.condicion_laboral === '1' && form.fecha_alta_temprana) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(form.fecha_alta_temprana)) {
+        toast.error('La fecha de alta temprana no es válida')
+        return
+      }
+    }
 
     setSaving(true)
     try {
@@ -400,6 +437,9 @@ export function DatosPersonalesTab({
           periodo_prueba_dias: personal.periodo_prueba_dias ?? null,
           carnet_manipulacion_alimentos: form.carnet_manipulacion_alimentos,
           activo: form.activo,
+          condicion_laboral: form.condicion_laboral === '' ? null : Number(form.condicion_laboral),
+          fecha_alta_temprana:
+            form.condicion_laboral === '1' && form.fecha_alta_temprana ? form.fecha_alta_temprana : null,
         }),
       })
 
@@ -435,12 +475,5 @@ export function DatosPersonalesTab({
     )
   }
 
-  return (
-    <ViewMode
-      personal={personal}
-      sucursalNombre={sucursalNombre}
-      canEditar={canEditar}
-      onEdit={handleEdit}
-    />
-  )
+  return <ViewMode personal={personal} sucursalNombre={sucursalNombre} canEditar={canEditar} onEdit={handleEdit} />
 }

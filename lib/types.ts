@@ -209,8 +209,21 @@ export interface Personal {
   solicitud_alta_id?: number | null
   datos_alta_json?: unknown
   activo: boolean
+  /** Lista de tipo_doc de documentos requeridos que faltan en la solicitud de alta. */
+  adjuntos_faltantes?: string[]
   created_at: string
   updated_at: string
+}
+
+export interface PersonalArchivo {
+  tipo_doc: string
+  label: string
+  url: string
+  nombre_original: string | null
+  solicitud_id: number
+  solicitud_tipo: string
+  fecha_solicitud: string
+  estado: string
 }
 
 export type RhIncentivoTipo = 'Incentivo' | 'Premio'

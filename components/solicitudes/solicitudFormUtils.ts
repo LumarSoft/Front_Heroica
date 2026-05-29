@@ -182,6 +182,10 @@ export interface SolicitudFormState {
   alta_doc_puesto_nombre: string
   alta_doc_foto_url: string
   alta_doc_foto_nombre: string
+  alta_doc_normas_url: string
+  alta_doc_normas_nombre: string
+  alta_doc_uniforme_url: string
+  alta_doc_uniforme_nombre: string
   alta_periodo_prueba: boolean
   alta_periodo_prueba_dias: string
   alta_carnet: boolean
@@ -205,6 +209,8 @@ export interface SolicitudFormState {
   apercibimiento_fecha: string
   apercibimiento_severidad: 'Leve' | 'Moderada' | 'Grave'
   apercibimiento_motivo: string
+  apercibimiento_archivo_url: string
+  apercibimiento_archivo_nombre: string
   descuento_motivo: string
   descuento_monto: string
   descuento_fecha: string
@@ -221,6 +227,8 @@ export interface SolicitudFormState {
   suspension_fecha_desde: string
   suspension_fecha_hasta: string
   suspension_motivo: string
+  suspension_archivo_url: string
+  suspension_archivo_nombre: string
   // Capacitaciones
   capacitacion_area_id: string
   capacitacion_tema: string
@@ -240,6 +248,8 @@ export interface SolicitudFormState {
   incentivo_descripcion: string
   incentivo_monto: string
   incentivo_fecha: string
+  incentivo_archivo_url: string
+  incentivo_archivo_nombre: string
   // Cambio de puesto/sucursal
   cambio_nuevo_puesto_id: string
   cambio_nueva_sucursal_id: string
@@ -290,6 +300,10 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
     alta_doc_puesto_nombre: '',
     alta_doc_foto_url: '',
     alta_doc_foto_nombre: '',
+    alta_doc_normas_url: '',
+    alta_doc_normas_nombre: '',
+    alta_doc_uniforme_url: '',
+    alta_doc_uniforme_nombre: '',
     alta_periodo_prueba: false,
     alta_periodo_prueba_dias: '90',
     alta_carnet: false,
@@ -312,6 +326,8 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
     apercibimiento_fecha: today,
     apercibimiento_severidad: 'Leve',
     apercibimiento_motivo: '',
+    apercibimiento_archivo_url: '',
+    apercibimiento_archivo_nombre: '',
     descuento_motivo: '',
     descuento_monto: '',
     descuento_fecha: today,
@@ -326,6 +342,8 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
     suspension_fecha_desde: today,
     suspension_fecha_hasta: today,
     suspension_motivo: '',
+    suspension_archivo_url: '',
+    suspension_archivo_nombre: '',
     capacitacion_area_id: '',
     capacitacion_tema: '',
     capacitacion_fecha: today,
@@ -341,6 +359,8 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
     incentivo_descripcion: '',
     incentivo_monto: '',
     incentivo_fecha: today,
+    incentivo_archivo_url: '',
+    incentivo_archivo_nombre: '',
     cambio_nuevo_puesto_id: '',
     cambio_nueva_sucursal_id: '',
     cambio_fecha_efectiva: today,
@@ -457,6 +477,10 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
     alta_doc_puesto_nombre: '',
     alta_doc_foto_url: '',
     alta_doc_foto_nombre: '',
+    alta_doc_normas_url: '',
+    alta_doc_normas_nombre: '',
+    alta_doc_uniforme_url: '',
+    alta_doc_uniforme_nombre: '',
     alta_periodo_prueba: detalles.periodo_prueba === true,
     alta_periodo_prueba_dias: detalles.periodo_prueba_dias ? String(detalles.periodo_prueba_dias) : '90',
     alta_carnet: detalles.carnet_manipulacion_alimentos === true,
@@ -495,6 +519,8 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
     const ddjjA = findArchivo('ddjj_domicilio')
     const puestoA = findArchivo('descripcion_puesto_firmada')
     const fotoA = findArchivo('foto_colaborador')
+    const normasA = findArchivo('normas_convivencia')
+    const uniformeA = findArchivo('constancia_uniforme')
     const carnetA = findArchivo('carnet_manipulacion_alimentos')
 
     const dniS = dniA ? { url: dniA.url, nombre: dniA.nombre_original ?? '' } : fallbackAdj('dni_frente_dorso')
@@ -503,6 +529,12 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
       ? { url: puestoA.url, nombre: puestoA.nombre_original ?? '' }
       : fallbackAdj('descripcion_puesto_firmada')
     const fotoS = fotoA ? { url: fotoA.url, nombre: fotoA.nombre_original ?? '' } : fallbackAdj('foto_colaborador')
+    const normasS = normasA
+      ? { url: normasA.url, nombre: normasA.nombre_original ?? '' }
+      : fallbackAdj('normas_convivencia')
+    const uniformeS = uniformeA
+      ? { url: uniformeA.url, nombre: uniformeA.nombre_original ?? '' }
+      : fallbackAdj('constancia_uniforme')
 
     // carnet_adjunto legacy desde JSON
     const carnetSlotLegacy = detalles.carnet_adjunto as { url?: string; nombre_original?: string } | null | undefined
@@ -520,6 +552,10 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
       alta_doc_puesto_nombre: puestoS.nombre,
       alta_doc_foto_url: fotoS.url,
       alta_doc_foto_nombre: fotoS.nombre,
+      alta_doc_normas_url: normasS.url,
+      alta_doc_normas_nombre: normasS.nombre,
+      alta_doc_uniforme_url: uniformeS.url,
+      alta_doc_uniforme_nombre: uniformeS.nombre,
       alta_carnet_archivo_url: carnetUrl,
       alta_carnet_archivo_nombre: carnetNombre,
     }
@@ -581,12 +617,30 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
     }
   }
 
+  if (solicitud.tipo === 'Apercibimientos') {
+    const adjA = solicitud.archivos?.find(a => a.tipo_doc === 'apercibimiento_adjunto')
+    const adjFallback = readAdjuntoIndividual(detalles, 'archivo_adjunto')
+    const adjUrl = adjA?.url ?? adjFallback.url
+    const adjNombre = adjA?.nombre_original ?? adjFallback.nombre
+    return {
+      ...base,
+      apercibimiento_archivo_url: adjUrl,
+      apercibimiento_archivo_nombre: adjNombre,
+    }
+  }
+
   if (solicitud.tipo === 'Suspensiones') {
+    const adjA = solicitud.archivos?.find(a => a.tipo_doc === 'suspension_adjunto')
+    const adjFallback = readAdjuntoIndividual(detalles, 'archivo_adjunto')
+    const adjUrl = adjA?.url ?? adjFallback.url
+    const adjNombre = adjA?.nombre_original ?? adjFallback.nombre
     return {
       ...base,
       suspension_fecha_desde: String(detalles.fecha_desde ?? today),
       suspension_fecha_hasta: String(detalles.fecha_hasta ?? today),
       suspension_motivo: String(detalles.motivo ?? ''),
+      suspension_archivo_url: adjUrl,
+      suspension_archivo_nombre: adjNombre,
     }
   }
 
@@ -619,6 +673,10 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
 
   if (solicitud.tipo === 'Incentivos y premios') {
     const scope = (detalles.scope as 'colaborador' | 'area' | 'puesto') ?? 'colaborador'
+    const adjA = solicitud.archivos?.find(a => a.tipo_doc === 'incentivo_adjunto')
+    const adjFallback = readAdjuntoIndividual(detalles, 'archivo_adjunto')
+    const adjUrl = adjA?.url ?? adjFallback.url
+    const adjNombre = adjA?.nombre_original ?? adjFallback.nombre
     return {
       ...base,
       incentivo_scope: scope,
@@ -627,6 +685,8 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
       incentivo_descripcion: String(detalles.descripcion ?? ''),
       incentivo_fecha: String(detalles.fecha ?? today),
       incentivo_monto: detalles.monto != null ? String(detalles.monto) : '',
+      incentivo_archivo_url: adjUrl,
+      incentivo_archivo_nombre: adjNombre,
     }
   }
 
@@ -666,7 +726,8 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
         beneficios: form.alta_beneficios.trim(),
         otras_observaciones_alta: form.alta_otras_observaciones.trim() || null,
         condicion_laboral: Number(form.alta_condicion_laboral) as 1 | 2,
-        fecha_alta_temprana: form.alta_condicion_laboral === '1' ? form.alta_fecha_alta_temprana : null,
+        fecha_alta_temprana:
+          form.alta_condicion_laboral === '1' && form.alta_fecha_alta_temprana ? form.alta_fecha_alta_temprana : null,
         periodo_prueba: form.alta_periodo_prueba,
         periodo_prueba_dias: form.alta_periodo_prueba ? Number(form.alta_periodo_prueba_dias) : null,
         carnet_manipulacion_alimentos: form.alta_carnet,
@@ -693,6 +754,14 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
           foto_colaborador: {
             url: form.alta_doc_foto_url.trim(),
             nombre_original: form.alta_doc_foto_nombre.trim() || null,
+          },
+          normas_convivencia: {
+            url: form.alta_doc_normas_url.trim(),
+            nombre_original: form.alta_doc_normas_nombre.trim() || null,
+          },
+          constancia_uniforme: {
+            url: form.alta_doc_uniforme_url.trim(),
+            nombre_original: form.alta_doc_uniforme_nombre.trim() || null,
           },
         },
       }
@@ -731,6 +800,12 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
         fecha: form.apercibimiento_fecha,
         severidad: form.apercibimiento_severidad,
         motivo: form.apercibimiento_motivo.trim(),
+        archivo_adjunto: form.apercibimiento_archivo_url.trim()
+          ? {
+              url: form.apercibimiento_archivo_url.trim(),
+              nombre_original: form.apercibimiento_archivo_nombre.trim() || null,
+            }
+          : null,
       }
     case 'Descuentos':
       return {
@@ -750,6 +825,12 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
         fecha_desde: form.suspension_fecha_desde,
         fecha_hasta: form.suspension_fecha_hasta,
         motivo: form.suspension_motivo.trim(),
+        archivo_adjunto: form.suspension_archivo_url.trim()
+          ? {
+              url: form.suspension_archivo_url.trim(),
+              nombre_original: form.suspension_archivo_nombre.trim() || null,
+            }
+          : null,
       }
     case 'Capacitaciones':
       return {
@@ -781,6 +862,12 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
         descripcion: form.incentivo_descripcion.trim(),
         fecha: form.incentivo_fecha,
         ...(form.incentivo_monto && { monto: Number(form.incentivo_monto) }),
+        archivo_adjunto: form.incentivo_archivo_url.trim()
+          ? {
+              url: form.incentivo_archivo_url.trim(),
+              nombre_original: form.incentivo_archivo_nombre.trim() || null,
+            }
+          : null,
       }
     case 'Cambio de puesto/sucursal':
       return {
@@ -824,8 +911,7 @@ export function validateSolicitudForm(form: SolicitudFormState, options?: { isEd
       if (form.alta_condicion_laboral !== '1' && form.alta_condicion_laboral !== '2') {
         return 'Seleccione la condición laboral (1 o 2)'
       }
-      if (form.alta_condicion_laboral === '1') {
-        if (!form.alta_fecha_alta_temprana) return 'Ingrese la fecha de alta temprana'
+      if (form.alta_condicion_laboral === '1' && form.alta_fecha_alta_temprana) {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(form.alta_fecha_alta_temprana)) return 'La fecha de alta temprana no es válida'
       }
       if (!form.alta_fecha_incorporacion) return 'Ingrese la fecha de inicio de la relación laboral'
@@ -856,6 +942,8 @@ export function validateSolicitudForm(form: SolicitudFormState, options?: { isEd
         if (!form.alta_doc_ddjj_url.trim()) return 'Adjunte la DDJJ de domicilio'
         if (!form.alta_doc_puesto_url.trim()) return 'Adjunte la descripción de puesto firmada'
         if (!form.alta_doc_foto_url.trim()) return 'Adjunte la foto del colaborador'
+        if (!form.alta_doc_normas_url.trim()) return 'Adjunte las normas de convivencia firmadas'
+        if (!form.alta_doc_uniforme_url.trim()) return 'Adjunte la constancia de entrega de uniforme'
       }
       return null
     case 'Bajas':
@@ -872,7 +960,6 @@ export function validateSolicitudForm(form: SolicitudFormState, options?: { isEd
         const errEmp = validateEmpleadoNovedadForSolicitud(form.baja_empleado_liquidacion)
         if (errEmp) return errEmp
       }
-      if (!form.baja_carta_url.trim()) return 'Adjunte la carta documento en PDF'
       return null
     case 'Vacaciones':
       if (form.personal_id === 'general') return 'Seleccione el colaborador para las vacaciones'
