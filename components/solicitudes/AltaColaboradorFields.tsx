@@ -47,7 +47,22 @@ interface AltaColaboradorFieldsProps {
   onChange: (patch: Partial<SolicitudFormState>) => void
 }
 
+function validarFecha(valor: string, max: string): string | null {
+  if (!valor) return null
+  const año = new Date(valor).getFullYear()
+  if (año < 1900) return 'El año ingresado no es válido.'
+  if (valor > max) return 'La fecha no puede ser futura.'
+  return null
+}
+
 export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange }: AltaColaboradorFieldsProps) {
+  const today = new Date().toISOString().split('T')[0]
+
+  const errorFechaNacimiento = validarFecha(form.alta_fecha_nacimiento, today)
+  const errorFechaAltaTemprana = validarFecha(form.alta_fecha_alta_temprana, today)
+  const errorFechaInicioCobro = validarFecha(form.alta_fecha_inicio_cobro, today)
+  const errorFechaIncorporacion = validarFecha(form.alta_fecha_incorporacion, today)
+
   return (
     <div className="space-y-4">
       <SectionCard
@@ -104,10 +119,12 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
             <Label className="text-xs font-semibold text-[#5A6070]">Fecha de nacimiento *</Label>
             <Input
               type="date"
-              className="h-10 rounded-lg border-[#E0E0E0]"
+              max={today}
+              className={`h-10 rounded-lg ${errorFechaNacimiento ? 'border-rose-400 focus-visible:ring-rose-300' : 'border-[#E0E0E0]'}`}
               value={form.alta_fecha_nacimiento}
               onChange={e => onChange({ alta_fecha_nacimiento: e.target.value })}
             />
+            {errorFechaNacimiento && <p className="text-xs text-rose-500">{errorFechaNacimiento}</p>}
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Teléfono *</Label>
@@ -190,10 +207,12 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
               <Label className="text-xs font-semibold text-[#5A6070]">Fecha de alta temprana</Label>
               <Input
                 type="date"
-                className="h-10 rounded-lg border-[#E0E0E0]"
+                max={today}
+                className={`h-10 rounded-lg ${errorFechaAltaTemprana ? 'border-rose-400 focus-visible:ring-rose-300' : 'border-[#E0E0E0]'}`}
                 value={form.alta_fecha_alta_temprana}
                 onChange={e => onChange({ alta_fecha_alta_temprana: e.target.value })}
               />
+              {errorFechaAltaTemprana && <p className="text-xs text-rose-500">{errorFechaAltaTemprana}</p>}
             </div>
           )}
           <div className="space-y-1.5">
@@ -255,19 +274,23 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
             <Label className="text-xs font-semibold text-[#5A6070]">Fecha de inicio de cobro en oficina *</Label>
             <Input
               type="date"
-              className="h-10 rounded-lg border-[#E0E0E0]"
+              max={today}
+              className={`h-10 rounded-lg ${errorFechaInicioCobro ? 'border-rose-400 focus-visible:ring-rose-300' : 'border-[#E0E0E0]'}`}
               value={form.alta_fecha_inicio_cobro}
               onChange={e => onChange({ alta_fecha_inicio_cobro: e.target.value })}
             />
+            {errorFechaInicioCobro && <p className="text-xs text-rose-500">{errorFechaInicioCobro}</p>}
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Fecha de inicio relación laboral *</Label>
             <Input
               type="date"
-              className="h-10 rounded-lg border-[#E0E0E0]"
+              max={today}
+              className={`h-10 rounded-lg ${errorFechaIncorporacion ? 'border-rose-400 focus-visible:ring-rose-300' : 'border-[#E0E0E0]'}`}
               value={form.alta_fecha_incorporacion}
               onChange={e => onChange({ alta_fecha_incorporacion: e.target.value })}
             />
+            {errorFechaIncorporacion && <p className="text-xs text-rose-500">{errorFechaIncorporacion}</p>}
           </div>
           <div className="sm:col-span-2 space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Beneficios otorgados *</Label>

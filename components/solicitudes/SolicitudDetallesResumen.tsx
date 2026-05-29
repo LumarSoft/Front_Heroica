@@ -111,7 +111,14 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-[#002868] mb-2">Datos laborales</p>
           {renderRows([
-            { label: 'Puesto (ID)', value: String(detalles.puesto_id ?? '-') },
+            {
+              label: 'Puesto',
+              value: detalles.puesto_nombre
+                ? String(detalles.puesto_nombre)
+                : detalles.puesto_id
+                  ? `ID ${String(detalles.puesto_id)}`
+                  : '-',
+            },
             {
               label: 'Condición laboral',
               value:

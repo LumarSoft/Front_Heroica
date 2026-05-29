@@ -323,6 +323,7 @@ export interface RhSolicitudAltaDetalles {
   banco?: string | null
   cbu?: string | null
   puesto_id: number
+  puesto_nombre?: string
   fecha_incorporacion: string
   fecha_inicio_cobro_oficina?: string
   jornada_semanal_dias?: number | null
