@@ -14,8 +14,9 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { API_ENDPOINTS } from '@/lib/config'
+import { API_ENDPOINTS, type NotificacionEventoTipo } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
+import type { NotificarEventoData } from '@/components/notificaciones/NotificarEventoDialog'
 import type { RhSolicitud } from '@/lib/types'
 import { SolicitudDetallesResumen } from './SolicitudDetallesResumen'
 
@@ -23,7 +24,7 @@ interface AprobarSolicitudDialogProps {
   solicitud: RhSolicitud | null
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess: () => void
+  onSuccess: (notify?: NotificarEventoData) => void
   canAprobar: boolean
   canEditar: boolean
   onEdit: (solicitud: RhSolicitud) => void
@@ -47,7 +48,12 @@ export function AprobarSolicitudDialog({
     }
   }, [open])
 
-  async function handleRequest(url: string, body: Record<string, unknown>, successMessage: string) {
+  async function handleRequest(
+    url: string,
+    body: Record<string, unknown>,
+    successMessage: string,
+    notifyTipo?: NotificacionEventoTipo,
+  ) {
     setIsSubmitting(true)
     try {
       const res = await apiFetch(url, {
@@ -58,7 +64,9 @@ export function AprobarSolicitudDialog({
       if (!res.ok) throw new Error(data.message || 'Error al actualizar la solicitud')
 
       toast.success(successMessage)
-      onSuccess()
+      const notify: NotificarEventoData | undefined =
+        notifyTipo && solicitud ? { tipo: notifyTipo, entidadId: solicitud.id } : undefined
+      onSuccess(notify)
       onOpenChange(false)
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Error desconocido')
@@ -211,6 +219,7 @@ export function AprobarSolicitudDialog({
                       API_ENDPOINTS.RRHH_SOLICITUDES.UPDATE_ESTADO(solicitud.id),
                       { estado: 'Rechazada', motivo_resolucion: motivoRechazo.trim() },
                       'Solicitud rechazada correctamente.',
+                      'solicitud_rrhh_rechazada',
                     )
                   }}
                   disabled={isSubmitting}
@@ -225,6 +234,7 @@ export function AprobarSolicitudDialog({
                       API_ENDPOINTS.RRHH_SOLICITUDES.UPDATE_ESTADO(solicitud.id),
                       { estado: 'Aprobada', motivo_resolucion: null },
                       'Solicitud aprobada correctamente.',
+                      'solicitud_rrhh_aprobada',
                     )
                   }
                   disabled={isSubmitting}

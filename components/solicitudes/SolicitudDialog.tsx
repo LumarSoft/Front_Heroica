@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
+import type { NotificarEventoData } from '@/components/notificaciones/NotificarEventoDialog'
 import type { Area, Personal, Puesto, RhIncentivoPremio, RhSolicitud, RhSolicitudTipo, Sucursal } from '@/lib/types'
 import { SolicitudSpecificFields } from './SolicitudSpecificFields'
 import {
@@ -39,7 +40,7 @@ interface SolicitudDialogProps {
   areas: Area[]
   incentivos: RhIncentivoPremio[]
   sucursales?: Sucursal[]
-  onSuccess: () => void
+  onSuccess: (notify?: NotificarEventoData) => void
   solicitud?: RhSolicitud | null
   tipoInicial?: RhSolicitudTipo | null
 }
@@ -158,7 +159,12 @@ export function SolicitudDialog({
       if (!res.ok) throw new Error(data.message || 'Error al guardar la solicitud')
 
       toast.success(isEditMode ? 'La solicitud se actualizó correctamente.' : 'La solicitud se creó correctamente.')
-      onSuccess()
+      const createdId = Number(data?.data?.id)
+      const notify: NotificarEventoData | undefined =
+        !isEditMode && Number.isFinite(createdId) && createdId > 0
+          ? { tipo: 'solicitud_rrhh_creada', entidadId: createdId }
+          : undefined
+      onSuccess(notify)
       onOpenChange(false)
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido'

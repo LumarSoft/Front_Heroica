@@ -1,6 +1,14 @@
 // Configuración de la API
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
+export type NotificacionEventoTipo =
+  | 'solicitud_rrhh_creada'
+  | 'solicitud_rrhh_aprobada'
+  | 'solicitud_rrhh_rechazada'
+  | 'pago_pendiente_creado'
+  | 'pago_pendiente_aprobado'
+  | 'pago_pendiente_rechazado'
+
 // Endpoints
 export const API_ENDPOINTS = {
   AUTH: {
@@ -220,6 +228,9 @@ export const API_ENDPOINTS = {
     MIS: `${API_URL}/api/notificaciones/mis`,
     CREATE: `${API_URL}/api/notificaciones`,
     LEER: `${API_URL}/api/notificaciones/leer`,
+    EMAIL_DESTINATARIOS: (tipo: NotificacionEventoTipo, entidadId: number) =>
+      `${API_URL}/api/notificaciones/email/destinatarios?tipo=${encodeURIComponent(tipo)}&entidad_id=${entidadId}`,
+    EMAIL_ENVIAR: `${API_URL}/api/notificaciones/email/enviar`,
   },
   ESCALAS_SALARIALES: {
     GET_ALL: `${API_URL}/api/escalas-salariales`,
