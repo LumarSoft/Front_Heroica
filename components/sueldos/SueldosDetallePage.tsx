@@ -175,7 +175,9 @@ export function SueldosDetallePage({ vista }: SueldosDetallePageProps) {
                 onSaved={loadData}
               />
             )}
-            {data && vista === 'liquidaciones' && <LiquidacionesSection liquidaciones={data.liquidaciones} />}
+            {data && vista === 'liquidaciones' && (
+              <LiquidacionesSection liquidaciones={data.liquidaciones} sucursalId={sucursalId} mes={mes} anio={anio} />
+            )}
           </>
         )}
       </main>

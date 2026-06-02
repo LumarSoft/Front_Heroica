@@ -4,14 +4,17 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowRight,
+  CheckCircle2,
   ChevronDown,
   DollarSign,
   Edit3,
   FileX2,
   Landmark,
   Loader2,
+  Lock,
   MessageSquare,
   Save,
+  Send,
   Wallet,
   X,
 } from 'lucide-react'
@@ -20,15 +23,14 @@ import type { TooltipContentProps } from 'recharts'
 import { toast } from 'sonner'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
+import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 export interface ResumenSueldos {
   total_colaboradores: number
@@ -51,6 +53,70 @@ export interface PorPuesto {
   sueldo_promedio: number
 }
 
+export interface LiqFinalRow {
+  liquidacion_id: number
+  personal_id: number
+  nombre: string
+  legajo: string
+  puesto: string
+  fa: string
+  fb: string
+  forma_cobro: string
+  estado: string
+  fecha_solicitud: string
+  escala: number
+  valor_hora_escala: number
+  aplica_valor_hora: boolean
+  aplica_sueldo_basico_escala: boolean
+  aplica_banco: boolean
+  aplica_horas_extra: boolean
+  aplica_incentivos: boolean
+  hs_realizadas_mes: number
+  valor_hora: number
+  sueldo_basico: number
+  horas_extra_50: number
+  horas_extra_hs: number
+  horas_feriado: number
+  horas_feriado_hs: number
+  incentivos: number
+  incentivos_seleccionados: number[]
+  incentivos_items: IncentivoSueldo[]
+  extras: number
+  ausencias_justificadas: number
+  ausencias_injustificadas: number
+  tardanzas: number
+  descuentos: number
+  adelantos: number
+  sueldo_neto: number
+  banco: number
+  efectivo: number
+  antiguedad_anios: number
+  antiguedad_texto: string
+  sac_auto: number
+  vng_auto: number
+  preaviso_auto: number
+  sac_porcentaje: number
+  sac_importe: number
+  vng_porcentaje: number
+  vng_importe: number
+  preaviso_porcentaje: number
+  preaviso_importe: number
+  total_liq: number
+  liq_banco: number
+  liq_efectivo: number
+  total_general: number
+  sueldo_pagado: boolean
+  comentario_cobro: string
+  fecha_deposito: string
+  ministerio_aplica: boolean
+  ministerio_direccion: string
+  ministerio_fecha: string
+  ministerio_horario: string
+  enviado_pagos?: boolean
+  fecha_enviado_pagos?: string
+}
+
+/** @deprecated use LiqFinalRow */
 export interface Liquidacion {
   id: number
   nombre: string
@@ -104,6 +170,9 @@ export interface TablaMensualRow {
   fa: string
   fb: string
   forma_cobro?: 'banco' | 'efectivo'
+  es_mes_sac?: boolean
+  enviado_pagos?: boolean
+  fecha_enviado_pagos?: string
   simulacion?: Partial<TablaMensualRow>
 }
 
@@ -119,7 +188,7 @@ export interface SueldosData {
   resumen: ResumenSueldos
   por_puesto: PorPuesto[]
   tabla_mensual: TablaMensualRow[]
-  liquidaciones: Liquidacion[]
+  liquidaciones: LiqFinalRow[]
 }
 
 export const MESES_LABEL = [
@@ -342,7 +411,7 @@ const SUELDOS_COLUMNS: SueldosColumn[] = [
   { key: 'sueldo_pagado', label: 'Pagado', kind: 'checkboxText', editable: true },
 ]
 
-const SAVE_FIELDS: EditableField[] = [
+export const SAVE_FIELDS: EditableField[] = [
   'aplica_valor_hora',
   'aplica_sueldo_basico_escala',
   'aplica_horas_extra',
@@ -371,7 +440,7 @@ const SAVE_FIELDS: EditableField[] = [
   'sueldo_pagado',
 ]
 
-function asNumber(value: unknown): number {
+export function asNumber(value: unknown): number {
   const parsed = Number(value ?? 0)
   return Number.isFinite(parsed) ? parsed : 0
 }
@@ -390,36 +459,12 @@ function formatCell(row: TablaMensualRow, column: SueldosColumn): string {
   return String(value ?? '-')
 }
 
-function formatHours(value: unknown): string {
-  const hours = asNumber(value)
-  return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(hours)
-}
-
-function hoursTooltipFor(row: TablaMensualRow, column: SueldosColumn): string | null {
-  if (column.key === 'horas_extra_50' && row.aplica_horas_extra && asNumber(row.horas_extra_hs) > 0) {
-    return `${formatHours(row.horas_extra_hs)} hs extra tomadas para este importe`
-  }
-  if (column.key === 'horas_feriado' && asNumber(row.horas_feriado_hs) > 0) {
-    return `${formatHours(row.horas_feriado_hs)} hs en feriado tomadas para este importe`
-  }
-  if (column.key === 'ausencias_justificadas' && asNumber(row.ausencias_justificadas_hs) > 0) {
-    return `${formatHours(row.ausencias_justificadas_hs)} hs justificadas tomadas para este importe`
-  }
-  if (column.key === 'ausencias_injustificadas' && asNumber(row.ausencias_injustificadas_hs) > 0) {
-    return `${formatHours(row.ausencias_injustificadas_hs)} hs injustificadas tomadas para este importe`
-  }
-  if (column.key === 'tardanzas' && asNumber(row.tardanzas_hs) > 0) {
-    return `${formatHours(row.tardanzas_hs)} hs de tardanza tomadas para este importe`
-  }
-  return null
-}
-
-function effectiveValorHora(row: TablaMensualRow): number {
+export function effectiveValorHora(row: TablaMensualRow): number {
   if (row.aplica_valor_hora && asNumber(row.valor_hora) > 0) return asNumber(row.valor_hora)
   return asNumber(row.sueldo_basico) > 0 ? asNumber(row.sueldo_basico) / 26 / 8 : 0
 }
 
-function recalculateRow(row: TablaMensualRow): TablaMensualRow {
+export function recalculateRow(row: TablaMensualRow): TablaMensualRow {
   const sueldoBasico = row.aplica_sueldo_basico_escala ? asNumber(row.escala) : asNumber(row.sueldo_basico)
   const valorHora = row.aplica_valor_hora ? asNumber(row.valor_hora_escala) || sueldoBasico / 26 / 8 : 0
   const valorHoraCalculo = valorHora || sueldoBasico / 26 / 8
@@ -428,23 +473,16 @@ function recalculateRow(row: TablaMensualRow): TablaMensualRow {
   const incentivos = row.aplica_incentivos
     ? row.incentivos_items.filter(item => item.selected).reduce((sum, item) => sum + asNumber(item.monto), 0)
     : 0
-  const banco = row.aplica_banco ? Math.min(asNumber(row.banco), Number.MAX_SAFE_INTEGER) : 0
-  const sueldoSac =
-    sueldoBasico +
-    horasExtra +
-    horasFeriado +
-    incentivos +
-    asNumber(row.extras) +
-    asNumber(row.ausencias_justificadas) -
-    asNumber(row.ausencias_injustificadas) -
-    asNumber(row.tardanzas) -
-    asNumber(row.descuentos)
+  const banco = row.aplica_banco ? asNumber(row.banco) : 0
+  // El SAC (aguinaldo) es un haber editable que solo aplica en junio y diciembre
+  const sueldoSac = row.es_mes_sac ? asNumber(row.sueldo_sac) : 0
   const sueldoNeto =
     sueldoBasico +
     horasExtra +
     horasFeriado +
     incentivos +
     asNumber(row.extras) +
+    sueldoSac +
     asNumber(row.ausencias_justificadas) -
     asNumber(row.ausencias_injustificadas) -
     asNumber(row.tardanzas) -
@@ -478,7 +516,7 @@ function checkboxChecked(row: TablaMensualRow, field: EditableField | null): boo
   return field ? Boolean(row[field]) : false
 }
 
-function normalizeDraftRow(row: TablaMensualRow): TablaMensualRow {
+export function normalizeDraftRow(row: TablaMensualRow): TablaMensualRow {
   const incentivosItems = Array.isArray(row.incentivos_items) ? row.incentivos_items : []
   return {
     ...row,
@@ -487,135 +525,6 @@ function normalizeDraftRow(row: TablaMensualRow): TablaMensualRow {
       ? row.incentivos_seleccionados
       : incentivosItems.filter(item => item.selected).map(item => item.id),
   }
-}
-
-function DetailModal({
-  row,
-  open,
-  onOpenChange,
-  onSaveComment,
-}: {
-  row: TablaMensualRow | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSaveComment: (row: TablaMensualRow, comentario: string) => Promise<void>
-}) {
-  const [commentDraft, setCommentDraft] = useState('')
-  const [savingComment, setSavingComment] = useState(false)
-
-  useEffect(() => {
-    setCommentDraft(open && row ? (row.comentario_cobro ?? '') : '')
-  }, [open, row])
-
-  if (!row) return null
-  const detailRow = row
-
-  const identityColumns = SUELDOS_COLUMNS.slice(0, 3)
-  const earningColumns = SUELDOS_COLUMNS.filter(column =>
-    [
-      'hs_realizadas_mes',
-      'valor_hora',
-      'sueldo_basico',
-      'horas_extra_50',
-      'horas_feriado',
-      'incentivos',
-      'extras',
-      'sueldo_sac',
-    ].includes(column.key),
-  )
-  const deductionColumns = SUELDOS_COLUMNS.filter(column =>
-    ['ausencias_justificadas', 'ausencias_injustificadas', 'tardanzas', 'descuentos', 'adelantos'].includes(column.key),
-  )
-  const paymentColumns = SUELDOS_COLUMNS.filter(column =>
-    ['sueldo_neto', 'banco', 'efectivo', 'fecha_deposito'].includes(column.key),
-  )
-
-  async function handleSaveComment() {
-    setSavingComment(true)
-    try {
-      await onSaveComment(detailRow, commentDraft)
-    } finally {
-      setSavingComment(false)
-    }
-  }
-
-  const renderDetailGrid = (columns: SueldosColumn[]) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-      {columns.map(column => {
-        const tooltip = hoursTooltipFor(row, column)
-        const card = (
-          <div
-            className={`rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm ${tooltip ? 'cursor-help' : ''}`}
-          >
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#7B8496]">{column.label}</p>
-            <p className="text-base font-semibold text-[#1A1A1A] mt-1 break-words">{formatCell(row, column)}</p>
-          </div>
-        )
-
-        return tooltip ? (
-          <UiTooltip key={column.key}>
-            <TooltipTrigger asChild>{card}</TooltipTrigger>
-            <TooltipContent side="top">{tooltip}</TooltipContent>
-          </UiTooltip>
-        ) : (
-          <div key={column.key}>{card}</div>
-        )
-      })}
-    </div>
-  )
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        overlayClassName="bg-slate-950/80 backdrop-blur-md"
-        className="max-w-[min(1500px,calc(100vw-3rem))] max-h-[88vh] overflow-y-auto bg-[#F8FAFC] p-0 shadow-2xl"
-      >
-        <DialogHeader className="sticky top-0 z-10 border-b border-slate-200 bg-white px-8 py-6">
-          <DialogTitle className="text-2xl font-bold text-[#002868]">Detalle de sueldo - {row.nombre}</DialogTitle>
-          <p className="text-sm text-[#6B7280]">Vista completa del colaborador para el período seleccionado.</p>
-        </DialogHeader>
-        <div className="space-y-6 px-8 py-6">
-          <section className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#002868]">Datos del colaborador</h3>
-            {renderDetailGrid(identityColumns)}
-          </section>
-          <section className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-700">Haberes y adicionales</h3>
-            {renderDetailGrid(earningColumns)}
-          </section>
-          <section className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-rose-700">Ausencias y descuentos</h3>
-            {renderDetailGrid(deductionColumns)}
-          </section>
-          <section className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#002868]">Pago</h3>
-            {renderDetailGrid(paymentColumns)}
-          </section>
-          <section className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-[#002868]">Comentarios del cobro</h3>
-            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <Textarea
-                value={commentDraft}
-                onChange={event => setCommentDraft(event.target.value)}
-                placeholder="Agregar una observación sobre este cobro..."
-                className="min-h-28 resize-none"
-              />
-              <div className="mt-3 flex justify-end">
-                <Button
-                  onClick={handleSaveComment}
-                  disabled={savingComment}
-                  className="h-9 gap-2 bg-[#002868] text-white hover:bg-[#003d8f]"
-                >
-                  {savingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  Guardar comentario
-                </Button>
-              </div>
-            </div>
-          </section>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
 }
 
 export function TablaMensualSection({
@@ -632,12 +541,21 @@ export function TablaMensualSection({
   onSaved?: () => void
 }) {
   const router = useRouter()
+  const user = useAuthStore(state => state.user)
   const [simulationMode, setSimulationMode] = useState(false)
   const [draftRows, setDraftRows] = useState<TablaMensualRow[]>(rows)
-  const [selectedRow, setSelectedRow] = useState<TablaMensualRow | null>(null)
   const [saving, setSaving] = useState(false)
+  const [sending, setSending] = useState(false)
+
+  const esMesSac = mes === 6 || mes === 12
+  function goToDetalle(pid: number) {
+    router.push(`/recursos-humanos/${sucursalId}/sueldos/mensual/${pid}?mes=${mes}&anio=${anio}`)
+  }
+  const columns = useMemo(() => SUELDOS_COLUMNS.filter(column => column.key !== 'sueldo_sac' || esMesSac), [esMesSac])
 
   const visibleRows = simulationMode ? draftRows : rows
+  const pendientesEnvio = rows.filter(row => !row.enviado_pagos && asNumber(row.sueldo_neto) > 0)
+  const enviadosCount = rows.filter(row => row.enviado_pagos).length
   const totals = useMemo(
     () => ({
       neto: visibleRows.reduce((sum, row) => sum + asNumber(row.sueldo_neto), 0),
@@ -697,25 +615,6 @@ export function TablaMensualSection({
     )
   }
 
-  async function saveCobroComment(row: TablaMensualRow, comentario: string) {
-    const response = await apiFetch(
-      API_ENDPOINTS.RRHH_SUELDOS.UPDATE_PERIODO_META(row.personal_id, sucursalId, mes, anio),
-      {
-        method: 'PUT',
-        body: JSON.stringify({ data: { comentario_cobro: comentario } }),
-      },
-    )
-    if (!response.ok) {
-      const data = await response.json()
-      throw new Error(data.message || 'Error al guardar comentario')
-    }
-    toast.success('Comentario del cobro guardado')
-    setSelectedRow(current =>
-      current?.personal_id === row.personal_id ? { ...current, comentario_cobro: comentario } : current,
-    )
-    onSaved?.()
-  }
-
   async function saveSimulation() {
     setSaving(true)
     try {
@@ -749,6 +648,38 @@ export function TablaMensualSection({
     }
   }
 
+  async function enviarPagos() {
+    if (pendientesEnvio.length === 0) return
+    setSending(true)
+    try {
+      const response = await apiFetch(API_ENDPOINTS.RRHH_SUELDOS.ENVIAR_PAGOS, {
+        method: 'POST',
+        body: JSON.stringify({
+          sucursal_id: sucursalId,
+          user_id: user?.id,
+          mes,
+          anio,
+          rows: pendientesEnvio.map(row => ({
+            personal_id: row.personal_id,
+            nombre: row.nombre,
+            sueldo_neto: row.sueldo_neto,
+            banco: row.banco,
+            efectivo: row.efectivo,
+            fecha_deposito: row.fecha_deposito,
+          })),
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || 'Error al enviar a Pagos Pendientes')
+      toast.success(data.message || 'Sueldos enviados a Pagos Pendientes')
+      onSaved?.()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al enviar a Pagos Pendientes')
+    } finally {
+      setSending(false)
+    }
+  }
+
   return (
     <>
       <Card className="border border-slate-100 shadow-sm overflow-hidden">
@@ -772,7 +703,7 @@ export function TablaMensualSection({
             <table className="w-full min-w-[2850px] text-xs">
               <thead>
                 <tr className="border-b border-[#F0F0F0] bg-[#FAFAFA]">
-                  {SUELDOS_COLUMNS.map((column, index) => (
+                  {columns.map((column, index) => (
                     <th
                       key={column.key}
                       className={`px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC] align-bottom ${column.sticky ? 'sticky z-20 bg-[#FAFAFA]' : ''} ${
@@ -793,7 +724,7 @@ export function TablaMensualSection({
                     key={row.personal_id}
                     className={`group transition-colors ${row.sueldo_pagado ? 'bg-emerald-50 hover:bg-emerald-100/70' : 'hover:bg-[#F8FAFF]'}`}
                   >
-                    {SUELDOS_COLUMNS.map((column, index) => {
+                    {columns.map((column, index) => {
                       const editable = simulationMode && column.editable
                       const checkboxField = checkboxFieldFor(column)
                       return (
@@ -940,16 +871,23 @@ export function TablaMensualSection({
                           ) : column.key === 'nombre' ? (
                             <button
                               type="button"
-                              onClick={() => setSelectedRow(row)}
+                              onClick={() => goToDetalle(row.personal_id)}
                               className="text-left cursor-pointer"
                             >
                               <p className="font-semibold text-[#1A1A1A] hover:text-[#002868]">{row.nombre}</p>
-                              <p className="text-[10px] text-[#9AA0AC]">Click para detalle</p>
+                              {row.enviado_pagos ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600">
+                                  <Lock className="w-2.5 h-2.5" />
+                                  Enviado a pagos
+                                </span>
+                              ) : (
+                                <p className="text-[10px] text-[#9AA0AC]">Click para detalle</p>
+                              )}
                             </button>
                           ) : (
                             <button
                               type="button"
-                              onClick={() => setSelectedRow(row)}
+                              onClick={() => goToDetalle(row.personal_id)}
                               className={`w-full cursor-pointer ${column.kind === 'money' ? 'text-right' : 'text-left'}`}
                             >
                               <span
@@ -972,7 +910,7 @@ export function TablaMensualSection({
                       {row.comentario_cobro ? (
                         <button
                           type="button"
-                          onClick={() => setSelectedRow(row)}
+                          onClick={() => goToDetalle(row.personal_id)}
                           className="inline-flex items-center gap-1.5 rounded-full bg-[#EEF3FF] px-2.5 py-1 text-xs font-semibold text-[#002868] hover:bg-[#D8E3F8] cursor-pointer"
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
@@ -996,14 +934,29 @@ export function TablaMensualSection({
               </tbody>
               <tfoot>
                 <tr className="border-t border-[#D8E3F8] bg-[#F8FAFF] font-bold text-[#002868]">
-                  <td className="sticky left-0 z-20 bg-[#F8FAFF] px-3 py-3">Totales</td>
-                  <td className="sticky left-[92px] z-20 bg-[#F8FAFF] px-3 py-3" />
-                  <td colSpan={14} className="px-3 py-3" />
-                  <td className="px-3 py-3 text-right tabular-nums">{fmtCurrency(totals.neto)}</td>
-                  <td className="px-3 py-3 text-right tabular-nums">{fmtCurrency(totals.banco)}</td>
-                  <td className="px-3 py-3 text-right tabular-nums">{fmtCurrency(totals.efectivo)}</td>
-                  <td className="px-3 py-3" />
-                  <td className="px-3 py-3" />
+                  {columns.map((column, index) => {
+                    if (index === 0)
+                      return (
+                        <td key={column.key} className="sticky left-0 z-20 bg-[#F8FAFF] px-3 py-3">
+                          Totales
+                        </td>
+                      )
+                    if (index === 1)
+                      return <td key={column.key} className="sticky left-[92px] z-20 bg-[#F8FAFF] px-3 py-3" />
+                    const total =
+                      column.key === 'sueldo_neto'
+                        ? totals.neto
+                        : column.key === 'banco'
+                          ? totals.banco
+                          : column.key === 'efectivo'
+                            ? totals.efectivo
+                            : null
+                    return (
+                      <td key={column.key} className="px-3 py-3 text-right tabular-nums">
+                        {total !== null ? fmtCurrency(total) : ''}
+                      </td>
+                    )
+                  })}
                   <td className="px-3 py-3" />
                 </tr>
               </tfoot>
@@ -1011,10 +964,19 @@ export function TablaMensualSection({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#F0F0F0] bg-white px-4 py-4">
-            <p className="text-xs text-[#9AA0AC]">
-              Los valores toman datos del sistema cuando existen; en simulación se pueden ajustar y confirmar para el
-              período.
-            </p>
+            <div className="space-y-1">
+              <p className="text-xs text-[#9AA0AC] max-w-md">
+                {simulationMode
+                  ? 'Ajustá los valores y aceptá la simulación para guardarlos en el período.'
+                  : 'Paso 1: simulá y guardá los valores. Paso 2: enviá a Pagos Pendientes para impactar la acreditación.'}
+              </p>
+              {!simulationMode && enviadosCount > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  {enviadosCount} enviado{enviadosCount !== 1 ? 's' : ''} a Pagos Pendientes
+                </span>
+              )}
+            </div>
             {simulationMode ? (
               <div className="flex items-center gap-2">
                 <Button
@@ -1036,45 +998,213 @@ export function TablaMensualSection({
                 </Button>
               </div>
             ) : (
-              <Button
-                onClick={enterSimulation}
-                className="h-9 gap-2 bg-[#002868] hover:bg-[#003d8f] text-white cursor-pointer"
-              >
-                <Edit3 className="w-4 h-4" />
-                Entrar en modo simulación
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={enterSimulation}
+                  variant="outline"
+                  className="h-9 gap-2 border-[#002868]/30 text-[#002868] hover:bg-[#002868]/8 cursor-pointer"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Modo simulación
+                </Button>
+                <Button
+                  onClick={enviarPagos}
+                  disabled={sending || pendientesEnvio.length === 0}
+                  className="h-9 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer disabled:opacity-50"
+                  title={
+                    pendientesEnvio.length === 0
+                      ? 'No hay sueldos pendientes de enviar'
+                      : `Enviar ${pendientesEnvio.length} sueldo(s) a Pagos Pendientes`
+                  }
+                >
+                  {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  Enviar a Pagos Pendientes
+                  {pendientesEnvio.length > 0 && ` (${pendientesEnvio.length})`}
+                </Button>
+              </div>
             )}
           </div>
         </CardContent>
       </Card>
-
-      <DetailModal
-        row={selectedRow}
-        open={selectedRow !== null}
-        onOpenChange={open => !open && setSelectedRow(null)}
-        onSaveComment={saveCobroComment}
-      />
     </>
   )
 }
 
-export function LiquidacionesSection({ liquidaciones }: { liquidaciones: Liquidacion[] }) {
+// ─── Liq Final helpers ───────────────────────────────────────────────────────
+
+export function recalculateLiqFinalRow(row: LiqFinalRow): LiqFinalRow {
+  const sueldoBasico = row.aplica_sueldo_basico_escala ? asNumber(row.escala) : asNumber(row.sueldo_basico)
+  const valorHora = row.aplica_valor_hora ? asNumber(row.valor_hora_escala) || sueldoBasico / 26 / 8 : 0
+  const valorHoraCalculo = valorHora || sueldoBasico / 26 / 8
+  const horasExtra = row.aplica_horas_extra ? asNumber(row.horas_extra_hs) * valorHoraCalculo * 1.5 : 0
+  const horasFeriado = asNumber(row.horas_feriado_hs) * valorHoraCalculo
+  const incentivos = row.aplica_incentivos
+    ? row.incentivos_items.filter(i => i.selected).reduce((s, i) => s + asNumber(i.monto), 0)
+    : 0
+
+  const sueldoNeto = Math.round(
+    sueldoBasico +
+      horasExtra +
+      horasFeriado +
+      incentivos +
+      asNumber(row.extras) +
+      asNumber(row.ausencias_justificadas) -
+      asNumber(row.ausencias_injustificadas) -
+      asNumber(row.tardanzas) -
+      asNumber(row.descuentos) -
+      asNumber(row.adelantos),
+  )
+
+  const banco = row.aplica_banco ? Math.min(Math.round(asNumber(row.banco)), sueldoNeto) : 0
+  const efectivo = row.aplica_banco ? Math.max(sueldoNeto - banco, 0) : sueldoNeto
+
+  // SAC, VNG y Preaviso son importes editables (defaults calculados por antigüedad).
+  const sacImporte = Math.round(asNumber(row.sac_importe))
+  const vngImporte = Math.round(asNumber(row.vng_importe))
+  const preavisoImporte = Math.round(asNumber(row.preaviso_importe))
+  const totalLiq = sacImporte + vngImporte + preavisoImporte
+
+  // Porcentajes derivados (informativos) respecto del neto del período.
+  const pct = (importe: number) => (sueldoNeto > 0 ? Math.round((importe / sueldoNeto) * 10000) / 100 : 0)
+
+  const ratio = sueldoNeto > 0 ? banco / sueldoNeto : row.aplica_banco ? 1 : 0
+  const liqBanco = Math.round(totalLiq * ratio)
+  const liqEfectivo = totalLiq - liqBanco
+
+  return {
+    ...row,
+    sueldo_basico: Math.round(sueldoBasico),
+    valor_hora: Math.round(valorHora),
+    horas_extra_50: Math.round(horasExtra),
+    horas_feriado: Math.round(horasFeriado),
+    incentivos: Math.round(incentivos),
+    incentivos_seleccionados: row.incentivos_items.filter(i => i.selected).map(i => i.id),
+    sueldo_neto: sueldoNeto,
+    banco,
+    efectivo,
+    sac_importe: sacImporte,
+    vng_importe: vngImporte,
+    preaviso_importe: preavisoImporte,
+    sac_porcentaje: pct(sacImporte),
+    vng_porcentaje: pct(vngImporte),
+    preaviso_porcentaje: pct(preavisoImporte),
+    total_liq: totalLiq,
+    liq_banco: liqBanco,
+    liq_efectivo: liqEfectivo,
+    total_general: sueldoNeto + totalLiq,
+  }
+}
+
+export function normalizeLiqFinalRow(row: LiqFinalRow): LiqFinalRow {
+  const items = Array.isArray(row.incentivos_items) ? row.incentivos_items : []
+  return recalculateLiqFinalRow({
+    ...row,
+    incentivos_items: items,
+    incentivos_seleccionados: Array.isArray(row.incentivos_seleccionados)
+      ? row.incentivos_seleccionados
+      : items.filter(i => i.selected).map(i => i.id),
+  })
+}
+
+export function liqEffectiveValorHora(row: LiqFinalRow): number {
+  if (row.aplica_valor_hora && asNumber(row.valor_hora) > 0) return asNumber(row.valor_hora)
+  return asNumber(row.sueldo_basico) > 0 ? asNumber(row.sueldo_basico) / 26 / 8 : 0
+}
+
+// ─── Liq Final Section ───────────────────────────────────────────────────────
+
+export const LIQ_SAVE_FIELDS: (keyof LiqFinalRow)[] = [
+  'aplica_valor_hora',
+  'aplica_sueldo_basico_escala',
+  'aplica_banco',
+  'aplica_horas_extra',
+  'aplica_incentivos',
+  'valor_hora',
+  'sueldo_basico',
+  'horas_extra_50',
+  'horas_extra_hs',
+  'horas_feriado',
+  'horas_feriado_hs',
+  'incentivos',
+  'incentivos_seleccionados',
+  'extras',
+  'ausencias_justificadas',
+  'ausencias_injustificadas',
+  'tardanzas',
+  'descuentos',
+  'adelantos',
+  'sueldo_neto',
+  'banco',
+  'efectivo',
+  'sac_porcentaje',
+  'sac_importe',
+  'vng_porcentaje',
+  'vng_importe',
+  'preaviso_porcentaje',
+  'preaviso_importe',
+  'total_liq',
+  'liq_banco',
+  'liq_efectivo',
+  'total_general',
+  'sueldo_pagado',
+  'fecha_deposito',
+  'comentario_cobro',
+  'ministerio_aplica',
+  'ministerio_direccion',
+  'ministerio_fecha',
+  'ministerio_horario',
+]
+
+export function LiquidacionesSection({
+  liquidaciones,
+  sucursalId,
+  mes,
+  anio,
+}: {
+  liquidaciones: LiqFinalRow[]
+  sucursalId: number
+  mes: number
+  anio: number
+}) {
+  const router = useRouter()
+  const enviadasCount = liquidaciones.filter(r => r.enviado_pagos).length
+
+  const totals = useMemo(
+    () => ({
+      neto: liquidaciones.reduce((s, r) => s + asNumber(r.sueldo_neto), 0),
+      liq: liquidaciones.reduce((s, r) => s + asNumber(r.total_liq), 0),
+      total: liquidaciones.reduce((s, r) => s + asNumber(r.total_general), 0),
+    }),
+    [liquidaciones],
+  )
+
+  function openDetalle(liquidacionId: number) {
+    router.push(`/recursos-humanos/${sucursalId}/sueldos/liquidaciones/${liquidacionId}?mes=${mes}&anio=${anio}`)
+  }
+
   return (
     <Card className="border border-slate-100 shadow-sm overflow-hidden">
       <div className="h-1 w-full bg-rose-500" />
       <CardHeader className="pb-2">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <FileX2 className="w-4 h-4 text-rose-500" />
           <CardTitle className="text-xs font-semibold text-[#9AA0AC] uppercase tracking-widest">
             Liquidaciones finales del período
           </CardTitle>
           {liquidaciones.length > 0 && (
-            <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">
+            <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">
               {liquidaciones.length}
+            </span>
+          )}
+          {enviadasCount > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {enviadasCount} enviada{enviadasCount !== 1 ? 's' : ''}
             </span>
           )}
         </div>
       </CardHeader>
+
       <CardContent className="p-0">
         {liquidaciones.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
@@ -1085,37 +1215,92 @@ export function LiquidacionesSection({ liquidaciones }: { liquidaciones: Liquida
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[1000px] text-xs">
               <thead>
                 <tr className="border-b border-[#F0F0F0] bg-[#FAFAFA]">
-                  {['Colaborador', 'Puesto', 'Fecha', 'Estado'].map(h => (
+                  {['Legajo', 'Colaborador', 'Puesto', 'FA', 'FB', 'Antigüedad'].map(h => (
                     <th
                       key={h}
-                      className="text-left text-[10px] font-semibold text-[#9AA0AC] uppercase tracking-wider px-5 py-3"
+                      className="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC]"
                     >
                       {h}
                     </th>
                   ))}
+                  {['Sueldo Neto', 'Total Liq.', 'Total General'].map(h => (
+                    <th
+                      key={h}
+                      className="px-3 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC]"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                  <th className="px-3 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC]">
+                    Estado
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F5F5F5]">
-                {liquidaciones.map(l => (
-                  <tr key={l.id} className="hover:bg-rose-50/40 transition-colors">
-                    <td className="px-5 py-3">
-                      <p className="font-semibold text-[#1A1A1A]">{l.nombre}</p>
-                      <p className="text-xs text-[#9AA0AC]">Leg. {l.legajo}</p>
+                {liquidaciones.map(row => (
+                  <tr
+                    key={row.liquidacion_id}
+                    onClick={() => openDetalle(row.liquidacion_id)}
+                    className={`group cursor-pointer transition-colors ${row.enviado_pagos ? 'bg-emerald-50/60 hover:bg-emerald-100/60' : 'hover:bg-rose-50/40'}`}
+                  >
+                    <td className="px-3 py-3 text-[#5A6070]">{row.legajo}</td>
+                    <td className="px-3 py-3">
+                      <p className="font-semibold text-[#1A1A1A] group-hover:text-rose-700">{row.nombre}</p>
+                      {row.enviado_pagos ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600">
+                          <Lock className="w-2.5 h-2.5" />
+                          Enviada a pagos
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-[#9AA0AC]">Ver detalle →</span>
+                      )}
                     </td>
-                    <td className="px-5 py-3 text-[#5A6070]">{l.puesto}</td>
-                    <td className="px-5 py-3 text-[#5A6070] tabular-nums">{fmtDate(l.fecha_solicitud)}</td>
-                    <td className="px-5 py-3">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-                        {l.estado}
+                    <td className="px-3 py-3 text-[#5A6070]">{row.puesto}</td>
+                    <td className="px-3 py-3 text-[#5A6070] tabular-nums">{row.fa ? fmtDate(row.fa) : '—'}</td>
+                    <td className="px-3 py-3 text-[#5A6070] tabular-nums">{row.fb ? fmtDate(row.fb) : '—'}</td>
+                    <td className="px-3 py-3 text-[#5A6070]">{row.antiguedad_texto || '—'}</td>
+                    <td className="px-3 py-3 text-right tabular-nums font-bold text-[#002868]">
+                      {fmtCurrency(row.sueldo_neto)}
+                    </td>
+                    <td className="px-3 py-3 text-right tabular-nums font-semibold text-rose-700">
+                      {fmtCurrency(row.total_liq)}
+                    </td>
+                    <td className="px-3 py-3 text-right tabular-nums font-bold text-rose-800">
+                      {fmtCurrency(row.total_general)}
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${row.enviado_pagos ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}
+                      >
+                        {row.enviado_pagos ? 'Enviada' : 'Pendiente'}
                       </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr className="border-t border-rose-100 bg-rose-50/60 font-bold text-rose-800 text-xs">
+                  <td className="px-3 py-3">Totales</td>
+                  <td colSpan={5} className="px-3 py-3" />
+                  <td className="px-3 py-3 text-right tabular-nums">{fmtCurrency(totals.neto)}</td>
+                  <td className="px-3 py-3 text-right tabular-nums">{fmtCurrency(totals.liq)}</td>
+                  <td className="px-3 py-3 text-right tabular-nums">{fmtCurrency(totals.total)}</td>
+                  <td className="px-3 py-3" />
+                </tr>
+              </tfoot>
             </table>
+          </div>
+        )}
+
+        {liquidaciones.length > 0 && (
+          <div className="border-t border-[#F0F0F0] bg-white px-4 py-4">
+            <p className="text-xs text-[#9AA0AC]">
+              Generadas desde bajas aprobadas. Hacé click en una fila para ver el detalle, editar y enviar a Pagos
+              Pendientes.
+            </p>
           </div>
         )}
       </CardContent>

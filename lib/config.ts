@@ -274,5 +274,9 @@ export const API_ENDPOINTS = {
       `${API_URL}/api/rrhh/sueldos/${personalId}/periodo?sucursal_id=${sucursalId}&mes=${mes}&anio=${anio}`,
     UPDATE_PERIODO_META: (personalId: number, sucursalId: number, mes: number, anio: number) =>
       `${API_URL}/api/rrhh/sueldos/${personalId}/periodo/meta?sucursal_id=${sucursalId}&mes=${mes}&anio=${anio}`,
+    UPDATE_LIQUIDACION: (liquidacionId: number) => `${API_URL}/api/rrhh/sueldos/liquidaciones/${liquidacionId}`,
+    ENVIAR_PAGOS: `${API_URL}/api/rrhh/sueldos/enviar-pagos`,
+    ENVIAR_LIQUIDACION_PAGOS: (liquidacionId: number) =>
+      `${API_URL}/api/rrhh/sueldos/liquidaciones/${liquidacionId}/enviar-pagos`,
   },
 }
