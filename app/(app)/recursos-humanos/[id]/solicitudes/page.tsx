@@ -152,7 +152,14 @@ export default function SolicitudesPage() {
           <div className="flex items-center justify-between h-14 gap-3">
             <div className="flex items-center gap-3">
               <Button
-                onClick={() => router.push(`/recursos-humanos/${sucursalId}`)}
+                onClick={() => {
+                  if (selectedTipo) {
+                    setSelectedTipo(null)
+                    setFilters(initialFilters)
+                  } else {
+                    router.push(`/recursos-humanos/${sucursalId}`)
+                  }
+                }}
                 variant="ghost"
                 size="icon"
                 className="w-9 h-9 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 cursor-pointer rounded-lg"
@@ -162,9 +169,13 @@ export default function SolicitudesPage() {
               </Button>
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC] leading-none mb-1">
-                  Recursos Humanos · {sucursal?.nombre ?? ''}
+                  {selectedTipo
+                    ? `Recursos Humanos · ${sucursal?.nombre ?? ''} · Solicitudes`
+                    : `Recursos Humanos · ${sucursal?.nombre ?? ''}`}
                 </p>
-                <h1 className="text-sm sm:text-base font-semibold text-[#002868] truncate leading-none">Solicitudes</h1>
+                <h1 className="text-sm sm:text-base font-semibold text-[#002868] truncate leading-none">
+                  {selectedTipo ?? 'Solicitudes'}
+                </h1>
               </div>
             </div>
 
@@ -192,11 +203,12 @@ export default function SolicitudesPage() {
           <div>
             <h2 className="text-xl sm:text-3xl font-bold text-[#002868] flex items-center gap-3">
               <ClipboardList className="w-8 h-8 text-[#002868]" />
-              Solicitudes
+              {selectedTipo ?? 'Solicitudes'}
             </h2>
             <p className="text-xs sm:text-sm text-[#666666] mt-1">
-              Carga, revisión y seguimiento de solicitudes de la sucursal · {solicitudesFiltradas.length} registro
-              {solicitudesFiltradas.length !== 1 ? 's' : ''}
+              {selectedTipo
+                ? `${solicitudesFiltradas.length} registro${solicitudesFiltradas.length !== 1 ? 's' : ''}`
+                : 'Carga, revisión y seguimiento de solicitudes de la sucursal'}
             </p>
           </div>
         </div>
@@ -210,21 +222,6 @@ export default function SolicitudesPage() {
           />
         ) : (
           <div className="mt-4">
-            <div className="flex items-center justify-between mb-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setSelectedTipo(null)
-                  setFilters(initialFilters)
-                }}
-                className="text-[#5A6070] border-[#D8E3F8]"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Volver a Categorías
-              </Button>
-            </div>
-
             <SolicitudesFilters
               filters={filters}
               onChange={setFilters}
