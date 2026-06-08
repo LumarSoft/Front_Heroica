@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import type { Puesto } from '@/lib/types'
 import { CbuInput } from '@/components/ui/cbu-input'
 import { CBU_DIGITOS } from '@/lib/schemas'
+import { handleDniChange, handleCuitChange } from '@/lib/validators'
 import type { SolicitudFormState } from './solicitudFormUtils'
 import { SolicitudArchivoAdjunto } from './SolicitudArchivoAdjunto'
 
@@ -85,16 +86,25 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
             <Input
               className="h-10 rounded-lg border-[#E0E0E0]"
               value={form.alta_dni}
-              onChange={e => onChange({ alta_dni: e.target.value })}
+              placeholder="12345678"
+              maxLength={8}
+              onChange={e => {
+                const digits = handleDniChange(e.target.value)
+                if (digits !== null) onChange({ alta_dni: digits })
+              }}
             />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">CUIL o CUIT *</Label>
             <Input
-              placeholder="Ej.: 20-44564489-8"
+              placeholder="20-12345678-9"
               className="h-10 rounded-lg border-[#E0E0E0]"
               value={form.alta_cuil}
-              onChange={e => onChange({ alta_cuil: e.target.value })}
+              maxLength={13}
+              onChange={e => {
+                const formatted = handleCuitChange(e.target.value)
+                if (formatted !== null) onChange({ alta_cuil: formatted })
+              }}
             />
           </div>
           <div className="sm:col-span-2 space-y-1.5">

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { isValidCuit, cuitToDigits } from './validators'
 
 // ── CBU / CVU ─────────────────────────────────────────────────────────────
 export const CBU_DIGITOS = 22
@@ -27,7 +28,7 @@ export type LoginFormValues = z.infer<typeof loginSchema>
 export const sucursalSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
   razon_social: z.string().optional(),
-  cuit: z.union([z.string().regex(/^\d{2}-\d{8}-\d$/, 'CUIT inválido (XX-XXXXXXXX-X)'), z.literal('')]),
+  cuit: z.union([z.string().refine(v => isValidCuit(v), 'El CUIT debe tener exactamente 11 dígitos'), z.literal('')]),
   direccion: z.string().optional(),
 })
 export type SucursalFormValues = z.infer<typeof sucursalSchema>

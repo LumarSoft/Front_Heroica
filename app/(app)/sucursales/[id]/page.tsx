@@ -19,6 +19,7 @@ import { ErrorBanner } from '@/components/ui/error-banner'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/store/authStore'
 import { CBU_DIGITOS } from '@/lib/schemas'
+import { handleCuitChange, isValidCuit } from '@/lib/validators'
 import { CbuInput } from '@/components/ui/cbu-input'
 
 export default function SucursalDetailPage() {
@@ -200,21 +201,13 @@ export default function SucursalDetailPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name } = e.target
-    let { value } = e.target
+    const { value } = e.target
 
     if (name === 'cuit') {
-      const digits = value.replace(/\D/g, '')
-      if (digits.length <= 11) {
-        if (digits.length > 2 && digits.length <= 10) {
-          value = `${digits.substring(0, 2)}-${digits.substring(2)}`
-        } else if (digits.length > 10) {
-          value = `${digits.substring(0, 2)}-${digits.substring(2, 10)}-${digits.substring(10, 11)}`
-        } else {
-          value = digits
-        }
-      } else {
-        return // No permitir más de 11 dígitos
-      }
+      const formatted = handleCuitChange(value)
+      if (formatted === null) return
+      setFormData(prev => ({ ...prev, cuit: formatted }))
+      return
     }
 
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -222,9 +215,14 @@ export default function SucursalDetailPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSaving(true)
     setError('')
 
+    if (formData.cuit && !isValidCuit(formData.cuit)) {
+      setError('El CUIT debe tener exactamente 11 dígitos')
+      return
+    }
+
+    setIsSaving(true)
     try {
       const response = await apiFetch(API_ENDPOINTS.SUCURSALES.UPDATE(sucursalId), {
         method: 'PUT',

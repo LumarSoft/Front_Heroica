@@ -1,5 +1,6 @@
 import type { RhSolicitud, RhSolicitudTipo } from '@/lib/types'
 import { CBU_DIGITOS } from '@/lib/schemas'
+import { isValidCuit, isValidDni } from '@/lib/validators'
 
 function getPrevMonthDefaults(): { mes: string; anio: string } {
   const d = new Date()
@@ -892,10 +893,9 @@ export function validateSolicitudForm(form: SolicitudFormState, options?: { isEd
     case 'Altas':
       if (!form.alta_nombre.trim()) return 'Ingrese nombres y apellidos del colaborador'
       if (!form.alta_dni.trim()) return 'Ingrese el DNI del colaborador'
-      {
-        const cuilDigits = form.alta_cuil.replace(/\D/g, '')
-        if (cuilDigits.length < 10 || cuilDigits.length > 13) return 'Ingrese un CUIL o CUIT válido'
-      }
+      if (!isValidDni(form.alta_dni)) return 'El DNI debe tener exactamente 8 dígitos'
+      if (!form.alta_cuil.trim()) return 'Ingrese el CUIL/CUIT del colaborador'
+      if (!isValidCuit(form.alta_cuil)) return 'El CUIL/CUIT debe tener exactamente 11 dígitos'
       if (!form.alta_domicilio.trim()) return 'Ingrese la dirección real'
       if (!form.alta_direccion_dni.trim()) return 'Ingrese la dirección según consta en el DNI'
       if (!form.alta_fecha_nacimiento) return 'Ingrese la fecha de nacimiento'

@@ -21,6 +21,7 @@ import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/store/authStore'
 import type { Sucursal } from '@/lib/types'
 import { sucursalSchema } from '@/lib/schemas'
+import { handleCuitChange } from '@/lib/validators'
 import { Building2, CircleCheck, CircleOff, Plus } from 'lucide-react'
 
 export default function SucursalesPage() {
@@ -63,21 +64,13 @@ export default function SucursalesPage() {
   }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let { name, value } = e.target
+    const { name, value } = e.target
 
     if (name === 'cuit') {
-      const digits = value.replace(/\D/g, '')
-      if (digits.length <= 11) {
-        if (digits.length > 2 && digits.length <= 10) {
-          value = `${digits.substring(0, 2)}-${digits.substring(2)}`
-        } else if (digits.length > 10) {
-          value = `${digits.substring(0, 2)}-${digits.substring(2, 10)}-${digits.substring(10, 11)}`
-        } else {
-          value = digits
-        }
-      } else {
-        return // No permitir más de 11 dígitos
-      }
+      const formatted = handleCuitChange(value)
+      if (formatted === null) return
+      setFormData(prev => ({ ...prev, cuit: formatted }))
+      return
     }
 
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -198,7 +191,6 @@ export default function SucursalesPage() {
 
         <ErrorBanner error={error} />
 
-        
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
             <LoadingSpinner />
