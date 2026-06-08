@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch'
 import { apiFetch } from '@/lib/api'
 import { API_ENDPOINTS } from '@/lib/config'
 import type { Personal, Puesto } from '@/lib/types'
+import { handleDniChange, isValidDni } from '@/lib/validators'
 
 interface DatosPersonalesTabProps {
   personal: Personal
@@ -262,9 +263,12 @@ function EditMode({
         <FormField label="DNI" required>
           <Input
             value={form.dni}
-            onChange={e => onChange({ dni: e.target.value })}
-            placeholder="Número de DNI"
-            maxLength={20}
+            onChange={e => {
+              const digits = handleDniChange(e.target.value)
+              if (digits !== null) onChange({ dni: digits })
+            }}
+            placeholder="12345678"
+            maxLength={8}
           />
         </FormField>
 
@@ -401,6 +405,10 @@ export function DatosPersonalesTab({
     }
     if (!form.dni.trim()) {
       toast.error('El DNI es requerido')
+      return
+    }
+    if (!isValidDni(form.dni)) {
+      toast.error('El DNI debe tener exactamente 8 dígitos')
       return
     }
     if (!form.puesto_id) {

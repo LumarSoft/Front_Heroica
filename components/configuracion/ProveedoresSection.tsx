@@ -17,6 +17,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
+import { handleCuitChange, isValidCuit } from '@/lib/validators'
 
 interface ProveedorItem {
   id: number
@@ -109,8 +110,8 @@ export function ProveedoresSection() {
       setError('El nombre es requerido')
       return
     }
-    if (cuitLimpio && !/^\d+$/.test(cuitLimpio)) {
-      setError('El CUIT/CUIL debe contener solo números y sin guiones')
+    if (cuitLimpio && !isValidCuit(cuitLimpio)) {
+      setError('El CUIT/CUIL debe tener exactamente 11 dígitos')
       return
     }
     if (telefonoLimpio && !/^\d+$/.test(telefonoLimpio)) {
@@ -179,7 +180,10 @@ export function ProveedoresSection() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-[#F0F0F0]">
           <CardTitle>Proveedores</CardTitle>
-          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f] text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4">
+          <Button
+            onClick={handleOpenNew}
+            className="bg-[#002868] hover:bg-[#003d8f] text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
+          >
             + Nuevo Proveedor
           </Button>
         </CardHeader>
@@ -279,8 +283,12 @@ export function ProveedoresSection() {
                 <Input
                   id="prov-cuit"
                   value={form.cuit}
-                  onChange={e => setForm({ ...form, cuit: e.target.value })}
-                  placeholder="30123456789"
+                  onChange={e => {
+                    const formatted = handleCuitChange(e.target.value)
+                    if (formatted !== null) setForm({ ...form, cuit: formatted })
+                  }}
+                  placeholder="30-12345678-9"
+                  maxLength={13}
                   className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
                 />
               </div>
