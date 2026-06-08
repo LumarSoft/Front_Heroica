@@ -122,14 +122,16 @@ export function AprobarSolicitudDialog({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#9AA0AC] mb-1">Colaborador</p>
-              <p className="text-sm font-semibold text-[#1A1A1A]">
-                {solicitud.personal_nombre
-                  ? `${solicitud.personal_nombre} #${solicitud.legajo ?? '-'}`
-                  : 'General / Sin asignar'}
-              </p>
-            </div>
+            {solicitud.tipo !== 'Altas' && solicitud.tipo !== 'Bajas' && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#9AA0AC] mb-1">Colaborador</p>
+                <p className="text-sm font-semibold text-[#1A1A1A]">
+                  {solicitud.personal_nombre
+                    ? `${solicitud.personal_nombre} #${solicitud.legajo ?? '-'}`
+                    : 'General / Sin asignar'}
+                </p>
+              </div>
+            )}
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-[#9AA0AC] mb-1">Solicitante</p>
               <p className="text-sm text-[#1A1A1A]">{solicitud.usuario_nombre}</p>
