@@ -233,11 +233,13 @@ export const API_ENDPOINTS = {
     EMAIL_ENVIAR: `${API_URL}/api/notificaciones/email/enviar`,
   },
   ESCALAS_SALARIALES: {
-    GET_ALL: `${API_URL}/api/escalas-salariales`,
-    GET_BY_PUESTO: (puestoId: number) => `${API_URL}/api/escalas-salariales?puesto_id=${puestoId}`,
+    GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/escalas-salariales?sucursal_id=${sucursalId}`,
+    GET_BY_SUCURSAL_PUESTO: (sucursalId: number, puestoId: number) =>
+      `${API_URL}/api/escalas-salariales?sucursal_id=${sucursalId}&puesto_id=${puestoId}`,
     CREATE: `${API_URL}/api/escalas-salariales`,
     UPDATE: (id: number) => `${API_URL}/api/escalas-salariales/${id}`,
     DELETE: (id: number) => `${API_URL}/api/escalas-salariales/${id}`,
+    COPIAR: `${API_URL}/api/escalas-salariales/copiar`,
   },
   PERSONAL: {
     GET_ALL: `${API_URL}/api/personal`,

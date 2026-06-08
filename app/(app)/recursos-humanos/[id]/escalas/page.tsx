@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { ArrowLeft, Copy, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
@@ -12,6 +12,7 @@ import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
 import { EscalasTable } from '@/components/escalas/EscalasTable'
 import { EscalaFormDialog } from '@/components/escalas/EscalaFormDialog'
 import { EscalaDeleteDialog } from '@/components/escalas/EscalaDeleteDialog'
+import { EscalaCopyDialog } from '@/components/escalas/EscalaCopyDialog'
 import type { EscalaSalarial } from '@/lib/types'
 
 const now = new Date()
@@ -35,9 +36,12 @@ export default function EscalasSalarialesPage() {
   const [deleteTarget, setDeleteTarget] = useState<EscalaSalarial | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  const [copyOpen, setCopyOpen] = useState(false)
+  const [copying, setCopying] = useState(false)
+
   const fetchEscalas = async () => {
     try {
-      const res = await apiFetch(API_ENDPOINTS.ESCALAS_SALARIALES.GET_ALL)
+      const res = await apiFetch(API_ENDPOINTS.ESCALAS_SALARIALES.GET_BY_SUCURSAL(sucursalId))
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Error al cargar escalas salariales')
       setEscalas(data.data ?? data)
@@ -48,28 +52,38 @@ export default function EscalasSalarialesPage() {
     }
   }
 
-  useEffect(() => { fetchEscalas() }, [])
+  useEffect(() => {
+    fetchEscalas()
+  }, [sucursalId])
 
   const prevMonth = () => {
-    if (filterMes === 1) { setFilterMes(12); setFilterAnio(a => a - 1) }
-    else setFilterMes(m => m - 1)
+    if (filterMes === 1) {
+      setFilterMes(12)
+      setFilterAnio(a => a - 1)
+    } else setFilterMes(m => m - 1)
   }
   const nextMonth = () => {
-    if (filterMes === 12) { setFilterMes(1); setFilterAnio(a => a + 1) }
-    else setFilterMes(m => m + 1)
+    if (filterMes === 12) {
+      setFilterMes(1)
+      setFilterAnio(a => a + 1)
+    } else setFilterMes(m => m + 1)
   }
 
-  const openCreate = () => { setEditTarget(null); setFormOpen(true) }
-  const openEdit = (escala: EscalaSalarial) => { setEditTarget(escala); setFormOpen(true) }
+  const openCreate = () => {
+    setEditTarget(null)
+    setFormOpen(true)
+  }
+  const openEdit = (escala: EscalaSalarial) => {
+    setEditTarget(escala)
+    setFormOpen(true)
+  }
 
   const handleSave = async (body: Omit<EscalaSalarial, 'id' | 'puesto_nombre'>) => {
     setSaving(true)
     try {
       const isEdit = editTarget !== null
       const res = await apiFetch(
-        isEdit
-          ? API_ENDPOINTS.ESCALAS_SALARIALES.UPDATE(editTarget.id)
-          : API_ENDPOINTS.ESCALAS_SALARIALES.CREATE,
+        isEdit ? API_ENDPOINTS.ESCALAS_SALARIALES.UPDATE(editTarget.id) : API_ENDPOINTS.ESCALAS_SALARIALES.CREATE,
         { method: isEdit ? 'PUT' : 'POST', body: JSON.stringify(body) },
       )
       const data = await res.json()
@@ -102,6 +116,31 @@ export default function EscalasSalarialesPage() {
       setDeleting(false)
     }
   }
+
+  const handleCopy = async (destinoIds: number[]) => {
+    setCopying(true)
+    try {
+      const res = await apiFetch(API_ENDPOINTS.ESCALAS_SALARIALES.COPIAR, {
+        method: 'POST',
+        body: JSON.stringify({
+          origen_sucursal_id: sucursalId,
+          mes: filterMes,
+          anio: filterAnio,
+          destino_sucursal_ids: destinoIds,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Error al copiar escalas')
+      toast.success(data.message || 'Escalas copiadas correctamente')
+      setCopyOpen(false)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error al copiar escalas')
+    } finally {
+      setCopying(false)
+    }
+  }
+
+  const hasEscalasCurrentPeriod = escalas.some(e => e.mes === filterMes && e.anio === filterAnio)
 
   if (isLoading) return <PageLoadingSpinner />
 
@@ -141,13 +180,25 @@ export default function EscalasSalarialesPage() {
               Categorías y referencias de sueldos base por puesto.
             </p>
           </div>
-          <Button
-            onClick={openCreate}
-            className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-5 py-2.5 flex items-center gap-2 shadow-sm hover:shadow-md transition-all self-start sm:self-auto"
-          >
-            <Plus className="w-4 h-4" />
-            Crear Escala
-          </Button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            {hasEscalasCurrentPeriod && (
+              <Button
+                onClick={() => setCopyOpen(true)}
+                variant="outline"
+                className="cursor-pointer border-[#002868] text-[#002868] hover:bg-[#EEF3FF] font-semibold px-4 py-2.5 flex items-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                Aplicar a otras sucursales
+              </Button>
+            )}
+            <Button
+              onClick={openCreate}
+              className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-5 py-2.5 flex items-center gap-2 shadow-sm hover:shadow-md transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              Crear Escala
+            </Button>
+          </div>
         </div>
 
         <EscalasTable
@@ -169,6 +220,7 @@ export default function EscalasSalarialesPage() {
         initial={editTarget}
         defaultMes={filterMes}
         defaultAnio={filterAnio}
+        sucursalId={sucursalId}
       />
 
       <EscalaDeleteDialog
@@ -176,6 +228,16 @@ export default function EscalasSalarialesPage() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         deleting={deleting}
+      />
+
+      <EscalaCopyDialog
+        open={copyOpen}
+        onClose={() => setCopyOpen(false)}
+        onCopy={handleCopy}
+        copying={copying}
+        origenSucursalId={sucursalId}
+        mes={filterMes}
+        anio={filterAnio}
       />
     </div>
   )

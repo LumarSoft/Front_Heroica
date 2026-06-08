@@ -32,6 +32,7 @@ interface EscalaFormDialogProps {
   initial: EscalaSalarial | null
   defaultMes: number
   defaultAnio: number
+  sucursalId: number
 }
 
 export function EscalaFormDialog({
@@ -42,6 +43,7 @@ export function EscalaFormDialog({
   initial,
   defaultMes,
   defaultAnio,
+  sucursalId,
 }: EscalaFormDialogProps) {
   const [tipoCalculo, setTipoCalculo] = useState<TipoCalculo>('fijo')
   const [puestoId, setPuestoId] = useState('')
@@ -107,6 +109,7 @@ export function EscalaFormDialog({
     if (tipoCalculo === 'fijo') {
       if (!sueldoBase) return
       await onSave({
+        sucursal_id: sucursalId,
         puesto_id: Number(puestoId),
         sueldo_base: Number(sueldoBase),
         mes: Number(mes),
@@ -116,6 +119,7 @@ export function EscalaFormDialog({
     } else {
       if (!valorHoraManual) return
       await onSave({
+        sucursal_id: sucursalId,
         puesto_id: Number(puestoId),
         sueldo_base: sueldoBaseCalculado ?? 0,
         mes: Number(mes),
