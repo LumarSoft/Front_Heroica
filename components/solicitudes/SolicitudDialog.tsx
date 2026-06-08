@@ -87,19 +87,36 @@ export function SolicitudDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState<SolicitudFormState>(createInitialSolicitudFormState)
+  const [bajaAreaFilter, setBajaAreaFilter] = useState('')
   const personalActivo = useMemo(() => personal.filter(colaborador => colaborador.activo), [personal])
   const ocultarOpcionSinColaborador = Boolean(form.tipo && TIPOS_CON_COLABORADOR_EXCLUYENTE.includes(form.tipo))
   const isEditMode = Boolean(solicitud)
 
+  const personalBajaFiltrado = useMemo(() => {
+    if (!bajaAreaFilter || bajaAreaFilter === 'todas') return personalActivo
+    return personalActivo.filter(p => {
+      const puesto = puestos.find(pu => pu.id === p.puesto_id)
+      return puesto?.area_id === Number(bajaAreaFilter)
+    })
+  }, [personalActivo, bajaAreaFilter, puestos])
+
   useEffect(() => {
     if (!open) {
       setForm(createInitialSolicitudFormState())
+      setBajaAreaFilter('')
       setError('')
       return
     }
 
     if (solicitud) {
       setForm(createSolicitudFormStateFromSolicitud(solicitud))
+      if (solicitud.tipo === 'Bajas' && solicitud.personal_id) {
+        const p = personal.find(c => c.id === solicitud.personal_id)
+        if (p) {
+          const puesto = puestos.find(pu => pu.id === p.puesto_id)
+          if (puesto?.area_id) setBajaAreaFilter(String(puesto.area_id))
+        }
+      }
     } else {
       const init = createInitialSolicitudFormState()
       const activos = personal.filter(c => c.activo)
@@ -111,7 +128,7 @@ export function SolicitudDialog({
           exigeLista && init.personal_id === 'general' && activos.length > 0 ? String(activos[0].id) : init.personal_id,
       })
     }
-  }, [open, solicitud, tipoInicial, personal])
+  }, [open, solicitud, tipoInicial, personal, puestos])
 
   async function handleSave() {
     const validationError = validateSolicitudForm(form, { isEditing: isEditMode })
@@ -275,11 +292,66 @@ export function SolicitudDialog({
             </div>
           )}
 
+          {form.tipo === 'Bajas' && (
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                    Área
+                  </Label>
+                  <Select
+                    value={bajaAreaFilter}
+                    onValueChange={value => {
+                      setBajaAreaFilter(value)
+                      setForm(prev => ({ ...prev, personal_id: 'general' }))
+                    }}
+                  >
+                    <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                      <SelectValue placeholder="Todas las áreas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todas">Todas las áreas</SelectItem>
+                      {areas.map(area => (
+                        <SelectItem key={area.id} value={area.id.toString()}>
+                          {area.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                    Colaborador *
+                  </Label>
+                  <Select value={form.personal_id} onValueChange={value => setForm({ ...form, personal_id: value })}>
+                    <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                      <SelectValue placeholder="Seleccionar…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {personalBajaFiltrado.length === 0 ? (
+                        <SelectItem value="__empty__" disabled>
+                          Sin colaboradores en esta área
+                        </SelectItem>
+                      ) : (
+                        personalBajaFiltrado.map(colaborador => (
+                          <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
+                            {colaborador.nombre}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+
           {form.tipo !== 'Novedades de sueldo' &&
             form.tipo !== 'Altas' &&
+            form.tipo !== 'Bajas' &&
             form.tipo !== 'Capacitaciones' &&
             form.tipo !== 'Incentivos y premios' && (
-              <div className={form.tipo === 'Bajas' ? 'flex flex-col gap-4' : 'grid grid-cols-2 gap-4'}>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
                     Colaborador{ocultarOpcionSinColaborador ? ' *' : ''}
@@ -300,19 +372,17 @@ export function SolicitudDialog({
                     </SelectContent>
                   </Select>
                 </div>
-                {form.tipo !== 'Bajas' ? (
-                  <div>
-                    <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
-                      Fecha *
-                    </Label>
-                    <Input
-                      type="date"
-                      value={form.fecha_solicitud}
-                      onChange={event => setForm({ ...form, fecha_solicitud: event.target.value })}
-                      className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
-                    />
-                  </div>
-                ) : null}
+                <div>
+                  <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                    Fecha *
+                  </Label>
+                  <Input
+                    type="date"
+                    value={form.fecha_solicitud}
+                    onChange={event => setForm({ ...form, fecha_solicitud: event.target.value })}
+                    className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+                  />
+                </div>
               </div>
             )}
 
