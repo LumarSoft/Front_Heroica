@@ -11,12 +11,13 @@ import Image from 'next/image'
 
 interface Setup2FADialogProps {
   open: boolean
-  userId: number
+  /** Token firmado emitido por el login que autoriza el setup de 2FA para este usuario */
+  setupToken: string
   onSuccess: (tempToken: string) => void
   onClose: () => void
 }
 
-export function Setup2FADialog({ open, userId, onSuccess, onClose }: Setup2FADialogProps) {
+export function Setup2FADialog({ open, setupToken, onSuccess, onClose }: Setup2FADialogProps) {
   const [step, setStep] = useState<'loading' | 'setup' | 'verify'>('loading')
   const [qrCode, setQrCode] = useState('')
   const [secret, setSecret] = useState('')
@@ -37,7 +38,7 @@ export function Setup2FADialog({ open, userId, onSuccess, onClose }: Setup2FADia
       const response = await fetch(API_ENDPOINTS.AUTH.ENABLE_2FA, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ setupToken }),
       })
 
       const data = await response.json()
@@ -72,7 +73,7 @@ export function Setup2FADialog({ open, userId, onSuccess, onClose }: Setup2FADia
       const response = await fetch(API_ENDPOINTS.AUTH.CONFIRM_2FA, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, code: verificationCode }),
+        body: JSON.stringify({ setupToken, code: verificationCode }),
       })
 
       const data = await response.json()

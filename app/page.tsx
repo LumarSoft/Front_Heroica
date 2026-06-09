@@ -33,6 +33,7 @@ export default function LoginPage() {
 
   const [needsSetup2FA, setNeedsSetup2FA] = useState(false)
   const [pendingUserId, setPendingUserId] = useState<number | null>(null)
+  const [setupToken, setSetupToken] = useState('')
 
   const code2FAInputRef = useRef<HTMLInputElement>(null)
 
@@ -70,6 +71,7 @@ export default function LoginPage() {
 
       if (data.needsSetup2FA) {
         setPendingUserId(data.userId)
+        setSetupToken(data.setupToken || '')
         setNeedsSetup2FA(true)
         return
       }
@@ -132,6 +134,7 @@ export default function LoginPage() {
     setCode2FA('')
     setError('')
     setPendingUserId(null)
+    setSetupToken('')
   }
 
   const handleClose2FASetup = () => {
@@ -509,7 +512,7 @@ export default function LoginPage() {
       {needsSetup2FA && pendingUserId && (
         <Setup2FADialog
           open={needsSetup2FA}
-          userId={pendingUserId}
+          setupToken={setupToken}
           onSuccess={handle2FASetupSuccess}
           onClose={handleClose2FASetup}
         />
