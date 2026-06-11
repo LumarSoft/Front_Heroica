@@ -281,4 +281,14 @@ export const API_ENDPOINTS = {
     ENVIAR_LIQUIDACION_PAGOS: (liquidacionId: number) =>
       `${API_URL}/api/rrhh/sueldos/liquidaciones/${liquidacionId}/enviar-pagos`,
   },
+  RRHH_ANALITICO: {
+    GLOBAL: (sucursalId?: number | null, desde?: string, hasta?: string) => {
+      const params = new URLSearchParams()
+      if (sucursalId) params.append('sucursal_id', String(sucursalId))
+      if (desde) params.append('desde', desde)
+      if (hasta) params.append('hasta', hasta)
+      const qs = params.toString()
+      return `${API_URL}/api/rrhh/analitico/global${qs ? `?${qs}` : ''}`
+    },
+  },
 }

@@ -289,6 +289,15 @@ function EditMode({
             onChange={e => onChange({ puesto_id: Number(e.target.value) })}
             className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 cursor-pointer"
           >
+            {/* Puesto actual no presente en el catálogo (ej. puesto renombrado o dado de baja):
+                lo mostramos igual para que el select refleje el valor real y no lo cambie solo. */}
+            {personal.puesto_id && !puestos.some(p => p.id === personal.puesto_id) && (
+              <option value={personal.puesto_id}>
+                {personal.puesto_nombre
+                  ? `${personal.puesto_nombre} (actual)`
+                  : `Puesto #${personal.puesto_id} (actual)`}
+              </option>
+            )}
             {puestos.map(p => (
               <option key={p.id} value={p.id}>
                 {p.nombre}

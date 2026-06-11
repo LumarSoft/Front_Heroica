@@ -217,6 +217,14 @@ export function fmtCurrency(v: number): string {
 }
 
 export function fmtDate(iso: string): string {
+  if (!iso) return '—'
+  // Evitar el desfase de zona horaria: una fecha 'YYYY-MM-DD' se interpreta como UTC
+  // y al mostrarla en hora local (UTC-3) restaba un día. La formateamos a mano.
+  const datePart = iso.includes('T') ? iso.split('T')[0] : iso
+  const [year, month, day] = datePart.split('-')
+  if (year && month && day) {
+    return `${day}/${month}/${year.slice(0, 4)}`
+  }
   return new Date(iso).toLocaleDateString('es-AR', {
     day: '2-digit',
     month: '2-digit',

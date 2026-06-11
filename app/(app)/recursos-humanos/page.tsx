@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Building2, CalendarDays, MapPin, Users } from 'lucide-react'
+import { ArrowRight, BarChart3, Building2, CalendarDays, MapPin, Users } from 'lucide-react'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -55,14 +55,25 @@ export default function RecursosHumanosPage() {
             </div>
           </div>
 
-          <button
-            onClick={() => router.push('/recursos-humanos/calendario')}
-            className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-[#002868] border border-[#D8E3F8] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#002868] hover:shadow-md cursor-pointer"
-          >
-            <CalendarDays className="w-4 h-4" />
-            Calendario
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => router.push('/recursos-humanos/analitico')}
+              className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-[#002868] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
+            >
+              <BarChart3 className="w-4 h-4" />
+              Analítico Global
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+            </button>
+
+            <button
+              onClick={() => router.push('/recursos-humanos/calendario')}
+              className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-[#002868] border border-[#D8E3F8] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#002868] hover:shadow-md cursor-pointer"
+            >
+              <CalendarDays className="w-4 h-4" />
+              Calendario
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+            </button>
+          </div>
         </div>
 
         <ErrorBanner error={error} />
