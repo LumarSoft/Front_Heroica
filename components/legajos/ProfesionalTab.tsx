@@ -2,9 +2,21 @@
 
 import { useEffect, useState, useRef, type ReactNode } from 'react'
 import {
-  AlertTriangle, CheckCircle2, Clock, DollarSign, FileText,
-  Loader2, MessageSquare, MinusCircle, Plus, Shield, Star,
-  TrendingDown, TrendingUp, Trash2, X,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  DollarSign,
+  FileText,
+  Loader2,
+  MessageSquare,
+  MinusCircle,
+  Plus,
+  Shield,
+  Star,
+  TrendingDown,
+  TrendingUp,
+  Trash2,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -105,27 +117,17 @@ function SectionTitle({ icon: Icon, label, count }: { icon: React.ElementType; l
 }
 
 function EmptyRow({ label }: { label: string }) {
-  return (
-    <p className="text-sm text-[#B0B8C4] py-3 text-center">{label}</p>
-  )
+  return <p className="text-sm text-[#B0B8C4] py-3 text-center">{label}</p>
 }
 
 function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return (
-    <div className={`bg-white rounded-2xl border border-[#E0E0E0] shadow-sm p-5 ${className}`}>
-      {children}
-    </div>
-  )
+  return <div className={`bg-white rounded-2xl border border-[#E0E0E0] shadow-sm p-5 ${className}`}>{children}</div>
 }
 
 // ─── Período de Prueba ────────────────────────────────────────────────────────
 
 function PeriodoPruebaCard({ data }: { data: PeriodoPrueba }) {
-  const barColor = data.alerta
-    ? 'bg-amber-400'
-    : data.en_periodo
-    ? 'bg-[#002868]'
-    : 'bg-emerald-500'
+  const barColor = data.alerta ? 'bg-amber-400' : data.en_periodo ? 'bg-[#002868]' : 'bg-emerald-500'
 
   return (
     <Card>
@@ -157,17 +159,17 @@ function PeriodoPruebaCard({ data }: { data: PeriodoPrueba }) {
           <span className="text-xs font-bold text-[#002868]">{data.porcentaje}%</span>
         </div>
         <div className="w-full h-2 bg-[#F0F2F5] rounded-full overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all ${barColor}`}
-            style={{ width: `${data.porcentaje}%` }}
-          />
+          <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${data.porcentaje}%` }} />
         </div>
       </div>
 
       <p className="text-[11px] text-[#B0B8C4]">
         Vencimiento: {formatFecha(data.fecha_fin)}
         {data.en_periodo && (
-          <> · <span className="font-semibold text-[#5A6070]">{data.dias_restantes} días restantes</span></>
+          <>
+            {' '}
+            · <span className="font-semibold text-[#5A6070]">{data.dias_restantes} días restantes</span>
+          </>
         )}
       </p>
     </Card>
@@ -403,10 +405,7 @@ function NovedadesSueldoSection({ items }: { items: SolicitudItem[] }) {
       ) : (
         <div className="space-y-2">
           {items.map(item => (
-            <div
-              key={item.id}
-              className="border border-[#F0F2F5] rounded-xl p-3 bg-[#FAFBFC]"
-            >
+            <div key={item.id} className="border border-[#F0F2F5] rounded-xl p-3 bg-[#FAFBFC]">
               <div className="flex items-center gap-2 mb-1">
                 {item.detalles?.tipo && (
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-purple-50 text-purple-700 border-purple-200">
@@ -533,13 +532,7 @@ function HorasExtrasSection({ items }: { items: SolicitudItem[] }) {
 
 // ─── Comentarios Internos ─────────────────────────────────────────────────────
 
-function ComentariosInternosSection({
-  personalId,
-  canEditar,
-}: {
-  personalId: number
-  canEditar: boolean
-}) {
+function ComentariosInternosSection({ personalId, canEditar }: { personalId: number; canEditar: boolean }) {
   const [notas, setNotas] = useState<Nota[]>([])
   const [loading, setLoading] = useState(true)
   const [texto, setTexto] = useState('')
@@ -561,7 +554,9 @@ function ComentariosInternosSection({
       }
     }
     fetchNotas()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [personalId])
 
   async function handleCreate() {
@@ -573,7 +568,10 @@ function ComentariosInternosSection({
         body: JSON.stringify({ contenido: texto.trim() }),
       })
       const data = await res.json()
-      if (!res.ok) { toast.error(data.message || 'Error al guardar'); return }
+      if (!res.ok) {
+        toast.error(data.message || 'Error al guardar')
+        return
+      }
       setNotas(prev => [data.data, ...prev])
       setTexto('')
       toast.success('Comentario guardado')
@@ -588,7 +586,10 @@ function ComentariosInternosSection({
     setDeletingId(notaId)
     try {
       const res = await apiFetch(API_ENDPOINTS.PERSONAL.DELETE_NOTA(personalId, notaId), { method: 'DELETE' })
-      if (!res.ok) { toast.error('Error al eliminar'); return }
+      if (!res.ok) {
+        toast.error('Error al eliminar')
+        return
+      }
       setNotas(prev => prev.filter(n => n.id !== notaId))
       toast.success('Comentario eliminado')
     } catch {
@@ -641,7 +642,12 @@ function ComentariosInternosSection({
             >
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#002868] to-[#1A4CB0] flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-[10px] font-bold text-white select-none">
-                  {nota.usuario_nombre.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()}
+                  {nota.usuario_nombre
+                    .split(' ')
+                    .slice(0, 2)
+                    .map(w => w[0])
+                    .join('')
+                    .toUpperCase()}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
@@ -698,7 +704,9 @@ export function ProfesionalTab({ personalId }: { personalId: number }) {
       }
     }
     fetchData()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [personalId])
 
   if (loading) {
@@ -745,9 +753,7 @@ export function ProfesionalTab({ personalId }: { personalId: number }) {
       </div>
 
       {/* Fila 5: Novedades de Sueldo */}
-      {data.novedades_sueldo.length > 0 && (
-        <NovedadesSueldoSection items={data.novedades_sueldo} />
-      )}
+      {data.novedades_sueldo.length > 0 && <NovedadesSueldoSection items={data.novedades_sueldo} />}
 
       {/* Fila 6: Comentarios internos */}
       <ComentariosInternosSection personalId={personalId} canEditar={canEditar} />

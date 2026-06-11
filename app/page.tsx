@@ -341,11 +341,13 @@ export default function LoginPage() {
                     <label htmlFor="remember-device" className="cursor-pointer select-none space-y-0.5">
                       <div className="flex items-center gap-1.5">
                         <Monitor className="w-3.5 h-3.5 text-[#002868]" />
-                        <span className="text-sm font-semibold text-[#002868]">Recordar este dispositivo por 30 días</span>
+                        <span className="text-sm font-semibold text-[#002868]">
+                          Recordar este dispositivo por 30 días
+                        </span>
                       </div>
                       <p className="text-xs text-[#666666]">
-                        No se te pedirá el código en este dispositivo durante 30 días.
-                        Solo marcá esta opción en dispositivos personales de confianza.
+                        No se te pedirá el código en este dispositivo durante 30 días. Solo marcá esta opción en
+                        dispositivos personales de confianza.
                       </p>
                     </label>
                   </div>

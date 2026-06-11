@@ -7,8 +7,12 @@ import { apiFetch } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  Dialog, DialogContent, DialogDescription,
-  DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -69,9 +73,7 @@ export function PuestosSection() {
     setIsSaving(true)
     setError('')
     try {
-      const url = form.id
-        ? API_ENDPOINTS.PUESTOS.UPDATE(form.id)
-        : API_ENDPOINTS.PUESTOS.CREATE
+      const url = form.id ? API_ENDPOINTS.PUESTOS.UPDATE(form.id) : API_ENDPOINTS.PUESTOS.CREATE
       const res = await apiFetch(url, {
         method: form.id ? 'PUT' : 'POST',
         body: JSON.stringify({ nombre: form.nombre.trim(), area_id: form.area_id }),
@@ -110,13 +112,10 @@ export function PuestosSection() {
   }
 
   // Agrupar puestos por área para mejor visualización
-  const puestosPorArea = areas.reduce<Record<number, { area: Area; puestos: Puesto[] }>>(
-    (acc, area) => {
-      acc[area.id] = { area, puestos: puestos.filter(p => p.area_id === area.id) }
-      return acc
-    },
-    {},
-  )
+  const puestosPorArea = areas.reduce<Record<number, { area: Area; puestos: Puesto[] }>>((acc, area) => {
+    acc[area.id] = { area, puestos: puestos.filter(p => p.area_id === area.id) }
+    return acc
+  }, {})
   const sinArea = puestos.filter(p => !areas.some(a => a.id === p.area_id))
 
   return (
@@ -142,9 +141,7 @@ export function PuestosSection() {
             <div className="space-y-5 pt-4">
               {Object.values(puestosPorArea).map(({ area, puestos: ps }) => (
                 <div key={area.id}>
-                  <p className="text-xs font-bold uppercase tracking-widest text-[#9AA0AC] mb-2">
-                    {area.nombre}
-                  </p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#9AA0AC] mb-2">{area.nombre}</p>
                   {ps.length === 0 ? (
                     <p className="text-sm text-[#C0C5D0] pl-1">Sin puestos en esta área.</p>
                   ) : (
@@ -181,9 +178,7 @@ export function PuestosSection() {
               ))}
               {sinArea.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-[#9AA0AC] mb-2">
-                    Sin área asignada
-                  </p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#9AA0AC] mb-2">Sin área asignada</p>
                   <div className="space-y-2">
                     {sinArea.map(puesto => (
                       <div
@@ -247,7 +242,9 @@ export function PuestosSection() {
               >
                 <option value="">Seleccioná un área...</option>
                 {areas.map(a => (
-                  <option key={a.id} value={a.id}>{a.nombre}</option>
+                  <option key={a.id} value={a.id}>
+                    {a.nombre}
+                  </option>
                 ))}
               </select>
             </div>

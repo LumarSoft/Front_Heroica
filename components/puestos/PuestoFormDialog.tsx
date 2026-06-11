@@ -4,8 +4,12 @@ import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog, DialogContent, DialogDescription,
-  DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -76,20 +80,16 @@ export function PuestoFormDialog({ open, onClose, onSave, saving, initial, areas
               >
                 <option value="">Seleccioná un área...</option>
                 {areas.map(a => (
-                  <option key={a.id} value={a.id}>{a.nombre}</option>
+                  <option key={a.id} value={a.id}>
+                    {a.nombre}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
 
           <DialogFooter className="mt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={saving}
-              className="cursor-pointer"
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="cursor-pointer">
               Cancelar
             </Button>
             <Button
@@ -97,9 +97,14 @@ export function PuestoFormDialog({ open, onClose, onSave, saving, initial, areas
               disabled={saving || !canSubmit}
               className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white"
             >
-              {saving
-                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Guardando...</>
-                : 'Guardar'}
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                'Guardar'
+              )}
             </Button>
           </DialogFooter>
         </form>

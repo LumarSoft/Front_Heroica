@@ -57,15 +57,11 @@ export default function HomePage() {
 
   return (
     <div className="min-h-full flex flex-col bg-gradient-to-br from-[#F0F5FF] via-[#F8FAFF] to-white">
-
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-14">
-
         {/* Greeting */}
         <div className="text-center mb-14">
-          <p className="text-sm font-medium text-[#7A93BB] mb-1 tracking-wide">
-            {getGreeting()},
-          </p>
+          <p className="text-sm font-medium text-[#7A93BB] mb-1 tracking-wide">{getGreeting()},</p>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#002868] mb-3 tracking-tight">
             {user?.nombre?.split(' ')[0] ?? 'Bienvenido'}
           </h1>
@@ -107,12 +103,8 @@ export default function HomePage() {
                 </div>
 
                 {/* Title & description */}
-                <h2 className="text-lg font-bold text-[#1E293B] mb-1.5">
-                  {mod.label}
-                </h2>
-                <p className="text-sm text-[#7A93BB] leading-relaxed mb-5">
-                  {mod.description}
-                </p>
+                <h2 className="text-lg font-bold text-[#1E293B] mb-1.5">{mod.label}</h2>
+                <p className="text-sm text-[#7A93BB] leading-relaxed mb-5">{mod.description}</p>
 
                 {/* Features */}
                 <ul className="space-y-1.5 mb-6">
@@ -133,9 +125,7 @@ export default function HomePage() {
                   style={{ color: mod.available ? mod.color : '#94A3B8' }}
                 >
                   {mod.available ? 'Ingresar' : 'Ver estado'}
-                  <ArrowRight
-                    className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1"
-                  />
+                  <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
                 </div>
 
                 {/* Hover glow for available */}
@@ -167,7 +157,6 @@ export default function HomePage() {
           </a>
         </p>
       </footer>
-
     </div>
   )
 }

@@ -41,7 +41,6 @@ export default function RecursosHumanosPage() {
   return (
     <div className="min-h-full bg-gradient-to-br from-[#F0F5FF] via-[#F8FAFF] to-white">
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-10">
-
         <div className="mb-8 sm:mb-10 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-3">
             <div className="w-11 h-11 rounded-2xl bg-[#002868] flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -134,7 +133,6 @@ export default function RecursosHumanosPage() {
             <p className="text-[#999999] text-sm mt-1">Cuando se registren sucursales, aparecerán acá.</p>
           </div>
         )}
-
       </main>
     </div>
   )

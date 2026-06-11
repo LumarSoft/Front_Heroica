@@ -183,7 +183,8 @@ export function RolesSection() {
     const result: Record<string, Permiso[]> = {}
     Object.entries(permisosAgrupados).forEach(([cat, perms]) => {
       const filtered = perms.filter(
-        p => p.descripcion.toLowerCase().includes(q) || p.clave.toLowerCase().includes(q) || cat.toLowerCase().includes(q),
+        p =>
+          p.descripcion.toLowerCase().includes(q) || p.clave.toLowerCase().includes(q) || cat.toLowerCase().includes(q),
       )
       if (filtered.length > 0) result[cat] = filtered
     })
@@ -333,9 +334,7 @@ export function RolesSection() {
         <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-[#F0F0F0]">
           <div>
             <CardTitle className="text-[#002868]">Roles y Permisos</CardTitle>
-            <p className="text-sm text-[#666666] mt-0.5">
-              Gestioná los roles y sus permisos por módulo del sistema
-            </p>
+            <p className="text-sm text-[#666666] mt-0.5">Gestioná los roles y sus permisos por módulo del sistema</p>
           </div>
           <Button id="btn-nuevo-rol" onClick={openCreate} className="bg-[#002868] hover:bg-[#003d8f] text-white">
             <Plus className="w-4 h-4 mr-1" />
@@ -383,9 +382,7 @@ export function RolesSection() {
                             </span>
                           </div>
 
-                          {rol.descripcion && (
-                            <p className="text-sm text-[#555] mt-1">{rol.descripcion}</p>
-                          )}
+                          {rol.descripcion && <p className="text-sm text-[#555] mt-1">{rol.descripcion}</p>}
 
                           {/* Resumen de permisos por módulo */}
                           {totalAsignados > 0 ? (
@@ -467,9 +464,7 @@ export function RolesSection() {
           <div className="px-8 py-6 space-y-5 overflow-y-auto flex-1">
             {/* Nombre */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">
-                Nombre *
-              </Label>
+              <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">Nombre *</Label>
               <Input
                 id="rol-nombre"
                 value={form.nombre}
@@ -487,9 +482,7 @@ export function RolesSection() {
 
             {/* Descripción */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">
-                Descripción
-              </Label>
+              <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">Descripción</Label>
               <Input
                 id="rol-descripcion"
                 value={form.descripcion}
@@ -502,9 +495,7 @@ export function RolesSection() {
             {/* Matriz de permisos */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">
-                  Permisos
-                </Label>
+                <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider">Permisos</Label>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -537,8 +528,8 @@ export function RolesSection() {
 
               {/* Resumen contador */}
               <p className="text-xs text-[#999]">
-                <span className="font-semibold text-[#002868]">{form.permiso_ids.length}</span> de{' '}
-                {permisos.length} permisos seleccionados
+                <span className="font-semibold text-[#002868]">{form.permiso_ids.length}</span> de {permisos.length}{' '}
+                permisos seleccionados
               </p>
 
               {/* Categorías */}
@@ -576,9 +567,7 @@ export function RolesSection() {
                           <span className="text-xs font-bold text-[#333] uppercase tracking-wide flex-1">
                             {categoria}
                           </span>
-                          <span
-                            className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${meta.badge}`}
-                          >
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${meta.badge}`}>
                             {assignedCount}/{catIdsFull.length}
                           </span>
                         </div>
@@ -666,9 +655,7 @@ export function RolesSection() {
             <div className="py-3">
               <div className="p-4 bg-[#F5F5F5] rounded-lg border border-[#E0E0E0]">
                 <p className="font-semibold text-[#1A1A1A]">{rolToDelete.nombre}</p>
-                {rolToDelete.descripcion && (
-                  <p className="text-sm text-[#666666] mt-0.5">{rolToDelete.descripcion}</p>
-                )}
+                {rolToDelete.descripcion && <p className="text-sm text-[#666666] mt-0.5">{rolToDelete.descripcion}</p>}
               </div>
             </div>
           )}

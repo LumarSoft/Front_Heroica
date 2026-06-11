@@ -42,6 +42,8 @@ export default function CajaBancoPage() {
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null)
   const [sucursalNombre, setSucursalNombre] = useState('')
   const [isExporting, setIsExporting] = useState(false)
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
+  const [exportTipo, setExportTipo] = useState<'todos' | 'ingresos' | 'egresos'>('todos')
   const [isBulkMoverDialogOpen, setIsBulkMoverDialogOpen] = useState(false)
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false)
   const [bulkSelectedIds, setBulkSelectedIds] = useState<number[]>([])
@@ -79,7 +81,8 @@ export default function CajaBancoPage() {
     setIsBulkMoverDialogOpen(true)
   }
 
-  const handleExport = async () => {
+  const handleExportConfirm = async () => {
+    setIsExportDialogOpen(false)
     setIsExporting(true)
     try {
       const qp = new URLSearchParams({ moneda })
@@ -89,6 +92,7 @@ export default function CajaBancoPage() {
       if (caja.filtroDeuda !== 'todos') qp.set('filtroDeuda', caja.filtroDeuda)
       if (caja.bancosFiltro.length > 0) qp.set('bancos', caja.bancosFiltro.join(','))
       if (caja.filtroChequesPendientes) qp.set('filtroChequesPendientes', 'true')
+      if (exportTipo !== 'todos') qp.set('tipoMovimiento', exportTipo === 'ingresos' ? 'ingreso' : 'egreso')
 
       const url = `${API_ENDPOINTS.CAJA_BANCO.EXPORT_EXCEL(Number(params.id))}?${qp.toString()}`
       const res = await apiFetch(url)
@@ -169,7 +173,7 @@ export default function CajaBancoPage() {
               title={`Caja Bancos — ${moneda}`}
               subtitle={`Gestión de saldos y movimientos bancarios (${moneda})`}
               onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
-              onExport={handleExport}
+              onExport={() => setIsExportDialogOpen(true)}
               isExporting={isExporting}
               isReadOnly={!canCrear}
               sucursalId={Number(params.id)}
@@ -363,7 +367,10 @@ export default function CajaBancoPage() {
         isOpen={caja.isNuevoMovimientoDialogOpen}
         onClose={() => caja.setIsNuevoMovimientoDialogOpen(false)}
         sucursalId={caja.sucursalId}
-        onSuccess={() => { caja.fetchMovimientos(); caja.fetchDescripciones() }}
+        onSuccess={() => {
+          caja.fetchMovimientos()
+          caja.fetchDescripciones()
+        }}
         cajaTipo="banco"
         moneda={moneda}
         categoriasExternas={caja.categorias}
@@ -394,6 +401,44 @@ export default function CajaBancoPage() {
         bancosExternos={caja.bancos}
         mediosPagoExternos={caja.mediosPago}
       />
+
+      {/* Dialog de opciones de exportación */}
+      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[#002868] text-xl">Exportar Excel</DialogTitle>
+            <DialogDescription>Elegí qué movimientos exportar</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {(['todos', 'ingresos', 'egresos'] as const).map(opcion => (
+              <label
+                key={opcion}
+                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${exportTipo === opcion ? 'border-[#002868] bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+              >
+                <input
+                  type="radio"
+                  name="exportTipo"
+                  value={opcion}
+                  checked={exportTipo === opcion}
+                  onChange={() => setExportTipo(opcion)}
+                  className="accent-[#002868]"
+                />
+                <span className="font-medium capitalize text-sm text-gray-700">
+                  {opcion === 'todos' ? 'Todo' : opcion === 'ingresos' ? 'Solo Ingresos' : 'Solo Egresos'}
+                </span>
+              </label>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleExportConfirm} className="bg-[#002868] hover:bg-[#003d8f] text-white">
+              Exportar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de detalle de banco */}
       <Dialog open={isBancoDialogOpen} onOpenChange={setIsBancoDialogOpen}>

@@ -7,8 +7,12 @@ import { apiFetch } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  Dialog, DialogContent, DialogDescription,
-  DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -31,7 +35,9 @@ export function AreasSection() {
   const [error, setError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; nombre: string } | null>(null)
 
-  useEffect(() => { fetchAreas() }, [])
+  useEffect(() => {
+    fetchAreas()
+  }, [])
 
   const fetchAreas = async () => {
     const res = await apiFetch(API_ENDPOINTS.AREAS.GET_ALL)
@@ -59,9 +65,7 @@ export function AreasSection() {
     setIsSaving(true)
     setError('')
     try {
-      const url = form.id
-        ? API_ENDPOINTS.AREAS.UPDATE(form.id)
-        : API_ENDPOINTS.AREAS.CREATE
+      const url = form.id ? API_ENDPOINTS.AREAS.UPDATE(form.id) : API_ENDPOINTS.AREAS.CREATE
       const res = await apiFetch(url, {
         method: form.id ? 'PUT' : 'POST',
         body: JSON.stringify({ nombre: form.nombre.trim(), descripcion: form.descripcion.trim() || null }),
@@ -113,9 +117,7 @@ export function AreasSection() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2 pt-4">
-            {areas.length === 0 && (
-              <p className="text-sm text-[#9AA0AC] text-center py-8">No hay áreas cargadas.</p>
-            )}
+            {areas.length === 0 && <p className="text-sm text-[#9AA0AC] text-center py-8">No hay áreas cargadas.</p>}
             {areas.map(area => (
               <div
                 key={area.id}
@@ -123,9 +125,7 @@ export function AreasSection() {
               >
                 <div>
                   <h3 className="font-semibold text-[#002868]">{area.nombre}</h3>
-                  {area.descripcion && (
-                    <p className="text-sm text-[#666666]">{area.descripcion}</p>
-                  )}
+                  {area.descripcion && <p className="text-sm text-[#666666]">{area.descripcion}</p>}
                 </div>
                 <div className="flex gap-1.5 flex-shrink-0">
                   <Button

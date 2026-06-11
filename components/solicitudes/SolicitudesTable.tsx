@@ -27,11 +27,19 @@ export function SolicitudesTable({ solicitudes, onSelect, showSucursal = false }
         <TableHeader>
           <TableRow className="bg-[#F8F9FA] hover:bg-[#F8F9FA] border-b-2 border-[#E0E0E0]">
             <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider w-32">Fecha</TableHead>
-            {showSucursal && <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Sucursal</TableHead>}
+            {showSucursal && (
+              <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Sucursal</TableHead>
+            )}
             <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Tipo</TableHead>
-            <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider hidden sm:table-cell">Colaborador</TableHead>
-            <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider hidden md:table-cell">Solicitante</TableHead>
-            <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">Estado</TableHead>
+            <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider hidden sm:table-cell">
+              Colaborador
+            </TableHead>
+            <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider hidden md:table-cell">
+              Solicitante
+            </TableHead>
+            <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-center">
+              Estado
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -43,7 +51,11 @@ export function SolicitudesTable({ solicitudes, onSelect, showSucursal = false }
             </TableRow>
           ) : (
             solicitudes.map(solicitud => (
-              <TableRow key={solicitud.id} onClick={() => onSelect(solicitud)} className="hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50 cursor-pointer">
+              <TableRow
+                key={solicitud.id}
+                onClick={() => onSelect(solicitud)}
+                className="hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50 cursor-pointer"
+              >
                 <TableCell className="text-[#666666] font-medium">{formatFecha(solicitud.fecha_solicitud)}</TableCell>
                 {showSucursal && <TableCell className="text-[#444]">{solicitud.sucursal_nombre}</TableCell>}
                 <TableCell className="font-semibold text-[#1A1A1A]">{solicitud.tipo}</TableCell>
@@ -59,15 +71,17 @@ export function SolicitudesTable({ solicitudes, onSelect, showSucursal = false }
                 </TableCell>
                 <TableCell className="text-[#666666] hidden md:table-cell">{solicitud.usuario_nombre}</TableCell>
                 <TableCell className="text-center">
-                  <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                    solicitud.estado === 'Pendiente'
-                      ? 'bg-amber-50 text-amber-700 border-amber-200'
-                      : solicitud.estado === 'Aprobada'
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : solicitud.estado === 'Rechazada'
-                      ? 'bg-rose-50 text-rose-600 border-rose-200'
-                      : 'bg-slate-50 text-slate-600 border-slate-200'
-                  }`}>
+                  <span
+                    className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                      solicitud.estado === 'Pendiente'
+                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : solicitud.estado === 'Aprobada'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : solicitud.estado === 'Rechazada'
+                            ? 'bg-rose-50 text-rose-600 border-rose-200'
+                            : 'bg-slate-50 text-slate-600 border-slate-200'
+                    }`}
+                  >
                     {solicitud.estado}
                   </span>
                 </TableCell>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
-
+import { Button } from '@/components/ui/button'
 import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
 import { CompraVentaDivisasDialog } from '@/components/caja/CompraVentaDivisasDialog'
 import { useCajaData } from '@/hooks/use-caja-data'
@@ -24,6 +24,7 @@ import { apiFetch } from '@/lib/api'
 import { AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { downloadBlob, toDateOnly } from '@/lib/downloadBlob'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 
 const columns = getEfectivoColumns()
 
@@ -39,6 +40,8 @@ export default function CajaEfectivoPage() {
   const [sucursalNombre, setSucursalNombre] = useState('')
   const [isCompraVentaDialogOpen, setIsCompraVentaDialogOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
+  const [exportTipo, setExportTipo] = useState<'todos' | 'ingresos' | 'egresos'>('todos')
   const [isBulkMoverDialogOpen, setIsBulkMoverDialogOpen] = useState(false)
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false)
   const [bulkSelectedIds, setBulkSelectedIds] = useState<number[]>([])
@@ -76,7 +79,8 @@ export default function CajaEfectivoPage() {
     setIsBulkMoverDialogOpen(true)
   }
 
-  const handleExport = async () => {
+  const handleExportConfirm = async () => {
+    setIsExportDialogOpen(false)
     setIsExporting(true)
     try {
       const qp = new URLSearchParams({ moneda })
@@ -84,6 +88,7 @@ export default function CajaEfectivoPage() {
       if (caja.dateRange?.to) qp.set('fechaFin', toDateOnly(caja.dateRange.to))
       if (caja.searchText) qp.set('searchText', caja.searchText)
       if (caja.filtroDeuda !== 'todos') qp.set('filtroDeuda', caja.filtroDeuda)
+      if (exportTipo !== 'todos') qp.set('tipoMovimiento', exportTipo === 'ingresos' ? 'ingreso' : 'egreso')
 
       const url = `${API_ENDPOINTS.MOVIMIENTOS.EXPORT_EXCEL(Number(params.id))}?${qp.toString()}`
       const res = await apiFetch(url)
@@ -152,7 +157,7 @@ export default function CajaEfectivoPage() {
               subtitle={`Gestión de saldos y movimientos en efectivo (${moneda})`}
               onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
               onCompraVentaDivisas={() => setIsCompraVentaDialogOpen(true)}
-              onExport={handleExport}
+              onExport={() => setIsExportDialogOpen(true)}
               isExporting={isExporting}
               isReadOnly={!canCrear}
               sucursalId={Number(params.id)}
@@ -312,7 +317,10 @@ export default function CajaEfectivoPage() {
         isOpen={caja.isNuevoMovimientoDialogOpen}
         onClose={() => caja.setIsNuevoMovimientoDialogOpen(false)}
         sucursalId={caja.sucursalId}
-        onSuccess={() => { caja.fetchMovimientos(); caja.fetchDescripciones() }}
+        onSuccess={() => {
+          caja.fetchMovimientos()
+          caja.fetchDescripciones()
+        }}
         cajaTipo="efectivo"
         moneda={moneda}
         categoriasExternas={caja.categorias}
@@ -349,6 +357,44 @@ export default function CajaEfectivoPage() {
         bancosExternos={caja.bancos}
         mediosPagoExternos={caja.mediosPago}
       />
+
+      {/* Dialog de opciones de exportación */}
+      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[#002868] text-xl">Exportar Excel</DialogTitle>
+            <DialogDescription>Elegí qué movimientos exportar</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {(['todos', 'ingresos', 'egresos'] as const).map(opcion => (
+              <label
+                key={opcion}
+                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${exportTipo === opcion ? 'border-[#002868] bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+              >
+                <input
+                  type="radio"
+                  name="exportTipo"
+                  value={opcion}
+                  checked={exportTipo === opcion}
+                  onChange={() => setExportTipo(opcion)}
+                  className="accent-[#002868]"
+                />
+                <span className="font-medium capitalize text-sm text-gray-700">
+                  {opcion === 'todos' ? 'Todo' : opcion === 'ingresos' ? 'Solo Ingresos' : 'Solo Egresos'}
+                </span>
+              </label>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleExportConfirm} className="bg-[#002868] hover:bg-[#003d8f] text-white">
+              Exportar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -3,8 +3,12 @@
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog, DialogContent, DialogDescription,
-  DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog'
 import type { Puesto } from '@/lib/types'
 
@@ -23,17 +27,11 @@ export function PuestoDeleteDialog({ target, onClose, onConfirm, deleting }: Pue
           <DialogTitle className="text-xl font-bold text-[#1A1A1A]">Eliminar Puesto</DialogTitle>
           <DialogDescription className="text-slate-500">
             ¿Estás seguro que querés eliminar el puesto{' '}
-            <span className="font-semibold text-[#1A1A1A]">{target?.nombre}</span>?
-            Esta acción no se puede deshacer.
+            <span className="font-semibold text-[#1A1A1A]">{target?.nombre}</span>? Esta acción no se puede deshacer.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="mt-2">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={deleting}
-            className="cursor-pointer"
-          >
+          <Button variant="outline" onClick={onClose} disabled={deleting} className="cursor-pointer">
             Cancelar
           </Button>
           <Button
@@ -41,9 +39,14 @@ export function PuestoDeleteDialog({ target, onClose, onConfirm, deleting }: Pue
             disabled={deleting}
             className="cursor-pointer bg-rose-600 hover:bg-rose-700 text-white"
           >
-            {deleting
-              ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Eliminando...</>
-              : 'Eliminar'}
+            {deleting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Eliminando...
+              </>
+            ) : (
+              'Eliminar'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

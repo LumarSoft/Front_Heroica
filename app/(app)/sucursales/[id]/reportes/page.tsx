@@ -298,11 +298,7 @@ export default function ReportesPage() {
                 onClick={handleDownloadPDF}
                 disabled={isExporting || isLoading || !reportData}
               >
-                {isExporting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Download className="w-4 h-4" />
-                )}
+                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 {isExporting ? 'Generando…' : 'Descargar PDF'}
               </Button>
             </div>
@@ -469,13 +465,8 @@ export default function ReportesPage() {
             {/* ── 9 · Comparativo por Categoría ────────────────────────────── */}
             <section className="mt-8">
               <SectionHeading number="9" title="Comparativo por Categoría" className="mt-4" />
-              <ComparativoCategoriaPanel
-                categoryData={categoryData}
-                currentMonth={debouncedMonth}
-                moneda={moneda}
-              />
+              <ComparativoCategoriaPanel categoryData={categoryData} currentMonth={debouncedMonth} moneda={moneda} />
             </section>
-
           </div>
         ) : null}
       </main>

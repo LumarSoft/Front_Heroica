@@ -57,9 +57,7 @@ export function EscalasTable({
         <Table>
           <TableHeader>
             <TableRow className="bg-[#F8F9FA] hover:bg-[#F8F9FA] border-b-2 border-[#E0E0E0]">
-              <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">
-                Puesto
-              </TableHead>
+              <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Puesto</TableHead>
               <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider text-right">
                 Sueldo Base
               </TableHead>
@@ -96,7 +94,10 @@ export function EscalasTable({
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={e => { e.stopPropagation(); onDelete(escala) }}
+                      onClick={e => {
+                        e.stopPropagation()
+                        onDelete(escala)
+                      }}
                       className="h-8 w-8 p-0 text-rose-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
                       aria-label="Eliminar escala"
                     >

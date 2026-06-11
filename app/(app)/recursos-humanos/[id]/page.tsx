@@ -2,16 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import {
-  ArrowLeft,
-  BadgePercent,
-  ClipboardList,
-  FileText,
-  Layers3,
-  Scale,
-  Users,
-  Wallet,
-} from 'lucide-react'
+import { ArrowLeft, BadgePercent, ClipboardList, FileText, Layers3, Scale, Users, Wallet } from 'lucide-react'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -188,7 +179,6 @@ export default function RecursosHumanosSucursalPage() {
             )
           })}
         </div>
-
       </main>
     </div>
   )

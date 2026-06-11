@@ -41,25 +41,25 @@ const EVENTOS: RhCalendarioEventoTipo[] = [
 ]
 
 const PERIODICIDADES: { value: RhCalendarioPeriodicidad; label: string }[] = [
-  { value: 'Ninguna',            label: 'Sin repetición' },
-  { value: 'Cada día',          label: 'Cada día' },
-  { value: 'Lun-Vie',           label: 'Todos los días hábiles (Lun–Vie)' },
-  { value: 'Cada semana',       label: 'Todas las semanas' },
-  { value: 'Cada 2 semanas',    label: 'Cada 2 semanas' },
-  { value: 'Cada mes',          label: 'Todos los meses' },
+  { value: 'Ninguna', label: 'Sin repetición' },
+  { value: 'Cada día', label: 'Cada día' },
+  { value: 'Lun-Vie', label: 'Todos los días hábiles (Lun–Vie)' },
+  { value: 'Cada semana', label: 'Todas las semanas' },
+  { value: 'Cada 2 semanas', label: 'Cada 2 semanas' },
+  { value: 'Cada mes', label: 'Todos los meses' },
   { value: 'Primero de cada mes', label: 'Primero de cada mes' },
-  { value: 'Cada año',          label: 'Todos los años' },
+  { value: 'Cada año', label: 'Todos los años' },
 ]
 
 // Color por tipo de evento para los badges
 const EVENTO_COLOR: Record<RhCalendarioEventoTipo, string> = {
-  'Capacitación':  'bg-blue-50 border-blue-200 text-blue-800',
-  'Reunión':       'bg-violet-50 border-violet-200 text-violet-800',
-  'Comunicado':    'bg-amber-50 border-amber-200 text-amber-800',
-  'Vencimiento':   'bg-rose-50 border-rose-200 text-rose-800',
-  'Evento interno':'bg-emerald-50 border-emerald-200 text-emerald-800',
-  'Ministerio':    'bg-indigo-50 border-indigo-200 text-indigo-800',
-  'Otro':          'bg-gray-50 border-gray-200 text-gray-700',
+  Capacitación: 'bg-blue-50 border-blue-200 text-blue-800',
+  Reunión: 'bg-violet-50 border-violet-200 text-violet-800',
+  Comunicado: 'bg-amber-50 border-amber-200 text-amber-800',
+  Vencimiento: 'bg-rose-50 border-rose-200 text-rose-800',
+  'Evento interno': 'bg-emerald-50 border-emerald-200 text-emerald-800',
+  Ministerio: 'bg-indigo-50 border-indigo-200 text-indigo-800',
+  Otro: 'bg-gray-50 border-gray-200 text-gray-700',
 }
 
 interface EventoForm {
@@ -136,8 +136,7 @@ function avanzarFecha(current: Date, periodicidad: RhCalendarioPeriodicidad): Da
       break
     case 'Lun-Vie':
       current.setDate(current.getDate() + 1)
-      while (current.getDay() === 0 || current.getDay() === 6)
-        current.setDate(current.getDate() + 1)
+      while (current.getDay() === 0 || current.getDay() === 6) current.setDate(current.getDate() + 1)
       break
     case 'Cada semana':
       current.setDate(current.getDate() + 7)
@@ -163,9 +162,8 @@ function generarFechas(fechaInicio: string, periodicidad: RhCalendarioPeriodicid
   const inicio = fromDateInput(fechaInicio)
   const fin = calcularHorizonte(inicio, periodicidad)
   const dates: string[] = []
-  let current = periodicidad === 'Primero de cada mes'
-    ? new Date(inicio.getFullYear(), inicio.getMonth(), 1)
-    : new Date(inicio)
+  let current =
+    periodicidad === 'Primero de cada mes' ? new Date(inicio.getFullYear(), inicio.getMonth(), 1) : new Date(inicio)
 
   while (current <= fin) {
     dates.push(toDateInput(current))
@@ -189,7 +187,9 @@ export default function RecursosHumanosCalendarioPage() {
 
   const selectedDateKey = selectedDate ? toDateInput(selectedDate) : toDateInput(new Date())
 
-  useEffect(() => { fetchEventos() }, [])
+  useEffect(() => {
+    fetchEventos()
+  }, [])
 
   async function fetchEventos() {
     setIsLoading(true)
@@ -234,7 +234,10 @@ export default function RecursosHumanosCalendarioPage() {
   }
 
   async function handleSave() {
-    if (!form.fecha) { toast.error('Seleccioná una fecha'); return }
+    if (!form.fecha) {
+      toast.error('Seleccioná una fecha')
+      return
+    }
 
     setSaving(true)
     try {
@@ -257,7 +260,7 @@ export default function RecursosHumanosCalendarioPage() {
         })
         const data = await response.json()
         if (!response.ok) throw new Error(data.message || 'Error al guardar evento')
-        setEventos(prev => prev.map(e => e.id === editing.id ? data.data : e))
+        setEventos(prev => prev.map(e => (e.id === editing.id ? data.data : e)))
         toast.success('Evento actualizado')
       } else if (form.periodicidad === 'Ninguna') {
         // Evento único
@@ -268,9 +271,7 @@ export default function RecursosHumanosCalendarioPage() {
         const data = await response.json()
         if (!response.ok) throw new Error(data.message || 'Error al guardar evento')
         setEventos(prev =>
-          [...prev, data.data].sort((a, b) =>
-            `${a.fecha}${a.hora ?? ''}`.localeCompare(`${b.fecha}${b.hora ?? ''}`),
-          ),
+          [...prev, data.data].sort((a, b) => `${a.fecha}${a.hora ?? ''}`.localeCompare(`${b.fecha}${b.hora ?? ''}`)),
         )
         toast.success('Evento creado')
       } else {
@@ -407,9 +408,7 @@ export default function RecursosHumanosCalendarioPage() {
               />
 
               <div className="mt-6 rounded-2xl border border-dashed border-[#D8E3F8] bg-[#F8FAFF] p-5">
-                <p className="text-xs font-bold uppercase tracking-wide text-[#9AA0AC] mb-1">
-                  Fecha seleccionada
-                </p>
+                <p className="text-xs font-bold uppercase tracking-wide text-[#9AA0AC] mb-1">Fecha seleccionada</p>
                 <p className="text-lg font-semibold text-[#1A1A1A]">
                   {selectedDate ? formatDate(selectedDateKey) : 'Sin fecha seleccionada'}
                 </p>
@@ -456,7 +455,9 @@ export default function RecursosHumanosCalendarioPage() {
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2 mb-3">
-                            <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${EVENTO_COLOR[evento.evento]}`}>
+                            <span
+                              className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${EVENTO_COLOR[evento.evento]}`}
+                            >
                               {evento.evento}
                             </span>
                             {evento.periodicidad && evento.periodicidad !== 'Ninguna' && (
@@ -551,7 +552,9 @@ export default function RecursosHumanosCalendarioPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {EVENTOS.map(evento => (
-                    <SelectItem key={evento} value={evento}>{evento}</SelectItem>
+                    <SelectItem key={evento} value={evento}>
+                      {evento}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -570,20 +573,18 @@ export default function RecursosHumanosCalendarioPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {PERIODICIDADES.map(({ value, label }) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {editing && (
-                <p className="text-[11px] text-[#9AA0AC]">La periodicidad no se puede cambiar al editar.</p>
-              )}
+              {editing && <p className="text-[11px] text-[#9AA0AC]">La periodicidad no se puede cambiar al editar.</p>}
             </div>
 
             {/* Fecha */}
             <div className="space-y-2">
-              <Label htmlFor="fecha">
-                {esRecurrente && !editing ? 'Fecha de inicio' : 'Fecha'}
-              </Label>
+              <Label htmlFor="fecha">{esRecurrente && !editing ? 'Fecha de inicio' : 'Fecha'}</Label>
               <Input
                 id="fecha"
                 type="date"

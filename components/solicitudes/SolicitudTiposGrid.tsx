@@ -21,7 +21,9 @@ export function SolicitudTiposGrid({ tipos, pendingCounts, onSelect, showBadges 
             key={tipo}
             onClick={() => onSelect(tipo)}
             className={`relative p-6 border rounded-xl cursor-pointer shadow-sm transition-all group ${
-              hasPending ? 'bg-[#FEF9C3] border-[#FDE047] hover:border-[#EAB308]' : 'bg-[#DCFCE7] border-[#BBF7D0] hover:border-[#22C55E]'
+              hasPending
+                ? 'bg-[#FEF9C3] border-[#FDE047] hover:border-[#EAB308]'
+                : 'bg-[#DCFCE7] border-[#BBF7D0] hover:border-[#22C55E]'
             }`}
           >
             {pending > 0 && showBadges && (
@@ -30,7 +32,9 @@ export function SolicitudTiposGrid({ tipos, pendingCounts, onSelect, showBadges 
               </div>
             )}
             <div className="flex flex-col h-full justify-center min-h-[60px]">
-              <h3 className="font-semibold text-[#1A1A1A] leading-tight group-hover:scale-105 transition-transform origin-left">{tipo}</h3>
+              <h3 className="font-semibold text-[#1A1A1A] leading-tight group-hover:scale-105 transition-transform origin-left">
+                {tipo}
+              </h3>
             </div>
           </div>
         )

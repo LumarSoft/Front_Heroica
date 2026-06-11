@@ -17,7 +17,15 @@ export interface SolicitudArchivoAdjuntoProps {
   onRemove: () => void
 }
 
-export function SolicitudArchivoAdjunto({ label, url, nombre, accept, uploadHint, onUpload, onRemove }: SolicitudArchivoAdjuntoProps) {
+export function SolicitudArchivoAdjunto({
+  label,
+  url,
+  nombre,
+  accept,
+  uploadHint,
+  onUpload,
+  onRemove,
+}: SolicitudArchivoAdjuntoProps) {
   const [uploading, setUploading] = useState(false)
   const ref = useRef<HTMLInputElement>(null)
 
@@ -26,7 +34,11 @@ export function SolicitudArchivoAdjunto({ label, url, nombre, accept, uploadHint
     try {
       const fd = new FormData()
       fd.append('file', file)
-      const res = await apiFetch(API_ENDPOINTS.RRHH_SOLICITUDES.UPLOAD_ARCHIVO, { method: 'POST', body: fd, headers: {} })
+      const res = await apiFetch(API_ENDPOINTS.RRHH_SOLICITUDES.UPLOAD_ARCHIVO, {
+        method: 'POST',
+        body: fd,
+        headers: {},
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Error al subir archivo')
       onUpload(data.data.url, data.data.nombre_original)
@@ -60,7 +72,16 @@ export function SolicitudArchivoAdjunto({ label, url, nombre, accept, uploadHint
           {uploading ? 'Subiendo...' : 'Adjuntar archivo'}
         </button>
       )}
-      <input ref={ref} type="file" accept={accept} className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+      <input
+        ref={ref}
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={e => {
+          const f = e.target.files?.[0]
+          if (f) handleFile(f)
+        }}
+      />
     </div>
   )
 }

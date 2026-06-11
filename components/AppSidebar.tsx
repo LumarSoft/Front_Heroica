@@ -19,12 +19,7 @@ import {
   Menu,
   PanelLeftClose,
 } from 'lucide-react'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/store/authStore'
 import { useCalculatorStore } from '@/store/calculatorStore'
 import { apiFetch } from '@/lib/api'
@@ -106,15 +101,11 @@ function NavItem({
 }: NavItemProps) {
   const baseExpandedCls = cn(
     'w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer',
-    active
-      ? 'bg-[#EAF0FF] text-[#002868] font-semibold'
-      : 'text-[#64748B] hover:bg-[#EEF3FF] hover:text-[#1E293B]',
+    active ? 'bg-[#EAF0FF] text-[#002868] font-semibold' : 'text-[#64748B] hover:bg-[#EEF3FF] hover:text-[#1E293B]',
   )
   const baseCollapsedCls = cn(
     'w-full h-10 flex items-center justify-center rounded-xl transition-all duration-150 cursor-pointer',
-    active
-      ? 'bg-[#EAF0FF] text-[#002868]'
-      : 'text-[#64748B] hover:bg-[#EEF3FF] hover:text-[#1E293B]',
+    active ? 'bg-[#EAF0FF] text-[#002868]' : 'text-[#64748B] hover:bg-[#EEF3FF] hover:text-[#1E293B]',
   )
 
   // Expanded inner content
@@ -159,9 +150,13 @@ function NavItem({
 
   if (collapsed) {
     const el = href ? (
-      <Link href={href} className={baseCollapsedCls}>{collapsedContent}</Link>
+      <Link href={href} className={baseCollapsedCls}>
+        {collapsedContent}
+      </Link>
     ) : (
-      <button ref={btnRef} onClick={onClick} className={baseCollapsedCls}>{collapsedContent}</button>
+      <button ref={btnRef} onClick={onClick} className={baseCollapsedCls}>
+        {collapsedContent}
+      </button>
     )
     return (
       <Tooltip>
@@ -172,7 +167,11 @@ function NavItem({
   }
 
   if (href) {
-    return <Link href={href} className={baseExpandedCls}>{expandedContent}</Link>
+    return (
+      <Link href={href} className={baseExpandedCls}>
+        {expandedContent}
+      </Link>
+    )
   }
   return (
     <button ref={btnRef} onClick={onClick} className={baseExpandedCls}>
@@ -216,7 +215,9 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
   }, [])
 
   useEffect(() => {
-    return () => { if (layoutTimerRef.current) clearTimeout(layoutTimerRef.current) }
+    return () => {
+      if (layoutTimerRef.current) clearTimeout(layoutTimerRef.current)
+    }
   }, [])
 
   const toggleCollapsed = () => {
@@ -248,7 +249,9 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
   }, [user])
 
   useEffect(() => {
-    function handler(e: KeyboardEvent) { if (e.key === 'Escape') setBellOpen(false) }
+    function handler(e: KeyboardEvent) {
+      if (e.key === 'Escape') setBellOpen(false)
+    }
     if (bellOpen) document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [bellOpen])
@@ -261,17 +264,23 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
       if (!res.ok) return
       const data = await res.json()
       setNotificaciones(data.data ?? [])
-    } catch { /* silent */ } finally { setLoadingNotif(false) }
+    } catch {
+      /* silent */
+    } finally {
+      setLoadingNotif(false)
+    }
   }
 
   async function marcarLeida(id: number) {
-    setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n))
+    setNotificaciones(prev => prev.map(n => (n.id === id ? { ...n, leida: true } : n)))
     try {
       await apiFetch(API_ENDPOINTS.NOTIFICACIONES.LEER, {
         method: 'PATCH',
         body: JSON.stringify({ ids: [id] }),
       })
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   }
 
   async function marcarTodasLeidas() {
@@ -281,7 +290,9 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
         method: 'PATCH',
         body: JSON.stringify({ ids: null }),
       })
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   }
 
   function handleOpenNotificacion(n: Notificacion) {
@@ -303,7 +314,6 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
     return (
       <TooltipProvider delayDuration={80}>
         <div className={cn('flex-1 overflow-y-auto py-3', isCollapsed ? 'px-2' : 'px-3')}>
-
           {/* ── Modules ──────────────────────────────────────────── */}
           {!isCollapsed && (
             <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#AABBD4] px-2 mb-2 whitespace-nowrap">
@@ -417,9 +427,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
                   {user?.nombre?.charAt(0).toUpperCase() ?? '?'}
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right">
-                {user?.nombre} — Cerrar sesión
-              </TooltipContent>
+              <TooltipContent side="right">{user?.nombre} — Cerrar sesión</TooltipContent>
             </Tooltip>
           </div>
         </TooltipProvider>
@@ -433,9 +441,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
             {user?.nombre?.charAt(0).toUpperCase() ?? '?'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[#1E293B] leading-tight truncate">
-              {user?.nombre}
-            </p>
+            <p className="text-sm font-semibold text-[#1E293B] leading-tight truncate">{user?.nombre}</p>
             <p className="text-xs text-[#94A3B8] capitalize leading-tight whitespace-nowrap">{user?.rol}</p>
           </div>
           <button
@@ -531,9 +537,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
                     </div>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right">
-                  Notificaciones{unread > 0 ? ` (${unread})` : ''}
-                </TooltipContent>
+                <TooltipContent side="right">Notificaciones{unread > 0 ? ` (${unread})` : ''}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           ) : (
@@ -571,10 +575,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
       {/* Mobile overlay — always fully expanded */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={onMobileClose}
-          />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onMobileClose} />
           <aside className="absolute left-0 top-0 bottom-0 w-72 bg-[#F7F9FD] shadow-2xl flex flex-col overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-4 h-16 border-b border-[#E2E8F5] flex-shrink-0">
@@ -649,13 +650,9 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
             <div>
               <p className="text-sm font-bold text-slate-800 leading-none">Notificaciones</p>
               {unread > 0 ? (
-                <p className="text-[11px] text-rose-500 font-semibold mt-0.5 leading-none">
-                  {unread} sin leer
-                </p>
+                <p className="text-[11px] text-rose-500 font-semibold mt-0.5 leading-none">{unread} sin leer</p>
               ) : (
-                <p className="text-[11px] text-slate-400 mt-0.5 leading-none">
-                  Al día
-                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5 leading-none">Al día</p>
               )}
             </div>
           </div>
@@ -704,14 +701,13 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
                       isUnread ? 'bg-blue-50/40 hover:bg-blue-50/70' : 'hover:bg-slate-50',
                     )}
                   >
-                    <div className={cn(
-                      'w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5',
-                      isMove ? 'bg-blue-100 text-blue-600' : 'bg-violet-100 text-violet-600',
-                    )}>
-                      {isMove
-                        ? <ArrowRight className="w-4 h-4" />
-                        : <MessageCircle className="w-4 h-4" />
-                      }
+                    <div
+                      className={cn(
+                        'w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5',
+                        isMove ? 'bg-blue-100 text-blue-600' : 'bg-violet-100 text-violet-600',
+                      )}
+                    >
+                      {isMove ? <ArrowRight className="w-4 h-4" /> : <MessageCircle className="w-4 h-4" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -719,24 +715,22 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
                           {n.tarea_codigo}
                         </span>
                         {n.tarea_titulo && (
-                          <span className="text-[11px] text-slate-500 font-medium truncate">
-                            {n.tarea_titulo}
-                          </span>
+                          <span className="text-[11px] text-slate-500 font-medium truncate">{n.tarea_titulo}</span>
                         )}
                       </div>
-                      <p className={cn(
-                        'text-xs leading-snug line-clamp-3',
-                        isUnread ? 'font-semibold text-slate-800' : 'text-slate-600',
-                      )}>
+                      <p
+                        className={cn(
+                          'text-xs leading-snug line-clamp-3',
+                          isUnread ? 'font-semibold text-slate-800' : 'text-slate-600',
+                        )}
+                      >
                         {n.descripcion}
                       </p>
                       <p className="text-[11px] text-slate-400 mt-1.5 font-medium">
                         De {n.de_nombre} · {timeAgo(n.created_at)}
                       </p>
                     </div>
-                    {isUnread && (
-                      <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-1.5" />
-                    )}
+                    {isUnread && <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 mt-1.5" />}
                   </button>
                 )
               })}
@@ -748,7 +742,10 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
         {notificaciones.length > 0 && (
           <div className="border-t border-slate-100 px-5 py-3.5 flex-shrink-0">
             <button
-              onClick={() => { setBellOpen(false); router.push('/tareas') }}
+              onClick={() => {
+                setBellOpen(false)
+                router.push('/tareas')
+              }}
               className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-[#002868] hover:text-[#003d8f] bg-[#002868]/4 hover:bg-[#002868]/8 py-2.5 rounded-xl transition-colors cursor-pointer"
             >
               Ver tablero de tareas

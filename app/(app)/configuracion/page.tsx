@@ -79,29 +79,37 @@ export default function ConfiguracionPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('mi-cuenta')
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  useEffect(() => { setIsHydrated(true) }, [])
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
 
   useEffect(() => {
     if (!isHydrated) return
-    if (!isAuthenticated) { router.push('/'); return }
-    if (!canVerConfiguracion) { router.push('/sucursales'); return }
+    if (!isAuthenticated) {
+      router.push('/')
+      return
+    }
+    if (!canVerConfiguracion) {
+      router.push('/sucursales')
+      return
+    }
     setActiveTab(isSuperAdmin ? 'categorias' : 'mi-cuenta')
   }, [isAuthenticated, isHydrated, router, canVerConfiguracion, isSuperAdmin])
 
   if (!isHydrated) return <PageLoadingSpinner />
 
   const ALL_TABS: TabDef[] = [
-    { id: 'categorias',   label: 'Categorías',     Icon: Folder,    visible: isSuperAdmin,          group: 'catalogo'   },
-    { id: 'subcategorias',label: 'Subcategorías',  Icon: FolderOpen,visible: isSuperAdmin,          group: 'catalogo'   },
-    { id: 'descripciones',label: 'Descripciones',  Icon: FileText,  visible: isSuperAdmin,          group: 'catalogo'   },
-    { id: 'proveedores',  label: 'Proveedores',    Icon: Truck,     visible: isSuperAdmin,          group: 'catalogo'   },
-    { id: 'bancos',       label: 'Bancos',         Icon: Building2, visible: isSuperAdmin,          group: 'financiero' },
-    { id: 'medios',       label: 'Medios de Pago', Icon: CreditCard,visible: isSuperAdmin,          group: 'financiero' },
-    { id: 'areas',        label: 'Áreas',          Icon: Layers3,   visible: isSuperAdmin || canVerAreas,  group: 'rrhh'  },
-    { id: 'puestos',      label: 'Puestos',        Icon: Briefcase, visible: isSuperAdmin || canVerPuestos, group: 'rrhh' },
-    { id: 'usuarios',     label: 'Usuarios',       Icon: Users,     visible: canGestionarUsuarios,  group: 'equipo'     },
-    { id: 'roles',        label: 'Roles y Permisos',Icon: Shield,   visible: canGestionarRoles,     group: 'equipo'     },
-    { id: 'mi-cuenta',    label: 'Mi Cuenta',      Icon: KeyRound,  visible: true,                  group: 'cuenta'     },
+    { id: 'categorias', label: 'Categorías', Icon: Folder, visible: isSuperAdmin, group: 'catalogo' },
+    { id: 'subcategorias', label: 'Subcategorías', Icon: FolderOpen, visible: isSuperAdmin, group: 'catalogo' },
+    { id: 'descripciones', label: 'Descripciones', Icon: FileText, visible: isSuperAdmin, group: 'catalogo' },
+    { id: 'proveedores', label: 'Proveedores', Icon: Truck, visible: isSuperAdmin, group: 'catalogo' },
+    { id: 'bancos', label: 'Bancos', Icon: Building2, visible: isSuperAdmin, group: 'financiero' },
+    { id: 'medios', label: 'Medios de Pago', Icon: CreditCard, visible: isSuperAdmin, group: 'financiero' },
+    { id: 'areas', label: 'Áreas', Icon: Layers3, visible: isSuperAdmin || canVerAreas, group: 'rrhh' },
+    { id: 'puestos', label: 'Puestos', Icon: Briefcase, visible: isSuperAdmin || canVerPuestos, group: 'rrhh' },
+    { id: 'usuarios', label: 'Usuarios', Icon: Users, visible: canGestionarUsuarios, group: 'equipo' },
+    { id: 'roles', label: 'Roles y Permisos', Icon: Shield, visible: canGestionarRoles, group: 'equipo' },
+    { id: 'mi-cuenta', label: 'Mi Cuenta', Icon: KeyRound, visible: true, group: 'cuenta' },
   ]
 
   const TABS = ALL_TABS.filter(t => t.visible)
@@ -150,7 +158,6 @@ export default function ConfiguracionPage() {
 
       <div className="container mx-auto px-4 sm:px-6 py-6 flex-1">
         <div className="max-w-6xl mx-auto">
-
           {/* Mobile nav — STANDALONE above content, not inside flex row */}
           <div className="md:hidden mb-4">
             <button
@@ -180,9 +187,7 @@ export default function ConfiguracionPage() {
                           onClick={() => handleTabChange(id)}
                           className={cn(
                             'w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer text-left',
-                            activeTab === id
-                              ? 'bg-[#002868]/8 text-[#002868]'
-                              : 'text-[#5A6070] hover:bg-[#F5F5F5]',
+                            activeTab === id ? 'bg-[#002868]/8 text-[#002868]' : 'text-[#5A6070] hover:bg-[#F5F5F5]',
                           )}
                         >
                           <Icon className="w-4 h-4 flex-shrink-0" />
@@ -198,7 +203,6 @@ export default function ConfiguracionPage() {
 
           {/* Sidebar + Content row */}
           <div className="flex gap-6">
-
             {/* Sidebar — desktop only */}
             <aside className="hidden md:flex flex-col w-52 flex-shrink-0 gap-1">
               {GROUPS.map(group => {
@@ -229,42 +233,44 @@ export default function ConfiguracionPage() {
               })}
             </aside>
 
-          {/* Content */}
-          <main className="flex-1 min-w-0">
-            {/* Section header */}
-            {activeTabDef && (
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 rounded-lg bg-[#002868]/10 flex items-center justify-center flex-shrink-0">
-                  <activeTabDef.Icon className="w-4 h-4 text-[#002868]" />
+            {/* Content */}
+            <main className="flex-1 min-w-0">
+              {/* Section header */}
+              {activeTabDef && (
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-8 h-8 rounded-lg bg-[#002868]/10 flex items-center justify-center flex-shrink-0">
+                    <activeTabDef.Icon className="w-4 h-4 text-[#002868]" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-[#002868] leading-tight">{activeTabDef.label}</h2>
+                    <p className="text-xs text-[#9AA0AC] leading-none mt-0.5">
+                      {GROUPS.find(g => g.key === activeTabDef.group)?.label}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-lg font-bold text-[#002868] leading-tight">{activeTabDef.label}</h2>
-                  <p className="text-xs text-[#9AA0AC] leading-none mt-0.5">
-                    {GROUPS.find(g => g.key === activeTabDef.group)?.label}
-                  </p>
-                </div>
-              </div>
-            )}
+              )}
 
-            {activeTab === 'categorias'    && <CategoriasSection />}
-            {activeTab === 'subcategorias' && <SubcategoriasSection />}
-            {activeTab === 'descripciones' && <DescripcionesSection />}
-            {activeTab === 'proveedores'   && <ProveedoresSection />}
-            {activeTab === 'bancos'        && <BancosSection />}
-            {activeTab === 'medios'        && <MediosPagoSection />}
-            {activeTab === 'areas'         && <AreasSection />}
-            {activeTab === 'puestos'       && <PuestosSection />}
-            {activeTab === 'usuarios'      && <UsuariosSection />}
-            {activeTab === 'roles'         && <RolesSection />}
-            {activeTab === 'mi-cuenta'     && (
-              <div className="flex flex-col gap-6 max-w-lg">
-                <CambiarPasswordSection />
-                <DispositivosConfianzaSection />
-              </div>
-            )}
-          </main>
-          </div>{/* end flex row */}
-        </div>{/* end max-w wrapper */}
+              {activeTab === 'categorias' && <CategoriasSection />}
+              {activeTab === 'subcategorias' && <SubcategoriasSection />}
+              {activeTab === 'descripciones' && <DescripcionesSection />}
+              {activeTab === 'proveedores' && <ProveedoresSection />}
+              {activeTab === 'bancos' && <BancosSection />}
+              {activeTab === 'medios' && <MediosPagoSection />}
+              {activeTab === 'areas' && <AreasSection />}
+              {activeTab === 'puestos' && <PuestosSection />}
+              {activeTab === 'usuarios' && <UsuariosSection />}
+              {activeTab === 'roles' && <RolesSection />}
+              {activeTab === 'mi-cuenta' && (
+                <div className="flex flex-col gap-6 max-w-lg">
+                  <CambiarPasswordSection />
+                  <DispositivosConfianzaSection />
+                </div>
+              )}
+            </main>
+          </div>
+          {/* end flex row */}
+        </div>
+        {/* end max-w wrapper */}
       </div>
     </div>
   )
