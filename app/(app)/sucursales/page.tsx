@@ -1,0 +1,530 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { API_ENDPOINTS } from '@/lib/config'
+import { apiFetch } from '@/lib/api'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ErrorBanner } from '@/components/ui/error-banner'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useAuthStore } from '@/store/authStore'
+import type { Sucursal } from '@/lib/types'
+import { sucursalSchema } from '@/lib/schemas'
+import { handleCuitChange } from '@/lib/validators'
+import { Building2, CircleCheck, CircleOff, Plus } from 'lucide-react'
+
+export default function SucursalesPage() {
+  const router = useRouter()
+  const [sucursales, setSucursales] = useState<Sucursal[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const canGestionarSucursales = useAuthStore(state => state.canGestionarSucursales())
+
+  // Estados para el modal
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const [formData, setFormData] = useState({
+    nombre: '',
+    razon_social: '',
+    cuit: '',
+    direccion: '',
+  })
+
+  useEffect(() => {
+    const fetchSucursales = async () => {
+      try {
+        const response = await apiFetch(API_ENDPOINTS.SUCURSALES.GET_ALL)
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Error al cargar sucursales')
+        }
+
+        setSucursales(data.data)
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Error al cargar sucursales'
+        setError(message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchSucursales()
+  }, [])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+
+    if (name === 'cuit') {
+      const formatted = handleCuitChange(value)
+      if (formatted === null) return
+      setFormData(prev => ({ ...prev, cuit: formatted }))
+      return
+    }
+
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleToggleActivo = async (e: React.MouseEvent, sucursal: Sucursal) => {
+    e.stopPropagation()
+    try {
+      const response = await apiFetch(API_ENDPOINTS.SUCURSALES.UPDATE(sucursal.id), {
+        method: 'PUT',
+        body: JSON.stringify({ ...sucursal, activo: !sucursal.activo }),
+      })
+      if (!response.ok) throw new Error('Error al actualizar estado')
+
+      setSucursales(prev => prev.map(s => (s.id === sucursal.id ? { ...s, activo: !s.activo } : s)))
+    } catch {
+      setError('Error al cambiar estado de sucursal')
+    }
+  }
+
+  const handleCreateSucursal = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const validation = sucursalSchema.safeParse(formData)
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message ?? 'Error de validación')
+      return
+    }
+
+    setIsCreating(true)
+    setError('')
+
+    try {
+      const response = await apiFetch(API_ENDPOINTS.SUCURSALES.CREATE, {
+        method: 'POST',
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al crear sucursal')
+      }
+
+      setSucursales(prev => [...prev, { ...data.data, activo: true }])
+      setIsModalOpen(false)
+      setFormData({ nombre: '', razon_social: '', cuit: '', direccion: '' })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al crear sucursal'
+      setError(message)
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  // Estados para el modal de eliminación
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [sucursalToDelete, setSucursalToDelete] = useState<Sucursal | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDeleteClick = (e: React.MouseEvent, sucursal: Sucursal) => {
+    e.stopPropagation() // Evitar que se active el click de la tarjeta
+    setSucursalToDelete(sucursal)
+    setDeleteModalOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!sucursalToDelete) return
+
+    setIsDeleting(true)
+    setError('')
+
+    try {
+      const response = await apiFetch(API_ENDPOINTS.SUCURSALES.DELETE(sucursalToDelete.id), { method: 'DELETE' })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al eliminar sucursal')
+      }
+
+      setSucursales(prev => prev.filter(s => s.id !== sucursalToDelete.id))
+      setDeleteModalOpen(false)
+      setSucursalToDelete(null)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al eliminar sucursal'
+      setError(message)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleSucursalClick = (id: number) => {
+    router.push(`/sucursales/${id}`)
+  }
+
+  const totalSucursales = sucursales.length
+  const sucursalesActivas = sucursales.filter(s => s.activo).length
+  const sucursalesInactivas = totalSucursales - sucursalesActivas
+
+  return (
+    <div className="min-h-full flex flex-col bg-gradient-to-br from-[#F0F5FF] via-[#F8FAFF] to-white">
+      <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-10 flex-1">
+        <div className="mb-8 sm:mb-10 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-[#002868] flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Building2 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7A93BB] mb-1">Módulo</p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-[#002868]">Tesorería</h1>
+              <p className="text-[#666666] text-base sm:text-lg mt-1">
+                Elegí una sucursal para ingresar a cajas, pagos pendientes y reportes.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <ErrorBanner error={error} />
+
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <LoadingSpinner />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {sucursales.map(sucursal => (
+              <Card
+                key={sucursal.id}
+                className={`group relative overflow-hidden border-[#D8E3F8] bg-white shadow-sm transition-all duration-300 ${
+                  sucursal.activo
+                    ? 'cursor-pointer hover:-translate-y-1 hover:border-[#002868] hover:shadow-xl'
+                    : 'opacity-60 grayscale cursor-pointer'
+                }`}
+                onClick={() => handleSucursalClick(sucursal.id)}
+              >
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-[#002868] text-xl font-bold group-hover:text-[#003d8f] transition-colors">
+                    {sucursal.nombre}
+                  </CardTitle>
+                  <CardDescription className="text-[#666666] text-sm">{sucursal.razon_social}</CardDescription>
+                </CardHeader>
+
+                <CardContent className="space-y-3 pb-6">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#002868]/10 flex items-center justify-center flex-shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                        className="w-4 h-4 text-[#002868]"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide">CUIT</p>
+                      <p className="text-sm text-[#1A1A1A] font-medium">{sucursal.cuit}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#002868]/10 flex items-center justify-center flex-shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                        className="w-4 h-4 text-[#002868]"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-[#666666] font-semibold uppercase tracking-wide">Dirección</p>
+                      <p className="text-sm text-[#1A1A1A] truncate">{sucursal.direccion}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-[#E0E0E0] flex justify-between items-center">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+                        sucursal.activo
+                          ? 'bg-green-50 text-green-700 border border-green-200'
+                          : 'bg-red-50 text-red-700 border border-red-200'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${sucursal.activo ? 'bg-green-500' : 'bg-red-500'}`}
+                      ></span>
+                      {sucursal.activo ? 'Activa' : 'Inactiva'}
+                    </span>
+                    {canGestionarSucursales && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={e => handleToggleActivo(e, sucursal)}
+                        className={
+                          sucursal.activo
+                            ? 'text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300'
+                            : 'text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 hover:border-green-300'
+                        }
+                      >
+                        {sucursal.activo ? 'Desactivar' : 'Activar'}
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+
+                {/* Botón de eliminar - esquina superior derecha */}
+                {canGestionarSucursales && (
+                  <button
+                    onClick={e => handleDeleteClick(e, sucursal)}
+                    className="absolute top-4 right-4 w-9 h-9 rounded-lg bg-white border border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all flex items-center justify-center shadow-sm hover:shadow-md opacity-0 group-hover:opacity-100 z-10 cursor-pointer"
+                    aria-label="Eliminar sucursal"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-4 h-4"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && sucursales.length === 0 && (
+          <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-[#D8E3F8]">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-16 h-16 mx-auto text-[#E0E0E0] mb-4"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z"
+              />
+            </svg>
+            <p className="text-[#666666] text-lg font-medium">No hay sucursales registradas</p>
+            <p className="text-[#999999] text-sm mt-1">Haz clic en el botón + para crear una nueva sucursal</p>
+          </div>
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="w-full py-6 mt-auto border-t border-[#E8EDF8] text-center text-[#666666] text-sm">
+        Developed with ❤️ by{' '}
+        <a
+          href="https://lumarsoft.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#002868] hover:underline font-semibold"
+        >
+          Lumarsoft
+        </a>
+      </footer>
+
+      {/* Botón flotante para agregar sucursal */}
+      {canGestionarSucursales && (
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="fixed bottom-8 right-8 w-16 h-16 bg-[#002868] text-white rounded-full shadow-2xl hover:bg-[#003d8f] hover:scale-110 transition-all flex items-center justify-center group cursor-pointer"
+          aria-label="Agregar sucursal"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2.5}
+            stroke="currentColor"
+            className="w-8 h-8"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+        </button>
+      )}
+
+      {/* Modal para crear sucursal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-[#002868]">Nueva Sucursal</DialogTitle>
+            <DialogDescription className="text-[#666666]">
+              Completa los datos para crear una nueva sucursal
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleCreateSucursal}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="nombre" className="text-[#002868] font-semibold">
+                  Nombre de la Sucursal *
+                </Label>
+                <Input
+                  id="nombre"
+                  name="nombre"
+                  placeholder="Ej: Heroica Centro"
+                  value={formData.nombre}
+                  onChange={handleInputChange}
+                  required
+                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="razon_social" className="text-[#002868] font-semibold">
+                  Razón Social *
+                </Label>
+                <Input
+                  id="razon_social"
+                  name="razon_social"
+                  placeholder="Ej: Heroica Bar S.A."
+                  value={formData.razon_social}
+                  onChange={handleInputChange}
+                  required
+                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cuit" className="text-[#002868] font-semibold">
+                  CUIT *
+                </Label>
+                <Input
+                  id="cuit"
+                  name="cuit"
+                  placeholder="Ej: 20-12345678-9"
+                  value={formData.cuit}
+                  onChange={handleInputChange}
+                  required
+                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="direccion" className="text-[#002868] font-semibold">
+                  Dirección *
+                </Label>
+                <Input
+                  id="direccion"
+                  name="direccion"
+                  placeholder="Ej: Av. Principal 123, Centro"
+                  value={formData.direccion}
+                  onChange={handleInputChange}
+                  required
+                  className="border-[#E0E0E0] focus:border-[#002868] focus:ring-[#002868]"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsModalOpen(false)}
+                disabled={isCreating}
+                className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isCreating}
+                className="bg-[#002868] hover:bg-[#003d8f] text-white cursor-pointer"
+              >
+                {isCreating ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+                    <span>Creando...</span>
+                  </div>
+                ) : (
+                  'Crear Sucursal'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de confirmación de eliminación */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-red-600">Confirmar Eliminación</DialogTitle>
+            <DialogDescription className="text-[#666666]">
+              Esta acción no se puede deshacer. ¿Estás seguro de que deseas eliminar esta sucursal?
+            </DialogDescription>
+          </DialogHeader>
+
+          {sucursalToDelete && (
+            <div className="py-4 space-y-2">
+              <div className="p-4 bg-[#F5F5F5] rounded-lg border border-[#E0E0E0]">
+                <p className="font-semibold text-[#002868]">{sucursalToDelete.nombre}</p>
+                <p className="text-sm text-[#666666]">{sucursalToDelete.razon_social}</p>
+                <p className="text-sm text-[#666666]">CUIT: {sucursalToDelete.cuit}</p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteModalOpen(false)}
+              disabled={isDeleting}
+              className="border-[#E0E0E0] text-[#666666] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] hover:border-[#666666] cursor-pointer"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white cursor-pointer"
+            >
+              {isDeleting ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Eliminando...</span>
+                </div>
+              ) : (
+                'Eliminar Sucursal'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}

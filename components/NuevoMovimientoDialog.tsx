@@ -19,6 +19,7 @@ import { apiFetch } from '@/lib/api'
 import { AlertTriangle, Upload, X, FileText, Download } from 'lucide-react'
 import { Combobox } from '@/components/ui/combobox'
 import { trackCreatedPago } from '@/hooks/use-employee-notifications'
+import type { NotificarEventoData } from '@/components/notificaciones/NotificarEventoDialog'
 import type { Categoria, Subcategoria, SelectOption, BancoParcial, DescripcionOption } from '@/lib/types'
 import { selectClasses, labelClasses, inputClasses } from '@/lib/dialog-styles'
 import { movimientoBaseSchema, movimientoBancoSchema } from '@/lib/schemas'
@@ -41,7 +42,7 @@ interface NuevoMovimientoDialogProps {
   isOpen: boolean
   onClose: () => void
   sucursalId: number
-  onSuccess: () => void
+  onSuccess: (notify?: NotificarEventoData) => void
   cajaTipo?: 'efectivo' | 'banco'
   isPagoPendiente?: boolean
   /** Cuando se provee, el dialog opera en modo "aprobar pago pendiente" */
@@ -530,7 +531,7 @@ export default function NuevoMovimientoDialog({
         }
 
         resetForm()
-        onSuccess()
+        onSuccess(pagoIdToApprove ? { tipo: 'pago_pendiente_aprobado', entidadId: pagoIdToApprove } : undefined)
         onClose()
         return
       }
@@ -608,8 +609,14 @@ export default function NuevoMovimientoDialog({
         })
       }
 
+      const createdId = Number(data?.data?.id)
+      const notify: NotificarEventoData | undefined =
+        isPagoPendiente && Number.isFinite(createdId) && createdId > 0
+          ? { tipo: 'pago_pendiente_creado', entidadId: createdId }
+          : undefined
+
       resetForm()
-      onSuccess()
+      onSuccess(notify)
       onClose()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al crear movimiento'
@@ -936,9 +943,7 @@ export default function NuevoMovimientoDialog({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className={labelClasses}>
-                    Descripción (Clasificación) *
-                  </Label>
+                  <Label className={labelClasses}>Descripción (Clasificación) *</Label>
                   <Combobox
                     options={descripciones
                       .filter(d => !d.tipo || d.tipo === formData.tipo)
@@ -951,9 +956,7 @@ export default function NuevoMovimientoDialog({
                         descripcion_id: value,
                         descripcion_nombre: '',
                         ...(selectedDesc?.categoria_id && { categoria_id: selectedDesc.categoria_id.toString() }),
-                        subcategoria_id: selectedDesc?.subcategoria_id
-                          ? selectedDesc.subcategoria_id.toString()
-                          : '',
+                        subcategoria_id: selectedDesc?.subcategoria_id ? selectedDesc.subcategoria_id.toString() : '',
                       }))
                     }}
                     onCreateOption={nombre => {

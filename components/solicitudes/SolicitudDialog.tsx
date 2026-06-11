@@ -1,0 +1,553 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { ClipboardList, Loader2, Save } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { API_ENDPOINTS } from '@/lib/config'
+import { apiFetch } from '@/lib/api'
+import type { NotificarEventoData } from '@/components/notificaciones/NotificarEventoDialog'
+import type { Area, Personal, Puesto, RhIncentivoPremio, RhSolicitud, RhSolicitudTipo, Sucursal } from '@/lib/types'
+import { SolicitudSpecificFields } from './SolicitudSpecificFields'
+import {
+  buildSolicitudDetalles,
+  createInitialSolicitudFormState,
+  createSolicitudFormStateFromSolicitud,
+  fechaSolicitudLocalHoy,
+  validateSolicitudForm,
+  type SolicitudFormState,
+} from './solicitudFormUtils'
+
+interface SolicitudDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  sucursalId: number
+  sucursalNombre?: string
+  personal: Personal[]
+  puestos: Puesto[]
+  areas: Area[]
+  incentivos: RhIncentivoPremio[]
+  sucursales?: Sucursal[]
+  onSuccess: (notify?: NotificarEventoData) => void
+  solicitud?: RhSolicitud | null
+  tipoInicial?: RhSolicitudTipo | null
+}
+
+const TIPOS_CON_COLABORADOR_EXCLUYENTE: RhSolicitudTipo[] = [
+  'Bajas',
+  'Vacaciones',
+  'Licencias',
+  'Apercibimientos',
+  'Descuentos',
+  'Horas extras',
+  'Cambio de puesto/sucursal',
+]
+
+const TIPOS_OPCIONES: RhSolicitudTipo[] = [
+  'Altas',
+  'Bajas',
+  'Novedades de sueldo',
+  'Incentivos y premios',
+  'Licencias',
+  'Vacaciones',
+  'Suspensiones',
+  'Apercibimientos',
+  'Capacitaciones',
+  'Pedido de uniforme',
+  'Adelantos',
+  'Cambio de puesto/sucursal',
+]
+
+export function SolicitudDialog({
+  open,
+  onOpenChange,
+  sucursalId,
+  sucursalNombre = '',
+  personal,
+  puestos,
+  areas,
+  incentivos,
+  sucursales = [],
+  onSuccess,
+  solicitud,
+  tipoInicial,
+}: SolicitudDialogProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [form, setForm] = useState<SolicitudFormState>(createInitialSolicitudFormState)
+  const [bajaAreaFilter, setBajaAreaFilter] = useState('')
+  const personalActivo = useMemo(() => personal.filter(colaborador => colaborador.activo), [personal])
+  const ocultarOpcionSinColaborador = Boolean(form.tipo && TIPOS_CON_COLABORADOR_EXCLUYENTE.includes(form.tipo))
+  const isEditMode = Boolean(solicitud)
+
+  const personalBajaFiltrado = useMemo(() => {
+    if (!bajaAreaFilter || bajaAreaFilter === 'todas') return personalActivo
+    return personalActivo.filter(p => {
+      const puesto = puestos.find(pu => pu.id === p.puesto_id)
+      return puesto?.area_id === Number(bajaAreaFilter)
+    })
+  }, [personalActivo, bajaAreaFilter, puestos])
+
+  useEffect(() => {
+    if (!open) {
+      setForm(createInitialSolicitudFormState())
+      setBajaAreaFilter('')
+      setError('')
+      return
+    }
+
+    if (solicitud) {
+      setForm(createSolicitudFormStateFromSolicitud(solicitud))
+      if (solicitud.tipo === 'Bajas' && solicitud.personal_id) {
+        const p = personal.find(c => c.id === solicitud.personal_id)
+        if (p) {
+          const puesto = puestos.find(pu => pu.id === p.puesto_id)
+          if (puesto?.area_id) setBajaAreaFilter(String(puesto.area_id))
+        }
+      }
+    } else {
+      const init = createInitialSolicitudFormState()
+      const activos = personal.filter(c => c.activo)
+      const exigeLista = tipoInicial && TIPOS_CON_COLABORADOR_EXCLUYENTE.includes(tipoInicial)
+      setForm({
+        ...init,
+        tipo: tipoInicial ?? '',
+        personal_id:
+          exigeLista && init.personal_id === 'general' && activos.length > 0 ? String(activos[0].id) : init.personal_id,
+      })
+    }
+  }, [open, solicitud, tipoInicial, personal, puestos])
+
+  async function handleSave() {
+    const validationError = validateSolicitudForm(form, { isEditing: isEditMode })
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
+    setIsSubmitting(true)
+    setError('')
+
+    try {
+      const fechaSolicitud =
+        form.tipo === 'Altas' || form.tipo === 'Bajas'
+          ? isEditMode
+            ? form.fecha_solicitud
+            : fechaSolicitudLocalHoy()
+          : form.fecha_solicitud
+
+      const personalIdPayload =
+        form.tipo === 'Novedades de sueldo' || form.tipo === 'Altas'
+          ? null
+          : form.tipo === 'Incentivos y premios' && form.incentivo_scope !== 'colaborador'
+            ? null
+            : form.personal_id === 'general'
+              ? null
+              : Number(form.personal_id)
+
+      const payload = {
+        sucursal_id: sucursalId,
+        personal_id: personalIdPayload,
+        tipo: form.tipo,
+        fecha_solicitud: fechaSolicitud,
+        observaciones: form.observaciones,
+        detalles: buildSolicitudDetalles(form),
+      }
+
+      const endpoint =
+        isEditMode && solicitud
+          ? API_ENDPOINTS.RRHH_SOLICITUDES.UPDATE(solicitud.id)
+          : API_ENDPOINTS.RRHH_SOLICITUDES.CREATE
+      const method = isEditMode ? 'PUT' : 'POST'
+      const res = await apiFetch(endpoint, { method, body: JSON.stringify(payload) })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Error al guardar la solicitud')
+
+      toast.success(isEditMode ? 'La solicitud se actualizó correctamente.' : 'La solicitud se creó correctamente.')
+      const createdId = Number(data?.data?.id)
+      const notify: NotificarEventoData | undefined =
+        !isEditMode && Number.isFinite(createdId) && createdId > 0
+          ? { tipo: 'solicitud_rrhh_creada', entidadId: createdId }
+          : undefined
+      onSuccess(notify)
+      onOpenChange(false)
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido'
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        className={`${
+          form.tipo === 'Novedades de sueldo' || form.tipo === 'Altas' || form.tipo === 'Bajas'
+            ? 'sm:max-w-[800px]'
+            : 'sm:max-w-[620px]'
+        } bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden`}
+      >
+        <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
+          <DialogHeader className="p-0 border-0">
+            <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-[#002868]" />
+              {form.tipo === 'Altas' && !isEditMode
+                ? 'Ficha de ALTA de colaborador'
+                : form.tipo === 'Bajas' && !isEditMode
+                  ? 'Ficha de BAJA de colaborador'
+                  : isEditMode
+                    ? 'Editar solicitud'
+                    : 'Nueva solicitud'}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
+              {form.tipo === 'Altas'
+                ? 'Complete la ficha según el modelo RRHH 001. Los mismos datos quedarán archivados en la solicitud.'
+                : form.tipo === 'Bajas'
+                  ? 'Complete la ficha según el modelo RRHH 002 (baja voluntaria / desvinculación según aplique). Colaboradores en lista desplegable.'
+                  : 'Complete los datos necesarios para registrar la solicitud.'}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
+        <div className="px-8 py-6 space-y-4 max-h-[70vh] overflow-y-auto">
+          <div>
+            <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+              Tipo de Solicitud *
+            </Label>
+            <Select
+              value={form.tipo}
+              onValueChange={(value: RhSolicitudTipo) =>
+                setForm(prev => ({
+                  ...prev,
+                  tipo: value,
+                  personal_id:
+                    TIPOS_CON_COLABORADOR_EXCLUYENTE.includes(value) &&
+                    prev.personal_id === 'general' &&
+                    personalActivo.length > 0
+                      ? String(personalActivo[0].id)
+                      : prev.personal_id,
+                }))
+              }
+            >
+              <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                <SelectValue placeholder="Seleccione un tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                {TIPOS_OPCIONES.map(tipo => (
+                  <SelectItem key={tipo} value={tipo}>
+                    {tipo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {form.tipo === 'Capacitaciones' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                  Área *
+                </Label>
+                <Select
+                  value={form.capacitacion_area_id}
+                  onValueChange={value => setForm({ ...form, capacitacion_area_id: value })}
+                >
+                  <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                    <SelectValue placeholder="Seleccionar área…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {areas.map(area => (
+                      <SelectItem key={area.id} value={area.id.toString()}>
+                        {area.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                  Fecha *
+                </Label>
+                <Input
+                  type="date"
+                  value={form.fecha_solicitud}
+                  onChange={event => setForm({ ...form, fecha_solicitud: event.target.value })}
+                  className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+                />
+              </div>
+            </div>
+          )}
+
+          {form.tipo === 'Bajas' && (
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                    Área
+                  </Label>
+                  <Select
+                    value={bajaAreaFilter}
+                    onValueChange={value => {
+                      setBajaAreaFilter(value)
+                      setForm(prev => ({ ...prev, personal_id: 'general' }))
+                    }}
+                  >
+                    <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                      <SelectValue placeholder="Todas las áreas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todas">Todas las áreas</SelectItem>
+                      {areas.map(area => (
+                        <SelectItem key={area.id} value={area.id.toString()}>
+                          {area.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                    Colaborador *
+                  </Label>
+                  <Select value={form.personal_id} onValueChange={value => setForm({ ...form, personal_id: value })}>
+                    <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                      <SelectValue placeholder="Seleccionar…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {personalBajaFiltrado.length === 0 ? (
+                        <SelectItem value="__empty__" disabled>
+                          Sin colaboradores en esta área
+                        </SelectItem>
+                      ) : (
+                        personalBajaFiltrado.map(colaborador => (
+                          <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
+                            {colaborador.nombre}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {form.tipo !== 'Novedades de sueldo' &&
+            form.tipo !== 'Altas' &&
+            form.tipo !== 'Bajas' &&
+            form.tipo !== 'Capacitaciones' &&
+            form.tipo !== 'Incentivos y premios' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                    Colaborador{ocultarOpcionSinColaborador ? ' *' : ''}
+                  </Label>
+                  <Select value={form.personal_id} onValueChange={value => setForm({ ...form, personal_id: value })}>
+                    <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                      <SelectValue placeholder={ocultarOpcionSinColaborador ? 'Seleccionar…' : 'General'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {!ocultarOpcionSinColaborador ? (
+                        <SelectItem value="general">-- General / Sin asignar --</SelectItem>
+                      ) : null}
+                      {personalActivo.map(colaborador => (
+                        <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
+                          {colaborador.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                    Fecha *
+                  </Label>
+                  <Input
+                    type="date"
+                    value={form.fecha_solicitud}
+                    onChange={event => setForm({ ...form, fecha_solicitud: event.target.value })}
+                    className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+                  />
+                </div>
+              </div>
+            )}
+
+          {form.tipo === 'Incentivos y premios' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                  Aplicar a *
+                </Label>
+                <Select
+                  value={form.incentivo_scope}
+                  onValueChange={value =>
+                    setForm(prev => ({
+                      ...prev,
+                      incentivo_scope: value as 'colaborador' | 'area' | 'puesto',
+                      personal_id: 'general',
+                      incentivo_area_id: '',
+                      incentivo_puesto_id: '',
+                    }))
+                  }
+                >
+                  <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="colaborador">Colaborador individual</SelectItem>
+                    <SelectItem value="area">Área</SelectItem>
+                    <SelectItem value="puesto">Puesto</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                  Fecha *
+                </Label>
+                <Input
+                  type="date"
+                  value={form.fecha_solicitud}
+                  onChange={event => setForm({ ...form, fecha_solicitud: event.target.value })}
+                  className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+                />
+              </div>
+              {form.incentivo_scope === 'colaborador' && (
+                <div className="col-span-2">
+                  <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                    Colaborador *
+                  </Label>
+                  <Select value={form.personal_id} onValueChange={value => setForm({ ...form, personal_id: value })}>
+                    <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                      <SelectValue placeholder="Seleccionar…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {personalActivo.map(colaborador => (
+                        <SelectItem key={colaborador.id} value={colaborador.id.toString()}>
+                          {colaborador.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {form.incentivo_scope === 'area' && (
+                <div className="col-span-2">
+                  <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                    Área *
+                  </Label>
+                  <Select
+                    value={form.incentivo_area_id}
+                    onValueChange={value => setForm({ ...form, incentivo_area_id: value })}
+                  >
+                    <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                      <SelectValue placeholder="Seleccionar área…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {areas.map(area => (
+                        <SelectItem key={area.id} value={area.id.toString()}>
+                          {area.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {form.incentivo_scope === 'puesto' && (
+                <div className="col-span-2">
+                  <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                    Puesto *
+                  </Label>
+                  <Select
+                    value={form.incentivo_puesto_id}
+                    onValueChange={value => setForm({ ...form, incentivo_puesto_id: value })}
+                  >
+                    <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
+                      <SelectValue placeholder="Seleccionar puesto…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {puestos.map(p => (
+                        <SelectItem key={p.id} value={p.id.toString()}>
+                          {p.nombre}
+                          <span className="text-[#9AA0AC] ml-1">· {p.area_nombre}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          )}
+
+          <SolicitudSpecificFields
+            form={form}
+            sucursalId={sucursalId}
+            puestos={puestos}
+            sucursalNombre={sucursalNombre}
+            areas={areas}
+            incentivos={incentivos}
+            personal={personal}
+            sucursales={sucursales}
+            isEditing={isEditMode}
+            onChange={patch => setForm(prev => ({ ...prev, ...patch }))}
+          />
+
+          {form.tipo !== 'Novedades de sueldo' && form.tipo !== 'Altas' && (
+            <div>
+              <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider mb-2 block">
+                Observaciones
+              </Label>
+              <Textarea
+                placeholder={
+                  form.tipo === 'Bajas'
+                    ? 'Contexto ante RRHH (RRHH 002 / acta complementaria)'
+                    : 'Detalles adicionales...'
+                }
+                className="min-h-[80px] resize-none rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]"
+                value={form.observaciones}
+                onChange={event => setForm({ ...form, observaciones: event.target.value })}
+              />
+            </div>
+          )}
+
+          {error && <p className="text-sm text-rose-600">{error}</p>}
+        </div>
+
+        <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC]">
+          <DialogFooter className="sm:justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+              className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] transition-all"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSubmitting || !form.tipo}
+              className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all flex items-center gap-2"
+            >
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {isEditMode ? 'Guardar cambios' : 'Guardar'}
+            </Button>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
