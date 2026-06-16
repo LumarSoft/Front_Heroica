@@ -152,6 +152,12 @@ export const API_ENDPOINTS = {
       DELETE: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}`,
       GET_SUCURSALES: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
       UPDATE_SUCURSALES: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/sucursales`,
+      GET_MODULOS: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/modulos`,
+      UPDATE_MODULOS: (id: number) => `${API_URL}/api/configuracion/usuarios/${id}/modulos`,
+    },
+    // Módulos (catálogo)
+    MODULOS: {
+      GET_ALL: `${API_URL}/api/configuracion/modulos`,
     },
     // Roles
     ROLES: {

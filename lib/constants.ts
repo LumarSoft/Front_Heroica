@@ -4,6 +4,12 @@ export const ROLES = {
   DIRECTIVO: { id: 4, nombre: 'directivo' },
 } as const
 
+// Módulos de alto nivel (acceso por usuario, independiente del rol)
+export const MODULOS = {
+  TESORERIA: 'tesoreria',
+  RECURSOS_HUMANOS: 'recursos_humanos',
+} as const
+
 export const PERMISOS = {
   // Movimientos de caja
   VER_MOVIMIENTOS: 'ver_movimientos',
