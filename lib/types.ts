@@ -225,6 +225,7 @@ export interface PersonalArchivo {
   solicitud_tipo: string
   fecha_solicitud: string
   estado: string
+  documento_id?: number
 }
 
 export type RhIncentivoTipo = 'Incentivo' | 'Premio'

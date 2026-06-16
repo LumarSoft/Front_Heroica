@@ -11,6 +11,7 @@ import { ErrorBanner } from '@/components/ui/error-banner'
 import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { DatosPersonalesTab } from '@/components/legajos/DatosPersonalesTab'
+import { DocumentosTab } from '@/components/legajos/DocumentosTab'
 import { HistorialTab } from '@/components/legajos/HistorialTab'
 import { ProfesionalTab } from '@/components/legajos/ProfesionalTab'
 import { AnaliticoTab } from '@/components/legajos/AnaliticoTab'
@@ -183,6 +184,12 @@ export default function FichaPersonalPage() {
               Profesional
             </TabsTrigger>
             <TabsTrigger
+              value="documentos"
+              className="text-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[#002868] data-[state=active]:font-semibold"
+            >
+              Documentos
+            </TabsTrigger>
+            <TabsTrigger
               value="analitico"
               className="text-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[#002868] data-[state=active]:font-semibold"
             >
@@ -210,6 +217,12 @@ export default function FichaPersonalPage() {
 
           <TabsContent value="profesional">
             <ProfesionalTab personalId={personal.id} />
+          </TabsContent>
+
+          <TabsContent value="documentos">
+            <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm p-5 sm:p-6">
+              <DocumentosTab personalId={personal.id} canEditar={canEditar} />
+            </div>
           </TabsContent>
 
           <TabsContent value="analitico">

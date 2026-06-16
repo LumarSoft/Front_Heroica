@@ -3,19 +3,13 @@
 import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { MontoInput } from '@/components/ui/monto-input'
 import { formatInputMonto } from '@/lib/formatters'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox'
 import { cn } from '@/lib/utils'
 import { MESES, YEAR_OPTIONS } from './constants'
 import { API_ENDPOINTS } from '@/lib/config'
@@ -132,25 +126,24 @@ export function EscalaFormDialog({
   const isEdit = initial !== null
   const isSubmitDisabled = saving || !puestoId || (tipoCalculo === 'fijo' ? !sueldoBase : !valorHoraManual)
 
+  const puestosOptions = puestos.map(p => ({ value: String(p.id), label: p.nombre }))
+
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="sm:max-w-[480px]">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-[#002868]">
+      <DialogContent className="sm:max-w-[460px] max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
+        <DialogHeader className="px-5 pt-4 pb-3 border-b border-[#F0F2F5] shrink-0">
+          <DialogTitle className="text-base font-semibold text-[#002868]">
             {isEdit ? 'Editar Escala Salarial' : 'Nueva Escala Salarial'}
           </DialogTitle>
-          <DialogDescription className="text-slate-500">
-            {isEdit ? 'Modificá los datos de la escala.' : 'Completá los datos de la nueva escala.'}
-          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-2">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-5 py-3 space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Mes</Label>
+                <Label className="text-xs font-medium text-[#5A6070]">Mes</Label>
                 <Select value={mes} onValueChange={setMes}>
-                  <SelectTrigger className="cursor-pointer">
+                  <SelectTrigger className="h-8 text-sm cursor-pointer">
                     <SelectValue placeholder="Mes" />
                   </SelectTrigger>
                   <SelectContent>
@@ -163,9 +156,9 @@ export function EscalaFormDialog({
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Año</Label>
+                <Label className="text-xs font-medium text-[#5A6070]">Año</Label>
                 <Select value={anio} onValueChange={setAnio}>
-                  <SelectTrigger className="cursor-pointer">
+                  <SelectTrigger className="h-8 text-sm cursor-pointer">
                     <SelectValue placeholder="Año" />
                   </SelectTrigger>
                   <SelectContent>
@@ -180,29 +173,19 @@ export function EscalaFormDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label>Puesto</Label>
-              <Select value={puestoId} onValueChange={setPuestoId}>
-                <SelectTrigger className="cursor-pointer">
-                  <SelectValue placeholder="Seleccioná un puesto..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {puestos.length === 0 ? (
-                    <SelectItem value="__empty__" disabled>
-                      No hay puestos cargados
-                    </SelectItem>
-                  ) : (
-                    puestos.map(p => (
-                      <SelectItem key={p.id} value={String(p.id)}>
-                        {p.nombre}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              <Label className="text-xs font-medium text-[#5A6070]">Puesto</Label>
+              <Combobox
+                options={puestosOptions}
+                value={puestoId}
+                onChange={setPuestoId}
+                placeholder="Seleccioná un puesto..."
+                searchPlaceholder="Buscar puesto..."
+                emptyText="No se encontró el puesto"
+              />
             </div>
 
             <div className="space-y-1.5">
-              <Label>Tipo de Cálculo</Label>
+              <Label className="text-xs font-medium text-[#5A6070]">Tipo de cálculo</Label>
               <div className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 w-fit">
                 <button
                   type="button"
@@ -234,7 +217,9 @@ export function EscalaFormDialog({
             {tipoCalculo === 'fijo' ? (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="sueldo">Sueldo Base (ARS)</Label>
+                  <Label htmlFor="sueldo" className="text-xs font-medium text-[#5A6070]">
+                    Sueldo Base (ARS)
+                  </Label>
                   <MontoInput
                     id="sueldo"
                     placeholder="Ej: 250.000"
@@ -244,20 +229,24 @@ export function EscalaFormDialog({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="valor_hora">Valor / Hora (ARS)</Label>
+                  <Label htmlFor="valor_hora" className="text-xs font-medium text-[#5A6070]">
+                    Valor / Hora (ARS)
+                  </Label>
                   <Input
                     id="valor_hora"
                     readOnly
                     tabIndex={-1}
                     value={valorHoraCalculado !== null ? formatInputMonto(valorHoraCalculado.toFixed(2)) : '—'}
-                    className="bg-[#F5F5F5] text-[#5A6070] cursor-default select-none"
+                    className="h-8 text-sm bg-[#F5F5F5] text-[#5A6070] cursor-default select-none"
                   />
                   <p className="text-[10px] text-[#9AA0AC]">Sueldo ÷ 26 días ÷ 8 hs</p>
                 </div>
               </div>
             ) : (
               <div className="space-y-1.5">
-                <Label htmlFor="valor_hora_manual">Valor / Hora (ARS)</Label>
+                <Label htmlFor="valor_hora_manual" className="text-xs font-medium text-[#5A6070]">
+                  Valor / Hora (ARS)
+                </Label>
                 <MontoInput
                   id="valor_hora_manual"
                   placeholder="Ej: 1.201,92"
@@ -269,25 +258,33 @@ export function EscalaFormDialog({
             )}
           </div>
 
-          <DialogFooter className="mt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={saving} className="cursor-pointer">
+          <div className="flex justify-end gap-2 px-5 py-3 border-t border-[#F0F2F5] shrink-0">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={onClose}
+              disabled={saving}
+              className="cursor-pointer"
+            >
               Cancelar
             </Button>
             <Button
               type="submit"
+              size="sm"
               disabled={isSubmitDisabled}
               className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white"
             >
               {saving ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
                   Guardando...
                 </>
               ) : (
                 'Guardar'
               )}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

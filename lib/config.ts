@@ -254,6 +254,8 @@ export const API_ENDPOINTS = {
     GET_NOTAS: (id: number) => `${API_URL}/api/personal/${id}/notas`,
     CREATE_NOTA: (id: number) => `${API_URL}/api/personal/${id}/notas`,
     DELETE_NOTA: (id: number, notaId: number) => `${API_URL}/api/personal/${id}/notas/${notaId}`,
+    UPLOAD_DOCUMENTO: (id: number) => `${API_URL}/api/personal/${id}/documentos`,
+    DELETE_DOCUMENTO: (id: number, docId: number) => `${API_URL}/api/personal/${id}/documentos/${docId}`,
   },
   PUESTOS: {
     GET_ALL: `${API_URL}/api/puestos`,

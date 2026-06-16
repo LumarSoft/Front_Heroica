@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Combobox } from '@/components/ui/combobox'
 import type { Puesto } from '@/lib/types'
 import { CbuInput } from '@/components/ui/cbu-input'
 import { CBU_DIGITOS } from '@/lib/schemas'
@@ -58,6 +59,7 @@ function validarFecha(valor: string, max: string): string | null {
 
 export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange }: AltaColaboradorFieldsProps) {
   const today = new Date().toISOString().split('T')[0]
+  const puestosOptions = puestos.map(p => ({ value: String(p.id), label: p.nombre }))
 
   const errorFechaNacimiento = validarFecha(form.alta_fecha_nacimiento, today)
   const errorFechaAltaTemprana = validarFecha(form.alta_fecha_alta_temprana, today)
@@ -227,18 +229,14 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
           )}
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Puesto de trabajo *</Label>
-            <Select value={form.alta_puesto_id} onValueChange={value => onChange({ alta_puesto_id: value })}>
-              <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm">
-                <SelectValue placeholder="Seleccione un puesto" />
-              </SelectTrigger>
-              <SelectContent>
-                {puestos.map(puesto => (
-                  <SelectItem key={puesto.id} value={puesto.id.toString()}>
-                    {puesto.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              options={puestosOptions}
+              value={form.alta_puesto_id}
+              onChange={value => onChange({ alta_puesto_id: value })}
+              placeholder="Seleccioná un puesto..."
+              searchPlaceholder="Buscar puesto..."
+              emptyText="No se encontró el puesto"
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Sucursal</Label>
