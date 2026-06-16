@@ -54,6 +54,8 @@ export interface PagoPendiente {
   comentarios?: string
   descripcion_id?: number
   proveedor_id?: number
+  categoria_id?: number
+  subcategoria_id?: number
   descripcion_nombre?: string
   proveedor_nombre?: string
   estado: 'pendiente' | 'aprobado' | 'rechazado' | 'completado'

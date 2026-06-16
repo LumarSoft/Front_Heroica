@@ -295,6 +295,10 @@ export default function PagosPendientesPage() {
                 : selectedPago.fecha.substring(0, 10)
               : undefined,
             prioridad: selectedPago.prioridad as 'baja' | 'media' | 'alta' | undefined,
+            categoria_id: selectedPago.categoria_id != null ? String(selectedPago.categoria_id) : undefined,
+            subcategoria_id: selectedPago.subcategoria_id != null ? String(selectedPago.subcategoria_id) : undefined,
+            descripcion_id: selectedPago.descripcion_id != null ? String(selectedPago.descripcion_id) : undefined,
+            proveedor_id: selectedPago.proveedor_id != null ? String(selectedPago.proveedor_id) : undefined,
           }}
           onSuccess={notify => {
             toast.success('Pago aprobado y movimiento registrado correctamente')
