@@ -110,9 +110,148 @@ export interface CuentaBancaria {
   banco?: string
 }
 
+export interface EscalaSalarial {
+  id: number
+  sucursal_id: number
+  puesto_id: number
+  puesto_nombre: string
+  sueldo_base: number
+  mes: number
+  anio: number
+  valor_hora: number | null
+}
+
+export interface Area {
+  id: number
+  nombre: string
+  descripcion: string | null
+  activo: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Puesto {
+  id: number
+  nombre: string
+  area_id: number
+  area_nombre: string
+  created_at: string
+  updated_at: string
+}
+
 export interface SelectOption {
   id: number
   nombre: string
+}
+
+export type RhCalendarioEventoTipo =
+  | 'Capacitación'
+  | 'Reunión'
+  | 'Comunicado'
+  | 'Vencimiento'
+  | 'Evento interno'
+  | 'Ministerio'
+  | 'Otro'
+export type RhCalendarioTipoNotion = 'General' | 'Invitación' | 'Comunicado' | 'Recordatorio'
+export type RhCalendarioPeriodicidad =
+  | 'Ninguna'
+  | 'Cada día'
+  | 'Lun-Vie'
+  | 'Cada semana'
+  | 'Cada 2 semanas'
+  | 'Cada mes'
+  | 'Primero de cada mes'
+  | 'Cada año'
+
+export interface RhCalendarioEvento {
+  id: number
+  evento: RhCalendarioEventoTipo
+  fecha: string
+  hora: string | null
+  direccion: string | null
+  participantes: string | null
+  comentarios: string | null
+  tipo_notion: RhCalendarioTipoNotion
+  periodicidad: RhCalendarioPeriodicidad | null
+  creado_por: number | null
+  creado_por_nombre: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Personal {
+  id: number
+  legajo: string
+  nombre: string
+  dni: string
+  cuil?: string | null
+  email?: string | null
+  telefono?: string | null
+  fecha_nacimiento?: string | null
+  domicilio_real?: string | null
+  domicilio_dni?: string | null
+  puesto_id: number
+  puesto_nombre: string
+  sucursal_id: number
+  fecha_incorporacion: string
+  fecha_inicio_cobro?: string | null
+  periodo_prueba?: boolean
+  periodo_prueba_dias?: number | null
+  jornada_semanal_dias?: number | null
+  jornada_diaria_horas?: string | null
+  propuesta_economica?: number | string | null
+  beneficios?: string | null
+  condicion_laboral?: number | null
+  fecha_alta_temprana?: string | null
+  banco?: string | null
+  cbu?: string | null
+  carnet_manipulacion_alimentos: boolean
+  carnet_archivo_url?: string | null
+  carnet_archivo_nombre?: string | null
+  carnet_vencimiento?: string | null
+  solicitud_alta_id?: number | null
+  datos_alta_json?: unknown
+  activo: boolean
+  /** Lista de tipo_doc de documentos requeridos que faltan en la solicitud de alta. */
+  adjuntos_faltantes?: string[]
+  created_at: string
+  updated_at: string
+}
+
+export interface PersonalArchivo {
+  tipo_doc: string
+  label: string
+  url: string
+  nombre_original: string | null
+  solicitud_id: number
+  solicitud_tipo: string
+  fecha_solicitud: string
+  estado: string
+  documento_id?: number
+}
+
+export type RhIncentivoTipo = 'Incentivo' | 'Premio'
+export type RhIncentivoMetodoCalculo = 'porcentaje_escala' | 'monto_fijo' | 'multiplicador_valor_hora'
+
+export interface RhIncentivoPremio {
+  id: number
+  sucursal_id: number
+  sucursal_nombre: string
+  area_id: number | null
+  area_nombre: string | null
+  puesto_id: number | null
+  puesto_nombre: string | null
+  nombre: string
+  tipo: RhIncentivoTipo
+  descripcion: string | null
+  mes: number
+  anio: number
+  metodo_calculo: RhIncentivoMetodoCalculo
+  valor: number
+  activo: boolean | number
+  fecha_ultima_actualizacion: string
+  created_at: string
+  updated_at: string
 }
 
 export interface DescripcionOption {
@@ -124,4 +263,199 @@ export interface DescripcionOption {
   categoria_nombre?: string | null
   subcategoria_nombre?: string | null
   activo?: boolean
+}
+
+export type RhSolicitudTipo =
+  | 'Altas'
+  | 'Bajas'
+  | 'Novedades de sueldo'
+  | 'Incentivos y premios'
+  | 'Licencias'
+  | 'Vacaciones'
+  | 'Suspensiones'
+  | 'Apercibimientos'
+  | 'Capacitaciones'
+  | 'Pedido de uniforme'
+  | 'Adelantos'
+  | 'Descuentos'
+  | 'Horas extras'
+  | 'Cambio de puesto/sucursal'
+export type RhSolicitudEstado = 'Pendiente' | 'Aprobada' | 'Rechazada' | 'Cancelada'
+export type RhSolicitudHistorialEvento =
+  | 'Creada'
+  | 'Editada'
+  | 'Aprobada'
+  | 'Rechazada'
+  | 'Cancelada'
+  | 'Legajo creado'
+  | 'Legajo desactivado'
+  | 'Liquidacion final generada'
+  | 'Error de liquidacion final'
+
+export interface RhSolicitudHistorialItem {
+  id: number
+  solicitud_id: number
+  personal_id: number | null
+  usuario_id: number | null
+  usuario_nombre: string | null
+  evento: RhSolicitudHistorialEvento
+  detalle: string | null
+  created_at: string
+}
+
+export interface RhSolicitudArchivo {
+  tipo_doc: string
+  url: string
+  nombre_original: string | null
+}
+
+export interface RhSolicitudAltaAdjuntoSlot {
+  url: string
+  nombre_original?: string | null
+}
+
+export interface RhSolicitudAltaDetalles {
+  nombre: string
+  dni: string
+  cuil?: string
+  domicilio?: string
+  /** Domicilio según consta en el DNI */
+  domicilio_dni?: string
+  fecha_nacimiento?: string
+  telefono?: string
+  email?: string | null
+  banco?: string | null
+  cbu?: string | null
+  puesto_id: number
+  puesto_nombre?: string
+  fecha_incorporacion: string
+  fecha_inicio_cobro_oficina?: string
+  jornada_semanal_dias?: number | null
+  jornada_diaria_horas_texto?: string | null
+  propuesta_economica?: number | null
+  beneficios?: string | null
+  otras_observaciones_alta?: string | null
+  /** 1 o 2 según condición contractual interna */
+  condicion_laboral?: 1 | 2
+  /** Obligatoria si condicion_laboral === 1 */
+  fecha_alta_temprana?: string | null
+  periodo_prueba?: boolean
+  periodo_prueba_dias?: number | null
+  carnet_manipulacion_alimentos?: boolean
+  carnet_fecha_vencimiento?: string | null
+}
+
+export interface RhSolicitudVacacionesDetalles {
+  fecha_desde: string
+  fecha_hasta: string
+  cantidad_dias: number
+}
+
+export interface RhSolicitudLicenciaDetalles {
+  tipo_licencia: string
+  fecha_desde: string
+  fecha_hasta: string
+  motivo: string
+}
+
+export interface RhEmpleadoNovedad {
+  personal_id: number
+  personal_nombre: string
+  cambio_puesto: boolean
+  nuevo_puesto_id: number | null
+  fecha_alta_puesto: string | null
+  horas_trabajadas: number | null
+  horas_feriados: number | null
+  horas_extras_autorizadas: boolean
+  horas_extras_cantidad: number | null
+  incentivos: Array<{ incentivo_id: number; nombre: string; aplica: boolean }>
+  apercibimiento: { tiene: boolean; motivo: string | null; archivo_url: string | null; archivo_nombre: string | null }
+  suspension: { tiene: boolean; motivo: string | null; archivo_url: string | null; archivo_nombre: string | null }
+  descuento: { tiene: boolean; monto: number | null; motivo: string | null }
+  ausencias_justificadas: {
+    tiene: boolean
+    cantidad: number | null
+    unidad: 'horas' | 'minutos'
+    motivo: string | null
+  }
+  ausencias_injustificadas: { cantidad: number | null; unidad: 'horas' | 'minutos'; motivo: string | null }
+  tardanzas: { tiene: boolean; cantidad: number | null; unidad: 'horas' | 'minutos'; motivo: string | null }
+  observaciones: string | null
+}
+
+export interface RhMotivoBajaCatalogoItem {
+  id: number
+  sucursal_id: number
+  nombre: string
+  orden?: number
+}
+
+export interface RhSolicitudBajaDetalles {
+  motivo_baja_id?: number | null
+  motivo_baja_nombre?: string | null
+  motivo_baja_detalle?: string | null
+  fecha_baja: string
+  /** Histórico (antes de liquidación tipo novedad) */
+  motivo_baja?: string
+  dias_horas_trabajadas_mes?: string
+  feriados_trabajados_mes?: string | null
+  horas_extras_mes?: string | null
+}
+
+export interface RhSolicitudNovedadSueldoDetalles {
+  area_id: number
+  mes: number
+  anio: number
+}
+
+export interface RhSolicitudApercibimientoDetalles {
+  fecha: string
+  severidad: 'Leve' | 'Moderada' | 'Grave'
+  motivo: string
+}
+
+export interface RhSolicitudCambioPuestoSucursalDetalles {
+  puesto_id_nuevo: number | null
+  sucursal_id_nueva: number | null
+  fecha_efectiva: string
+  motivo: string | null
+}
+
+export type RhSolicitudDetalles =
+  | Record<string, unknown>
+  | RhSolicitudAltaDetalles
+  | RhSolicitudBajaDetalles
+  | RhSolicitudVacacionesDetalles
+  | RhSolicitudLicenciaDetalles
+  | RhSolicitudNovedadSueldoDetalles
+  | RhSolicitudApercibimientoDetalles
+  | RhSolicitudCambioPuestoSucursalDetalles
+  | null
+
+export interface RhSolicitud {
+  id: number
+  sucursal_id: number
+  sucursal_nombre: string
+  personal_id: number | null
+  personal_creado_id: number | null
+  personal_nombre: string | null
+  legajo: string | null
+  dni: string | null
+  usuario_id: number
+  usuario_nombre: string
+  resuelto_por_usuario_id: number | null
+  resuelto_por_nombre: string | null
+  tipo: RhSolicitudTipo
+  estado: RhSolicitudEstado
+  fecha_solicitud: string
+  fecha_resolucion: string | null
+  detalles: RhSolicitudDetalles
+  observaciones: string | null
+  motivo_resolucion: string | null
+  liquidacion_final_estado: 'Pendiente' | 'Generada' | 'No aplica' | 'Error'
+  archivos?: RhSolicitudArchivo[]
+  empleados?: RhEmpleadoNovedad[]
+  historial?: RhSolicitudHistorialItem[]
+  created_at: string
+  updated_at: string
 }
