@@ -10,6 +10,7 @@ import { MontoInput } from '@/components/ui/monto-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { Combobox } from '@/components/ui/combobox'
 import type { Area, Puesto, RhIncentivoMetodoCalculo, RhIncentivoPremio, RhIncentivoTipo } from '@/lib/types'
 
 type ScopeType = 'sucursal' | 'area' | 'puesto'
@@ -205,171 +206,193 @@ export function IncentivoFormDialog({
   }
 
   const metodoActual = METODOS.find(m => m.value === form.metodo_calculo)
+  const areasOptions = areas.map(a => ({ value: String(a.id), label: a.nombre }))
+  const puestosOptions = puestos.map(p => ({ value: String(p.id), label: `${p.nombre} · ${p.area_nombre}` }))
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#002868]">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
+        <DialogHeader className="px-5 pt-4 pb-3 border-b border-[#F0F2F5] shrink-0">
+          <DialogTitle className="text-base font-semibold text-[#002868]">
             {initial ? 'Editar incentivo' : 'Nuevo incentivo o premio'}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="nombre">Nombre</Label>
-            <Input id="nombre" value={form.nombre} onChange={e => setField('nombre', e.target.value)} />
-          </div>
-
-          <div className="space-y-2 sm:col-span-2">
-            <Label>Aplicar a</Label>
-            <Select
-              value={form.scope}
-              onValueChange={v => setForm(prev => ({ ...prev, scope: v as ScopeType, area_id: '', puesto_id: '' }))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sucursal">Toda la sucursal</SelectItem>
-                <SelectItem value="area">Área específica</SelectItem>
-                <SelectItem value="puesto">Puesto específico</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {form.scope === 'area' && (
-            <div className="space-y-2 sm:col-span-2">
-              <Label>Área</Label>
-              <Select value={form.area_id} onValueChange={v => setField('area_id', v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccione un área" />
-                </SelectTrigger>
-                <SelectContent>
-                  {areas.map(a => (
-                    <SelectItem key={a.id} value={String(a.id)}>
-                      {a.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {form.scope === 'puesto' && (
-            <div className="space-y-2 sm:col-span-2">
-              <Label>Puesto</Label>
-              <Select value={form.puesto_id} onValueChange={v => setField('puesto_id', v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccione un puesto" />
-                </SelectTrigger>
-                <SelectContent>
-                  {puestos.map(p => (
-                    <SelectItem key={p.id} value={String(p.id)}>
-                      {p.nombre}
-                      <span className="text-[#9AA0AC] ml-1">· {p.area_nombre}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label>Tipo</Label>
-            <Select value={form.tipo} onValueChange={v => setField('tipo', v as RhIncentivoTipo)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Incentivo">Incentivo</SelectItem>
-                <SelectItem value="Premio">Premio</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Método de cálculo</Label>
-            <Select value={form.metodo_calculo} onValueChange={v => handleMetodoChange(v as RhIncentivoMetodoCalculo)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {METODOS.map(m => (
-                  <SelectItem key={m.value} value={m.value}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Mes</Label>
-            <Select value={String(form.mes)} onValueChange={v => setField('mes', Number(v))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MESES.map((label, i) => (
-                  <SelectItem key={label} value={String(i + 1)}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="anio">Año</Label>
-            <Input id="anio" type="number" value={form.anio} onChange={e => setField('anio', Number(e.target.value))} />
-          </div>
-
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="valor">Valor</Label>
-            {form.metodo_calculo === 'monto_fijo' ? (
-              <MontoInput id="valor" placeholder="Ej: 25.000" value={form.valor} onChange={v => setField('valor', v)} />
-            ) : (
+        <div className="flex-1 overflow-y-auto px-5 py-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-xs font-medium text-[#5A6070]">Nombre</Label>
               <Input
-                id="valor"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.valor}
-                placeholder={form.metodo_calculo === 'porcentaje_escala' ? 'Ej: 7' : 'Ej: 2'}
-                onChange={e => setField('valor', e.target.value)}
+                className="h-8 text-sm"
+                id="nombre"
+                value={form.nombre}
+                onChange={e => setField('nombre', e.target.value)}
               />
-            )}
-            {metodoActual && <p className="text-xs text-[#9AA0AC]">{metodoActual.hint}</p>}
-          </div>
-
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="descripcion">Detalle informativo</Label>
-            <Textarea
-              id="descripcion"
-              value={form.descripcion}
-              placeholder="Cómo se calcula, objetivo asociado o comentario interno"
-              onChange={e => setField('descripcion', e.target.value)}
-            />
-          </div>
-
-          <div className="sm:col-span-2 flex items-center justify-between rounded-2xl border border-[#D8E3F8] bg-white p-4">
-            <div>
-              <p className="font-semibold text-[#002868]">Activo</p>
-              <p className="text-sm text-[#666666]">Desactivá el incentivo cuando deje de aplicar.</p>
             </div>
-            <Switch checked={form.activo} onCheckedChange={v => setField('activo', v)} />
+
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-xs font-medium text-[#5A6070]">Aplicar a</Label>
+              <Select
+                value={form.scope}
+                onValueChange={v => setForm(prev => ({ ...prev, scope: v as ScopeType, area_id: '', puesto_id: '' }))}
+              >
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sucursal">Toda la sucursal</SelectItem>
+                  <SelectItem value="area">Área específica</SelectItem>
+                  <SelectItem value="puesto">Puesto específico</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {form.scope === 'area' && (
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label className="text-xs font-medium text-[#5A6070]">Área</Label>
+                <Combobox
+                  options={areasOptions}
+                  value={form.area_id}
+                  onChange={v => setField('area_id', v)}
+                  placeholder="Seleccioná un área..."
+                  searchPlaceholder="Buscar área..."
+                  emptyText="No se encontró el área"
+                />
+              </div>
+            )}
+
+            {form.scope === 'puesto' && (
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label className="text-xs font-medium text-[#5A6070]">Puesto</Label>
+                <Combobox
+                  options={puestosOptions}
+                  value={form.puesto_id}
+                  onChange={v => setField('puesto_id', v)}
+                  placeholder="Seleccioná un puesto..."
+                  searchPlaceholder="Buscar puesto..."
+                  emptyText="No se encontró el puesto"
+                />
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-[#5A6070]">Tipo</Label>
+              <Select value={form.tipo} onValueChange={v => setField('tipo', v as RhIncentivoTipo)}>
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Incentivo">Incentivo</SelectItem>
+                  <SelectItem value="Premio">Premio</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-[#5A6070]">Método de cálculo</Label>
+              <Select
+                value={form.metodo_calculo}
+                onValueChange={v => handleMetodoChange(v as RhIncentivoMetodoCalculo)}
+              >
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {METODOS.map(m => (
+                    <SelectItem key={m.value} value={m.value}>
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-[#5A6070]">Mes</Label>
+              <Select value={String(form.mes)} onValueChange={v => setField('mes', Number(v))}>
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MESES.map((label, i) => (
+                    <SelectItem key={label} value={String(i + 1)}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-[#5A6070]">Año</Label>
+              <Input
+                className="h-8 text-sm"
+                id="anio"
+                type="number"
+                value={form.anio}
+                onChange={e => setField('anio', Number(e.target.value))}
+              />
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-xs font-medium text-[#5A6070]">Valor</Label>
+              {form.metodo_calculo === 'monto_fijo' ? (
+                <MontoInput
+                  id="valor"
+                  placeholder="Ej: 25.000"
+                  value={form.valor}
+                  onChange={v => setField('valor', v)}
+                />
+              ) : (
+                <Input
+                  className="h-8 text-sm"
+                  id="valor"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.valor}
+                  placeholder={form.metodo_calculo === 'porcentaje_escala' ? 'Ej: 7' : 'Ej: 2'}
+                  onChange={e => setField('valor', e.target.value)}
+                />
+              )}
+              {metodoActual && <p className="text-[11px] text-[#9AA0AC]">{metodoActual.hint}</p>}
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-xs font-medium text-[#5A6070]">Detalle informativo</Label>
+              <Textarea
+                id="descripcion"
+                rows={2}
+                value={form.descripcion}
+                placeholder="Cómo se calcula, objetivo asociado o comentario interno"
+                onChange={e => setField('descripcion', e.target.value)}
+                className="text-sm resize-none"
+              />
+            </div>
+
+            <div className="sm:col-span-2 flex items-center justify-between rounded-xl border border-[#D8E3F8] bg-white px-3 py-2.5">
+              <div>
+                <p className="text-sm font-semibold text-[#002868]">Activo</p>
+                <p className="text-xs text-[#666666]">Desactivá cuando deje de aplicar.</p>
+              </div>
+              <Switch checked={form.activo} onCheckedChange={v => setField('activo', v)} />
+            </div>
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={saving}>
+        <div className="flex justify-end gap-2 px-5 py-3 border-t border-[#F0F2F5] shrink-0">
+          <Button variant="outline" size="sm" onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={saving} className="bg-[#002868] text-white hover:bg-[#003d8f]">
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={saving}
+            className="bg-[#002868] text-white hover:bg-[#003d8f]"
+          >
             {saving ? 'Guardando...' : 'Guardar'}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )

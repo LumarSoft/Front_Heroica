@@ -1,8 +1,10 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { MontoInput } from '@/components/ui/monto-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox'
 import type { Area, Personal, Puesto, RhIncentivoPremio, Sucursal } from '@/lib/types'
 import type { SolicitudFormState } from './solicitudFormUtils'
 import { AltaColaboradorFields } from './AltaColaboradorFields'
@@ -11,6 +13,85 @@ import { NovedadSueldoFields } from './NovedadSueldoFields'
 import { SolicitudArchivoAdjunto } from './SolicitudArchivoAdjunto'
 
 const ACCEPT_PDF = 'application/pdf,.pdf'
+
+function DateDMY({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [day, setDay] = useState('')
+  const [month, setMonth] = useState('')
+  const [year, setYear] = useState('')
+
+  useEffect(() => {
+    if (value) {
+      const [y, m, d] = value.split('-')
+      setYear(y || '')
+      setMonth(m ? String(Number(m)) : '')
+      setDay(d ? String(Number(d)) : '')
+    } else {
+      setDay('')
+      setMonth('')
+      setYear('')
+    }
+  }, [value])
+
+  const commit = (d: string, m: string, y: string) => {
+    if (d && m && y && y.length === 4) {
+      onChange(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`)
+    } else {
+      onChange('')
+    }
+  }
+
+  return (
+    <div className="flex items-end gap-1.5">
+      <div>
+        <p className="text-[10px] text-[#9AA0AC] mb-0.5">Día</p>
+        <Input
+          type="number"
+          min={1}
+          max={31}
+          placeholder="DD"
+          className="h-10 w-16 text-center rounded-lg border-[#E0E0E0]"
+          value={day}
+          onChange={e => {
+            setDay(e.target.value)
+            commit(e.target.value, month, year)
+          }}
+        />
+      </div>
+      <span className="text-[#C0C0C0] pb-2.5 select-none">/</span>
+      <div>
+        <p className="text-[10px] text-[#9AA0AC] mb-0.5">Mes</p>
+        <Input
+          type="number"
+          min={1}
+          max={12}
+          placeholder="MM"
+          className="h-10 w-16 text-center rounded-lg border-[#E0E0E0]"
+          value={month}
+          onChange={e => {
+            setMonth(e.target.value)
+            commit(day, e.target.value, year)
+          }}
+        />
+      </div>
+      <span className="text-[#C0C0C0] pb-2.5 select-none">/</span>
+      <div>
+        <p className="text-[10px] text-[#9AA0AC] mb-0.5">Año</p>
+        <Input
+          type="number"
+          min={2020}
+          max={2100}
+          placeholder="AAAA"
+          className="h-10 w-24 text-center rounded-lg border-[#E0E0E0]"
+          value={year}
+          onChange={e => {
+            setYear(e.target.value)
+            commit(day, month, e.target.value)
+          }}
+        />
+      </div>
+    </div>
+  )
+}
 
 interface SolicitudSpecificFieldsProps {
   form: SolicitudFormState
@@ -343,27 +424,22 @@ export function SolicitudSpecificFields({
 
   if (form.tipo === 'Cambio de puesto/sucursal') {
     const sucursalesDestino = sucursales.filter(s => s.activo && s.id !== sucursalId)
+    const puestosOptions = [
+      { value: 'none', label: 'Sin cambio' },
+      ...puestos.map(p => ({ value: String(p.id), label: `${p.nombre} · ${p.area_nombre}` })),
+    ]
     return (
       <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-[#5A6070] mb-1">Nuevo puesto</p>
-          <Select
+          <Combobox
+            options={puestosOptions}
             value={form.cambio_nuevo_puesto_id || 'none'}
-            onValueChange={value => onChange({ cambio_nuevo_puesto_id: value === 'none' ? '' : value })}
-          >
-            <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
-              <SelectValue placeholder="Sin cambio" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Sin cambio</SelectItem>
-              {puestos.map(p => (
-                <SelectItem key={p.id} value={String(p.id)}>
-                  {p.nombre}
-                  <span className="text-[#9AA0AC] ml-1">· {p.area_nombre}</span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={value => onChange({ cambio_nuevo_puesto_id: value === 'none' ? '' : value })}
+            placeholder="Sin cambio"
+            searchPlaceholder="Buscar puesto..."
+            emptyText="No se encontró el puesto"
+          />
         </div>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-[#5A6070] mb-1">Nueva sucursal</p>
@@ -384,13 +460,9 @@ export function SolicitudSpecificFields({
             </SelectContent>
           </Select>
         </div>
-        <div>
+        <div className="col-span-2">
           <p className="text-[10px] font-bold uppercase tracking-wider text-[#5A6070] mb-1">Fecha efectiva *</p>
-          <Input
-            type="date"
-            value={form.cambio_fecha_efectiva}
-            onChange={event => onChange({ cambio_fecha_efectiva: event.target.value })}
-          />
+          <DateDMY value={form.cambio_fecha_efectiva} onChange={v => onChange({ cambio_fecha_efectiva: v })} />
         </div>
         <div className="col-span-2">
           <p className="text-[10px] font-bold uppercase tracking-wider text-[#5A6070] mb-1">Motivo (opcional)</p>
