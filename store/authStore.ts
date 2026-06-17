@@ -10,6 +10,7 @@ interface User {
   rol_id: number
   must_change_password?: boolean
   permisos?: string[]
+  modulos?: string[]
   two_factor_enabled?: boolean
 }
 
@@ -21,6 +22,7 @@ interface AuthState {
   logout: () => void
   isSuperAdmin: () => boolean
   hasPermiso: (clave: string) => boolean
+  canAccessModulo: (clave: string) => boolean
 
   // Configuración
   canVerConfiguracion: () => boolean
@@ -111,6 +113,15 @@ export const useAuthStore = create<AuthState>()(
         if (!user) return false
         if (Number(user.rol_id) === ROLES.SUPERADMIN.id) return true
         return user.permisos?.includes(clave) ?? false
+      },
+
+      // Verifica acceso a un módulo (capa independiente del rol).
+      // Superadmin siempre tiene acceso a todos los módulos.
+      canAccessModulo: (clave: string) => {
+        const { user } = get()
+        if (!user) return false
+        if (Number(user.rol_id) === ROLES.SUPERADMIN.id) return true
+        return user.modulos?.includes(clave) ?? false
       },
 
       // Configuración

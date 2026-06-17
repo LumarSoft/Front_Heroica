@@ -25,6 +25,7 @@ import { useCalculatorStore } from '@/store/calculatorStore'
 import { apiFetch } from '@/lib/api'
 import { API_ENDPOINTS } from '@/lib/config'
 import { cn } from '@/lib/utils'
+import { MODULOS } from '@/lib/constants'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,6 +59,7 @@ function timeAgo(iso: string): string {
 const MODULES = [
   {
     id: 'tesoreria',
+    modulo: MODULOS.TESORERIA,
     label: 'Tesorería',
     icon: Building2,
     defaultHref: '/sucursales',
@@ -65,6 +67,7 @@ const MODULES = [
   },
   {
     id: 'recursos-humanos',
+    modulo: MODULOS.RECURSOS_HUMANOS,
     label: 'Recursos Humanos',
     icon: Users,
     defaultHref: '/recursos-humanos',
@@ -195,6 +198,10 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
   const pathname = usePathname()
   const router = useRouter()
   const canVerConfiguracion = useAuthStore(state => state.canVerConfiguracion())
+  const userModulos = useAuthStore(state => state.user?.modulos)
+  const isSuperAdmin = useAuthStore(state => state.isSuperAdmin())
+  // Solo se muestran los módulos a los que el usuario tiene acceso (superadmin: todos)
+  const visibleModules = MODULES.filter(m => isSuperAdmin || (userModulos?.includes(m.modulo) ?? false))
   const { toggleCalculator, isOpen: isCalculatorOpen } = useCalculatorStore()
 
   // ── Collapse ─────────────────────────────────────────────────────────────────
@@ -322,7 +329,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
           )}
 
           <nav className={cn('space-y-0.5', isCollapsed ? 'mb-4' : 'mb-5')}>
-            {MODULES.map(mod => {
+            {visibleModules.map(mod => {
               const modActive = mod.matchPaths.some(p => isActive(p))
               const Icon = mod.icon
 

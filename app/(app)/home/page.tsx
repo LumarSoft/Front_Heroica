@@ -4,12 +4,14 @@ import { useRouter } from 'next/navigation'
 import { Building2, Users, ArrowRight, DollarSign, BarChart2, FileCheck, Briefcase, TrendingUp } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
+import { MODULOS } from '@/lib/constants'
 
 // ─── Module cards ─────────────────────────────────────────────────────────────
 
 const MODULES = [
   {
     id: 'tesoreria',
+    modulo: MODULOS.TESORERIA,
     label: 'Tesorería',
     description: 'Gestión de sucursales, cajas, pagos y reportes financieros.',
     icon: Building2,
@@ -25,6 +27,7 @@ const MODULES = [
   },
   {
     id: 'recursos-humanos',
+    modulo: MODULOS.RECURSOS_HUMANOS,
     label: 'Recursos Humanos',
     description: 'Gestión de empleados, nómina y liquidaciones de personal.',
     icon: Users,
@@ -54,6 +57,9 @@ function getGreeting() {
 export default function HomePage() {
   const router = useRouter()
   const user = useAuthStore(state => state.user)
+  const isSuperAdmin = useAuthStore(state => state.isSuperAdmin())
+  // Solo se muestran las cards de los módulos a los que el usuario tiene acceso
+  const visibleModules = MODULES.filter(m => isSuperAdmin || (user?.modulos?.includes(m.modulo) ?? false))
 
   return (
     <div className="min-h-full flex flex-col bg-gradient-to-br from-[#F0F5FF] via-[#F8FAFF] to-white">
@@ -72,7 +78,7 @@ export default function HomePage() {
 
         {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-2xl">
-          {MODULES.map(mod => {
+          {visibleModules.map(mod => {
             const Icon = mod.icon
             return (
               <button

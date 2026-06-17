@@ -232,7 +232,7 @@ export default function AnaliticoGlobalPage() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#EEF2FB" />
                       <XAxis dataKey="periodo" tick={{ fontSize: 12, fill: '#7A93BB' }} />
                       <YAxis tick={{ fontSize: 12, fill: '#7A93BB' }} width={70} tickFormatter={v => formatMonto(v)} />
-                      <Tooltip formatter={(v: number) => formatMonto(v)} />
+                      <Tooltip formatter={v => formatMonto(Number(v))} />
                       <Area
                         type="monotone"
                         dataKey="sueldoPromedio"
@@ -279,7 +279,10 @@ export default function AnaliticoGlobalPage() {
                         cx="50%"
                         cy="50%"
                         outerRadius={100}
-                        label={entry => `${entry.area}: ${entry.cantidad}`}
+                        label={props => {
+                          const e = props as { area?: string; cantidad?: number }
+                          return `${e.area}: ${e.cantidad}`
+                        }}
                         labelLine={false}
                       >
                         {data.distribucionArea.map((_, i) => (
@@ -306,7 +309,10 @@ export default function AnaliticoGlobalPage() {
                         cx="50%"
                         cy="50%"
                         outerRadius={100}
-                        label={entry => `${entry.puesto}: ${entry.cantidad}`}
+                        label={props => {
+                          const e = props as { puesto?: string; cantidad?: number }
+                          return `${e.puesto}: ${e.cantidad}`
+                        }}
                         labelLine={false}
                       >
                         {data.distribucionPuesto.map((_, i) => (
@@ -334,7 +340,7 @@ export default function AnaliticoGlobalPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#EEF2FB" />
                     <XAxis type="number" tick={{ fontSize: 12, fill: '#7A93BB' }} tickFormatter={v => formatMonto(v)} />
                     <YAxis type="category" dataKey="puesto" tick={{ fontSize: 12, fill: '#002868' }} width={130} />
-                    <Tooltip formatter={(v: number) => formatMonto(v)} />
+                    <Tooltip formatter={v => formatMonto(Number(v))} />
                     <Bar dataKey="sueldoPromedio" name="Sueldo base prom." fill="#2F5BBD" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
