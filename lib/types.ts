@@ -58,6 +58,9 @@ export interface PagoPendiente {
   subcategoria_id?: number
   descripcion_nombre?: string
   proveedor_nombre?: string
+  sucursal_id?: number
+  sucursal_nombre?: string
+  moneda?: 'ARS' | 'USD'
   estado: 'pendiente' | 'aprobado' | 'rechazado' | 'completado'
   prioridad: 'baja' | 'media' | 'alta'
   tipo?: string
