@@ -4,8 +4,34 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
-import { formatFecha } from '@/lib/formatters'
+import { formatFecha, formatMonto } from '@/lib/formatters'
 import type { PagoPendiente } from '@/lib/types'
+
+/**
+ * Devuelve una etiqueta legible para identificar el pago en la notificación.
+ * El `concepto` es un campo libre que muchas veces queda vacío; en ese caso
+ * caemos en la descripción o el proveedor para que la clienta sepa qué se aprobó.
+ */
+function etiquetaPago(p: PagoPendiente): string {
+  const candidato = [p.concepto, p.descripcion_nombre, p.proveedor_nombre]
+    .map(v => (v ?? '').trim())
+    .find(v => v.length > 0)
+  return candidato ?? `Pago #${p.id}`
+}
+
+/**
+ * Línea de contexto (descripción + sucursal + monto) para que, entre tantos
+ * pagos y sucursales, la clienta ubique de inmediato cuál fue aprobado.
+ * La descripción solo se agrega si aporta algo distinto al título (`etiqueta`).
+ */
+function contextoPago(p: PagoPendiente, etiqueta: string): string {
+  const partes: string[] = []
+  const desc = (p.descripcion_nombre ?? '').trim()
+  if (desc && desc !== etiqueta.trim()) partes.push(desc)
+  if (p.sucursal_nombre) partes.push(p.sucursal_nombre)
+  if (p.monto != null) partes.push(formatMonto(p.monto, p.moneda ?? 'ARS'))
+  return partes.join(' · ')
+}
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
 export interface TrackedPago {
@@ -124,21 +150,24 @@ export function useEmployeeNotifications(userId: number | undefined, sucursalId:
         const fechaActual = normalizeDate(item.fecha ?? '')
         const fechaCambio = fechaOriginal && fechaOriginal !== fechaActual
 
+        const etiqueta = etiquetaPago(item)
+        const contexto = contextoPago(item, etiqueta)
+
         // ── Toast según estado ──
         if (estado === 'aprobado') {
-          if (fechaCambio) {
-            toast.success(`Tu pago "${item.concepto}" fue aprobado`, {
-              description: `La fecha fue cambiada del ${formatFecha(fechaOriginal!)} al ${formatFecha(fechaActual)}.`,
-              duration: 9000,
-            })
-          } else {
-            toast.success(`Tu pago "${item.concepto}" fue aprobado por el administrador.`, {
-              duration: 7000,
-            })
-          }
+          const lineaCambioFecha = fechaCambio
+            ? `La fecha fue cambiada del ${formatFecha(fechaOriginal!)} al ${formatFecha(fechaActual)}.`
+            : ''
+          const description = [contexto, lineaCambioFecha].filter(Boolean).join('\n')
+          toast.success(`Pago aprobado: ${etiqueta}`, {
+            description: description || undefined,
+            duration: fechaCambio ? 9000 : 7000,
+          })
         } else {
-          toast.error(`Tu pago "${item.concepto}" fue rechazado.`, {
-            description: item.motivo_rechazo ? `Motivo: ${item.motivo_rechazo}` : 'Sin motivo especificado.',
+          const motivo = item.motivo_rechazo ? `Motivo: ${item.motivo_rechazo}` : 'Sin motivo especificado.'
+          const description = [contexto, motivo].filter(Boolean).join('\n')
+          toast.error(`Pago rechazado: ${etiqueta}`, {
+            description,
             duration: 9000,
           })
         }
