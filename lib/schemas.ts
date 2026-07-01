@@ -1,4 +1,21 @@
 import { z } from 'zod'
+import { isValidCuit, cuitToDigits } from './validators'
+
+// ── CBU / CVU ─────────────────────────────────────────────────────────────
+export const CBU_DIGITOS = 22
+
+// Para campos CBU obligatorios (ej: cuentas bancarias de sucursal)
+export const cbuRequeridoSchema = z
+  .string()
+  .regex(/^\d+$/, 'El CBU o CVU solo debe contener dígitos')
+  .length(CBU_DIGITOS, `El CBU o CVU debe tener exactamente ${CBU_DIGITOS} dígitos`)
+
+// Para campos CBU opcionales (ej: datos bancarios de un empleado)
+export const cbuOpcionalSchema = z
+  .string()
+  .refine(val => val === '' || (val.length === CBU_DIGITOS && /^\d+$/.test(val)), {
+    message: `El CBU o CVU debe tener exactamente ${CBU_DIGITOS} dígitos`,
+  })
 
 // ── Login ──────────────────────────────────────────────────────────────────
 export const loginSchema = z.object({
@@ -11,7 +28,7 @@ export type LoginFormValues = z.infer<typeof loginSchema>
 export const sucursalSchema = z.object({
   nombre: z.string().min(1, 'El nombre es obligatorio'),
   razon_social: z.string().optional(),
-  cuit: z.union([z.string().regex(/^\d{2}-\d{8}-\d$/, 'CUIT inválido (XX-XXXXXXXX-X)'), z.literal('')]),
+  cuit: z.union([z.string().refine(v => isValidCuit(v), 'El CUIT debe tener exactamente 11 dígitos'), z.literal('')]),
   direccion: z.string().optional(),
 })
 export type SucursalFormValues = z.infer<typeof sucursalSchema>

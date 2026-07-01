@@ -1,0 +1,483 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams, useSearchParams } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
+import { useCajaData } from '@/hooks/use-caja-data'
+import { formatMonto, calcularTotal } from '@/lib/formatters'
+import { ContentLoadingSpinner } from '@/components/ui/loading-spinner'
+import { ErrorBanner } from '@/components/ui/error-banner'
+import { AccessDenied } from '@/components/ui/access-denied'
+import { useAuthStore } from '@/store/authStore'
+import { BancoParcial } from '@/lib/types'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { PageHeader } from '@/components/caja/PageHeader'
+import { CajaTabs, TabsContent } from '@/components/caja/CajaTabs'
+import { TransactionTable, getBancoColumns } from '@/components/caja/TransactionTable'
+import { PaymentCalendar } from '@/components/caja/PaymentCalendar'
+import { DetailsDialog, StateDialog, DeleteDialog, DeudaDialog } from '@/components/caja/TransactionDialogs'
+import { MoverMovimientoDialog } from '@/components/caja/MoverMovimientoDialog'
+import { BulkMoverDialog } from '@/components/caja/BulkMoverDialog'
+import { EndDateFilter } from '@/components/caja/EndDateFilter'
+import { API_ENDPOINTS } from '@/lib/config'
+import { apiFetch } from '@/lib/api'
+import { AlertTriangle } from 'lucide-react'
+import { toast } from 'sonner'
+import { downloadBlob, toDateOnly } from '@/lib/downloadBlob'
+
+const columns = getBancoColumns()
+
+export default function CajaBancoPage() {
+  const params = useParams()
+  const user = useAuthStore(state => state.user)
+  const searchParams = useSearchParams()
+  const moneda = (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS'
+  const caja = useCajaData('banco', moneda)
+  const [selectedBanco, setSelectedBanco] = useState<BancoParcial | null>(null)
+  const [isBancoDialogOpen, setIsBancoDialogOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('real')
+  const [viewMode, setViewMode] = useState<'tabla' | 'calendario'>('tabla')
+  const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null)
+  const [sucursalNombre, setSucursalNombre] = useState('')
+  const [isExporting, setIsExporting] = useState(false)
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
+  const [exportTipo, setExportTipo] = useState<'todos' | 'ingresos' | 'egresos'>('todos')
+  const [isBulkMoverDialogOpen, setIsBulkMoverDialogOpen] = useState(false)
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false)
+  const [bulkSelectedIds, setBulkSelectedIds] = useState<number[]>([])
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false)
+
+  const handleBulkDelete = (ids: number[]) => {
+    setBulkSelectedIds(ids)
+    setIsBulkDeleteDialogOpen(true)
+  }
+
+  const handleBulkDeleteConfirm = async () => {
+    setIsBulkDeleting(true)
+    try {
+      const res = await apiFetch(API_ENDPOINTS.CAJA_BANCO.BULK_DELETE, {
+        method: 'DELETE',
+        body: JSON.stringify({ ids: bulkSelectedIds }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(data.message)
+        caja.fetchMovimientos()
+        setIsBulkDeleteDialogOpen(false)
+      } else {
+        toast.error(data.message || 'Error al eliminar.')
+      }
+    } catch {
+      toast.error('Error de red al eliminar.')
+    } finally {
+      setIsBulkDeleting(false)
+    }
+  }
+
+  const handleBulkMove = (ids: number[]) => {
+    setBulkSelectedIds(ids)
+    setIsBulkMoverDialogOpen(true)
+  }
+
+  const handleExportConfirm = async () => {
+    setIsExportDialogOpen(false)
+    setIsExporting(true)
+    try {
+      const qp = new URLSearchParams({ moneda })
+      if (caja.dateRange?.from) qp.set('fechaInicio', toDateOnly(caja.dateRange.from))
+      if (caja.dateRange?.to) qp.set('fechaFin', toDateOnly(caja.dateRange.to))
+      if (caja.searchText) qp.set('searchText', caja.searchText)
+      if (caja.filtroDeuda !== 'todos') qp.set('filtroDeuda', caja.filtroDeuda)
+      if (caja.bancosFiltro.length > 0) qp.set('bancos', caja.bancosFiltro.join(','))
+      if (caja.filtroChequesPendientes) qp.set('filtroChequesPendientes', 'true')
+      if (exportTipo !== 'todos') qp.set('tipoMovimiento', exportTipo === 'ingresos' ? 'ingreso' : 'egreso')
+
+      const url = `${API_ENDPOINTS.CAJA_BANCO.EXPORT_EXCEL(Number(params.id))}?${qp.toString()}`
+      const res = await apiFetch(url)
+      if (!res.ok) throw new Error('Error en la respuesta del servidor')
+      const blob = await res.blob()
+      downloadBlob(blob, `${sucursalNombre}.xlsx`)
+    } catch {
+      toast.error('Error al exportar el Excel.')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  // Verificar si la sucursal está activa
+  useEffect(() => {
+    if (!params.id) return
+    apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)))
+      .then(r => r.json())
+      .then(d => {
+        setSucursalActiva(Boolean(d.data?.activo))
+        setSucursalNombre(d.data?.nombre || '')
+      })
+      .catch(() => setSucursalActiva(true))
+  }, [params.id])
+
+  const { hasPermiso } = useAuthStore()
+  const isGlobalReadOnly = sucursalActiva === false
+
+  const canCrear = !isGlobalReadOnly && hasPermiso('crear_movimientos')
+  const canEditInfo = !isGlobalReadOnly && hasPermiso('editar_movimientos')
+  const canAddComment = !isGlobalReadOnly && hasPermiso('agregar_comentarios')
+  const canDelete = !isGlobalReadOnly && hasPermiso('eliminar_movimientos')
+  const canChangeState = !isGlobalReadOnly && hasPermiso('aprobar_movimientos')
+  const canToggleDeuda = canCrear // because creating mirror debt acts as "crear"
+
+  const isStrictlyReadOnly = isGlobalReadOnly || (!canEditInfo && !canAddComment)
+
+  const { initialize } = caja
+  useEffect(() => {
+    if (user?.rol === 'empleado') return
+    initialize()
+  }, [user?.rol, initialize])
+
+  const bancoNeto = Number(selectedBanco?.total_real ?? 0) + Number(selectedBanco?.total_necesario ?? 0)
+
+  return (
+    <div className="min-h-full bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col h-full">
+        {user?.rol === 'empleado' ? (
+          <AccessDenied resource="la caja de bancos" backUrl={`/sucursales/${params.id}`} />
+        ) : (
+          <div className="flex flex-col space-y-6 flex-grow">
+            {/* Mensajes */}
+            <ErrorBanner error={caja.error} />
+
+            {isStrictlyReadOnly && !isGlobalReadOnly && (
+              <div className="mb-4 p-4 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+                <p className="text-sm text-indigo-800 font-medium">
+                  Modo lectura. Solo puedes visualizar los movimientos.
+                </p>
+              </div>
+            )}
+
+            {/* Banner solo lectura */}
+            {isGlobalReadOnly && (
+              <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <p className="text-sm text-amber-800 font-medium">
+                  Esta sucursal está <strong>inactiva</strong>. Podés ver los datos pero no crear ni modificar
+                  movimientos.
+                </p>
+              </div>
+            )}
+
+            {/* Cabecera */}
+            <PageHeader
+              title={`Caja Bancos — ${moneda}`}
+              subtitle={`Gestión de saldos y movimientos bancarios (${moneda})`}
+              onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
+              onExport={() => setIsExportDialogOpen(true)}
+              isExporting={isExporting}
+              isReadOnly={!canCrear}
+              sucursalId={Number(params.id)}
+            />
+
+            {caja.isLoading ? (
+              <ContentLoadingSpinner />
+            ) : (
+              <>
+                {/* Parciales por Banco */}
+                {caja.parciales.length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold text-[#002868] mb-3">Parciales por Banco</h3>
+                    <div className="flex flex-wrap gap-2 lg:flex-nowrap lg:overflow-x-auto pb-2">
+                      {caja.parciales.map(p => (
+                        <Card
+                          key={p.banco_id || 'otros'}
+                          className="border-[#E0E0E0] shadow-sm hover:shadow-lg hover:border-[#002868]/40 transition-all cursor-pointer min-w-[140px] flex-1 group"
+                          onClick={() => {
+                            setSelectedBanco(p)
+                            setIsBancoDialogOpen(true)
+                          }}
+                        >
+                          <CardContent className="p-4 flex items-center justify-center">
+                            <span
+                              className="text-sm font-bold text-[#002868] group-hover:text-[#003d8f] transition-colors truncate"
+                              title={p.banco_nombre || 'OTROS'}
+                            >
+                              {p.banco_nombre || 'OTROS'}
+                            </span>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tabs + Tablas */}
+                <EndDateFilter
+                  dateRange={caja.dateRange}
+                  onDateRangeChange={caja.setDateRange}
+                  onLimpiar={caja.limpiarFiltros}
+                  hayFiltro={caja.hayFiltroActivo}
+                  bancos={caja.bancos}
+                  bancosSeleccionados={caja.bancosFiltro}
+                  onBancosChange={caja.setBancosFiltro}
+                  searchText={caja.searchText}
+                  onSearchTextChange={caja.setSearchText}
+                  filtroDeuda={caja.filtroDeuda}
+                  onFiltroDeudeChange={caja.setFiltroDeuda}
+                  filtroChequesPendientes={caja.filtroChequesPendientes}
+                  onFiltroChequesPendientesChange={caja.setFiltroChequesPendientes}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                />
+                <CajaTabs
+                  saldoReal={caja.saldoRealFiltrado}
+                  saldoNecesario={caja.saldoNecesarioSinDeudaFiltrado}
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                >
+                  <TabsContent value="real" className="mt-0 outline-none flex-grow">
+                    {viewMode === 'calendario' ? (
+                      <PaymentCalendar
+                        title="Saldo Real"
+                        description="Movimientos de banco confirmados."
+                        transactions={caja.saldoRealFiltrado}
+                        columns={columns}
+                        onViewDetails={caja.handleOpenDetails}
+                        onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
+                        onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                        onMove={canCrear ? caja.handleOpenMover : undefined}
+                        onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                        onBulkMove={canCrear ? handleBulkMove : undefined}
+                        isReadOnly={isStrictlyReadOnly}
+                      />
+                    ) : (
+                      <TransactionTable
+                        title="Saldo Real"
+                        description="Movimientos de banco confirmados para el periodo actual."
+                        transactions={caja.saldoRealFiltrado}
+                        columns={columns}
+                        onViewDetails={caja.handleOpenDetails}
+                        onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
+                        onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                        onMove={canCrear ? caja.handleOpenMover : undefined}
+                        onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                        onBulkMove={canCrear ? handleBulkMove : undefined}
+                        isReadOnly={isStrictlyReadOnly}
+                      />
+                    )}
+                  </TabsContent>
+                  <TabsContent value="necesario" className="mt-0 outline-none flex-grow">
+                    {viewMode === 'calendario' ? (
+                      <PaymentCalendar
+                        title="Saldo Necesario"
+                        description="Pagos y compromisos programados que impactarán en bancos."
+                        transactions={caja.saldoNecesarioFiltrado}
+                        columns={columns}
+                        onViewDetails={caja.handleOpenDetails}
+                        onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
+                        onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                        onToggleDeuda={canToggleDeuda ? caja.handleOpenDeuda : undefined}
+                        onMove={canCrear ? caja.handleOpenMover : undefined}
+                        onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                        onBulkMove={canCrear ? handleBulkMove : undefined}
+                        isReadOnly={isStrictlyReadOnly}
+                      />
+                    ) : (
+                      <TransactionTable
+                        title="Saldo Necesario"
+                        description="Pagos y compromisos programados que impactarán en bancos."
+                        transactions={caja.saldoNecesarioFiltrado}
+                        customTotal={
+                          calcularTotal(caja.saldoRealFiltrado) + calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
+                        }
+                        columns={columns}
+                        onViewDetails={caja.handleOpenDetails}
+                        onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
+                        onDelete={canDelete ? caja.handleOpenDelete : undefined}
+                        onToggleDeuda={canToggleDeuda ? caja.handleOpenDeuda : undefined}
+                        onMove={canCrear ? caja.handleOpenMover : undefined}
+                        onBulkDelete={canDelete ? handleBulkDelete : undefined}
+                        onBulkMove={canCrear ? handleBulkMove : undefined}
+                        isReadOnly={isStrictlyReadOnly}
+                      />
+                    )}
+                  </TabsContent>
+                </CajaTabs>
+              </>
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* Dialogs */}
+      <DetailsDialog
+        open={caja.isDetailsDialogOpen}
+        onOpenChange={caja.setIsDetailsDialogOpen}
+        formData={caja.formData}
+        onInputChange={caja.handleInputChange}
+        onSave={caja.handleSaveDetails}
+        isSaving={caja.isSaving}
+        categorias={caja.categorias}
+        subcategorias={caja.subcategorias}
+        bancos={caja.bancos}
+        mediosPago={caja.mediosPago}
+        descripciones={caja.descripciones}
+        proveedores={caja.proveedores}
+        showBancoFields={true}
+        isReadOnly={isStrictlyReadOnly}
+        canEditInfo={canEditInfo}
+        canEditComment={canAddComment}
+        movimientoId={caja.selectedTransaction?.id}
+        cajaTipo="banco"
+      />
+
+      <StateDialog
+        open={caja.isStateDialogOpen}
+        onOpenChange={caja.setIsStateDialogOpen}
+        nuevoEstado={caja.nuevoEstado}
+        onEstadoChange={caja.setNuevoEstado}
+        onSave={caja.handleSaveStateChange}
+        isSaving={caja.isSaving}
+      />
+
+      <DeleteDialog
+        open={caja.isDeleteDialogOpen}
+        onOpenChange={caja.setIsDeleteDialogOpen}
+        onConfirm={caja.handleDelete}
+        isSaving={caja.isSaving}
+      />
+
+      <DeleteDialog
+        open={isBulkDeleteDialogOpen}
+        onOpenChange={setIsBulkDeleteDialogOpen}
+        onConfirm={handleBulkDeleteConfirm}
+        isSaving={isBulkDeleting}
+        count={bulkSelectedIds.length}
+      />
+
+      <DeudaDialog
+        open={caja.isDeudaDialogOpen}
+        onOpenChange={caja.setIsDeudaDialogOpen}
+        transaction={caja.selectedTransaction}
+        onSave={caja.handleSaveDeuda}
+        isSaving={caja.isSaving}
+      />
+
+      <NuevoMovimientoDialog
+        isOpen={caja.isNuevoMovimientoDialogOpen}
+        onClose={() => caja.setIsNuevoMovimientoDialogOpen(false)}
+        sucursalId={caja.sucursalId}
+        onSuccess={() => {
+          caja.fetchMovimientos()
+          caja.fetchDescripciones()
+        }}
+        cajaTipo="banco"
+        moneda={moneda}
+        categoriasExternas={caja.categorias}
+        bancosExternos={caja.bancos}
+        mediosPagoExternos={caja.mediosPago}
+        descripcionesExternas={caja.descripciones}
+        proveedoresExternas={caja.proveedores}
+        parcialesBancos={caja.parciales}
+      />
+
+      <MoverMovimientoDialog
+        open={caja.isMoverMovimientoDialogOpen}
+        onOpenChange={caja.setIsMoverMovimientoDialogOpen}
+        transaction={caja.selectedTransaction}
+        currentSucursalId={caja.sucursalId}
+        onSuccess={caja.fetchMovimientos}
+        bancosExternos={caja.bancos}
+        mediosPagoExternos={caja.mediosPago}
+      />
+
+      <BulkMoverDialog
+        open={isBulkMoverDialogOpen}
+        onOpenChange={setIsBulkMoverDialogOpen}
+        selectedIds={bulkSelectedIds}
+        currentSucursalId={caja.sucursalId}
+        cajaTipo="banco"
+        onSuccess={caja.fetchMovimientos}
+        bancosExternos={caja.bancos}
+        mediosPagoExternos={caja.mediosPago}
+      />
+
+      {/* Dialog de opciones de exportación */}
+      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[#002868] text-xl">Exportar Excel</DialogTitle>
+            <DialogDescription>Elegí qué movimientos exportar</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {(['todos', 'ingresos', 'egresos'] as const).map(opcion => (
+              <label
+                key={opcion}
+                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${exportTipo === opcion ? 'border-[#002868] bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+              >
+                <input
+                  type="radio"
+                  name="exportTipo"
+                  value={opcion}
+                  checked={exportTipo === opcion}
+                  onChange={() => setExportTipo(opcion)}
+                  className="accent-[#002868]"
+                />
+                <span className="font-medium capitalize text-sm text-gray-700">
+                  {opcion === 'todos' ? 'Todo' : opcion === 'ingresos' ? 'Solo Ingresos' : 'Solo Egresos'}
+                </span>
+              </label>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleExportConfirm} className="bg-[#002868] hover:bg-[#003d8f] text-white">
+              Exportar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de detalle de banco */}
+      <Dialog open={isBancoDialogOpen} onOpenChange={setIsBancoDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[#002868] text-xl">{selectedBanco?.banco_nombre || 'OTROS'}</DialogTitle>
+            <DialogDescription>Detalle de saldos del banco</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            {/* Saldo Real */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+              <span className="text-sm font-medium text-[#666666] uppercase tracking-wide">Saldo Real</span>
+              <span
+                className={`text-lg font-bold ${Number(selectedBanco?.total_real) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
+              >
+                {formatMonto(selectedBanco?.total_real ?? 0)}
+              </span>
+            </div>
+            {/* Compromisos pendientes */}
+            <div className="flex items-center justify-between px-4 py-2 rounded-xl border border-dashed border-[#E0E0E0]">
+              <span className="text-xs font-medium text-[#888888] uppercase tracking-wide">Compromisos pendientes</span>
+              <span
+                className={`text-sm font-semibold ${Number(selectedBanco?.total_necesario) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
+              >
+                {formatMonto(selectedBanco?.total_necesario ?? 0)}
+              </span>
+            </div>
+            {/* Saldo proyectado = real + necesario (ya negativos los egresos) */}
+            <div
+              className={`flex items-center justify-between p-4 rounded-xl border-2 ${bancoNeto >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}
+            >
+              <span className="text-sm font-bold text-[#333] uppercase tracking-wide">Saldo Necesario</span>
+              <span className={`text-lg font-bold ${bancoNeto >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                {formatMonto(bancoNeto)}
+              </span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}

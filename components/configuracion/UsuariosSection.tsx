@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { Trash2, Building2, ChevronDown, ChevronUp, ShieldCheck, Lock, KeyRound } from 'lucide-react'
+import { Trash2, Building2, ChevronDown, ChevronUp, ShieldCheck, Lock, KeyRound, Boxes } from 'lucide-react'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
@@ -45,12 +45,20 @@ interface Sucursal {
   two_factor_enabled?: boolean
 }
 
+interface Modulo {
+  id: number
+  clave: string
+  nombre: string
+  descripcion?: string
+}
+
 interface UsuarioForm {
   email: string
   password: string
   nombre: string
   rol_id: number | ''
   sucursal_ids: number[]
+  modulo_ids: number[]
   must_change_password: boolean
 }
 
@@ -60,6 +68,7 @@ const DEFAULT_FORM: UsuarioForm = {
   nombre: '',
   rol_id: '',
   sucursal_ids: [],
+  modulo_ids: [],
   must_change_password: true,
 }
 
@@ -100,6 +109,7 @@ export function UsuariosSection() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [roles, setRoles] = useState<Rol[]>([])
   const [sucursales, setSucursales] = useState<Sucursal[]>([])
+  const [modulos, setModulos] = useState<Modulo[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   // Create dialog
@@ -108,12 +118,19 @@ export function UsuariosSection() {
   const [isSaving, setIsSaving] = useState(false)
   const [formError, setFormError] = useState('')
   const [showSucursales, setShowSucursales] = useState(false)
+  const [showModulos, setShowModulos] = useState(false)
 
   // Sucursales dialog (editar sucursales de usuario existente)
   const [sucursalesDialogOpen, setSucursalesDialogOpen] = useState(false)
   const [editingSucursalesUser, setEditingSucursalesUser] = useState<Usuario | null>(null)
   const [sucursalesSeleccionadas, setSucursalesSeleccionadas] = useState<number[]>([])
   const [isSavingSucursales, setIsSavingSucursales] = useState(false)
+
+  // Módulos dialog (editar módulos de usuario existente)
+  const [modulosDialogOpen, setModulosDialogOpen] = useState(false)
+  const [editingModulosUser, setEditingModulosUser] = useState<Usuario | null>(null)
+  const [modulosSeleccionados, setModulosSeleccionados] = useState<number[]>([])
+  const [isSavingModulos, setIsSavingModulos] = useState(false)
 
   // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -132,15 +149,22 @@ export function UsuariosSection() {
   const fetchAll = async () => {
     setIsLoading(true)
     try {
-      const [resUsuarios, resRoles, resSucursales] = await Promise.all([
+      const [resUsuarios, resRoles, resSucursales, resModulos] = await Promise.all([
         apiFetch(API_ENDPOINTS.CONFIGURACION.USUARIOS.GET_ALL),
         apiFetch(API_ENDPOINTS.CONFIGURACION.ROLES.GET_ALL),
         apiFetch(API_ENDPOINTS.SUCURSALES.GET_ALL),
+        apiFetch(API_ENDPOINTS.CONFIGURACION.MODULOS.GET_ALL),
       ])
-      const [dataU, dataR, dataS] = await Promise.all([resUsuarios.json(), resRoles.json(), resSucursales.json()])
+      const [dataU, dataR, dataS, dataM] = await Promise.all([
+        resUsuarios.json(),
+        resRoles.json(),
+        resSucursales.json(),
+        resModulos.json(),
+      ])
       if (dataU.success) setUsuarios(dataU.data)
       if (dataR.success) setRoles(dataR.data)
       if (dataS.success) setSucursales(dataS.data)
+      if (dataM.success) setModulos(dataM.data)
     } catch {
       toast.error('Error al cargar datos')
     } finally {
@@ -168,6 +192,7 @@ export function UsuariosSection() {
           nombre: form.nombre,
           rol_id: Number(form.rol_id),
           sucursal_ids: form.sucursal_ids,
+          modulo_ids: form.modulo_ids,
           must_change_password: form.must_change_password,
         }),
       })
@@ -282,6 +307,53 @@ export function UsuariosSection() {
     }
   }
 
+  const openModulosDialog = async (usuario: Usuario) => {
+    setEditingModulosUser(usuario)
+    try {
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.USUARIOS.GET_MODULOS(usuario.id))
+      const data = await res.json()
+      if (data.success) {
+        setModulosSeleccionados(data.data.map((m: Modulo) => m.id))
+      }
+    } catch {
+      setModulosSeleccionados([])
+    }
+    setModulosDialogOpen(true)
+  }
+
+  const handleSaveModulos = async () => {
+    if (!editingModulosUser) return
+    setIsSavingModulos(true)
+    try {
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.USUARIOS.UPDATE_MODULOS(editingModulosUser.id), {
+        method: 'PUT',
+        body: JSON.stringify({ modulo_ids: modulosSeleccionados }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success('Módulos actualizados. El usuario verá los cambios al volver a iniciar sesión.')
+        setModulosDialogOpen(false)
+      } else {
+        toast.error(data.message || 'Error al actualizar módulos')
+      }
+    } catch {
+      toast.error('Error al actualizar módulos')
+    } finally {
+      setIsSavingModulos(false)
+    }
+  }
+
+  const toggleModuloForm = (id: number) => {
+    setForm(prev => ({
+      ...prev,
+      modulo_ids: prev.modulo_ids.includes(id) ? prev.modulo_ids.filter(m => m !== id) : [...prev.modulo_ids, id],
+    }))
+  }
+
+  const toggleModuloEdit = (id: number) => {
+    setModulosSeleccionados(prev => (prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]))
+  }
+
   const toggleSucursalForm = (id: number) => {
     setForm(prev => ({
       ...prev,
@@ -378,7 +450,6 @@ export function UsuariosSection() {
                     className={`px-4 sm:px-6 py-3.5 sm:py-4 transition-colors ${usuario.activo ? 'hover:bg-gray-50/80' : 'bg-gray-50/50'}`}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4">
-
                       {/* Avatar + Info */}
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div
@@ -392,7 +463,9 @@ export function UsuariosSection() {
                           {/* Línea 1: nombre + rol + estado activo */}
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="font-semibold text-[#1A1A1A] text-sm truncate">{usuario.nombre}</span>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 ${badgeClass}`}>
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 ${badgeClass}`}
+                            >
                               {badgeLabel}
                             </span>
                             {!usuario.activo && (
@@ -458,6 +531,15 @@ export function UsuariosSection() {
                               className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md text-[#555] hover:text-[#002868] hover:bg-[#EEF2FF] transition-colors cursor-pointer flex-shrink-0"
                             >
                               <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            </button>
+
+                            <button
+                              id={`btn-modulos-${usuario.id}`}
+                              onClick={() => openModulosDialog(usuario)}
+                              title="Gestionar módulos"
+                              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md text-[#555] hover:text-[#002868] hover:bg-[#EEF2FF] transition-colors cursor-pointer flex-shrink-0"
+                            >
+                              <Boxes className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
 
                             <Switch
@@ -636,6 +718,53 @@ export function UsuariosSection() {
               )}
             </div>
 
+            {/* Módulos — colapsable */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowModulos(!showModulos)}
+                className="flex items-center gap-2 w-full text-left"
+              >
+                <Label className="text-xs font-semibold text-[#5A6070] uppercase tracking-wider cursor-pointer">
+                  Módulos habilitados
+                </Label>
+                <span className="text-xs text-[#002868] ml-auto flex items-center gap-1 font-medium">
+                  {form.modulo_ids.length > 0
+                    ? `${form.modulo_ids.length} habilitado${form.modulo_ids.length !== 1 ? 's' : ''}`
+                    : 'Ninguno'}
+                  {showModulos ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </span>
+              </button>
+
+              {showModulos && (
+                <div className="mt-2 border border-[#E0E0E0] rounded-lg overflow-hidden">
+                  <div className="p-2 bg-[#F8F9FA] border-b border-[#E8E8E8]">
+                    <p className="text-xs text-[#777]">
+                      Definí a qué áreas del sistema entra (independiente del rol). Sin selección = sin acceso a
+                      módulos.
+                    </p>
+                  </div>
+                  <div className="max-h-36 overflow-y-auto divide-y divide-[#F5F5F5]">
+                    {modulos.map(m => (
+                      <div
+                        key={m.id}
+                        className="flex items-center gap-2.5 px-3 py-2 hover:bg-[#F8F9FA] cursor-pointer"
+                        onClick={() => toggleModuloForm(m.id)}
+                      >
+                        <Checkbox
+                          id={`mod-form-${m.id}`}
+                          checked={form.modulo_ids.includes(m.id)}
+                          onCheckedChange={() => toggleModuloForm(m.id)}
+                          className="border-[#C0C0C0] data-[state=checked]:bg-[#002868] data-[state=checked]:border-[#002868]"
+                        />
+                        <span className="text-sm text-[#1A1A1A]">{m.nombre}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {formError && <p className="text-sm text-rose-600">{formError}</p>}
           </div>
 
@@ -718,6 +847,72 @@ export function UsuariosSection() {
                 className="bg-[#002868] hover:bg-[#003d8f] text-white"
               >
                 {isSavingSucursales ? 'Guardando...' : 'Guardar'}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Gestionar módulos de usuario existente */}
+      <Dialog open={modulosDialogOpen} onOpenChange={setModulosDialogOpen}>
+        <DialogContent className="sm:max-w-[440px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
+          <div className="px-7 pt-7 pb-4 border-b border-[#F0F0F0]">
+            <DialogHeader className="p-0">
+              <DialogTitle className="text-xl font-bold text-[#1A1A1A]">
+                Módulos de {editingModulosUser?.nombre}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
+                Definí a qué áreas del sistema entra este usuario. Es independiente del rol: el rol define qué puede
+                hacer; el módulo, dónde.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="px-7 py-5">
+            <div className="border border-[#E0E0E0] rounded-lg overflow-hidden divide-y divide-[#F5F5F5]">
+              {modulos.map(m => (
+                <div
+                  key={m.id}
+                  className="flex items-start gap-3 px-4 py-2.5 hover:bg-[#F8F9FA] cursor-pointer transition-colors"
+                  onClick={() => toggleModuloEdit(m.id)}
+                >
+                  <Checkbox
+                    id={`mod-edit-${m.id}`}
+                    checked={modulosSeleccionados.includes(m.id)}
+                    onCheckedChange={() => toggleModuloEdit(m.id)}
+                    className="mt-0.5 border-[#C0C0C0] data-[state=checked]:bg-[#002868] data-[state=checked]:border-[#002868]"
+                  />
+                  <div>
+                    <span className="text-sm text-[#1A1A1A] font-medium">{m.nombre}</span>
+                    {m.descripcion && <p className="text-xs text-[#8A8F9C]">{m.descripcion}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-[#999] mt-2 text-center">
+              {modulosSeleccionados.length > 0
+                ? `${modulosSeleccionados.length} módulo${modulosSeleccionados.length !== 1 ? 's' : ''} habilitado${modulosSeleccionados.length !== 1 ? 's' : ''}`
+                : 'Sin acceso a módulos'}
+            </p>
+          </div>
+
+          <div className="px-7 py-4 border-t border-[#F0F0F0] bg-[#FAFBFC]">
+            <DialogFooter className="gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setModulosDialogOpen(false)}
+                disabled={isSavingModulos}
+                className="border-[#E0E0E0] text-[#5A6070]"
+              >
+                Cancelar
+              </Button>
+              <Button
+                id="btn-guardar-modulos"
+                onClick={handleSaveModulos}
+                disabled={isSavingModulos}
+                className="bg-[#002868] hover:bg-[#003d8f] text-white"
+              >
+                {isSavingModulos ? 'Guardando...' : 'Guardar'}
               </Button>
             </DialogFooter>
           </div>
