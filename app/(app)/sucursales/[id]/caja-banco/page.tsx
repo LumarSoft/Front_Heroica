@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
@@ -23,7 +23,7 @@ import { BulkMoverDialog } from '@/components/caja/BulkMoverDialog'
 import { EndDateFilter } from '@/components/caja/EndDateFilter'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { downloadBlob, toDateOnly } from '@/lib/downloadBlob'
 
@@ -31,6 +31,7 @@ const columns = getBancoColumns()
 
 export default function CajaBancoPage() {
   const params = useParams()
+  const router = useRouter()
   const user = useAuthStore(state => state.user)
   const searchParams = useSearchParams()
   const moneda = (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS'
@@ -140,6 +141,30 @@ export default function CajaBancoPage() {
 
   return (
     <div className="min-h-full bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
+      <header className="bg-white border-b border-[#E0E0E0] sticky top-0 z-40">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex items-center h-14 gap-3">
+            <Button
+              onClick={() => router.push(`/sucursales/${params.id}?moneda=${moneda}`)}
+              variant="ghost"
+              size="icon"
+              className="w-9 h-9 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 cursor-pointer rounded-lg"
+              aria-label="Volver a la sucursal"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC] leading-none mb-1">
+                Sucursal
+              </p>
+              <h2 className="text-sm sm:text-base font-semibold text-[#002868] truncate leading-none">
+                {sucursalNombre || 'Cargando...'}
+              </h2>
+            </div>
+          </div>
+        </div>
+      </header>
+
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col h-full">
         {user?.rol === 'empleado' ? (
           <AccessDenied resource="la caja de bancos" backUrl={`/sucursales/${params.id}`} />
