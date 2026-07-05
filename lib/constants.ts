@@ -69,4 +69,7 @@ export const PERMISOS = {
   APROBAR_SOLICITUDES: 'aprobar_solicitudes',
   VER_HISTORIAL_SOLICITUDES_GLOBAL: 'ver_historial_solicitudes_global',
   VER_SOLICITUDES_TODAS_SUCURSALES: 'ver_solicitudes_todas_sucursales',
+
+  // HeroicAI
+  USAR_HEROICAI: 'usar_heroicai',
 } as const

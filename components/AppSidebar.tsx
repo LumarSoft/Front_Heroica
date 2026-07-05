@@ -18,6 +18,7 @@ import {
   X,
   Menu,
   PanelLeftClose,
+  Sparkles,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/store/authStore'
@@ -198,6 +199,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
   const pathname = usePathname()
   const router = useRouter()
   const canVerConfiguracion = useAuthStore(state => state.canVerConfiguracion())
+  const canUsarHeroicai = useAuthStore(state => state.canUsarHeroicai())
   const userModulos = useAuthStore(state => state.user?.modulos)
   const isSuperAdmin = useAuthStore(state => state.isSuperAdmin())
   // Solo se muestran los módulos a los que el usuario tiene acceso (superadmin: todos)
@@ -385,6 +387,17 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
           )}
 
           <nav className="space-y-0.5">
+            {canUsarHeroicai && (
+              <NavItem
+                icon={Sparkles}
+                label="HeroicAI"
+                href="/heroicai"
+                tooltipLabel="HeroicAI — Asistente IA"
+                active={isActive('/heroicai')}
+                collapsed={isCollapsed}
+                onClick={onMobileClose}
+              />
+            )}
             <NavItem
               icon={Calculator}
               label="Calculadora"

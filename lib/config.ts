@@ -289,6 +289,11 @@ export const API_ENDPOINTS = {
     ENVIAR_LIQUIDACION_PAGOS: (liquidacionId: number) =>
       `${API_URL}/api/rrhh/sueldos/liquidaciones/${liquidacionId}/enviar-pagos`,
   },
+  HEROICAI: {
+    CHAT: `${API_URL}/api/heroicai/chat`,
+    CONVERSACIONES: `${API_URL}/api/heroicai/conversaciones`,
+    CONVERSACION: (id: number) => `${API_URL}/api/heroicai/conversaciones/${id}`,
+  },
   RRHH_ANALITICO: {
     GLOBAL: (sucursalId?: number | null, desde?: string, hasta?: string) => {
       const params = new URLSearchParams()

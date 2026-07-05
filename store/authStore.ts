@@ -86,6 +86,9 @@ interface AuthState {
   canAprobarSolicitudes: () => boolean
   canVerHistorialSolicitudesGlobal: () => boolean
   canVerSolicitudesTodasSucursales: () => boolean
+
+  // HeroicAI
+  canUsarHeroicai: () => boolean
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -186,6 +189,9 @@ export const useAuthStore = create<AuthState>()(
       canAprobarSolicitudes: () => get().hasPermiso('aprobar_solicitudes'),
       canVerHistorialSolicitudesGlobal: () => get().hasPermiso('ver_historial_solicitudes_global'),
       canVerSolicitudesTodasSucursales: () => get().hasPermiso('ver_solicitudes_todas_sucursales'),
+
+      // HeroicAI
+      canUsarHeroicai: () => get().hasPermiso('usar_heroicai'),
     }),
     {
       name: 'auth-storage',

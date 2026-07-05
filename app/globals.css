@@ -149,6 +149,150 @@
   animation: calendarCellEnter 0.25s ease-out both;
 }
 
+/* ── HeroicAI ─────────────────────────────────────────────── */
+/* Caret parpadeante mientras el asistente escribe */
+@keyframes heroicaiBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+.heroicai-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: linear-gradient(180deg, #2563eb, #002868);
+  border-radius: 2px;
+  animation: heroicaiBlink 1s step-end infinite;
+}
+
+/* Puntos de "pensando" con rebote escalonado */
+@keyframes heroicaiDot {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+.heroicai-dot {
+  animation: heroicaiDot 1.2s ease-in-out infinite;
+}
+
+/* Aura pulsante detrás del avatar mientras HeroicAI piensa */
+@keyframes heroicaiAura {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+.heroicai-aura {
+  animation: heroicaiAura 1.8s ease-in-out infinite;
+  filter: blur(4px);
+}
+
+/* Sparkle que respira suavemente */
+@keyframes heroicaiSpark {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.15) rotate(12deg);
+    opacity: 1;
+  }
+}
+.heroicai-spark {
+  animation: heroicaiSpark 1.8s ease-in-out infinite;
+}
+
+/* Texto de estado con degradé que se desplaza (efecto shimmer) */
+@keyframes heroicaiShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.heroicai-shimmer {
+  background: linear-gradient(90deg, #64748b 0%, #64748b 35%, #2563eb 50%, #64748b 65%, #64748b 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: heroicaiShimmer 2.4s linear infinite;
+}
+
+/* Puntos suspensivos animados que siguen al texto de estado */
+@keyframes heroicaiEllipsis {
+  0% {
+    content: '';
+  }
+  25% {
+    content: '.';
+  }
+  50% {
+    content: '..';
+  }
+  75%,
+  100% {
+    content: '...';
+  }
+}
+.heroicai-ellipsis::after {
+  content: '...';
+  animation: heroicaiEllipsis 1.5s steps(1) infinite;
+}
+
+/* Respetar la preferencia de menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .heroicai-aura,
+  .heroicai-spark,
+  .heroicai-shimmer,
+  .heroicai-ellipsis::after,
+  .heroicai-dot {
+    animation: none;
+  }
+  .heroicai-aura {
+    opacity: 0.25;
+  }
+  .heroicai-shimmer {
+    -webkit-text-fill-color: #475569;
+    color: #475569;
+  }
+}
+
+/* Glow suave del encabezado premium */
+@keyframes heroicaiGlow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+.heroicai-glow {
+  animation: heroicaiGlow 4s ease-in-out infinite;
+}
+
 /* Patrones decorativos para login (evitar estilos inline) */
 .login-pattern-primary {
   background-image: radial-gradient(circle, #002868 1px, transparent 1px);
