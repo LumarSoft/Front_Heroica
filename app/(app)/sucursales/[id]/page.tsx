@@ -528,9 +528,7 @@ export default function SucursalDetailPage() {
           <h2 className="text-4xl md:text-5xl font-bold text-[#002868] mb-3">
             {canVerMovimientos ? 'Gestión de Cajas' : 'Gestión de Pagos'}
           </h2>
-          <p className="text-lg text-[#666666] mb-6">
-            {canVerMovimientos ? 'Selecciona la caja que deseas gestionar' : 'Gestiona tus solicitudes de pago'}
-          </p>
+          <p className="text-lg text-[#666666] mb-6">{sucursal?.nombre ?? ''}</p>
 
           {/* Selector de Moneda */}
           {canVerMovimientos && (
