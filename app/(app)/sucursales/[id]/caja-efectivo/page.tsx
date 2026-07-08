@@ -42,6 +42,7 @@ export default function CajaEfectivoPage() {
   const [isExporting, setIsExporting] = useState(false)
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
   const [exportTipo, setExportTipo] = useState<'todos' | 'ingresos' | 'egresos'>('todos')
+  const [exportSaldo, setExportSaldo] = useState<'todos' | 'saldo_real' | 'saldo_necesario'>('todos')
   const [isBulkMoverDialogOpen, setIsBulkMoverDialogOpen] = useState(false)
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false)
   const [bulkSelectedIds, setBulkSelectedIds] = useState<number[]>([])
@@ -89,6 +90,7 @@ export default function CajaEfectivoPage() {
       if (caja.searchText) qp.set('searchText', caja.searchText)
       if (caja.filtroDeuda !== 'todos') qp.set('filtroDeuda', caja.filtroDeuda)
       if (exportTipo !== 'todos') qp.set('tipoMovimiento', exportTipo === 'ingresos' ? 'ingreso' : 'egreso')
+      if (exportSaldo !== 'todos') qp.set('tipoSaldo', exportSaldo)
 
       const url = `${API_ENDPOINTS.MOVIMIENTOS.EXPORT_EXCEL(Number(params.id))}?${qp.toString()}`
       const res = await apiFetch(url)
@@ -360,30 +362,58 @@ export default function CajaEfectivoPage() {
 
       {/* Dialog de opciones de exportación */}
       <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-[#002868] text-xl">Exportar Excel</DialogTitle>
             <DialogDescription>Elegí qué movimientos exportar</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 py-2">
-            {(['todos', 'ingresos', 'egresos'] as const).map(opcion => (
-              <label
-                key={opcion}
-                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${exportTipo === opcion ? 'border-[#002868] bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
-              >
-                <input
-                  type="radio"
-                  name="exportTipo"
-                  value={opcion}
-                  checked={exportTipo === opcion}
-                  onChange={() => setExportTipo(opcion)}
-                  className="accent-[#002868]"
-                />
-                <span className="font-medium capitalize text-sm text-gray-700">
-                  {opcion === 'todos' ? 'Todo' : opcion === 'ingresos' ? 'Solo Ingresos' : 'Solo Egresos'}
-                </span>
-              </label>
-            ))}
+          <div className="grid grid-cols-2 gap-4 py-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#7A93BB] mb-2">Tipo</p>
+              <div className="space-y-2">
+                {(['todos', 'ingresos', 'egresos'] as const).map(opcion => (
+                  <label
+                    key={opcion}
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${exportTipo === opcion ? 'border-[#002868] bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+                  >
+                    <input
+                      type="radio"
+                      name="exportTipo"
+                      value={opcion}
+                      checked={exportTipo === opcion}
+                      onChange={() => setExportTipo(opcion)}
+                      className="accent-[#002868]"
+                    />
+                    <span className="font-medium text-sm text-gray-700">
+                      {opcion === 'todos' ? 'Todos' : opcion === 'ingresos' ? 'Solo Ingresos' : 'Solo Egresos'}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#7A93BB] mb-2">Saldo</p>
+              <div className="space-y-2">
+                {(['todos', 'saldo_real', 'saldo_necesario'] as const).map(opcion => (
+                  <label
+                    key={opcion}
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${exportSaldo === opcion ? 'border-[#002868] bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+                  >
+                    <input
+                      type="radio"
+                      name="exportSaldo"
+                      value={opcion}
+                      checked={exportSaldo === opcion}
+                      onChange={() => setExportSaldo(opcion)}
+                      className="accent-[#002868]"
+                    />
+                    <span className="font-medium text-sm text-gray-700">
+                      {opcion === 'todos' ? 'Todos' : opcion === 'saldo_real' ? 'Saldo Real' : 'Saldo Necesario'}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>
