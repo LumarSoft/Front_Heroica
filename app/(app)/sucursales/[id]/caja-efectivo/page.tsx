@@ -131,6 +131,19 @@ export default function CajaEfectivoPage() {
 
   const isStrictlyReadOnly = isGlobalReadOnly || (!canEditInfo && !canAddComment)
 
+  // Edición de celdas en línea (estilo Excel) — requiere permiso de edición
+  const inlineEdit = canEditInfo
+    ? {
+        context: {
+          categorias: caja.categorias,
+          descripciones: caja.descripciones,
+          bancos: caja.bancos,
+          mediosPago: caja.mediosPago,
+        },
+        onSave: caja.updateMovimientoInline,
+      }
+    : undefined
+
   // Creación de movimientos en línea (solo ARS; USD requiere tipo de cambio)
   const canInlineCreate = canCrear && moneda === 'ARS'
   const renderInlineForm =
@@ -275,6 +288,7 @@ export default function CajaEfectivoPage() {
                         renderInlineCreateForm={renderInlineForm('completado')}
                         highlightId={highlightId}
                         onReorder={caja.reorderMovimiento}
+                        inlineEdit={inlineEdit}
                       />
                     )}
                   </TabsContent>
@@ -314,6 +328,7 @@ export default function CajaEfectivoPage() {
                         renderInlineCreateForm={renderInlineForm('aprobado')}
                         highlightId={highlightId}
                         onReorder={caja.reorderMovimiento}
+                        inlineEdit={inlineEdit}
                       />
                     )}
                   </TabsContent>
