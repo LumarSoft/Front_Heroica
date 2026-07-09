@@ -22,13 +22,14 @@ import {
   closestCenter,
 } from '@dnd-kit/core'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
-import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { SortableTransactionRow, type DragHandleProps } from './SortableTransactionRow'
 import { RowActions } from './RowActions'
 import { EditableCell } from './EditableCell'
 import { useGridEdit } from '@/hooks/use-grid-edit'
 import { EDIT_FIELD_SPECS, type EditFieldKey, type InlineEditContext } from '@/lib/caja-inline-edit'
+import { computeReorderOrden, effOrden } from '@/lib/caja-reorder'
 
 // =============================================
 // Definición de columnas
@@ -81,9 +82,17 @@ const DESCRIPCION_COLUMN: ColumnDef = {
     const chequeCargado = tieneNumeroChequeCargado(t.numero_cheque)
     return (
       <div className="flex items-center gap-1.5 min-w-0">
-        <span className="min-w-0 flex-1 truncate text-[#666666]" title={text || ''}>
-          {truncarTexto(text)}
-        </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="min-w-0 flex-1 truncate text-[#666666] cursor-default">{truncarTexto(text)}</span>
+          </TooltipTrigger>
+          <TooltipContent>
+            {text && <p className="max-w-[220px]">{text}</p>}
+            <p className={cn('font-semibold', text && 'mt-0.5 text-white/70')}>
+              Categoría: {t.categoria_nombre || 'Sin categoría'}
+            </p>
+          </TooltipContent>
+        </Tooltip>
         {chequePendiente && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -220,6 +229,45 @@ export function getEfectivoColumns(): ColumnDef[] {
   return [...BASE_COLUMNS, DESCRIPCION_COLUMN, MONTO_COLUMN, ...EFECTIVO_COLUMNS, DEUDA_COLUMN]
 }
 
+/**
+ * Columnas reducidas para la vista Dual (dos paneles lado a lado): sólo fecha, descripción
+ * y monto, de modo que las columnas esenciales + los botones de acción entren sin scroll
+ * horizontal. El resto de los datos sigue disponible en "Ver detalles" y en las otras vistas.
+ */
+export function getCompactColumns(): ColumnDef[] {
+  return [BASE_COLUMNS[0], DESCRIPCION_COLUMN, MONTO_COLUMN]
+}
+
+// =============================================
+// Límite de DnD: en modo 'self' provee su propio DndContext; en 'external' asume el del
+// contenedor padre (vista Dual) y sólo deja pasar los hijos. `external` es constante por uso,
+// así que este componente estable no remonta las filas al alternar.
+// =============================================
+
+function DndBoundary({
+  external,
+  sensors,
+  onDragEnd,
+  children,
+}: {
+  external: boolean
+  sensors: ReturnType<typeof useSensors>
+  onDragEnd: (event: DragEndEvent) => void
+  children: React.ReactNode
+}) {
+  if (external) return <>{children}</>
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      modifiers={[restrictToVerticalAxis]}
+      onDragEnd={onDragEnd}
+    >
+      {children}
+    </DndContext>
+  )
+}
+
 // =============================================
 // Virtualización
 // =============================================
@@ -262,6 +310,20 @@ interface TransactionTableProps {
     context: InlineEditContext
     onSave: (id: number, patch: Partial<Transaction>) => Promise<boolean>
   }
+  /** Tinte de fondo por fila (verde = pago, amarillo = impago) para la vista combinada */
+  rowTint?: (t: Transaction) => 'green' | 'yellow' | null
+  /**
+   * Modo de drag & drop:
+   *  - 'self' (default): la tabla crea su propio DndContext (reordenar dentro de la lista).
+   *  - 'external': asume un DndContext del contenedor padre (vista Dual, arrastre entre paneles).
+   */
+  dndMode?: 'self' | 'external'
+  /** Clases de alto fijo (+ scroll interno) para igualar la altura visual entre paneles (vista Dual) */
+  fixedHeightClass?: string
+  /** Id de la fila sobre la que se está arrastrando algo: se resalta como "vas a soltar acá" */
+  dropTargetRowId?: number | null
+  /** Clases del resalte de `dropTargetRowId` (colores según el panel de destino) */
+  dropIndicatorClassName?: string
 }
 
 export function TransactionTable({
@@ -283,6 +345,11 @@ export function TransactionTable({
   highlightId = null,
   onReorder,
   inlineEdit,
+  rowTint,
+  dndMode = 'self',
+  fixedHeightClass,
+  dropTargetRowId = null,
+  dropIndicatorClassName,
 }: TransactionTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   // Gap donde se crea un movimiento en línea: gapKey -1 = arriba de todo; i = debajo de la fila i
@@ -376,14 +443,11 @@ export function TransactionTable({
   const total = customTotal !== undefined ? customTotal : calcularTotal(transactions)
   const showBulkActions = (onBulkDelete || onBulkMove) && !isReadOnly
   const showInsert = canInlineCreate && !isReadOnly && !!renderInlineCreateForm
-  const dndEnabled = !!onReorder && !isReadOnly && transactions.length > 1
+  // En modo externo (vista Dual) permitimos arrastrar aunque haya una sola fila (para moverla al otro panel)
+  const dndEnabled = !!onReorder && !isReadOnly && (dndMode === 'external' || transactions.length > 1)
   // Columna izquierda (gutter) con el handle de arrastre y/o el botón "+"
   const showGutter = showInsert || dndEnabled
   const totalColSpan = columns.length + 1 + (showBulkActions ? 1 : 0) + (showGutter ? 1 : 0)
-
-  // Orden efectivo (posición manual, fallback: id). La lista se ordena por
-  // (fecha, orden ?? id) ascendente, así que el orden solo importa entre filas de igual fecha.
-  const effOrden = (t: Transaction) => t.orden ?? t.id
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -393,34 +457,13 @@ export function TransactionTable({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
-
-    const oldIndex = transactions.findIndex(t => t.id === active.id)
-    const newIndex = transactions.findIndex(t => t.id === over.id)
-    if (oldIndex < 0 || newIndex < 0) return
-
-    const activeTx = transactions[oldIndex]
-    const overTx = transactions[newIndex]
-    // Solo se permite reordenar dentro de la misma fecha
-    if (activeTx.fecha !== overTx.fecha) {
+    const result = computeReorderOrden(transactions, Number(active.id), Number(over.id))
+    if (result === 'different-date') {
       toast.error('Solo se puede reordenar dentro de la misma fecha')
       return
     }
-
-    // Nueva posición: punto medio entre los vecinos (misma fecha) en el orden resultante
-    const reordered = arrayMove(transactions, oldIndex, newIndex)
-    const pos = reordered.findIndex(t => t.id === active.id)
-    const prev = reordered[pos - 1]
-    const next = reordered[pos + 1]
-    const prevOrden = prev && prev.fecha === activeTx.fecha ? effOrden(prev) : null
-    const nextOrden = next && next.fecha === activeTx.fecha ? effOrden(next) : null
-
-    let nuevoOrden: number
-    if (prevOrden !== null && nextOrden !== null) nuevoOrden = (prevOrden + nextOrden) / 2
-    else if (prevOrden !== null) nuevoOrden = prevOrden + 1
-    else if (nextOrden !== null) nuevoOrden = nextOrden - 1
-    else return // único en su fecha, nada que reordenar
-
-    onReorder?.(Number(active.id), nuevoOrden)
+    if (result === null) return
+    onReorder?.(Number(active.id), result)
   }
 
   const openInsert = (gapKey: number, defaultFecha: string, orden: number) => {
@@ -521,93 +564,110 @@ export function TransactionTable({
   }
 
   // Render de una fila de movimiento. `measureRef` lo usa el virtualizador para medir la altura.
-  const renderRow = (transaction: Transaction, index: number, measureRef?: (el: Element | null) => void) => (
-    <SortableTransactionRow
-      id={transaction.id}
-      dataIndex={index}
-      disabled={!dndEnabled}
-      rowRef={el => {
-        if (transaction.id === highlightId) highlightRowRef.current = el
-        measureRef?.(el)
-      }}
-      className={`group/row hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50 ${
-        flashId === transaction.id
-          ? 'bg-emerald-50 ring-2 ring-inset ring-emerald-500 animate-pulse'
-          : selectedIds.has(transaction.id)
-            ? 'bg-indigo-50/60'
-            : ''
-      }`}
-    >
-      {handle => (
-        <>
-          {renderGutterCell(transaction, index, handle)}
-          {showBulkActions && (
-            <TableCell className="text-center w-10">
-              <input
-                type="checkbox"
-                checked={selectedIds.has(transaction.id)}
-                onChange={() => toggleOne(transaction.id)}
-                className="w-4 h-4 rounded border-gray-300 text-indigo-600 cursor-pointer"
+  const renderRow = (transaction: Transaction, index: number, measureRef?: (el: Element | null) => void) => {
+    const tint = rowTint?.(transaction) ?? null
+    const tintRowClass =
+      tint === 'green'
+        ? 'bg-emerald-50/70 hover:bg-emerald-100/60'
+        : tint === 'yellow'
+          ? 'bg-amber-50/70 hover:bg-amber-100/60'
+          : 'hover:bg-[#F8F9FA]/50'
+    const tintCellClass = tint === 'green' ? 'bg-emerald-50/70' : tint === 'yellow' ? 'bg-amber-50/70' : 'bg-white'
+    const isDropTarget = dropTargetRowId === transaction.id
+    return (
+      <SortableTransactionRow
+        id={transaction.id}
+        dataIndex={index}
+        disabled={!dndEnabled}
+        rowRef={el => {
+          if (transaction.id === highlightId) highlightRowRef.current = el
+          measureRef?.(el)
+        }}
+        className={`group/row transition-colors border-b border-[#E0E0E0]/50 ${
+          isDropTarget
+            ? (dropIndicatorClassName ?? 'bg-[#EEF3FF] ring-2 ring-inset ring-[#002868]')
+            : flashId === transaction.id
+              ? 'bg-emerald-50 ring-2 ring-inset ring-emerald-500 animate-pulse'
+              : selectedIds.has(transaction.id)
+                ? 'bg-indigo-50/60'
+                : tintRowClass
+        }`}
+      >
+        {handle => (
+          <>
+            {renderGutterCell(transaction, index, handle)}
+            {showBulkActions && (
+              <TableCell className="text-center w-10">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(transaction.id)}
+                  onChange={() => toggleOne(transaction.id)}
+                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 cursor-pointer"
+                />
+              </TableCell>
+            )}
+            {columns.map(col => {
+              const spec = editEnabled && col.editField ? EDIT_FIELD_SPECS[col.editField] : null
+              const editingThis = !!spec && grid.isActive(transaction.id, col.key)
+              return (
+                <TableCell
+                  key={col.key}
+                  className={`${spec ? 'px-1' : 'px-2'} ${
+                    col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''
+                  } ${col.widthClass || ''} ${
+                    col.hideBelow === 'md'
+                      ? 'hidden md:table-cell'
+                      : col.hideBelow === 'lg'
+                        ? 'hidden lg:table-cell'
+                        : ''
+                  }`}
+                >
+                  {spec && inlineEdit ? (
+                    <EditableCell
+                      editing={editingThis}
+                      saving={grid.isSaving(transaction.id)}
+                      type={spec.type}
+                      display={col.render(transaction)}
+                      raw={editingThis ? spec.getRaw(transaction) : ''}
+                      // Las opciones (filtrado de catálogos) sólo se calculan para la celda
+                      // en edición → evita recalcular en todas las filas en cada render.
+                      options={editingThis ? spec.getOptions?.(transaction, inlineEdit.context) : undefined}
+                      align={col.align}
+                      placeholder={spec.placeholder}
+                      onStart={() => grid.start(transaction.id, col.key)}
+                      onCommit={(value, dir) => grid.commit(value, dir)}
+                      onCancel={grid.cancel}
+                    />
+                  ) : (
+                    col.render(transaction)
+                  )}
+                </TableCell>
+              )
+            })}
+            <TableCell
+              className={`w-[172px] min-w-[172px] max-w-[172px] px-2 text-center ${
+                flashId === transaction.id
+                  ? 'bg-emerald-50'
+                  : selectedIds.has(transaction.id)
+                    ? 'bg-indigo-50/60'
+                    : tintCellClass
+              }`}
+            >
+              <RowActions
+                transaction={transaction}
+                isReadOnly={isReadOnly}
+                onViewDetails={onViewDetails}
+                onChangeState={onChangeState}
+                onToggleDeuda={onToggleDeuda}
+                onMove={onMove}
+                onDelete={onDelete}
               />
             </TableCell>
-          )}
-          {columns.map(col => {
-            const spec = editEnabled && col.editField ? EDIT_FIELD_SPECS[col.editField] : null
-            const editingThis = !!spec && grid.isActive(transaction.id, col.key)
-            return (
-              <TableCell
-                key={col.key}
-                className={`${spec ? 'px-1' : 'px-2'} ${
-                  col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''
-                } ${col.widthClass || ''} ${
-                  col.hideBelow === 'md' ? 'hidden md:table-cell' : col.hideBelow === 'lg' ? 'hidden lg:table-cell' : ''
-                }`}
-              >
-                {spec && inlineEdit ? (
-                  <EditableCell
-                    editing={editingThis}
-                    saving={grid.isSaving(transaction.id)}
-                    type={spec.type}
-                    display={col.render(transaction)}
-                    raw={editingThis ? spec.getRaw(transaction) : ''}
-                    // Las opciones (filtrado de catálogos) sólo se calculan para la celda
-                    // en edición → evita recalcular en todas las filas en cada render.
-                    options={editingThis ? spec.getOptions?.(transaction, inlineEdit.context) : undefined}
-                    align={col.align}
-                    placeholder={spec.placeholder}
-                    onStart={() => grid.start(transaction.id, col.key)}
-                    onCommit={(value, dir) => grid.commit(value, dir)}
-                    onCancel={grid.cancel}
-                  />
-                ) : (
-                  col.render(transaction)
-                )}
-              </TableCell>
-            )
-          })}
-          <TableCell
-            className={`w-[172px] min-w-[172px] max-w-[172px] px-2 text-center ${
-              flashId === transaction.id
-                ? 'bg-emerald-50'
-                : selectedIds.has(transaction.id)
-                  ? 'bg-indigo-50/60'
-                  : 'bg-white'
-            }`}
-          >
-            <RowActions
-              transaction={transaction}
-              isReadOnly={isReadOnly}
-              onViewDetails={onViewDetails}
-              onChangeState={onChangeState}
-              onToggleDeuda={onToggleDeuda}
-              onMove={onMove}
-              onDelete={onDelete}
-            />
-          </TableCell>
-        </>
-      )}
-    </SortableTransactionRow>
-  )
+          </>
+        )}
+      </SortableTransactionRow>
+    )
+  }
 
   // Filas visibles cuando se virtualiza: sólo la ventana + espaciadores arriba/abajo
   const virtualItems = virtualize ? virtualizer.getVirtualItems() : []
@@ -679,18 +739,17 @@ export function TransactionTable({
         <div
           ref={scrollRef}
           className={`rounded-md border border-[#E0E0E0] overflow-x-auto ${
-            virtualize ? `${VIRTUAL_SCROLL_MAX_H} overflow-y-auto` : ''
+            fixedHeightClass
+              ? `${fixedHeightClass} overflow-y-auto`
+              : virtualize
+                ? `${VIRTUAL_SCROLL_MAX_H} overflow-y-auto`
+                : ''
           }`}
         >
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-          >
+          <DndBoundary external={dndMode === 'external'} sensors={sensors} onDragEnd={handleDragEnd}>
             <SortableContext items={transactions.map(t => t.id)} strategy={verticalListSortingStrategy}>
               <Table className="w-full table-fixed">
-                <TableHeader className={virtualize ? 'sticky top-0 z-20' : undefined}>
+                <TableHeader className={virtualize || fixedHeightClass ? 'sticky top-0 z-20' : undefined}>
                   <TableRow className="bg-[#F8F9FA] hover:bg-[#F8F9FA] border-b-2 border-[#E0E0E0]">
                     {showGutter && <TableHead className="w-14 px-1" />}
                     {showBulkActions && (
@@ -794,7 +853,7 @@ export function TransactionTable({
                 </TableBody>
               </Table>
             </SortableContext>
-          </DndContext>
+          </DndBoundary>
         </div>
       </CardContent>
     </Card>

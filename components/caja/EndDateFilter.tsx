@@ -3,13 +3,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { CalendarDays, ChevronDown, Clock, FilterX, Landmark, LayoutList, Search } from 'lucide-react'
+import { CalendarDays, ChevronDown, Clock, Columns2, FilterX, Landmark, LayoutList, Rows3, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { SelectOption } from '@/lib/types'
+import type { CajaViewMode } from '@/lib/caja-reorder'
 import { DateRange } from 'react-day-picker'
 import { cn } from '@/lib/utils'
+
+const VIEW_MODE_OPTIONS: { value: CajaViewMode; label: string; icon: typeof LayoutList }[] = [
+  { value: 'tabla', label: 'Tabla', icon: LayoutList },
+  { value: 'combinada', label: 'Combinada', icon: Rows3 },
+  { value: 'dual', label: 'Dual', icon: Columns2 },
+  { value: 'calendario', label: 'Calendario', icon: CalendarDays },
+]
 
 interface EndDateFilterProps {
   dateRange: DateRange | undefined
@@ -21,8 +29,8 @@ interface EndDateFilterProps {
   onBancosChange?: (ids: string[]) => void
   searchText?: string
   onSearchTextChange?: (text: string) => void
-  viewMode?: 'tabla' | 'calendario'
-  onViewModeChange?: (mode: 'tabla' | 'calendario') => void
+  viewMode?: CajaViewMode
+  onViewModeChange?: (mode: CajaViewMode) => void
   filtroDeuda?: 'todos' | 'solo_deudas' | 'sin_deudas'
   onFiltroDeudeChange?: (v: 'todos' | 'solo_deudas' | 'sin_deudas') => void
   filtroChequesPendientes?: boolean
@@ -99,12 +107,19 @@ export function EndDateFilter({
       <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         {/* Date range — always on one line */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
-          <span className="text-xs font-semibold text-[#5A6070] uppercase tracking-wide whitespace-nowrap hidden xs:block">Desde</span>
+          <span className="text-xs font-semibold text-[#5A6070] uppercase tracking-wide whitespace-nowrap hidden xs:block">
+            Desde
+          </span>
           <Popover>
             <PopoverTrigger asChild>
               <button type="button" className={cn(triggerClass, 'flex-1 min-w-0 max-w-[140px] sm:max-w-[160px]')}>
                 <CalendarDays className="w-4 h-4 text-[#002868] flex-shrink-0" />
-                <span className={cn('truncate text-xs sm:text-sm', dateRange?.from ? 'text-[#1A1A1A] font-medium' : 'text-[#9AA0AC]')}>
+                <span
+                  className={cn(
+                    'truncate text-xs sm:text-sm',
+                    dateRange?.from ? 'text-[#1A1A1A] font-medium' : 'text-[#9AA0AC]',
+                  )}
+                >
                   {dateRange?.from ? format(dateRange.from, 'd MMM yy', { locale: es }) : 'Desde'}
                 </span>
               </button>
@@ -127,7 +142,12 @@ export function EndDateFilter({
             <PopoverTrigger asChild>
               <button type="button" className={cn(triggerClass, 'flex-1 min-w-0 max-w-[140px] sm:max-w-[160px]')}>
                 <CalendarDays className="w-4 h-4 text-[#002868] flex-shrink-0" />
-                <span className={cn('truncate text-xs sm:text-sm', dateRange?.to ? 'text-[#1A1A1A] font-medium' : 'text-[#9AA0AC]')}>
+                <span
+                  className={cn(
+                    'truncate text-xs sm:text-sm',
+                    dateRange?.to ? 'text-[#1A1A1A] font-medium' : 'text-[#9AA0AC]',
+                  )}
+                >
                   {dateRange?.to ? format(dateRange.to, 'd MMM yy', { locale: es }) : 'Hasta'}
                 </span>
               </button>
@@ -186,35 +206,29 @@ export function EndDateFilter({
           </div>
         )}
 
-        {/* Toggle Tabla / Calendario */}
+        {/* Toggle de vista: Tabla / Combinada / Dual / Calendario */}
         {onViewModeChange && (
           <div className="flex items-center gap-0.5 p-0.5 bg-[#F0F4FF] rounded-lg border border-[#002868]/15 ml-auto">
-            <button
-              type="button"
-              onClick={() => onViewModeChange('tabla')}
-              className={cn(
-                'flex items-center gap-1.5 h-7 px-2 sm:px-3 rounded-md text-xs font-semibold transition-all',
-                viewMode === 'tabla'
-                  ? 'bg-[#002868] text-white shadow-sm'
-                  : 'text-[#5A6070] hover:text-[#002868] hover:bg-white/60',
-              )}
-            >
-              <LayoutList className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Tabla</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onViewModeChange('calendario')}
-              className={cn(
-                'flex items-center gap-1.5 h-7 px-2 sm:px-3 rounded-md text-xs font-semibold transition-all',
-                viewMode === 'calendario'
-                  ? 'bg-[#002868] text-white shadow-sm'
-                  : 'text-[#5A6070] hover:text-[#002868] hover:bg-white/60',
-              )}
-            >
-              <CalendarDays className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Calendario</span>
-            </button>
+            {VIEW_MODE_OPTIONS.map(opt => {
+              const Icon = opt.icon
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => onViewModeChange(opt.value)}
+                  title={opt.label}
+                  className={cn(
+                    'flex items-center gap-1.5 h-7 px-2 sm:px-2.5 rounded-md text-xs font-semibold transition-all',
+                    viewMode === opt.value
+                      ? 'bg-[#002868] text-white shadow-sm'
+                      : 'text-[#5A6070] hover:text-[#002868] hover:bg-white/60',
+                  )}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span className="hidden lg:inline">{opt.label}</span>
+                </button>
+              )
+            })}
           </div>
         )}
       </div>
@@ -236,13 +250,11 @@ export function EndDateFilter({
           )}
           {onFiltroDeudeChange && (
             <div className="flex items-center gap-0.5 p-0.5 bg-[#FFF8F0] rounded-lg border border-orange-200 flex-shrink-0">
-              {(
-                [
-                  { value: 'todos' as const, label: 'Todos', shortLabel: 'All', showIcon: false },
-                  { value: 'solo_deudas' as const, label: 'Solo deudas', shortLabel: 'Deudas', showIcon: true },
-                  { value: 'sin_deudas' as const, label: 'Sin deudas', shortLabel: 'S/D', showIcon: false },
-                ]
-              ).map(opt => (
+              {[
+                { value: 'todos' as const, label: 'Todos', shortLabel: 'All', showIcon: false },
+                { value: 'solo_deudas' as const, label: 'Solo deudas', shortLabel: 'Deudas', showIcon: true },
+                { value: 'sin_deudas' as const, label: 'Sin deudas', shortLabel: 'S/D', showIcon: false },
+              ].map(opt => (
                 <button
                   key={opt.value}
                   type="button"
