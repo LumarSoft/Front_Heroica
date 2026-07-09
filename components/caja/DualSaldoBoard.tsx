@@ -65,36 +65,20 @@ const PANEL_HEIGHT_CLASS = 'h-[65vh] min-h-[420px]'
 
 const ACCENT = {
   real: {
-    ring: 'ring-emerald-400',
     rowIndicator: 'bg-emerald-100 ring-2 ring-inset ring-emerald-500',
   },
   necesario: {
-    ring: 'ring-amber-400',
     rowIndicator: 'bg-amber-100 ring-2 ring-inset ring-amber-500',
   },
 } as const
 
-/** Zona soltable que envuelve cada panel; un aro sutil marca cuándo es un destino válido (sin overlays). */
-function DroppablePane({
-  id,
-  accent,
-  isForeignTarget,
-  children,
-}: {
-  id: string
-  accent: PaneKey
-  isForeignTarget: boolean
-  children: React.ReactNode
-}) {
+/**
+ * Zona soltable que envuelve cada panel. Sin resalte propio: la única señal de dónde va a
+ * caer el registro es el indicador de fila (`dropTargetRowId` en TransactionTable).
+ */
+function DroppablePane({ id, children }: { id: string; children: React.ReactNode }) {
   const { setNodeRef } = useDroppable({ id })
-  return (
-    <div
-      ref={setNodeRef}
-      className={cn('rounded-2xl transition-all', isForeignTarget && `ring-2 ring-offset-2 ${ACCENT[accent].ring}`)}
-    >
-      {children}
-    </div>
-  )
+  return <div ref={setNodeRef}>{children}</div>
 }
 
 export function DualSaldoBoard({
@@ -192,9 +176,11 @@ export function DualSaldoBoard({
     const nuevoEstado = to === 'real' ? 'completado' : 'aprobado'
     onChangeEstado(Number(active.id), nuevoEstado)
 
+    // Este delay debe ser mayor al del destello en TransactionTable (4500ms): si se limpia antes,
+    // el cleanup del efecto de highlight cancelaría su propio timer y el destello quedaría trabado.
     if (justMovedTimerRef.current) clearTimeout(justMovedTimerRef.current)
     setJustMovedId(Number(active.id))
-    justMovedTimerRef.current = setTimeout(() => setJustMovedId(null), 3000)
+    justMovedTimerRef.current = setTimeout(() => setJustMovedId(null), 5000)
   }
 
   const hint = isReadOnly ? undefined : 'Arrastrá una fila al otro panel para marcarla como pagada o pendiente.'
@@ -221,11 +207,7 @@ export function DualSaldoBoard({
       >
         <div className="grid grid-cols-1 gap-4 2xl:grid-cols-2 2xl:gap-5">
           {/* Panel Saldo Real (pago / verde) */}
-          <DroppablePane
-            id={PANE_ID.real}
-            accent="real"
-            isForeignTarget={sourcePane === 'necesario' && dropIndicator?.pane === 'real'}
-          >
+          <DroppablePane id={PANE_ID.real}>
             <div className="mb-2 flex items-center gap-2 px-1">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">Pagado</span>
@@ -260,11 +242,7 @@ export function DualSaldoBoard({
           </DroppablePane>
 
           {/* Panel Saldo Necesario (impago / amarillo) */}
-          <DroppablePane
-            id={PANE_ID.necesario}
-            accent="necesario"
-            isForeignTarget={sourcePane === 'real' && dropIndicator?.pane === 'necesario'}
-          >
+          <DroppablePane id={PANE_ID.necesario}>
             <div className="mb-2 flex items-center gap-2 px-1">
               <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
               <span className="text-xs font-bold uppercase tracking-wider text-amber-700">Por pagar</span>

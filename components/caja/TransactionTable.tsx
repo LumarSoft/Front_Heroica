@@ -360,20 +360,6 @@ export function TransactionTable({
   const [flashId, setFlashId] = useState<number | null>(null)
   const highlightRowRef = useRef<HTMLTableRowElement | null>(null)
 
-  // Al recibir un highlightId nuevo: titilar y hacer scroll hacia la fila creada
-  useEffect(() => {
-    if (highlightId == null) return
-    setFlashId(highlightId)
-    const raf = requestAnimationFrame(() => {
-      highlightRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    })
-    const timer = setTimeout(() => setFlashId(null), 2800)
-    return () => {
-      cancelAnimationFrame(raf)
-      clearTimeout(timer)
-    }
-  }, [highlightId])
-
   const toggleAll = () => {
     if (selectedIds.size === transactions.length && transactions.length > 0) {
       setSelectedIds(new Set())
@@ -426,6 +412,37 @@ export function TransactionTable({
     overscan: 14,
     getItemKey: index => transactions[index]?.id ?? index,
   })
+
+  // Refs para leer los valores más recientes desde el efecto de highlight sin re-dispararlo
+  // en cada cambio de datos (sólo debe reaccionar a que cambie `highlightId`).
+  const transactionsRef = useRef(transactions)
+  transactionsRef.current = transactions
+  const virtualizeRef = useRef(virtualize)
+  virtualizeRef.current = virtualize
+  const virtualizerRef = useRef(virtualizer)
+  virtualizerRef.current = virtualizer
+
+  // Al recibir un highlightId nuevo: titilar y hacer scroll animado hasta la fila. Si la lista
+  // está virtualizada, la fila puede no estar montada (windowing) — usamos el índice del
+  // virtualizador en vez de una ref al DOM para que el scroll funcione igual en listas largas.
+  useEffect(() => {
+    if (highlightId == null) return
+    setFlashId(highlightId)
+    let raf = 0
+    if (virtualizeRef.current) {
+      const idx = transactionsRef.current.findIndex(t => t.id === highlightId)
+      if (idx >= 0) virtualizerRef.current.scrollToIndex(idx, { align: 'center', behavior: 'smooth' })
+    } else {
+      raf = requestAnimationFrame(() => {
+        highlightRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+    }
+    const timer = setTimeout(() => setFlashId(null), 4500)
+    return () => {
+      cancelAnimationFrame(raf)
+      clearTimeout(timer)
+    }
+  }, [highlightId])
 
   const handleBulkDelete = () => {
     if (onBulkDelete) {

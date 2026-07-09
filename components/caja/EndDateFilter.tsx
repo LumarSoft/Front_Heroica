@@ -1,9 +1,20 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { format } from 'date-fns'
+import { addMonths, format, isSameDay, subMonths } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { CalendarDays, ChevronDown, Clock, Columns2, FilterX, Landmark, LayoutList, Rows3, Search } from 'lucide-react'
+import {
+  CalendarDays,
+  CalendarRange,
+  ChevronDown,
+  Clock,
+  Columns2,
+  FilterX,
+  Landmark,
+  LayoutList,
+  Rows3,
+  Search,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -71,6 +82,18 @@ export function EndDateFilter({
 
   const handleToSelect = (day: Date | undefined) => {
     onDateRangeChange({ from: dateRange?.from, to: day })
+  }
+
+  // Rango fijo "±1 mes": desde 1 mes atrás hasta 1 mes adelante de hoy
+  const fixedRange = useMemo(() => ({ from: subMonths(new Date(), 1), to: addMonths(new Date(), 1) }), [])
+  const isFixedRangeActive =
+    !!dateRange?.from &&
+    !!dateRange?.to &&
+    isSameDay(dateRange.from, fixedRange.from) &&
+    isSameDay(dateRange.to, fixedRange.to)
+
+  const toggleFixedRange = () => {
+    onDateRangeChange(isFixedRangeActive ? undefined : fixedRange)
   }
 
   useEffect(() => {
@@ -165,6 +188,22 @@ export function EndDateFilter({
             </PopoverContent>
           </Popover>
         </div>
+
+        {/* Rango fijo: 1 mes atrás — 1 mes adelante */}
+        <button
+          type="button"
+          onClick={toggleFixedRange}
+          title="Fijar rango: 1 mes atrás hasta 1 mes adelante de hoy"
+          className={cn(
+            'h-9 px-3 flex items-center gap-1.5 rounded-lg text-xs sm:text-sm font-semibold border cursor-pointer transition-all flex-shrink-0',
+            isFixedRangeActive
+              ? 'bg-[#002868] text-white border-[#002868] shadow-sm'
+              : 'bg-[#F8F9FA] text-[#5A6070] border-[#E0E0E0] hover:border-[#002868]/40 hover:text-[#002868]',
+          )}
+        >
+          <CalendarRange className="w-4 h-4 flex-shrink-0" />
+          <span className="hidden sm:inline">±1 mes</span>
+        </button>
 
         {/* Filtro Banco */}
         {showBancoFilter && (
