@@ -311,6 +311,47 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     [saldoReal, saldoNecesario, endpoints, fetchMovimientos],
   )
 
+  /**
+   * Cambia el estado de un movimiento reubicándolo de forma optimista entre las listas de
+   * saldo real (completado) y saldo necesario (aprobado). Persiste vía el endpoint de estado.
+   * Lo usa el arrastre entre columnas de la vista "Dual". Devuelve true si se guardó bien.
+   */
+  const cambiarEstadoMovimiento = useCallback(
+    async (id: number, nuevoEstado: 'completado' | 'aprobado'): Promise<boolean> => {
+      const source = saldoReal.find(m => m.id === id) || saldoNecesario.find(m => m.id === id)
+      if (!source) return false
+      if (source.estado === nuevoEstado) return true
+      const updated: Transaction = { ...source, estado: nuevoEstado }
+
+      // Optimista: sacar de ambas listas y reinsertar en la que corresponde al nuevo estado
+      if (nuevoEstado === 'completado') {
+        setSaldoNecesario(prev => prev.filter(m => m.id !== id))
+        setSaldoReal(prev => [...prev.filter(m => m.id !== id), updated].sort(sortByFechaOrden))
+      } else {
+        setSaldoReal(prev => prev.filter(m => m.id !== id))
+        setSaldoNecesario(prev => [...prev.filter(m => m.id !== id), updated].sort(sortByFechaOrden))
+      }
+
+      try {
+        const res = await apiFetch(endpoints.updateEstado(id), {
+          method: 'PUT',
+          body: JSON.stringify({ estado: nuevoEstado }),
+        })
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.message || 'Error al cambiar el estado')
+        }
+        fetchTotales()
+        return true
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : 'No se pudo cambiar el estado.')
+        fetchMovimientos() // revertir al estado del servidor
+        return false
+      }
+    },
+    [saldoReal, saldoNecesario, endpoints, fetchMovimientos, fetchTotales],
+  )
+
   const fetchCategorias = useCallback(async () => {
     try {
       const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL)
@@ -746,6 +787,13 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     }
   }, [saldoNecesario, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda, filtroChequesPendientes])
 
+  // Lista combinada: saldo real + saldo necesario intercalados y ordenados por fecha.
+  // Alimenta la vista "Combinada" (una sola tabla con filas pintadas según su estado).
+  const saldoCombinadoFiltrado = useMemo<Transaction[]>(
+    () => [...saldoRealFiltrado, ...saldoNecesarioFiltrado].sort(sortByFechaOrden),
+    [saldoRealFiltrado, saldoNecesarioFiltrado],
+  )
+
   // Parciales filtrados: agrupar saldoReal + saldoNecesarioSinDeudaFiltrado por banco_id
   const parcialesFiltrados = useMemo<BancoParcial[]>(() => {
     const map = new Map<number | string, BancoParcial>()
@@ -799,6 +847,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     // Datos filtrados por fecha
     saldoNecesarioFiltrado,
     saldoNecesarioSinDeudaFiltrado,
+    saldoCombinadoFiltrado,
     parcialesFiltrados,
 
     // Filtros
@@ -859,5 +908,6 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     fetchDescripciones,
     reorderMovimiento,
     updateMovimientoInline,
+    cambiarEstadoMovimiento,
   }
 }
