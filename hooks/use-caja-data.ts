@@ -260,6 +260,57 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     [endpoints, fetchMovimientos],
   )
 
+  /**
+   * Edición "en línea" de una celda: aplica el cambio de forma optimista (merge + re-orden
+   * por fecha) y persiste el movimiento completo vía PUT. Si el backend falla, revierte
+   * recargando desde el servidor. Devuelve true si se guardó correctamente.
+   */
+  const updateMovimientoInline = useCallback(
+    async (id: number, patch: Partial<Transaction>): Promise<boolean> => {
+      const source = saldoReal.find(m => m.id === id) || saldoNecesario.find(m => m.id === id)
+      if (!source) return false
+      const merged: Transaction = { ...source, ...patch }
+
+      const aplicar = (list: Transaction[]) =>
+        list.some(m => m.id === id) ? list.map(m => (m.id === id ? merged : m)).sort(sortByFechaOrden) : list
+
+      setSaldoReal(prev => aplicar(prev))
+      setSaldoNecesario(prev => aplicar(prev))
+
+      try {
+        const response = await apiFetch(endpoints.update(id), {
+          method: 'PUT',
+          body: JSON.stringify({
+            fecha: merged.fecha ? merged.fecha.split('T')[0] : merged.fecha,
+            concepto: merged.concepto ?? '',
+            monto: Math.abs(Number(merged.monto)),
+            comentarios: merged.comentarios ?? '',
+            prioridad: merged.prioridad,
+            tipo: merged.tipo,
+            categoria_id: merged.categoria_id ?? null,
+            subcategoria_id: merged.subcategoria_id ?? null,
+            descripcion_id: merged.descripcion_id ?? null,
+            proveedor_id: merged.proveedor_id ?? null,
+            comprobante: merged.comprobante ?? '',
+            banco_id: merged.banco_id ?? null,
+            medio_pago_id: merged.medio_pago_id ?? null,
+            numero_cheque: merged.numero_cheque ?? null,
+          }),
+        })
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}))
+          throw new Error(data.message || 'Error al actualizar el movimiento')
+        }
+        return true
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : 'No se pudo guardar el cambio.')
+        fetchMovimientos() // revertir al estado del servidor
+        return false
+      }
+    },
+    [saldoReal, saldoNecesario, endpoints, fetchMovimientos],
+  )
+
   const fetchCategorias = useCallback(async () => {
     try {
       const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL)
@@ -333,7 +384,8 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
   // Handlers de dialogs
   // =============================================
 
-  const handleOpenDetails = (transaction: Transaction) => {
+  // Handlers memoizados (sólo usan setters estables) → permiten memoizar las filas/acciones
+  const handleOpenDetails = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction)
     setFormData({
       fecha: transaction.fecha ? transaction.fecha.split('T')[0] : '',
@@ -352,28 +404,28 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
       numero_cheque: transaction.numero_cheque || '',
     })
     setIsDetailsDialogOpen(true)
-  }
+  }, [])
 
-  const handleOpenStateChange = (transaction: Transaction) => {
+  const handleOpenStateChange = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction)
     setNuevoEstado(transaction.estado || 'pendiente')
     setIsStateDialogOpen(true)
-  }
+  }, [])
 
-  const handleOpenDelete = (transaction: Transaction) => {
+  const handleOpenDelete = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction)
     setIsDeleteDialogOpen(true)
-  }
+  }, [])
 
-  const handleOpenDeuda = (transaction: Transaction) => {
+  const handleOpenDeuda = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction)
     setIsDeudaDialogOpen(true)
-  }
+  }, [])
 
-  const handleOpenMover = (transaction: Transaction) => {
+  const handleOpenMover = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction)
     setIsMoverMovimientoDialogOpen(true)
-  }
+  }, [])
 
   // =============================================
   // Operaciones CRUD
@@ -806,5 +858,6 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     fetchMovimientos,
     fetchDescripciones,
     reorderMovimiento,
+    updateMovimientoInline,
   }
 }

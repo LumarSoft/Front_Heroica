@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, Fragment } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback, Fragment } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -10,7 +10,8 @@ import type { Transaction } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Clock, Trash2, ArrowRightLeft, Plus, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Trash2, ArrowRightLeft, Plus, ArrowUp, ArrowDown, GripVertical, AlertTriangle, Hash } from 'lucide-react'
 import {
   DndContext,
   type DragEndEvent,
@@ -23,6 +24,10 @@ import {
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { SortableTransactionRow, type DragHandleProps } from './SortableTransactionRow'
+import { RowActions } from './RowActions'
+import { EditableCell } from './EditableCell'
+import { useGridEdit } from '@/hooks/use-grid-edit'
+import { EDIT_FIELD_SPECS, type EditFieldKey, type InlineEditContext } from '@/lib/caja-inline-edit'
 
 // =============================================
 // Definición de columnas
@@ -35,6 +40,8 @@ export interface ColumnDef {
   hideBelow?: 'md' | 'lg' // responsive breakpoint
   widthClass?: string
   render: (t: Transaction) => React.ReactNode
+  /** Si se define, la celda se puede editar en línea (estilo Excel) para ese campo */
+  editField?: EditFieldKey
 }
 
 /** Columnas base compartidas */
@@ -43,12 +50,14 @@ const BASE_COLUMNS: ColumnDef[] = [
     key: 'fecha',
     label: 'Fecha',
     widthClass: 'w-[100px]',
+    editField: 'fecha',
     render: t => <span className="font-medium text-[#1A1A1A] whitespace-nowrap">{formatFecha(t.fecha)}</span>,
   },
   {
     key: 'categoria',
     label: 'Categoria',
     widthClass: 'w-[140px]',
+    editField: 'categoria',
     render: t => (
       <div className="w-full">
         <span className="block text-[#1A1A1A] font-medium truncate" title={t.categoria_nombre || ''}>
@@ -64,36 +73,39 @@ const DESCRIPCION_COLUMN: ColumnDef = {
   key: 'descripcion',
   label: 'Descripcion',
   widthClass: 'w-[150px]',
+  editField: 'descripcion',
   render: t => {
     const text = t.descripcion_nombre || t.concepto || null
+    const chequePendiente = isMedioPagoChequeLike(t.medio_pago_nombre) && !tieneNumeroChequeCargado(t.numero_cheque)
+    const chequeCargado = tieneNumeroChequeCargado(t.numero_cheque)
     return (
-      <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="block w-full text-[#666666] truncate" title={text || ''}>
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="min-w-0 flex-1 truncate text-[#666666]" title={text || ''}>
           {truncarTexto(text)}
         </span>
-        {isMedioPagoChequeLike(t.medio_pago_nombre) && !tieneNumeroChequeCargado(t.numero_cheque) && (
-          <span
-            className="inline-flex items-center gap-1 self-start px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-semibold tracking-wide whitespace-nowrap"
-            title="Medio cheque / eCheq: pendiente cargar N° en el banco"
-          >
-            Sin N° cheque
-          </span>
+        {chequePendiente && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className="inline-flex h-4 w-4 shrink-0 cursor-help items-center justify-center rounded-full border border-amber-300 bg-amber-100 text-amber-700"
+                aria-label="Cheque sin número"
+              >
+                <AlertTriangle className="h-2.5 w-2.5" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Cheque / eCheq: falta cargar el N° en el banco</TooltipContent>
+          </Tooltip>
         )}
-        {tieneNumeroChequeCargado(t.numero_cheque) && (
-          <span
-            className="inline-flex items-center gap-1 self-start px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-semibold tracking-wide whitespace-nowrap"
-            title={`Cheque N° ${t.numero_cheque}`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 16 16"
-              fill="currentColor"
-              className="w-2.5 h-2.5 flex-shrink-0"
-            >
-              <path d="M2 3.5A1.5 1.5 0 0 1 3.5 2h9A1.5 1.5 0 0 1 14 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5v-9ZM4 6a.75.75 0 0 0 0 1.5h8A.75.75 0 0 0 12 6H4Zm0 3a.75.75 0 0 0 0 1.5h4A.75.75 0 0 0 8 9H4Z" />
-            </svg>
-            #{t.numero_cheque}
-          </span>
+        {chequeCargado && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex shrink-0 cursor-help items-center gap-0.5 rounded-md border border-emerald-200 bg-emerald-50 px-1 py-0.5 text-[10px] font-semibold text-emerald-700">
+                <Hash className="h-2.5 w-2.5" />
+                {t.numero_cheque}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Cheque N° {t.numero_cheque} cargado</TooltipContent>
+          </Tooltip>
         )}
       </div>
     )
@@ -106,6 +118,7 @@ const BANCO_COLUMNS: ColumnDef[] = [
     key: 'medio_pago',
     label: 'Medio Pago',
     widthClass: 'w-[120px]',
+    editField: 'medio_pago',
     render: t => {
       const nombre = t.medio_pago_nombre || ''
       const chequeLike = isMedioPagoChequeLike(nombre)
@@ -140,6 +153,7 @@ const BANCO_COLUMNS: ColumnDef[] = [
     label: 'Banco',
     align: 'center',
     widthClass: 'w-[110px]',
+    editField: 'banco',
     render: t => (
       <span className="block w-full font-medium text-[#002868] truncate" title={t.banco_nombre || ''}>
         {t.banco_nombre || '-'}
@@ -157,6 +171,7 @@ const MONTO_COLUMN: ColumnDef = {
   label: 'Monto',
   align: 'right',
   widthClass: 'w-[125px]',
+  editField: 'monto',
   render: t => (
     <span
       className={`font-bold text-sm whitespace-nowrap ${Number(t.monto) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}
@@ -230,6 +245,11 @@ interface TransactionTableProps {
   highlightId?: number | null
   /** Persiste el nuevo `orden` al reordenar por drag & drop (solo dentro de la misma fecha) */
   onReorder?: (id: number, nuevoOrden: number) => void
+  /** Habilita la edición de celdas en línea (estilo Excel) sobre las columnas con `editField` */
+  inlineEdit?: {
+    context: InlineEditContext
+    onSave: (id: number, patch: Partial<Transaction>) => Promise<boolean>
+  }
 }
 
 export function TransactionTable({
@@ -250,6 +270,7 @@ export function TransactionTable({
   renderInlineCreateForm,
   highlightId = null,
   onReorder,
+  inlineEdit,
 }: TransactionTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   // Gap donde se crea un movimiento en línea: gapKey -1 = arriba de todo; i = debajo de la fila i
@@ -296,6 +317,25 @@ export function TransactionTable({
 
   const allSelected = transactions.length > 0 && selectedIds.size === transactions.length
   const someSelected = selectedIds.size > 0 && selectedIds.size < transactions.length
+
+  // --- Edición de celdas en línea (estilo Excel) ---
+  const editEnabled = !!inlineEdit && !isReadOnly
+  const editableColKeys = useMemo(() => columns.filter(c => c.editField).map(c => c.key), [columns])
+  const rowIds = useMemo(() => transactions.map(t => t.id), [transactions])
+
+  const handleInlineCommit = useCallback(
+    async (rowId: number, colKey: string, value: string): Promise<boolean> => {
+      if (!inlineEdit) return false
+      const col = columns.find(c => c.key === colKey)
+      const t = transactions.find(tx => tx.id === rowId)
+      if (!col?.editField || !t) return false
+      const patch = EDIT_FIELD_SPECS[col.editField].buildPatch(value, t, inlineEdit.context)
+      return inlineEdit.onSave(rowId, patch)
+    },
+    [inlineEdit, columns, transactions],
+  )
+
+  const grid = useGridEdit({ rowIds, colKeys: editableColKeys, onCommit: handleInlineCommit })
 
   const handleBulkDelete = () => {
     if (onBulkDelete) {
@@ -619,22 +659,51 @@ export function TransactionTable({
                                     />
                                   </TableCell>
                                 )}
-                                {columns.map(col => (
-                                  <TableCell
-                                    key={col.key}
-                                    className={`px-2 ${
-                                      col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''
-                                    } ${col.widthClass || ''} ${
-                                      col.hideBelow === 'md'
-                                        ? 'hidden md:table-cell'
-                                        : col.hideBelow === 'lg'
-                                          ? 'hidden lg:table-cell'
-                                          : ''
-                                    }`}
-                                  >
-                                    {col.render(transaction)}
-                                  </TableCell>
-                                ))}
+                                {columns.map(col => {
+                                  const spec = editEnabled && col.editField ? EDIT_FIELD_SPECS[col.editField] : null
+                                  const editingThis = !!spec && grid.isActive(transaction.id, col.key)
+                                  return (
+                                    <TableCell
+                                      key={col.key}
+                                      className={`${spec ? 'px-1' : 'px-2'} ${
+                                        col.align === 'center'
+                                          ? 'text-center'
+                                          : col.align === 'right'
+                                            ? 'text-right'
+                                            : ''
+                                      } ${col.widthClass || ''} ${
+                                        col.hideBelow === 'md'
+                                          ? 'hidden md:table-cell'
+                                          : col.hideBelow === 'lg'
+                                            ? 'hidden lg:table-cell'
+                                            : ''
+                                      }`}
+                                    >
+                                      {spec && inlineEdit ? (
+                                        <EditableCell
+                                          editing={editingThis}
+                                          saving={grid.isSaving(transaction.id)}
+                                          type={spec.type}
+                                          display={col.render(transaction)}
+                                          raw={editingThis ? spec.getRaw(transaction) : ''}
+                                          // Las opciones (filtrado de catálogos) sólo se calculan
+                                          // para la celda que se está editando → evita recalcular
+                                          // en todas las filas en cada render.
+                                          options={
+                                            editingThis ? spec.getOptions?.(transaction, inlineEdit.context) : undefined
+                                          }
+                                          align={col.align}
+                                          placeholder={spec.placeholder}
+                                          onStart={() => grid.start(transaction.id, col.key)}
+                                          onCommit={(value, dir) => grid.commit(value, dir)}
+                                          onCancel={grid.cancel}
+                                        />
+                                      ) : (
+                                        col.render(transaction)
+                                      )}
+                                    </TableCell>
+                                  )
+                                })}
                                 <TableCell
                                   className={`w-[172px] min-w-[172px] max-w-[172px] px-2 text-center ${
                                     flashId === transaction.id
@@ -644,110 +713,15 @@ export function TransactionTable({
                                         : 'bg-white'
                                   }`}
                                 >
-                                  <div className="flex flex-nowrap items-center justify-center gap-1">
-                                    {/* Ver detalles */}
-                                    <Button
-                                      size="sm"
-                                      onClick={() => onViewDetails(transaction)}
-                                      className={`h-7 w-7 p-0 text-white border-none cursor-pointer shadow-sm transition-all flex items-center justify-center ${
-                                        isReadOnly
-                                          ? 'bg-gray-400 hover:bg-gray-500'
-                                          : 'bg-[#002868] hover:bg-[#003d8f] hover:shadow-md'
-                                      }`}
-                                      title={isReadOnly ? 'Ver detalles (solo lectura)' : 'Ver detalles'}
-                                    >
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={2}
-                                        stroke="currentColor"
-                                        className="w-4 h-4"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
-                                        />
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                        />
-                                      </svg>
-                                    </Button>
-                                    {/* Cambiar estado */}
-                                    {onChangeState && (
-                                      <Button
-                                        size="sm"
-                                        onClick={() => !isReadOnly && onChangeState(transaction)}
-                                        disabled={isReadOnly}
-                                        className="h-7 w-7 p-0 bg-[#002868] hover:bg-[#003d8f] text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
-                                        title={isReadOnly ? 'Sucursal inactiva' : 'Cambiar estado'}
-                                      >
-                                        <svg
-                                          xmlns="http://www.w3.org/2000/svg"
-                                          fill="none"
-                                          viewBox="0 0 24 24"
-                                          strokeWidth={2}
-                                          stroke="currentColor"
-                                          className="w-4 h-4"
-                                        >
-                                          <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-                                          />
-                                        </svg>
-                                      </Button>
-                                    )}
-                                    {/* Deuda (solo si hay handler) */}
-                                    {onToggleDeuda && (
-                                      <Button
-                                        size="sm"
-                                        onClick={() => !isReadOnly && onToggleDeuda(transaction)}
-                                        disabled={isReadOnly}
-                                        className={`h-7 w-7 p-0 border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none ${
-                                          transaction.es_deuda
-                                            ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                                            : 'bg-orange-100 hover:bg-orange-200 text-orange-700'
-                                        }`}
-                                        title={
-                                          isReadOnly
-                                            ? 'Sucursal inactiva'
-                                            : transaction.es_deuda
-                                              ? 'Quitar deuda'
-                                              : 'Marcar como deuda'
-                                        }
-                                      >
-                                        <Clock className="w-4 h-4" />
-                                      </Button>
-                                    )}
-                                    {/* Mover */}
-                                    {onMove && (
-                                      <Button
-                                        size="sm"
-                                        onClick={() => !isReadOnly && onMove(transaction)}
-                                        disabled={isReadOnly}
-                                        className="h-7 w-7 p-0 bg-indigo-500 hover:bg-indigo-600 text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
-                                        title={isReadOnly ? 'Sucursal inactiva' : 'Mover transacción'}
-                                      >
-                                        <ArrowRightLeft className="w-4 h-4" />
-                                      </Button>
-                                    )}
-                                    {/* Eliminar */}
-                                    {onDelete && (
-                                      <Button
-                                        size="sm"
-                                        onClick={() => !isReadOnly && onDelete(transaction)}
-                                        disabled={isReadOnly}
-                                        className="h-7 w-7 p-0 bg-rose-500 hover:bg-rose-600 text-white border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
-                                        title={isReadOnly ? 'Sucursal inactiva' : 'Eliminar movimiento'}
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </Button>
-                                    )}
-                                  </div>
+                                  <RowActions
+                                    transaction={transaction}
+                                    isReadOnly={isReadOnly}
+                                    onViewDetails={onViewDetails}
+                                    onChangeState={onChangeState}
+                                    onToggleDeuda={onToggleDeuda}
+                                    onMove={onMove}
+                                    onDelete={onDelete}
+                                  />
                                 </TableCell>
                               </>
                             )}

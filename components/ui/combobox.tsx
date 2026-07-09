@@ -29,6 +29,10 @@ interface ComboboxProps {
    * y que sea recortado por contenedores con overflow (p. ej. tablas).
    */
   overlay?: boolean
+  /** Abre el menú automáticamente al montar (útil para edición en línea estilo Excel). */
+  autoOpen?: boolean
+  /** Se dispara cuando el menú se cierra (por Escape, click afuera o selección). */
+  onClose?: () => void
 }
 
 interface MenuCoords {
@@ -36,6 +40,9 @@ interface MenuCoords {
   left: number
   width: number
 }
+
+/** Ancho mínimo del menú desplegable en modo overlay (px) */
+const MENU_MIN_WIDTH = 240
 
 export function Combobox({
   options,
@@ -49,6 +56,8 @@ export function Combobox({
   onCreateOption,
   pendingLabel,
   overlay = false,
+  autoOpen = false,
+  onClose,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState('')
@@ -67,7 +76,12 @@ export function Combobox({
   const recomputeCoords = React.useCallback(() => {
     if (!triggerRef.current) return
     const rect = triggerRef.current.getBoundingClientRect()
-    setCoords({ top: rect.bottom + 4, left: rect.left, width: rect.width })
+    // El menú nunca es más angosto que MENU_MIN_WIDTH (evita dropdowns diminutos en
+    // celdas de tabla estrechas). Además se reubica para no salirse del viewport.
+    const menuWidth = Math.max(rect.width, MENU_MIN_WIDTH)
+    const maxLeft = window.innerWidth - menuWidth - 8
+    const left = Math.max(8, Math.min(rect.left, maxLeft))
+    setCoords({ top: rect.bottom + 4, left, width: menuWidth })
   }, [])
 
   const handleOpen = () => {
@@ -80,7 +94,18 @@ export function Combobox({
   const closeMenu = React.useCallback(() => {
     setOpen(false)
     setSearch('')
-  }, [])
+    onClose?.()
+  }, [onClose])
+
+  // Apertura automática al montar (edición en línea)
+  const didAutoOpen = React.useRef(false)
+  React.useEffect(() => {
+    if (!autoOpen || didAutoOpen.current) return
+    didAutoOpen.current = true
+    if (overlay) recomputeCoords()
+    setOpen(true)
+    setTimeout(() => inputRef.current?.focus(), 20)
+  }, [autoOpen, overlay, recomputeCoords])
 
   const handleSelect = (optionValue: string) => {
     onChange(optionValue === value ? '' : optionValue)
@@ -99,9 +124,15 @@ export function Combobox({
     closeMenu()
   }
 
-  // Cerrar con Escape (input)
+  // Teclado del input de búsqueda: Escape cierra, Enter elige la 1ra coincidencia
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') closeMenu()
+    if (e.key === 'Escape') {
+      closeMenu()
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      if (filtered.length > 0) handleSelect(filtered[0].value)
+      else if (showCreate) handleCreate()
+    }
   }
 
   // Reposicionar/cerrar el overlay ante scroll o resize
