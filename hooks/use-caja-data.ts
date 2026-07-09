@@ -89,6 +89,15 @@ function normalizeTransaction(
   }
 }
 
+// Orden por fecha y, dentro de la misma fecha, por la posición manual `orden`
+// (fallback: id). Habilita inserción "arriba/abajo" y reordenamiento por drag & drop.
+function sortByFechaOrden(a: Transaction, b: Transaction): number {
+  const fechaA = a.fecha ? new Date(a.fecha).getTime() : 0
+  const fechaB = b.fecha ? new Date(b.fecha).getTime() : 0
+  if (fechaA !== fechaB) return fechaA - fechaB
+  return (a.orden ?? a.id) - (b.orden ?? b.id)
+}
+
 // =============================================
 // Selección de endpoints según tipo de caja
 // =============================================
@@ -102,6 +111,7 @@ function getEndpoints(tipo: 'efectivo' | 'banco') {
       update: API_ENDPOINTS.CAJA_BANCO.UPDATE,
       updateEstado: API_ENDPOINTS.CAJA_BANCO.UPDATE_ESTADO,
       toggleDeuda: API_ENDPOINTS.CAJA_BANCO.TOGGLE_DEUDA,
+      updateOrden: API_ENDPOINTS.CAJA_BANCO.UPDATE_ORDEN,
       deleteMovimiento: API_ENDPOINTS.CAJA_BANCO.DELETE,
     }
   }
@@ -112,6 +122,7 @@ function getEndpoints(tipo: 'efectivo' | 'banco') {
     update: API_ENDPOINTS.MOVIMIENTOS.UPDATE,
     updateEstado: API_ENDPOINTS.MOVIMIENTOS.UPDATE_ESTADO,
     toggleDeuda: API_ENDPOINTS.MOVIMIENTOS.TOGGLE_DEUDA,
+    updateOrden: API_ENDPOINTS.MOVIMIENTOS.UPDATE_ORDEN,
     deleteMovimiento: API_ENDPOINTS.MOVIMIENTOS.DELETE,
   }
 }
@@ -204,15 +215,11 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
         normalizeTransaction,
       )
 
-      const movimientosCompletados = allMovimientos.filter(m => m.estado === 'completado').sort((a, b) => b.id - a.id)
+      const movimientosCompletados = allMovimientos.filter(m => m.estado === 'completado').sort(sortByFechaOrden)
 
       const movimientosAprobados = allMovimientos
         .filter(m => m.estado === 'aprobado' || m.estado === 'pendiente')
-        .sort((a, b) => {
-          const fechaA = a.fecha ? new Date(a.fecha).getTime() : 0
-          const fechaB = b.fecha ? new Date(b.fecha).getTime() : 0
-          return fechaA - fechaB
-        })
+        .sort(sortByFechaOrden)
 
       setSaldoReal(movimientosCompletados)
       // Saldo necesario incluye TODOS los aprobados/pendientes (incluyendo deuda),
@@ -227,6 +234,31 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     // Refrescar totales/parciales del API al finalizar
     fetchTotales()
   }, [endpoints, sucursalId, moneda, fetchTotales])
+
+  // Reordenar un movimiento (drag & drop): actualiza `orden` de forma optimista y persiste.
+  const reorderMovimiento = useCallback(
+    async (id: number, nuevoOrden: number) => {
+      const aplicar = (list: Transaction[]) =>
+        list.some(m => m.id === id)
+          ? list.map(m => (m.id === id ? { ...m, orden: nuevoOrden } : m)).sort(sortByFechaOrden)
+          : list
+
+      setSaldoReal(prev => aplicar(prev))
+      setSaldoNecesario(prev => aplicar(prev))
+
+      try {
+        const res = await apiFetch(endpoints.updateOrden(id), {
+          method: 'PATCH',
+          body: JSON.stringify({ orden: nuevoOrden }),
+        })
+        if (!res.ok) throw new Error('Error al guardar el orden')
+      } catch {
+        toast.error('No se pudo guardar el nuevo orden.')
+        fetchMovimientos() // revertir al estado del servidor
+      }
+    },
+    [endpoints, fetchMovimientos],
+  )
 
   const fetchCategorias = useCallback(async () => {
     try {
@@ -555,7 +587,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     // Búsqueda por cheque: query que empieza con #
     if (trimmed.startsWith('#')) {
       const chequeQuery = trimmed.slice(1).toLowerCase()
-      return (m.numero_cheque?.toLowerCase().includes(chequeQuery) ?? false)
+      return m.numero_cheque?.toLowerCase().includes(chequeQuery) ?? false
     }
 
     const lower = trimmed.toLowerCase()
@@ -564,10 +596,9 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     const montoMatches =
       formattedMonto.includes(lower) ||
       formattedMontoSigned.includes(lower) ||
-      (lower.includes(',') && (
-        formattedMonto.replace(/\./g, '').includes(lower.replace(/\./g, '')) ||
-        formattedMontoSigned.replace(/\./g, '').includes(lower.replace(/\./g, ''))
-      ))
+      (lower.includes(',') &&
+        (formattedMonto.replace(/\./g, '').includes(lower.replace(/\./g, '')) ||
+          formattedMontoSigned.replace(/\./g, '').includes(lower.replace(/\./g, ''))))
     return (
       (m.concepto?.toLowerCase().includes(lower) ?? false) ||
       (m.comentarios?.toLowerCase().includes(lower) ?? false) ||
@@ -604,7 +635,9 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
             return id ? bancosFiltroSet.has(id) : false
           })
 
-    const filteredBySearch = searchText.trim() ? filteredByBanco.filter(m => matchesSearch(m, searchText.trim())) : filteredByBanco
+    const filteredBySearch = searchText.trim()
+      ? filteredByBanco.filter(m => matchesSearch(m, searchText.trim()))
+      : filteredByBanco
     const filteredByChequePendiente = filtroChequesPendientes
       ? filteredBySearch.filter(
           m => isMedioPagoChequeLike(m.medio_pago_nombre) && !tieneNumeroChequeCargado(m.numero_cheque),
@@ -772,5 +805,6 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     initialize,
     fetchMovimientos,
     fetchDescripciones,
+    reorderMovimiento,
   }
 }

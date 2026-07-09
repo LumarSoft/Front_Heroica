@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { PageHeader } from '@/components/caja/PageHeader'
 import { CajaTabs, TabsContent } from '@/components/caja/CajaTabs'
 import { TransactionTable, getBancoColumns } from '@/components/caja/TransactionTable'
+import { InlineMovimientoRow } from '@/components/caja/InlineMovimientoRow'
 import { PaymentCalendar } from '@/components/caja/PaymentCalendar'
 import { DetailsDialog, StateDialog, DeleteDialog, DeudaDialog } from '@/components/caja/TransactionDialogs'
 import { MoverMovimientoDialog } from '@/components/caja/MoverMovimientoDialog'
@@ -50,6 +51,7 @@ export default function CajaBancoPage() {
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false)
   const [bulkSelectedIds, setBulkSelectedIds] = useState<number[]>([])
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
+  const [highlightId, setHighlightId] = useState<number | null>(null)
 
   const handleBulkDelete = (ids: number[]) => {
     setBulkSelectedIds(ids)
@@ -132,6 +134,33 @@ export default function CajaBancoPage() {
   const canToggleDeuda = canCrear // because creating mirror debt acts as "crear"
 
   const isStrictlyReadOnly = isGlobalReadOnly || (!canEditInfo && !canAddComment)
+
+  // Creación de movimientos en línea (solo ARS; USD requiere tipo de cambio)
+  const canInlineCreate = canCrear && moneda === 'ARS'
+  const renderInlineForm =
+    (estado: 'completado' | 'aprobado') =>
+    ({ defaultFecha, orden, onClose }: { defaultFecha: string; orden: number; onClose: () => void }) => (
+      <InlineMovimientoRow
+        cajaTipo="banco"
+        moneda={moneda}
+        sucursalId={caja.sucursalId}
+        userId={user?.id}
+        estado={estado}
+        defaultFecha={defaultFecha}
+        orden={orden}
+        categorias={caja.categorias}
+        descripciones={caja.descripciones}
+        bancos={caja.bancos}
+        mediosPago={caja.mediosPago}
+        onCancel={onClose}
+        onCreated={(createdId: number) => {
+          caja.fetchMovimientos()
+          caja.fetchDescripciones()
+          setHighlightId(createdId)
+          onClose()
+        }}
+      />
+    )
 
   const { initialize } = caja
   useEffect(() => {
@@ -290,6 +319,10 @@ export default function CajaBancoPage() {
                         onBulkDelete={canDelete ? handleBulkDelete : undefined}
                         onBulkMove={canCrear ? handleBulkMove : undefined}
                         isReadOnly={isStrictlyReadOnly}
+                        canInlineCreate={canInlineCreate}
+                        renderInlineCreateForm={renderInlineForm('completado')}
+                        highlightId={highlightId}
+                        onReorder={caja.reorderMovimiento}
                       />
                     )}
                   </TabsContent>
@@ -326,6 +359,10 @@ export default function CajaBancoPage() {
                         onBulkDelete={canDelete ? handleBulkDelete : undefined}
                         onBulkMove={canCrear ? handleBulkMove : undefined}
                         isReadOnly={isStrictlyReadOnly}
+                        canInlineCreate={canInlineCreate}
+                        renderInlineCreateForm={renderInlineForm('aprobado')}
+                        highlightId={highlightId}
+                        onReorder={caja.reorderMovimiento}
                       />
                     )}
                   </TabsContent>

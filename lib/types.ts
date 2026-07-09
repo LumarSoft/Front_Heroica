@@ -8,6 +8,8 @@ export interface Transaction {
   id: number
   sucursal_id: number
   fecha: string
+  /** Posición manual dentro de su fecha (para inserción arriba/abajo). Fallback: id */
+  orden?: number | null
   concepto: string
   monto: number
   comentarios?: string
