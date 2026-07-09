@@ -9,32 +9,20 @@ import {
   format,
   addMonths,
   subMonths,
-  isToday,
   isSameMonth,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { ArrowLeft, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Minus } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Minus, Wallet } from 'lucide-react'
 import type { Transaction } from '@/lib/types'
 import type { ColumnDef } from '@/components/caja/TransactionTable'
 import { TransactionTable } from '@/components/caja/TransactionTable'
+import { DayCell, WeekTotalsCell, type DayData, type WeekTotals } from '@/components/caja/PaymentCalendarCells'
 import { formatMonto } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
 // =============================================
 // Tipos internos
 // =============================================
-
-interface DayData {
-  egresos: number
-  ingresos: number
-  items: Transaction[]
-}
-
-interface WeekTotals {
-  egresos: number
-  ingresos: number
-  neto: number
-}
 
 interface PaymentCalendarProps {
   transactions: Transaction[]
@@ -49,117 +37,18 @@ interface PaymentCalendarProps {
   isReadOnly?: boolean
   title: string
   description: string
+  /**
+   * Saldo real actual (suma de movimientos completados). Cuando se pasa, el calendario
+   * cambia a modo "Saldo Necesario": por día/semana/mes muestra cuánto va a salir y lo
+   * compara contra este saldo, mostrando cuánto sobra o cuánto falta para cubrirlo.
+   */
+  saldoRealActual?: number
 }
 
 const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
 function getISODate(date: Date): string {
   return format(date, 'yyyy-MM-dd')
-}
-
-// =============================================
-// Sub-componente: celda de día
-// =============================================
-
-interface DayCellProps {
-  date: Date
-  data: DayData | undefined
-  isCurrentMonth: boolean
-  onClick: (date: Date) => void
-  animationDelay: number
-}
-
-function DayCell({ date, data, isCurrentMonth, onClick, animationDelay }: DayCellProps) {
-  const today = isToday(date)
-  const hasData = data && data.items.length > 0
-  const neto = hasData ? data.ingresos - data.egresos : 0
-
-  return (
-    <div
-      onClick={() => isCurrentMonth && onClick(date)}
-      style={{ animationDelay: `${animationDelay}ms` }}
-      className={cn(
-        'relative min-h-[110px] p-2.5 border border-[#E8EAED] rounded-xl transition-all duration-200 calendar-cell-enter',
-        isCurrentMonth
-          ? 'bg-white cursor-pointer hover:border-[#002868]/40 hover:shadow-md hover:-translate-y-0.5'
-          : 'bg-[#F8F9FA] opacity-40 cursor-default',
-        today && isCurrentMonth && 'ring-2 ring-[#002868] ring-offset-1',
-      )}
-    >
-      {/* Número del día */}
-      <div className="flex items-center justify-between mb-1">
-        <span
-          className={cn(
-            'text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full',
-            today && isCurrentMonth ? 'bg-[#002868] text-white' : 'text-[#5A6070]',
-          )}
-        >
-          {format(date, 'd')}
-        </span>
-        {hasData && <span className="text-[11px] text-[#9AA0AC] font-medium">{data.items.length} mov.</span>}
-      </div>
-
-      {/* Datos financieros */}
-      {hasData && (
-        <div className="space-y-1 mt-1.5">
-          {data.egresos > 0 && (
-            <div className="flex items-center gap-1 min-w-0">
-              <TrendingDown className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
-              <span className="text-xs font-semibold text-rose-600 truncate">{formatMonto(data.egresos)}</span>
-            </div>
-          )}
-          {data.ingresos > 0 && (
-            <div className="flex items-center gap-1 min-w-0">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-              <span className="text-xs font-semibold text-emerald-600 truncate">{formatMonto(data.ingresos)}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-1 pt-1 border-t border-[#E8EAED] min-w-0">
-            <Minus className="w-3.5 h-3.5 text-[#002868] flex-shrink-0" />
-            <span className={cn('text-xs font-bold truncate', neto >= 0 ? 'text-[#002868]' : 'text-amber-600')}>
-              {formatMonto(neto)}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {!hasData && isCurrentMonth && (
-        <div className="flex items-center justify-center h-12 opacity-20">
-          <Minus className="w-4 h-4 text-[#9AA0AC]" />
-        </div>
-      )}
-    </div>
-  )
-}
-
-// =============================================
-// Sub-componente: columna de totales semanales
-// =============================================
-
-function WeekTotalsCell({ totals }: { totals: WeekTotals }) {
-  return (
-    <div className="hidden sm:flex flex-col justify-center gap-1 px-3 py-2 bg-[#F0F4FF] rounded-xl border border-[#002868]/10 w-full overflow-hidden">
-      <p className="text-[9px] font-bold text-[#002868]/60 uppercase tracking-wider mb-0.5">Semana</p>
-      {totals.egresos > 0 && (
-        <div className="flex items-center gap-1 min-w-0">
-          <TrendingDown className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
-          <span className="text-xs font-semibold text-rose-600 truncate">{formatMonto(totals.egresos)}</span>
-        </div>
-      )}
-      {totals.ingresos > 0 && (
-        <div className="flex items-center gap-1 min-w-0">
-          <TrendingUp className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-          <span className="text-xs font-semibold text-emerald-600 truncate">{formatMonto(totals.ingresos)}</span>
-        </div>
-      )}
-      <div className="flex items-center gap-1 pt-0.5 border-t border-[#002868]/10 min-w-0">
-        <Minus className="w-3.5 h-3.5 text-[#002868] flex-shrink-0" />
-        <span className={cn('text-xs font-bold truncate', totals.neto >= 0 ? 'text-[#002868]' : 'text-amber-600')}>
-          {formatMonto(totals.neto)}
-        </span>
-      </div>
-    </div>
-  )
 }
 
 // =============================================
@@ -179,6 +68,7 @@ export function PaymentCalendar({
   isReadOnly,
   title,
   description,
+  saldoRealActual,
 }: PaymentCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(() => new Date())
   const [selectedDay, setSelectedDay] = useState<Date | null>(null)
@@ -282,6 +172,9 @@ export function PaymentCalendar({
   if (selectedDay) {
     const dayLabel = format(selectedDay, "EEEE d 'de' MMMM yyyy", { locale: es })
     const capitalDayLabel = dayLabel.charAt(0).toUpperCase() + dayLabel.slice(1)
+    const selectedDayData = dayMap.get(getISODate(selectedDay))
+    const selectedDayNeto = selectedDayData ? selectedDayData.ingresos - selectedDayData.egresos : 0
+    const selectedDayDiferencia = saldoRealActual !== undefined ? saldoRealActual - (selectedDayData?.egresos ?? 0) : 0
 
     return (
       <div
@@ -308,37 +201,59 @@ export function PaymentCalendar({
         <div className="mb-4 px-4 py-3 bg-[#F0F4FF] rounded-xl border border-[#002868]/10">
           <p className="text-xs font-bold text-[#002868]/60 uppercase tracking-wider mb-0.5">Detalle del día</p>
           <p className="text-base font-bold text-[#002868]">{capitalDayLabel}</p>
-          {selectedDayTransactions.length > 0 && (
+          {selectedDayTransactions.length > 0 && selectedDayData && saldoRealActual !== undefined && (
             <div className="flex flex-wrap gap-4 mt-2">
-              {(() => {
-                const d = dayMap.get(getISODate(selectedDay))!
-                const neto = d.ingresos - d.egresos
-                return (
-                  <>
-                    {d.egresos > 0 && (
-                      <span className="flex items-center gap-1 text-xs font-semibold text-rose-600">
-                        <TrendingDown className="w-3.5 h-3.5" />
-                        {formatMonto(d.egresos)}
-                      </span>
-                    )}
-                    {d.ingresos > 0 && (
-                      <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
-                        <TrendingUp className="w-3.5 h-3.5" />
-                        {formatMonto(d.ingresos)}
-                      </span>
-                    )}
-                    <span
-                      className={cn(
-                        'flex items-center gap-1 text-xs font-bold',
-                        neto >= 0 ? 'text-[#002868]' : 'text-amber-600',
-                      )}
-                    >
-                      <Minus className="w-3.5 h-3.5" />
-                      Neto: {formatMonto(neto)}
-                    </span>
-                  </>
-                )
-              })()}
+              {selectedDayData.egresos > 0 && (
+                <span className="flex items-center gap-1 text-xs font-semibold text-rose-600">
+                  <TrendingDown className="w-3.5 h-3.5" />
+                  Sale {formatMonto(selectedDayData.egresos)}
+                </span>
+              )}
+              <span className="flex items-center gap-1 text-xs font-medium text-[#5A6070]">
+                <Wallet className="w-3.5 h-3.5" />
+                Real: {formatMonto(saldoRealActual)}
+              </span>
+              <span
+                className={cn(
+                  'flex items-center gap-1 text-xs font-bold',
+                  selectedDayDiferencia >= 0 ? 'text-emerald-600' : 'text-rose-600',
+                )}
+              >
+                {selectedDayDiferencia >= 0 ? (
+                  <TrendingUp className="w-3.5 h-3.5" />
+                ) : (
+                  <TrendingDown className="w-3.5 h-3.5" />
+                )}
+                {selectedDayDiferencia >= 0
+                  ? `Sobra ${formatMonto(selectedDayDiferencia)}`
+                  : `Falta ${formatMonto(Math.abs(selectedDayDiferencia))}`}
+              </span>
+            </div>
+          )}
+
+          {selectedDayTransactions.length > 0 && selectedDayData && saldoRealActual === undefined && (
+            <div className="flex flex-wrap gap-4 mt-2">
+              {selectedDayData.egresos > 0 && (
+                <span className="flex items-center gap-1 text-xs font-semibold text-rose-600">
+                  <TrendingDown className="w-3.5 h-3.5" />
+                  {formatMonto(selectedDayData.egresos)}
+                </span>
+              )}
+              {selectedDayData.ingresos > 0 && (
+                <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  {formatMonto(selectedDayData.ingresos)}
+                </span>
+              )}
+              <span
+                className={cn(
+                  'flex items-center gap-1 text-xs font-bold',
+                  selectedDayNeto >= 0 ? 'text-[#002868]' : 'text-amber-600',
+                )}
+              >
+                <Minus className="w-3.5 h-3.5" />
+                Neto: {formatMonto(selectedDayNeto)}
+              </span>
             </div>
           )}
         </div>
@@ -408,27 +323,59 @@ export function PaymentCalendar({
 
           {/* Totales del mes */}
           <div className="hidden lg:flex items-center gap-4 text-xs">
-            {monthTotals.egresos > 0 && (
-              <span className="flex items-center gap-1 font-semibold text-rose-600">
-                <TrendingDown className="w-3.5 h-3.5" />
-                {formatMonto(monthTotals.egresos)}
-              </span>
+            {saldoRealActual !== undefined ? (
+              <>
+                {monthTotals.egresos > 0 && (
+                  <span className="flex items-center gap-1 font-semibold text-rose-600">
+                    <TrendingDown className="w-3.5 h-3.5" />
+                    Sale {formatMonto(monthTotals.egresos)}
+                  </span>
+                )}
+                <span className="flex items-center gap-1 font-medium text-[#5A6070]">
+                  <Wallet className="w-3.5 h-3.5" />
+                  Real: {formatMonto(saldoRealActual)}
+                </span>
+                <span
+                  className={cn(
+                    'flex items-center gap-1 font-bold',
+                    saldoRealActual - monthTotals.egresos >= 0 ? 'text-emerald-600' : 'text-rose-600',
+                  )}
+                >
+                  {saldoRealActual - monthTotals.egresos >= 0 ? (
+                    <TrendingUp className="w-3.5 h-3.5" />
+                  ) : (
+                    <TrendingDown className="w-3.5 h-3.5" />
+                  )}
+                  {saldoRealActual - monthTotals.egresos >= 0
+                    ? `Sobra ${formatMonto(saldoRealActual - monthTotals.egresos)}`
+                    : `Falta ${formatMonto(Math.abs(saldoRealActual - monthTotals.egresos))}`}
+                </span>
+              </>
+            ) : (
+              <>
+                {monthTotals.egresos > 0 && (
+                  <span className="flex items-center gap-1 font-semibold text-rose-600">
+                    <TrendingDown className="w-3.5 h-3.5" />
+                    {formatMonto(monthTotals.egresos)}
+                  </span>
+                )}
+                {monthTotals.ingresos > 0 && (
+                  <span className="flex items-center gap-1 font-semibold text-emerald-600">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    {formatMonto(monthTotals.ingresos)}
+                  </span>
+                )}
+                <span
+                  className={cn(
+                    'flex items-center gap-1 font-bold',
+                    monthTotals.neto >= 0 ? 'text-[#002868]' : 'text-amber-600',
+                  )}
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                  {formatMonto(monthTotals.neto)}
+                </span>
+              </>
             )}
-            {monthTotals.ingresos > 0 && (
-              <span className="flex items-center gap-1 font-semibold text-emerald-600">
-                <TrendingUp className="w-3.5 h-3.5" />
-                {formatMonto(monthTotals.ingresos)}
-              </span>
-            )}
-            <span
-              className={cn(
-                'flex items-center gap-1 font-bold',
-                monthTotals.neto >= 0 ? 'text-[#002868]' : 'text-amber-600',
-              )}
-            >
-              <Minus className="w-3.5 h-3.5" />
-              {formatMonto(monthTotals.neto)}
-            </span>
           </div>
         </div>
 
@@ -490,13 +437,14 @@ export function PaymentCalendar({
                         isCurrentMonth={isCurrentMonth}
                         onClick={handleDayClick}
                         animationDelay={globalIdx * 20}
+                        saldoRealActual={saldoRealActual}
                       />
                     )
                   })}
                   {/* Columna totales semanales */}
                   <div className="flex items-stretch min-h-[110px]">
                     {weekHasData ? (
-                      <WeekTotalsCell totals={weekTotals} />
+                      <WeekTotalsCell totals={weekTotals} saldoRealActual={saldoRealActual} />
                     ) : (
                       <div className="hidden sm:block min-h-[110px] rounded-xl bg-transparent" />
                     )}
@@ -509,18 +457,37 @@ export function PaymentCalendar({
 
         {/* Leyenda inferior */}
         <div className="flex flex-wrap items-center gap-4 px-6 py-3 border-t border-[#E8EAED] bg-[#F8F9FA]">
-          <div className="flex items-center gap-1.5 text-xs text-[#5A6070]">
-            <TrendingDown className="w-3.5 h-3.5 text-rose-500" />
-            <span>Egresos</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-[#5A6070]">
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Ingresos</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-[#5A6070]">
-            <Minus className="w-3.5 h-3.5 text-[#002868]" />
-            <span>Neto</span>
-          </div>
+          {saldoRealActual !== undefined ? (
+            <>
+              <div className="flex items-center gap-1.5 text-xs text-[#5A6070]">
+                <TrendingDown className="w-3.5 h-3.5 text-rose-500" />
+                <span>Sale</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-[#5A6070]">
+                <Wallet className="w-3.5 h-3.5 text-[#7A93BB]" />
+                <span>Saldo real actual</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-[#5A6070]">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Sobra / Falta</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-1.5 text-xs text-[#5A6070]">
+                <TrendingDown className="w-3.5 h-3.5 text-rose-500" />
+                <span>Egresos</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-[#5A6070]">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Ingresos</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-[#5A6070]">
+                <Minus className="w-3.5 h-3.5 text-[#002868]" />
+                <span>Neto</span>
+              </div>
+            </>
+          )}
           <span className="text-xs text-[#9AA0AC] ml-auto">Hacé click en un día para ver el detalle</span>
         </div>
       </div>
