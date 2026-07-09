@@ -293,6 +293,7 @@ export default function CajaEfectivoPage() {
                         onBulkDelete={canDelete ? handleBulkDelete : undefined}
                         onBulkMove={canCrear ? handleBulkMove : undefined}
                         isReadOnly={isStrictlyReadOnly}
+                        saldoRealActual={calcularTotal(caja.saldoRealFiltrado)}
                       />
                     ) : (
                       <TransactionTable
