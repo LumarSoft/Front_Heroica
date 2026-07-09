@@ -22,6 +22,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/store/authStore'
 import { useCalculatorStore } from '@/store/calculatorStore'
+import { useSidebarStore } from '@/store/sidebarStore'
 import { apiFetch } from '@/lib/api'
 import { API_ENDPOINTS } from '@/lib/config'
 import { cn } from '@/lib/utils'
@@ -205,21 +206,13 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
   const { toggleCalculator, isOpen: isCalculatorOpen } = useCalculatorStore()
 
   // ── Collapse ─────────────────────────────────────────────────────────────────
-  // `collapsed`       → controls the CSS width (starts immediately)
-  // `layoutCollapsed` → controls the inner content (delayed when closing so
-  //                     overflow-hidden clips the text naturally during animation)
-  const [collapsed, setCollapsed] = useState(false)
-  const [layoutCollapsed, setLayoutCollapsed] = useState(false)
+  // `collapsed`       → ancho CSS (desde el store; otras vistas pueden colapsarla)
+  // `layoutCollapsed` → contenido interno (se retrasa al cerrar para que el
+  //                     overflow-hidden recorte el texto durante la animación)
+  const collapsed = useSidebarStore(state => state.collapsed)
+  const toggleCollapsed = useSidebarStore(state => state.toggle)
+  const [layoutCollapsed, setLayoutCollapsed] = useState(() => useSidebarStore.getState().collapsed)
   const layoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    const stored = localStorage.getItem('heroica-sidebar-collapsed')
-    if (stored !== null) {
-      const val = stored === 'true'
-      setCollapsed(val)
-      setLayoutCollapsed(val)
-    }
-  }, [])
 
   useEffect(() => {
     return () => {
@@ -227,19 +220,18 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
     }
   }, [])
 
-  const toggleCollapsed = () => {
-    const next = !collapsed
-    setCollapsed(next)
-    localStorage.setItem('heroica-sidebar-collapsed', String(next))
+  // Sincroniza el contenido interno con el ancho, tanto si el colapso lo dispara el
+  // botón como si lo hace otra vista (p. ej. al abrir la vista Dual de las cajas).
+  useEffect(() => {
     if (layoutTimerRef.current) clearTimeout(layoutTimerRef.current)
-    if (next) {
-      // Collapsing: let the width animation run first, then switch content
+    if (collapsed) {
+      // Colapsando: dejar correr la animación de ancho y luego cambiar el contenido
       layoutTimerRef.current = setTimeout(() => setLayoutCollapsed(true), 280)
     } else {
-      // Expanding: switch content immediately so text flows in as sidebar grows
+      // Expandiendo: cambiar el contenido de inmediato para que el texto fluya
       setLayoutCollapsed(false)
     }
-  }
+  }, [collapsed])
 
   // ── Notifications ─────────────────────────────────────────────────────────────
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([])
