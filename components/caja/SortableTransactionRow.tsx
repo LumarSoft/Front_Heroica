@@ -18,8 +18,10 @@ interface SortableTransactionRowProps {
   id: number
   disabled?: boolean
   className?: string
-  /** Ref extra (además del de dnd-kit) para hacer scroll al resaltar una fila */
+  /** Ref extra (además del de dnd-kit) para hacer scroll al resaltar una fila / medir en virtualización */
   rowRef?: (el: HTMLTableRowElement | null) => void
+  /** Índice para el virtualizador (data-index) */
+  dataIndex?: number
   children: (handle: DragHandleProps) => ReactNode
 }
 
@@ -28,7 +30,14 @@ interface SortableTransactionRowProps {
  * (grip) que se provee a `children` vía render-prop, para no interferir con los
  * clicks de los botones de acción de la fila.
  */
-export function SortableTransactionRow({ id, disabled, className, rowRef, children }: SortableTransactionRowProps) {
+export function SortableTransactionRow({
+  id,
+  disabled,
+  className,
+  rowRef,
+  dataIndex,
+  children,
+}: SortableTransactionRowProps) {
   const { setNodeRef, setActivatorNodeRef, transform, transition, attributes, listeners, isDragging } = useSortable({
     id,
     disabled,
@@ -48,6 +57,7 @@ export function SortableTransactionRow({ id, disabled, className, rowRef, childr
   return (
     <TableRow
       ref={mergedRef}
+      data-index={dataIndex}
       style={style}
       className={`${className ?? ''} ${isDragging ? 'shadow-lg ring-1 ring-[#002868]/20' : ''}`}
     >
