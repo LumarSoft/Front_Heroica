@@ -341,6 +341,7 @@ export default function CajaBancoPage() {
                         onBulkDelete={canDelete ? handleBulkDelete : undefined}
                         onBulkMove={canCrear ? handleBulkMove : undefined}
                         isReadOnly={isStrictlyReadOnly}
+                        saldoRealActual={calcularTotal(caja.saldoRealFiltrado)}
                       />
                     ) : (
                       <TransactionTable
