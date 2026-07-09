@@ -23,6 +23,7 @@ import {
 } from '@dnd-kit/core'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { SortableTransactionRow, type DragHandleProps } from './SortableTransactionRow'
 import { RowActions } from './RowActions'
 import { EditableCell } from './EditableCell'
@@ -220,6 +221,17 @@ export function getEfectivoColumns(): ColumnDef[] {
 }
 
 // =============================================
+// Virtualización
+// =============================================
+
+/** A partir de esta cantidad de filas se activa la virtualización (windowing) */
+const VIRTUALIZE_THRESHOLD = 60
+/** Altura estimada de fila (px) — el virtualizador la corrige midiendo cada fila */
+const ESTIMATED_ROW_HEIGHT = 48
+/** Alto máximo del panel scrolleable cuando se virtualiza */
+const VIRTUAL_SCROLL_MAX_H = 'max-h-[70vh]'
+
+// =============================================
 // Componente TransactionTable
 // =============================================
 
@@ -336,6 +348,17 @@ export function TransactionTable({
   )
 
   const grid = useGridEdit({ rowIds, colKeys: editableColKeys, onCommit: handleInlineCommit })
+
+  // --- Virtualización (solo listas grandes) ---
+  const virtualize = transactions.length > VIRTUALIZE_THRESHOLD
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const virtualizer = useVirtualizer({
+    count: transactions.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    overscan: 14,
+    getItemKey: index => transactions[index]?.id ?? index,
+  })
 
   const handleBulkDelete = () => {
     if (onBulkDelete) {
@@ -497,6 +520,101 @@ export function TransactionTable({
     )
   }
 
+  // Render de una fila de movimiento. `measureRef` lo usa el virtualizador para medir la altura.
+  const renderRow = (transaction: Transaction, index: number, measureRef?: (el: Element | null) => void) => (
+    <SortableTransactionRow
+      id={transaction.id}
+      dataIndex={index}
+      disabled={!dndEnabled}
+      rowRef={el => {
+        if (transaction.id === highlightId) highlightRowRef.current = el
+        measureRef?.(el)
+      }}
+      className={`group/row hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50 ${
+        flashId === transaction.id
+          ? 'bg-emerald-50 ring-2 ring-inset ring-emerald-500 animate-pulse'
+          : selectedIds.has(transaction.id)
+            ? 'bg-indigo-50/60'
+            : ''
+      }`}
+    >
+      {handle => (
+        <>
+          {renderGutterCell(transaction, index, handle)}
+          {showBulkActions && (
+            <TableCell className="text-center w-10">
+              <input
+                type="checkbox"
+                checked={selectedIds.has(transaction.id)}
+                onChange={() => toggleOne(transaction.id)}
+                className="w-4 h-4 rounded border-gray-300 text-indigo-600 cursor-pointer"
+              />
+            </TableCell>
+          )}
+          {columns.map(col => {
+            const spec = editEnabled && col.editField ? EDIT_FIELD_SPECS[col.editField] : null
+            const editingThis = !!spec && grid.isActive(transaction.id, col.key)
+            return (
+              <TableCell
+                key={col.key}
+                className={`${spec ? 'px-1' : 'px-2'} ${
+                  col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''
+                } ${col.widthClass || ''} ${
+                  col.hideBelow === 'md' ? 'hidden md:table-cell' : col.hideBelow === 'lg' ? 'hidden lg:table-cell' : ''
+                }`}
+              >
+                {spec && inlineEdit ? (
+                  <EditableCell
+                    editing={editingThis}
+                    saving={grid.isSaving(transaction.id)}
+                    type={spec.type}
+                    display={col.render(transaction)}
+                    raw={editingThis ? spec.getRaw(transaction) : ''}
+                    // Las opciones (filtrado de catálogos) sólo se calculan para la celda
+                    // en edición → evita recalcular en todas las filas en cada render.
+                    options={editingThis ? spec.getOptions?.(transaction, inlineEdit.context) : undefined}
+                    align={col.align}
+                    placeholder={spec.placeholder}
+                    onStart={() => grid.start(transaction.id, col.key)}
+                    onCommit={(value, dir) => grid.commit(value, dir)}
+                    onCancel={grid.cancel}
+                  />
+                ) : (
+                  col.render(transaction)
+                )}
+              </TableCell>
+            )
+          })}
+          <TableCell
+            className={`w-[172px] min-w-[172px] max-w-[172px] px-2 text-center ${
+              flashId === transaction.id
+                ? 'bg-emerald-50'
+                : selectedIds.has(transaction.id)
+                  ? 'bg-indigo-50/60'
+                  : 'bg-white'
+            }`}
+          >
+            <RowActions
+              transaction={transaction}
+              isReadOnly={isReadOnly}
+              onViewDetails={onViewDetails}
+              onChangeState={onChangeState}
+              onToggleDeuda={onToggleDeuda}
+              onMove={onMove}
+              onDelete={onDelete}
+            />
+          </TableCell>
+        </>
+      )}
+    </SortableTransactionRow>
+  )
+
+  // Filas visibles cuando se virtualiza: sólo la ventana + espaciadores arriba/abajo
+  const virtualItems = virtualize ? virtualizer.getVirtualItems() : []
+  const virtualPaddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0
+  const virtualPaddingBottom =
+    virtualItems.length > 0 ? virtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end : 0
+
   return (
     <Card className="border-[#E0E0E0] bg-white shadow-lg">
       <CardHeader className="border-b border-[#E0E0E0] px-3 py-3 sm:px-4">
@@ -558,7 +676,12 @@ export function TransactionTable({
             )}
           </div>
         )}
-        <div className="rounded-md border border-[#E0E0E0] overflow-x-auto">
+        <div
+          ref={scrollRef}
+          className={`rounded-md border border-[#E0E0E0] overflow-x-auto ${
+            virtualize ? `${VIRTUAL_SCROLL_MAX_H} overflow-y-auto` : ''
+          }`}
+        >
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -567,7 +690,7 @@ export function TransactionTable({
           >
             <SortableContext items={transactions.map(t => t.id)} strategy={verticalListSortingStrategy}>
               <Table className="w-full table-fixed">
-                <TableHeader>
+                <TableHeader className={virtualize ? 'sticky top-0 z-20' : undefined}>
                   <TableRow className="bg-[#F8F9FA] hover:bg-[#F8F9FA] border-b-2 border-[#E0E0E0]">
                     {showGutter && <TableHead className="w-14 px-1" />}
                     {showBulkActions && (
@@ -629,106 +752,43 @@ export function TransactionTable({
                       </TableCell>
                     </TableRow>
                   ) : null}
-                  {transactions.length > 0 && (
+                  {/* Camino normal (listas chicas): render completo */}
+                  {transactions.length > 0 && !virtualize && (
                     <>
                       {renderDraftRow(-1)}
                       {transactions.map((transaction, index) => (
                         <Fragment key={transaction.id}>
-                          <SortableTransactionRow
-                            id={transaction.id}
-                            disabled={!dndEnabled}
-                            rowRef={transaction.id === highlightId ? el => (highlightRowRef.current = el) : undefined}
-                            className={`group/row hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50 ${
-                              flashId === transaction.id
-                                ? 'bg-emerald-50 ring-2 ring-inset ring-emerald-500 animate-pulse'
-                                : selectedIds.has(transaction.id)
-                                  ? 'bg-indigo-50/60'
-                                  : ''
-                            }`}
-                          >
-                            {handle => (
-                              <>
-                                {renderGutterCell(transaction, index, handle)}
-                                {showBulkActions && (
-                                  <TableCell className="text-center w-10">
-                                    <input
-                                      type="checkbox"
-                                      checked={selectedIds.has(transaction.id)}
-                                      onChange={() => toggleOne(transaction.id)}
-                                      className="w-4 h-4 rounded border-gray-300 text-indigo-600 cursor-pointer"
-                                    />
-                                  </TableCell>
-                                )}
-                                {columns.map(col => {
-                                  const spec = editEnabled && col.editField ? EDIT_FIELD_SPECS[col.editField] : null
-                                  const editingThis = !!spec && grid.isActive(transaction.id, col.key)
-                                  return (
-                                    <TableCell
-                                      key={col.key}
-                                      className={`${spec ? 'px-1' : 'px-2'} ${
-                                        col.align === 'center'
-                                          ? 'text-center'
-                                          : col.align === 'right'
-                                            ? 'text-right'
-                                            : ''
-                                      } ${col.widthClass || ''} ${
-                                        col.hideBelow === 'md'
-                                          ? 'hidden md:table-cell'
-                                          : col.hideBelow === 'lg'
-                                            ? 'hidden lg:table-cell'
-                                            : ''
-                                      }`}
-                                    >
-                                      {spec && inlineEdit ? (
-                                        <EditableCell
-                                          editing={editingThis}
-                                          saving={grid.isSaving(transaction.id)}
-                                          type={spec.type}
-                                          display={col.render(transaction)}
-                                          raw={editingThis ? spec.getRaw(transaction) : ''}
-                                          // Las opciones (filtrado de catálogos) sólo se calculan
-                                          // para la celda que se está editando → evita recalcular
-                                          // en todas las filas en cada render.
-                                          options={
-                                            editingThis ? spec.getOptions?.(transaction, inlineEdit.context) : undefined
-                                          }
-                                          align={col.align}
-                                          placeholder={spec.placeholder}
-                                          onStart={() => grid.start(transaction.id, col.key)}
-                                          onCommit={(value, dir) => grid.commit(value, dir)}
-                                          onCancel={grid.cancel}
-                                        />
-                                      ) : (
-                                        col.render(transaction)
-                                      )}
-                                    </TableCell>
-                                  )
-                                })}
-                                <TableCell
-                                  className={`w-[172px] min-w-[172px] max-w-[172px] px-2 text-center ${
-                                    flashId === transaction.id
-                                      ? 'bg-emerald-50'
-                                      : selectedIds.has(transaction.id)
-                                        ? 'bg-indigo-50/60'
-                                        : 'bg-white'
-                                  }`}
-                                >
-                                  <RowActions
-                                    transaction={transaction}
-                                    isReadOnly={isReadOnly}
-                                    onViewDetails={onViewDetails}
-                                    onChangeState={onChangeState}
-                                    onToggleDeuda={onToggleDeuda}
-                                    onMove={onMove}
-                                    onDelete={onDelete}
-                                  />
-                                </TableCell>
-                              </>
-                            )}
-                          </SortableTransactionRow>
+                          {renderRow(transaction, index)}
                           {renderDraftRow(index)}
                         </Fragment>
                       ))}
+                    </>
+                  )}
+
+                  {/* Camino virtualizado (listas grandes): sólo la ventana visible + espaciadores */}
+                  {transactions.length > 0 && virtualize && (
+                    <>
+                      {virtualPaddingTop > 0 && (
+                        <tr aria-hidden>
+                          <td colSpan={totalColSpan} style={{ height: virtualPaddingTop, padding: 0, border: 0 }} />
+                        </tr>
+                      )}
+                      {virtualItems.map(vi => {
+                        const transaction = transactions[vi.index]
+                        if (!transaction) return null
+                        return (
+                          <Fragment key={transaction.id}>
+                            {vi.index === 0 && renderDraftRow(-1)}
+                            {renderRow(transaction, vi.index, virtualizer.measureElement)}
+                            {renderDraftRow(vi.index)}
+                          </Fragment>
+                        )
+                      })}
+                      {virtualPaddingBottom > 0 && (
+                        <tr aria-hidden>
+                          <td colSpan={totalColSpan} style={{ height: virtualPaddingBottom, padding: 0, border: 0 }} />
+                        </tr>
+                      )}
                     </>
                   )}
                 </TableBody>
