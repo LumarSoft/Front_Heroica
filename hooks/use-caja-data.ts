@@ -91,10 +91,20 @@ function normalizeTransaction(
 
 // Orden por fecha y, dentro de la misma fecha, por la posición manual `orden`
 // (fallback: id). Habilita inserción "arriba/abajo" y reordenamiento por drag & drop.
+// Ascendente: usado en Saldo Necesario — lo más próximo a vencer arriba, lo más lejano abajo.
 function sortByFechaOrden(a: Transaction, b: Transaction): number {
   const fechaA = a.fecha ? new Date(a.fecha).getTime() : 0
   const fechaB = b.fecha ? new Date(b.fecha).getTime() : 0
   if (fechaA !== fechaB) return fechaA - fechaB
+  return (a.orden ?? a.id) - (b.orden ?? b.id)
+}
+
+// Descendente por fecha (lo más nuevo arriba) — usado en Saldo Real. Dentro de la misma
+// fecha se mantiene el orden manual ascendente, así el drag & drop se sigue sintiendo natural.
+function sortByFechaOrdenDesc(a: Transaction, b: Transaction): number {
+  const fechaA = a.fecha ? new Date(a.fecha).getTime() : 0
+  const fechaB = b.fecha ? new Date(b.fecha).getTime() : 0
+  if (fechaA !== fechaB) return fechaB - fechaA
   return (a.orden ?? a.id) - (b.orden ?? b.id)
 }
 
@@ -215,7 +225,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
         normalizeTransaction,
       )
 
-      const movimientosCompletados = allMovimientos.filter(m => m.estado === 'completado').sort(sortByFechaOrden)
+      const movimientosCompletados = allMovimientos.filter(m => m.estado === 'completado').sort(sortByFechaOrdenDesc)
 
       const movimientosAprobados = allMovimientos
         .filter(m => m.estado === 'aprobado' || m.estado === 'pendiente')
@@ -238,13 +248,11 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
   // Reordenar un movimiento (drag & drop): actualiza `orden` de forma optimista y persiste.
   const reorderMovimiento = useCallback(
     async (id: number, nuevoOrden: number) => {
-      const aplicar = (list: Transaction[]) =>
-        list.some(m => m.id === id)
-          ? list.map(m => (m.id === id ? { ...m, orden: nuevoOrden } : m)).sort(sortByFechaOrden)
-          : list
+      const aplicar = (list: Transaction[], sortFn: typeof sortByFechaOrden) =>
+        list.some(m => m.id === id) ? list.map(m => (m.id === id ? { ...m, orden: nuevoOrden } : m)).sort(sortFn) : list
 
-      setSaldoReal(prev => aplicar(prev))
-      setSaldoNecesario(prev => aplicar(prev))
+      setSaldoReal(prev => aplicar(prev, sortByFechaOrdenDesc))
+      setSaldoNecesario(prev => aplicar(prev, sortByFechaOrden))
 
       try {
         const res = await apiFetch(endpoints.updateOrden(id), {
@@ -271,11 +279,11 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
       if (!source) return false
       const merged: Transaction = { ...source, ...patch }
 
-      const aplicar = (list: Transaction[]) =>
-        list.some(m => m.id === id) ? list.map(m => (m.id === id ? merged : m)).sort(sortByFechaOrden) : list
+      const aplicar = (list: Transaction[], sortFn: typeof sortByFechaOrden) =>
+        list.some(m => m.id === id) ? list.map(m => (m.id === id ? merged : m)).sort(sortFn) : list
 
-      setSaldoReal(prev => aplicar(prev))
-      setSaldoNecesario(prev => aplicar(prev))
+      setSaldoReal(prev => aplicar(prev, sortByFechaOrdenDesc))
+      setSaldoNecesario(prev => aplicar(prev, sortByFechaOrden))
 
       try {
         const response = await apiFetch(endpoints.update(id), {
@@ -326,7 +334,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
       // Optimista: sacar de ambas listas y reinsertar en la que corresponde al nuevo estado
       if (nuevoEstado === 'completado') {
         setSaldoNecesario(prev => prev.filter(m => m.id !== id))
-        setSaldoReal(prev => [...prev.filter(m => m.id !== id), updated].sort(sortByFechaOrden))
+        setSaldoReal(prev => [...prev.filter(m => m.id !== id), updated].sort(sortByFechaOrdenDesc))
       } else {
         setSaldoReal(prev => prev.filter(m => m.id !== id))
         setSaldoNecesario(prev => [...prev.filter(m => m.id !== id), updated].sort(sortByFechaOrden))
