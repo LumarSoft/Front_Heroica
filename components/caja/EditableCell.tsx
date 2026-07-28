@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { Combobox } from '@/components/ui/combobox'
-import { parseInputMonto } from '@/lib/formatters'
+import { parseInputMonto, formatInputMonto } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { Pencil, Loader2 } from 'lucide-react'
 import type { EditFieldType, EditOption } from '@/lib/caja-inline-edit'
@@ -155,7 +155,8 @@ function CellEditor({ type, raw, options, align, placeholder, onCommit, onCancel
       autoFocus
       type={type === 'date' ? 'date' : 'text'}
       inputMode={type === 'monto' ? 'decimal' : undefined}
-      value={value}
+      // El estado guarda el valor crudo ("1234.56"); el monto se muestra formateado ("1.234,56")
+      value={type === 'monto' ? formatInputMonto(value) : value}
       placeholder={placeholder}
       // .select() sólo aplica a inputs de texto (en type=date lanza excepción)
       onFocus={e => {

@@ -82,28 +82,31 @@ export function capitalize(str: string): string {
 }
 
 /**
- * Mantiene solo números y evalúa un único punto decimal (desde una coma del usuario)
- * Útil para limpiar el input en tiempo real y prepararlo para el estado (parseFloat).
+ * Normaliza lo que escribe el usuario a un número "crudo" apto para parseFloat ("1234.56").
+ *
+ * Acepta indistintamente punto o coma como separador decimal: se toma el último separador
+ * escrito y se decide por la cantidad de dígitos que lo siguen (los montos tienen como
+ * máximo 2 decimales):
+ *   - 0, 1 o 2 dígitos  → es el separador decimal   ("1234.5" / "1234,5" → 1234.5)
+ *   - 3 o más dígitos   → es separador de miles     ("1.000" → 1000, "1.0005" → 10005)
+ * El resto de los separadores siempre se descartan (agrupación de miles).
  */
 export function parseInputMonto(value: string): string {
   if (!value) return ''
-  // Remover puntos (separador de miles local)
-  let clean = value.replace(/\./g, '')
-  // Cambiar coma por punto (para JS)
-  clean = clean.replace(/,/g, '.')
-  // Remover caracteres no válidos (quedan solo números y punto decimal)
-  clean = clean.replace(/[^0-9.]/g, '')
 
-  // Asegurar que solo haya un punto decimal
-  const parts = clean.split('.')
-  if (parts.length > 2) {
-    clean = parts[0] + '.' + parts.slice(1).join('')
-  }
+  // Quedarse sólo con dígitos y separadores (descarta $, espacios, letras, etc.)
+  let clean = value.replace(/[^0-9.,]/g, '')
+  if (!clean) return ''
 
-  // Limitar a máximo 2 decimales
-  const finalParts = clean.split('.')
-  if (finalParts.length === 2 && finalParts[1].length > 2) {
-    clean = finalParts[0] + '.' + finalParts[1].substring(0, 2)
+  const lastSep = Math.max(clean.lastIndexOf('.'), clean.lastIndexOf(','))
+  // Lo que sigue al último separador son siempre dígitos (no puede haber otro separador)
+  const decimales = lastSep === -1 ? '' : clean.slice(lastSep + 1)
+
+  if (lastSep !== -1 && decimales.length <= 2) {
+    const entero = clean.slice(0, lastSep).replace(/[.,]/g, '')
+    clean = `${entero}.${decimales}`
+  } else {
+    clean = clean.replace(/[.,]/g, '')
   }
 
   // Si empieza por punto, añadir el cero inicial

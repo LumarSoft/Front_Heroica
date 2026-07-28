@@ -3,7 +3,7 @@
 import { Combobox } from '@/components/ui/combobox'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { parseInputMonto } from '@/lib/formatters'
+import { parseInputMonto, formatInputMonto } from '@/lib/formatters'
 import type { Categoria, SelectOption, DescripcionOption } from '@/lib/types'
 import { Check, X, Loader2 } from 'lucide-react'
 import { useInlineMovimiento } from '@/hooks/use-inline-movimiento'
@@ -199,7 +199,7 @@ export function InlineMovimientoRow({
           <label className={labelClass}>Monto *</label>
           <Input
             inputMode="decimal"
-            value={monto}
+            value={formatInputMonto(monto)}
             onChange={e => setMonto(parseInputMonto(e.target.value))}
             placeholder="0,00"
             className={`h-10 ${errorRing('monto')}`}
