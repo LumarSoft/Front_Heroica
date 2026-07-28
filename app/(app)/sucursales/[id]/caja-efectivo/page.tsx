@@ -1,10 +1,11 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { subMonths, addMonths } from 'date-fns'
 import { Button } from '@/components/ui/button'
-import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
+const NuevoMovimientoDialog = dynamic(() => import('@/components/NuevoMovimientoDialog'))
 import { CompraVentaDivisasDialog } from '@/components/caja/CompraVentaDivisasDialog'
 import { useCajaData } from '@/hooks/use-caja-data'
 import { calcularTotal } from '@/lib/formatters'
@@ -199,6 +200,11 @@ export default function CajaEfectivoPage() {
     prevViewModeRef.current = viewMode
   }, [viewMode, dateRange, setDateRange])
 
+  const { setCombinadaActiva } = caja
+  useEffect(() => {
+    setCombinadaActiva(viewMode === 'combinada')
+  }, [viewMode, setCombinadaActiva])
+
   return (
     <div className="min-h-full bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
       <header className="bg-white border-b border-[#E0E0E0] sticky top-0 z-40">
@@ -282,9 +288,10 @@ export default function CajaEfectivoPage() {
                     title="Movimientos combinados"
                     description="Saldo real y necesario intercalados por fecha. Verde = pagado, amarillo = por pagar."
                     transactions={caja.saldoCombinadoFiltrado}
-                    customTotal={
-                      calcularTotal(caja.saldoRealFiltrado) + calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
-                    }
+                    hasMore={caja.hasMoreCombinado}
+                    isLoadingMore={caja.isLoadingMoreCombinado}
+                    onLoadMore={caja.loadMoreCombinado}
+                    customTotal={caja.totalRealServidor + caja.totalNecesarioServidor}
                     columns={columns}
                     onViewDetails={caja.handleOpenDetails}
                     onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
@@ -304,10 +311,8 @@ export default function CajaEfectivoPage() {
                     real={caja.saldoRealFiltrado}
                     necesario={caja.saldoNecesarioFiltrado}
                     columns={compactColumns}
-                    realTotal={calcularTotal(caja.saldoRealFiltrado)}
-                    necesarioTotal={
-                      calcularTotal(caja.saldoRealFiltrado) + calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
-                    }
+                    realTotal={caja.totalRealServidor}
+                    necesarioTotal={caja.totalRealServidor + caja.totalNecesarioServidor}
                     onViewDetails={caja.handleOpenDetails}
                     onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
                     onDelete={canDelete ? caja.handleOpenDelete : undefined}
@@ -349,6 +354,9 @@ export default function CajaEfectivoPage() {
                           title="Saldo Real"
                           description="Movimientos de efectivo confirmados para el periodo actual."
                           transactions={caja.saldoRealFiltrado}
+                          hasMore={caja.hasMoreReal}
+                          isLoadingMore={caja.isLoadingMoreReal}
+                          onLoadMore={caja.loadMoreReal}
                           columns={columns}
                           onViewDetails={caja.handleOpenDetails}
                           onChangeState={caja.handleOpenStateChange}
@@ -380,16 +388,17 @@ export default function CajaEfectivoPage() {
                           onBulkDelete={canDelete ? handleBulkDelete : undefined}
                           onBulkMove={canCrear ? handleBulkMove : undefined}
                           isReadOnly={isStrictlyReadOnly}
-                          saldoRealActual={calcularTotal(caja.saldoRealFiltrado)}
+                          saldoRealActual={caja.totalRealServidor}
                         />
                       ) : (
                         <TransactionTable
                           title="Saldo Necesario"
                           description="Pagos y compromisos en efectivo programados."
                           transactions={caja.saldoNecesarioFiltrado}
-                          customTotal={
-                            calcularTotal(caja.saldoReal) + calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
-                          }
+                          hasMore={caja.hasMoreNecesario}
+                          isLoadingMore={caja.isLoadingMoreNecesario}
+                          onLoadMore={caja.loadMoreNecesario}
+                          customTotal={caja.totalRealServidor + caja.totalNecesarioServidor}
                           columns={columns}
                           onViewDetails={caja.handleOpenDetails}
                           onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}

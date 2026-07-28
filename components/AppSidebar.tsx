@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -22,6 +22,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/store/authStore'
 import { useCalculatorStore } from '@/store/calculatorStore'
+import { usePolling } from '@/hooks/use-polling'
 import { useSidebarStore } from '@/store/sidebarStore'
 import { apiFetch } from '@/lib/api'
 import { API_ENDPOINTS } from '@/lib/config'
@@ -237,15 +238,21 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([])
   const [bellOpen, setBellOpen] = useState(false)
   const [loadingNotif, setLoadingNotif] = useState(false)
+  const [unread, setUnread] = useState(0)
   const notifPanelRef = useRef<HTMLDivElement>(null)
-  const unread = notificaciones.filter(n => !n.leida).length
 
-  useEffect(() => {
-    if (!user) return
-    doFetch()
-    const interval = setInterval(doFetch, 30_000)
-    return () => clearInterval(interval)
-  }, [user])
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const res = await apiFetch(API_ENDPOINTS.NOTIFICACIONES.MIS_COUNT)
+      if (!res.ok) return
+      const data = await res.json()
+      setUnread(data.data?.unreadCount ?? 0)
+    } catch {
+      /* silent */
+    }
+  }, [])
+
+  usePolling(fetchUnreadCount, { intervalMs: 30_000, enabled: Boolean(user) })
 
   useEffect(() => {
     function handler(e: KeyboardEvent) {
@@ -253,6 +260,11 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
     }
     if (bellOpen) document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
+  }, [bellOpen])
+
+  useEffect(() => {
+    if (!bellOpen) return
+    doFetch()
   }, [bellOpen])
 
   async function doFetch() {
@@ -263,6 +275,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
       if (!res.ok) return
       const data = await res.json()
       setNotificaciones(data.data ?? [])
+      if (typeof data.unreadCount === 'number') setUnread(data.unreadCount)
     } catch {
       /* silent */
     } finally {
@@ -272,6 +285,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
 
   async function marcarLeida(id: number) {
     setNotificaciones(prev => prev.map(n => (n.id === id ? { ...n, leida: true } : n)))
+    setUnread(prev => Math.max(0, prev - 1))
     try {
       await apiFetch(API_ENDPOINTS.NOTIFICACIONES.LEER, {
         method: 'PATCH',
@@ -284,6 +298,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
 
   async function marcarTodasLeidas() {
     setNotificaciones(prev => prev.map(n => ({ ...n, leida: true })))
+    setUnread(0)
     try {
       await apiFetch(API_ENDPOINTS.NOTIFICACIONES.LEER, {
         method: 'PATCH',

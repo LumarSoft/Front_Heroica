@@ -1,11 +1,12 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { subMonths, addMonths } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
+const NuevoMovimientoDialog = dynamic(() => import('@/components/NuevoMovimientoDialog'))
 import { useCajaData } from '@/hooks/use-caja-data'
 import { formatMonto, calcularTotal } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
@@ -203,6 +204,11 @@ export default function CajaBancoPage() {
     prevViewModeRef.current = viewMode
   }, [viewMode, dateRange, setDateRange])
 
+  const { setCombinadaActiva } = caja
+  useEffect(() => {
+    setCombinadaActiva(viewMode === 'combinada')
+  }, [viewMode, setCombinadaActiva])
+
   const bancoNeto = Number(selectedBanco?.total_real ?? 0) + Number(selectedBanco?.total_necesario ?? 0)
 
   return (
@@ -330,9 +336,10 @@ export default function CajaBancoPage() {
                     title="Movimientos combinados"
                     description="Saldo real y necesario intercalados por fecha. Verde = pagado, amarillo = por pagar."
                     transactions={caja.saldoCombinadoFiltrado}
-                    customTotal={
-                      calcularTotal(caja.saldoRealFiltrado) + calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
-                    }
+                    hasMore={caja.hasMoreCombinado}
+                    isLoadingMore={caja.isLoadingMoreCombinado}
+                    onLoadMore={caja.loadMoreCombinado}
+                    customTotal={caja.totalRealServidor + caja.totalNecesarioServidor}
                     columns={columns}
                     onViewDetails={caja.handleOpenDetails}
                     onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
@@ -352,10 +359,8 @@ export default function CajaBancoPage() {
                     real={caja.saldoRealFiltrado}
                     necesario={caja.saldoNecesarioFiltrado}
                     columns={compactColumns}
-                    realTotal={calcularTotal(caja.saldoRealFiltrado)}
-                    necesarioTotal={
-                      calcularTotal(caja.saldoRealFiltrado) + calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
-                    }
+                    realTotal={caja.totalRealServidor}
+                    necesarioTotal={caja.totalRealServidor + caja.totalNecesarioServidor}
                     onViewDetails={caja.handleOpenDetails}
                     onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
                     onDelete={canDelete ? caja.handleOpenDelete : undefined}
@@ -397,6 +402,9 @@ export default function CajaBancoPage() {
                           title="Saldo Real"
                           description="Movimientos de banco confirmados para el periodo actual."
                           transactions={caja.saldoRealFiltrado}
+                          hasMore={caja.hasMoreReal}
+                          isLoadingMore={caja.isLoadingMoreReal}
+                          onLoadMore={caja.loadMoreReal}
                           columns={columns}
                           onViewDetails={caja.handleOpenDetails}
                           onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
@@ -428,16 +436,17 @@ export default function CajaBancoPage() {
                           onBulkDelete={canDelete ? handleBulkDelete : undefined}
                           onBulkMove={canCrear ? handleBulkMove : undefined}
                           isReadOnly={isStrictlyReadOnly}
-                          saldoRealActual={calcularTotal(caja.saldoRealFiltrado)}
+                          saldoRealActual={caja.totalRealServidor}
                         />
                       ) : (
                         <TransactionTable
                           title="Saldo Necesario"
                           description="Pagos y compromisos programados que impactarán en bancos."
                           transactions={caja.saldoNecesarioFiltrado}
-                          customTotal={
-                            calcularTotal(caja.saldoRealFiltrado) + calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
-                          }
+                          hasMore={caja.hasMoreNecesario}
+                          isLoadingMore={caja.isLoadingMoreNecesario}
+                          onLoadMore={caja.loadMoreNecesario}
+                          customTotal={caja.totalRealServidor + caja.totalNecesarioServidor}
                           columns={columns}
                           onViewDetails={caja.handleOpenDetails}
                           onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}

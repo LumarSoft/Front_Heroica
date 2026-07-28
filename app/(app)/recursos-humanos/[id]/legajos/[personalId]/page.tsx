@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, UserCircle2 } from 'lucide-react'
@@ -14,7 +15,9 @@ import { DatosPersonalesTab } from '@/components/legajos/DatosPersonalesTab'
 import { DocumentosTab } from '@/components/legajos/DocumentosTab'
 import { HistorialTab } from '@/components/legajos/HistorialTab'
 import { ProfesionalTab } from '@/components/legajos/ProfesionalTab'
-import { AnaliticoTab } from '@/components/legajos/AnaliticoTab'
+const AnaliticoTab = dynamic(() => import('@/components/legajos/AnaliticoTab').then(m => m.AnaliticoTab), {
+  ssr: false,
+})
 import type { Personal, Puesto, Sucursal } from '@/lib/types'
 
 function getInitials(nombre: string): string {

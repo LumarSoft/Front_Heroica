@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
+import { invalidateCatalog, CATALOG_KEYS } from '@/lib/catalog-cache'
 
 interface Categoria {
   id: number
@@ -101,6 +102,7 @@ export function CategoriasSection() {
       if (data.success) {
         toast.success(data.message)
         setIsDialogOpen(false)
+        invalidateCatalog(CATALOG_KEYS.CATEGORIAS)
         await fetchCategorias()
       } else {
         setError(data.message)
@@ -119,6 +121,7 @@ export function CategoriasSection() {
       const data = await res.json()
       if (data.success) {
         toast.success(data.message)
+        invalidateCatalog(CATALOG_KEYS.CATEGORIAS)
         await fetchCategorias()
       }
     } catch {
@@ -155,9 +158,7 @@ export function CategoriasSection() {
                       {cat.tipo === 'ingreso' ? '↑ Ingreso' : '↓ Egreso'}
                     </span>
                   </div>
-                  {cat.descripcion && (
-                    <p className="text-xs text-[#888] mt-0.5 truncate">{cat.descripcion}</p>
-                  )}
+                  {cat.descripcion && <p className="text-xs text-[#888] mt-0.5 truncate">{cat.descripcion}</p>}
                 </div>
                 <div className="flex gap-1.5 flex-shrink-0">
                   <Button

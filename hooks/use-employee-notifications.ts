@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { formatFecha, formatMonto } from '@/lib/formatters'
 import type { PagoPendiente } from '@/lib/types'
+import { usePolling } from '@/hooks/use-polling'
 
 /**
  * Devuelve una etiqueta legible para identificar el pago en la notificación.
@@ -105,7 +106,6 @@ export function trackCreatedPago(userId: number, pago: Omit<TrackedPago, never>)
  */
 export function useEmployeeNotifications(userId: number | undefined, sucursalId: number, isEmployee: boolean) {
   const [unseenCount, setUnseenCount] = useState(0)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const normalizeDate = (fecha: string): string => {
     if (!fecha) return ''
@@ -186,16 +186,7 @@ export function useEmployeeNotifications(userId: number | undefined, sucursalId:
     }
   }, [userId, sucursalId, isEmployee])
 
-  useEffect(() => {
-    if (!isEmployee || !userId) return
-
-    checkNotifications()
-    intervalRef.current = setInterval(checkNotifications, 30_000)
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [checkNotifications, isEmployee, userId])
+  usePolling(checkNotifications, { intervalMs: 30_000, enabled: Boolean(isEmployee && userId) })
 
   const clearUnseenCount = useCallback(() => setUnseenCount(0), [])
 

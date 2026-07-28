@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { API_ENDPOINTS } from '@/lib/config'
@@ -9,6 +9,9 @@ import { parseInputMonto } from '@/lib/formatters'
 import { isMedioPagoChequeLike, tieneNumeroChequeCargado } from '@/lib/cheque'
 import { DateRange } from 'react-day-picker'
 import { useAuthStore } from '@/store/authStore'
+import { cachedFetch, CATALOG_KEYS } from '@/lib/catalog-cache'
+import { buildFiltrosQS, buildPaginaQS, hayFiltrosActivos, PAGE_SIZE } from '@/lib/caja-filtros'
+import type { Cursor, SaldoTipo } from '@/lib/caja-filtros'
 import type { Transaction, BancoParcial, Categoria, Subcategoria, SelectOption, DescripcionOption } from '@/lib/types'
 
 // =============================================
@@ -108,6 +111,13 @@ function sortByFechaOrdenDesc(a: Transaction, b: Transaction): number {
   return (a.orden ?? a.id) - (b.orden ?? b.id)
 }
 
+async function fetchCatalogo<T>(url: string): Promise<T[]> {
+  const response = await apiFetch(url)
+  if (!response.ok) throw new Error('Error al cargar el catálogo')
+  const data = await response.json()
+  return (data.data ?? []) as T[]
+}
+
 // =============================================
 // Selección de endpoints según tipo de caja
 // =============================================
@@ -115,9 +125,10 @@ function sortByFechaOrdenDesc(a: Transaction, b: Transaction): number {
 function getEndpoints(tipo: 'efectivo' | 'banco') {
   if (tipo === 'banco') {
     return {
-      getMovimientos: (sucursalId: number, moneda: string) =>
-        API_ENDPOINTS.CAJA_BANCO.GET_BY_SUCURSAL(sucursalId, moneda),
-      getTotales: (sucursalId: number, moneda: string) => API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(sucursalId, moneda),
+      getMovimientos: (sucursalId: number, moneda: string, qs: string = '') =>
+        API_ENDPOINTS.CAJA_BANCO.GET_BY_SUCURSAL(sucursalId, moneda, qs),
+      getTotales: (sucursalId: number, moneda: string, qs: string = '') =>
+        API_ENDPOINTS.CAJA_BANCO.GET_TOTALES(sucursalId, moneda, qs),
       update: API_ENDPOINTS.CAJA_BANCO.UPDATE,
       updateEstado: API_ENDPOINTS.CAJA_BANCO.UPDATE_ESTADO,
       toggleDeuda: API_ENDPOINTS.CAJA_BANCO.TOGGLE_DEUDA,
@@ -126,9 +137,10 @@ function getEndpoints(tipo: 'efectivo' | 'banco') {
     }
   }
   return {
-    getMovimientos: (sucursalId: number, moneda: string) =>
-      API_ENDPOINTS.MOVIMIENTOS.GET_BY_SUCURSAL(sucursalId, moneda),
-    getTotales: (sucursalId: number, moneda: string) => API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(sucursalId, moneda),
+    getMovimientos: (sucursalId: number, moneda: string, qs: string = '') =>
+      API_ENDPOINTS.MOVIMIENTOS.GET_BY_SUCURSAL(sucursalId, moneda, qs),
+    getTotales: (sucursalId: number, moneda: string, qs: string = '') =>
+      API_ENDPOINTS.MOVIMIENTOS.GET_TOTALES(sucursalId, moneda, qs),
     update: API_ENDPOINTS.MOVIMIENTOS.UPDATE,
     updateEstado: API_ENDPOINTS.MOVIMIENTOS.UPDATE_ESTADO,
     toggleDeuda: API_ENDPOINTS.MOVIMIENTOS.TOGGLE_DEUDA,
@@ -159,6 +171,24 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
   const [saldoReal, setSaldoReal] = useState<Transaction[]>([])
   const [saldoNecesario, setSaldoNecesario] = useState<Transaction[]>([])
   const [parciales, setParciales] = useState<BancoParcial[]>([])
+  const [totales, setTotales] = useState<{ total_real: number; total_necesario: number }>({
+    total_real: 0,
+    total_necesario: 0,
+  })
+
+  const [saldoCombinado, setSaldoCombinado] = useState<Transaction[]>([])
+  const [combinadaActiva, setCombinadaActiva] = useState(false)
+  const [cursorCombinado, setCursorCombinado] = useState<Cursor | null>(null)
+  const [hasMoreCombinado, setHasMoreCombinado] = useState(false)
+  const [isLoadingMoreCombinado, setIsLoadingMoreCombinado] = useState(false)
+
+  const [cursorReal, setCursorReal] = useState<Cursor | null>(null)
+  const [cursorNecesario, setCursorNecesario] = useState<Cursor | null>(null)
+  const [hasMoreReal, setHasMoreReal] = useState(false)
+  const [hasMoreNecesario, setHasMoreNecesario] = useState(false)
+  const [isLoadingMoreReal, setIsLoadingMoreReal] = useState(false)
+  const [isLoadingMoreNecesario, setIsLoadingMoreNecesario] = useState(false)
+  const requestIdRef = useRef(0)
 
   // --- Filtro por fechas ---
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
@@ -166,6 +196,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
   const [bancosFiltro, setBancosFiltro] = useState<string[]>([])
   // --- Búsqueda por texto (concepto, descripción, N° cheque) ---
   const [searchText, setSearchText] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   // --- Filtro por deuda ---
   const [filtroDeuda, setFiltroDeuda] = useState<'todos' | 'solo_deudas' | 'sin_deudas'>('todos')
   // --- Filtro por cheques pendientes (cheque físico / eCheq sin número) ---
@@ -197,53 +228,107 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
   // Fetchers
   // =============================================
 
+  const filtrosQS = useMemo(
+    () =>
+      buildFiltrosQS({ dateRange, bancosFiltro, searchText: debouncedSearch, filtroDeuda, filtroChequesPendientes }),
+    [dateRange, bancosFiltro, debouncedSearch, filtroDeuda, filtroChequesPendientes],
+  )
+
   const fetchTotales = useCallback(async () => {
     try {
-      const response = await apiFetch(endpoints.getTotales(sucursalId, moneda))
+      const response = await apiFetch(endpoints.getTotales(sucursalId, moneda, filtrosQS))
       const data = await response.json()
       if (response.ok) {
         setParciales(data.data?.parciales || [])
+        setTotales({
+          total_real: Number(data.data?.total_real ?? 0),
+          total_necesario: Number(data.data?.total_necesario ?? 0),
+        })
       }
     } catch {
       // Non-critical background refresh
     }
-  }, [endpoints, sucursalId, moneda])
+  }, [endpoints, sucursalId, moneda, filtrosQS])
+
+  const fetchPagina = useCallback(
+    async (saldo: SaldoTipo, cursor: Cursor | null) => {
+      const url = endpoints.getMovimientos(sucursalId, moneda, filtrosQS + buildPaginaQS(saldo, cursor))
+      const response = await apiFetch(url)
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || 'Error al cargar movimientos')
+      return {
+        items: (data.data.items || []).map(normalizeTransaction) as Transaction[],
+        hasMore: Boolean(data.data.hasMore),
+        nextCursor: (data.data.nextCursor ?? null) as Cursor | null,
+      }
+    },
+    [endpoints, sucursalId, moneda, filtrosQS],
+  )
 
   const fetchMovimientos = useCallback(async () => {
+    const reqId = ++requestIdRef.current
     try {
       setIsLoading(true)
       setError('')
 
-      const response = await apiFetch(endpoints.getMovimientos(sucursalId, moneda))
-      const data = await response.json()
+      const [real, necesario] = await Promise.all([fetchPagina('real', null), fetchPagina('necesario', null)])
+      if (reqId !== requestIdRef.current) return
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Error al cargar movimientos')
-      }
+      setSaldoReal(real.items.sort(sortByFechaOrdenDesc))
+      setHasMoreReal(real.hasMore)
+      setCursorReal(real.nextCursor)
 
-      const allMovimientos: Transaction[] = [...(data.data.saldo_real || []), ...(data.data.saldo_necesario || [])].map(
-        normalizeTransaction,
-      )
-
-      const movimientosCompletados = allMovimientos.filter(m => m.estado === 'completado').sort(sortByFechaOrdenDesc)
-
-      const movimientosAprobados = allMovimientos
-        .filter(m => m.estado === 'aprobado' || m.estado === 'pendiente')
-        .sort(sortByFechaOrden)
-
-      setSaldoReal(movimientosCompletados)
-      // Saldo necesario incluye TODOS los aprobados/pendientes (incluyendo deuda),
-      // pero la deuda se identifica con es_deuda=1 para excluirla del total en UI
-      setSaldoNecesario(movimientosAprobados)
+      setSaldoNecesario(necesario.items.sort(sortByFechaOrden))
+      setHasMoreNecesario(necesario.hasMore)
+      setCursorNecesario(necesario.nextCursor)
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al cargar movimientos'
-      setError(message)
+      if (reqId !== requestIdRef.current) return
+      setError(err instanceof Error ? err.message : 'Error al cargar movimientos')
     } finally {
-      setIsLoading(false)
+      if (reqId === requestIdRef.current) setIsLoading(false)
     }
-    // Refrescar totales/parciales del API al finalizar
     fetchTotales()
-  }, [endpoints, sucursalId, moneda, fetchTotales])
+  }, [fetchPagina, fetchTotales])
+
+  const loadMoreReal = useCallback(async () => {
+    if (!hasMoreReal || isLoadingMoreReal || !cursorReal) return
+    const reqId = requestIdRef.current
+    setIsLoadingMoreReal(true)
+    try {
+      const page = await fetchPagina('real', cursorReal)
+      if (reqId !== requestIdRef.current) return
+      setSaldoReal(prev => {
+        const vistos = new Set(prev.map(m => m.id))
+        return [...prev, ...page.items.filter(m => !vistos.has(m.id))].sort(sortByFechaOrdenDesc)
+      })
+      setHasMoreReal(page.hasMore)
+      setCursorReal(page.nextCursor)
+    } catch {
+      toast.error('No se pudieron cargar más movimientos.')
+    } finally {
+      setIsLoadingMoreReal(false)
+    }
+  }, [hasMoreReal, isLoadingMoreReal, cursorReal, fetchPagina])
+
+  const loadMoreNecesario = useCallback(async () => {
+    if (!hasMoreNecesario || isLoadingMoreNecesario || !cursorNecesario) return
+    const reqId = requestIdRef.current
+    setIsLoadingMoreNecesario(true)
+    try {
+      const page = await fetchPagina('necesario', cursorNecesario)
+      if (reqId !== requestIdRef.current) return
+      setSaldoNecesario(prev => {
+        const vistos = new Set(prev.map(m => m.id))
+        return [...prev, ...page.items.filter(m => !vistos.has(m.id))].sort(sortByFechaOrden)
+      })
+      setHasMoreNecesario(page.hasMore)
+      setCursorNecesario(page.nextCursor)
+    } catch {
+      toast.error('No se pudieron cargar más movimientos.')
+    } finally {
+      setIsLoadingMoreNecesario(false)
+    }
+  }, [hasMoreNecesario, isLoadingMoreNecesario, cursorNecesario, fetchPagina])
 
   // Reordenar un movimiento (drag & drop): actualiza `orden` de forma optimista y persiste.
   const reorderMovimiento = useCallback(
@@ -360,11 +445,32 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     [saldoReal, saldoNecesario, endpoints, fetchMovimientos, fetchTotales],
   )
 
+  const loadMoreCombinado = useCallback(async () => {
+    if (!hasMoreCombinado || isLoadingMoreCombinado || !cursorCombinado) return
+    const reqId = requestIdRef.current
+    setIsLoadingMoreCombinado(true)
+    try {
+      const page = await fetchPagina('combinado', cursorCombinado)
+      if (reqId !== requestIdRef.current) return
+      setSaldoCombinado(prev => {
+        const vistos = new Set(prev.map(m => m.id))
+        return [...prev, ...page.items.filter(m => !vistos.has(m.id))].sort(sortByFechaOrden)
+      })
+      setHasMoreCombinado(page.hasMore)
+      setCursorCombinado(page.nextCursor)
+    } catch {
+      toast.error('No se pudieron cargar más movimientos.')
+    } finally {
+      setIsLoadingMoreCombinado(false)
+    }
+  }, [hasMoreCombinado, isLoadingMoreCombinado, cursorCombinado, fetchPagina])
+
   const fetchCategorias = useCallback(async () => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL)
-      const data = await response.json()
-      if (response.ok) setCategorias(data.data || [])
+      const data = await cachedFetch(CATALOG_KEYS.CATEGORIAS, () =>
+        fetchCatalogo<Categoria>(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL),
+      )
+      setCategorias(data)
     } catch {
       // Catalogue fetch failure is non-critical
     }
@@ -372,9 +478,10 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
 
   const fetchSubcategorias = useCallback(async (categoriaId: number) => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId))
-      const data = await response.json()
-      if (response.ok) setSubcategorias(data.data || [])
+      const data = await cachedFetch(CATALOG_KEYS.SUBCATEGORIAS(categoriaId), () =>
+        fetchCatalogo<Subcategoria>(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId)),
+      )
+      setSubcategorias(data)
     } catch {
       // Non-critical
     }
@@ -382,9 +489,10 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
 
   const fetchBancos = useCallback(async () => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL)
-      const data = await response.json()
-      if (response.ok) setBancos(data.data || [])
+      const data = await cachedFetch(CATALOG_KEYS.BANCOS, () =>
+        fetchCatalogo<SelectOption>(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL),
+      )
+      setBancos(data)
     } catch {
       // Non-critical
     }
@@ -392,9 +500,10 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
 
   const fetchMediosPago = useCallback(async () => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL)
-      const data = await response.json()
-      if (response.ok) setMediosPago(data.data || [])
+      const data = await cachedFetch(CATALOG_KEYS.MEDIOS_PAGO, () =>
+        fetchCatalogo<SelectOption>(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL),
+      )
+      setMediosPago(data)
     } catch {
       // Non-critical
     }
@@ -402,9 +511,10 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
 
   const fetchDescripciones = useCallback(async () => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ACTIVE)
-      const data = await response.json()
-      if (response.ok) setDescripciones(data.data || [])
+      const data = await cachedFetch(CATALOG_KEYS.DESCRIPCIONES, () =>
+        fetchCatalogo<DescripcionOption>(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ACTIVE),
+      )
+      setDescripciones(data)
     } catch {
       // Non-critical
     }
@@ -412,9 +522,10 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
 
   const fetchProveedores = useCallback(async () => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.PROVEEDORES.GET_ALL)
-      const data = await response.json()
-      if (response.ok) setProveedores(data.data || [])
+      const data = await cachedFetch(CATALOG_KEYS.PROVEEDORES, () =>
+        fetchCatalogo<SelectOption>(API_ENDPOINTS.CONFIGURACION.PROVEEDORES.GET_ALL),
+      )
+      setProveedores(data)
     } catch {
       // Non-critical
     }
@@ -428,6 +539,33 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
       setSubcategorias([])
     }
   }, [formData.categoria_id, fetchSubcategorias])
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchText), 400)
+    return () => clearTimeout(t)
+  }, [searchText])
+
+  useEffect(() => {
+    fetchMovimientos()
+  }, [filtrosQS])
+
+  useEffect(() => {
+    if (!combinadaActiva) return
+    let cancelado = false
+    fetchPagina('combinado', null)
+      .then(page => {
+        if (cancelado) return
+        setSaldoCombinado(page.items.sort(sortByFechaOrden))
+        setHasMoreCombinado(page.hasMore)
+        setCursorCombinado(page.nextCursor)
+      })
+      .catch(() => {
+        if (!cancelado) setSaldoCombinado([])
+      })
+    return () => {
+      cancelado = true
+    }
+  }, [combinadaActiva, fetchPagina])
 
   // =============================================
   // Handlers de dialogs
@@ -664,165 +802,20 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
   // =============================================
 
   const initialize = useCallback(() => {
-    fetchMovimientos() // fetchMovimientos ya llama fetchTotales al finalizar
     fetchCategorias()
     fetchBancos()
     fetchMediosPago()
     fetchDescripciones()
     fetchProveedores()
-  }, [fetchMovimientos, fetchCategorias, fetchBancos, fetchMediosPago, fetchDescripciones, fetchProveedores])
+  }, [fetchCategorias, fetchBancos, fetchMediosPago, fetchDescripciones, fetchProveedores])
 
-  // =============================================
-  // Filtro por fechas (client-side)
-  // =============================================
+  const saldoRealFiltrado = saldoReal
+  const saldoNecesarioFiltrado = saldoNecesario
+  const saldoNecesarioSinDeudaFiltrado = useMemo(() => saldoNecesario.filter(m => !m.es_deuda), [saldoNecesario])
 
-  const bancosFiltroSet = useMemo(() => {
-    const ids = bancosFiltro.map(id => id.trim()).filter(Boolean)
-    return new Set(ids)
-  }, [bancosFiltro])
+  const saldoCombinadoFiltrado = saldoCombinado
 
-  const matchesSearch = useCallback((m: Transaction, q: string): boolean => {
-    if (!q) return true
-    const trimmed = q.trim()
-
-    // Búsqueda por cheque: query que empieza con #
-    if (trimmed.startsWith('#')) {
-      const chequeQuery = trimmed.slice(1).toLowerCase()
-      return m.numero_cheque?.toLowerCase().includes(chequeQuery) ?? false
-    }
-
-    const lower = trimmed.toLowerCase()
-    const formattedMonto = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2 }).format(Math.abs(m.monto))
-    const formattedMontoSigned = m.monto < 0 ? `-${formattedMonto}` : formattedMonto
-    const montoMatches =
-      formattedMonto.includes(lower) ||
-      formattedMontoSigned.includes(lower) ||
-      (lower.includes(',') &&
-        (formattedMonto.replace(/\./g, '').includes(lower.replace(/\./g, '')) ||
-          formattedMontoSigned.replace(/\./g, '').includes(lower.replace(/\./g, ''))))
-    return (
-      (m.concepto?.toLowerCase().includes(lower) ?? false) ||
-      (m.comentarios?.toLowerCase().includes(lower) ?? false) ||
-      (m.numero_cheque?.toLowerCase().includes(lower) ?? false) ||
-      (m.comprobante?.toLowerCase().includes(lower) ?? false) ||
-      (m.descripcion_nombre?.toLowerCase().includes(lower) ?? false) ||
-      montoMatches
-    )
-  }, [])
-
-  const saldoRealFiltrado = useMemo(() => {
-    let filteredByDate = saldoReal
-    const fromStr = getISODateOnly(dateRange?.from)
-    const toStr = getISODateOnly(dateRange?.to)
-
-    if (fromStr || toStr) {
-      filteredByDate = saldoReal.filter(m => {
-        if (!m.fecha) return true
-        const movStr = getISODateOnly(m.fecha)
-        if (!movStr) return true
-
-        if (fromStr && movStr < fromStr) return false
-        if (toStr && movStr > toStr) return false
-
-        return true
-      })
-    }
-
-    const filteredByBanco =
-      bancosFiltroSet.size === 0
-        ? filteredByDate
-        : filteredByDate.filter(m => {
-            const id = m.banco_id?.toString()
-            return id ? bancosFiltroSet.has(id) : false
-          })
-
-    const filteredBySearch = searchText.trim()
-      ? filteredByBanco.filter(m => matchesSearch(m, searchText.trim()))
-      : filteredByBanco
-    const filteredByChequePendiente = filtroChequesPendientes
-      ? filteredBySearch.filter(
-          m => isMedioPagoChequeLike(m.medio_pago_nombre) && !tieneNumeroChequeCargado(m.numero_cheque),
-        )
-      : filteredBySearch
-    if (filtroDeuda === 'solo_deudas') return filteredByChequePendiente.filter(m => m.es_deuda)
-    if (filtroDeuda === 'sin_deudas') return filteredByChequePendiente.filter(m => !m.es_deuda)
-    return filteredByChequePendiente
-  }, [saldoReal, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda, filtroChequesPendientes])
-
-  const { saldoNecesarioFiltrado, saldoNecesarioSinDeudaFiltrado } = useMemo(() => {
-    let filteredByDate = saldoNecesario
-    const fromStr = getISODateOnly(dateRange?.from)
-    const toStr = getISODateOnly(dateRange?.to)
-
-    if (fromStr || toStr) {
-      filteredByDate = saldoNecesario.filter(m => {
-        if (!m.fecha) return true
-        const movStr = getISODateOnly(m.fecha)
-        if (!movStr) return true
-
-        if (fromStr && movStr < fromStr) return false
-        if (toStr && movStr > toStr) return false
-
-        return true
-      })
-    }
-
-    const filteredByBanco =
-      bancosFiltroSet.size === 0
-        ? filteredByDate
-        : filteredByDate.filter(m => {
-            const id = m.banco_id?.toString()
-            return id ? bancosFiltroSet.has(id) : false
-          })
-
-    const filteredBySearch = searchText.trim()
-      ? filteredByBanco.filter(m => matchesSearch(m, searchText.trim()))
-      : filteredByBanco
-
-    const filteredByChequePendiente = filtroChequesPendientes
-      ? filteredBySearch.filter(
-          m => isMedioPagoChequeLike(m.medio_pago_nombre) && !tieneNumeroChequeCargado(m.numero_cheque),
-        )
-      : filteredBySearch
-
-    let filtered = filteredByChequePendiente
-    if (filtroDeuda === 'solo_deudas') filtered = filteredByChequePendiente.filter(m => m.es_deuda)
-    else if (filtroDeuda === 'sin_deudas') filtered = filteredByChequePendiente.filter(m => !m.es_deuda)
-
-    return {
-      saldoNecesarioFiltrado: filtered,
-      saldoNecesarioSinDeudaFiltrado: filtered.filter(m => !m.es_deuda),
-    }
-  }, [saldoNecesario, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda, filtroChequesPendientes])
-
-  // Lista combinada: saldo real + saldo necesario intercalados y ordenados por fecha.
-  // Alimenta la vista "Combinada" (una sola tabla con filas pintadas según su estado).
-  const saldoCombinadoFiltrado = useMemo<Transaction[]>(
-    () => [...saldoRealFiltrado, ...saldoNecesarioFiltrado].sort(sortByFechaOrden),
-    [saldoRealFiltrado, saldoNecesarioFiltrado],
-  )
-
-  // Parciales filtrados: agrupar saldoReal + saldoNecesarioSinDeudaFiltrado por banco_id
-  const parcialesFiltrados = useMemo<BancoParcial[]>(() => {
-    const map = new Map<number | string, BancoParcial>()
-    const addToBanco = (m: Transaction, tipoEntry: 'real' | 'necesario') => {
-      const key = m.banco_id ?? 'otros'
-      if (!map.has(key)) {
-        map.set(key, {
-          banco_id: m.banco_id ?? 0,
-          banco_nombre: m.banco_nombre ?? 'OTROS',
-          total_real: 0,
-          total_necesario: 0,
-        })
-      }
-      const entry = map.get(key)!
-      if (tipoEntry === 'real') entry.total_real += m.monto
-      else entry.total_necesario += m.monto
-    }
-    saldoRealFiltrado.forEach(m => addToBanco(m, 'real'))
-    saldoNecesarioSinDeudaFiltrado.forEach(m => addToBanco(m, 'necesario'))
-    return Array.from(map.values())
-  }, [saldoRealFiltrado, saldoNecesarioSinDeudaFiltrado])
+  const parcialesFiltrados = parciales
 
   const limpiarFiltros = () => {
     setDateRange(undefined)
@@ -870,12 +863,13 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     filtroChequesPendientes,
     setFiltroChequesPendientes,
     limpiarFiltros,
-    hayFiltroActivo:
-      dateRange !== undefined ||
-      bancosFiltro.length > 0 ||
-      searchText !== '' ||
-      filtroDeuda !== 'todos' ||
+    hayFiltroActivo: hayFiltrosActivos({
+      dateRange,
+      bancosFiltro,
+      searchText,
+      filtroDeuda,
       filtroChequesPendientes,
+    }),
 
     // Estado de dialogs
     isDetailsDialogOpen,
@@ -909,6 +903,21 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     handleSaveStateChange,
     handleDelete,
     handleSaveDeuda,
+
+    hasMoreReal,
+    hasMoreNecesario,
+    isLoadingMoreReal,
+    isLoadingMoreNecesario,
+    loadMoreReal,
+    loadMoreNecesario,
+    loadMoreCombinado,
+    hasMoreCombinado,
+    isLoadingMoreCombinado,
+    setCombinadaActiva,
+    pageSize: PAGE_SIZE,
+
+    totalRealServidor: totales.total_real,
+    totalNecesarioServidor: totales.total_necesario,
 
     // Fetchers
     initialize,
