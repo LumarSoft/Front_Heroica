@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
+import { invalidateCatalog, CATALOG_KEYS } from '@/lib/catalog-cache'
 
 interface MedioPago {
   id: number
@@ -88,6 +89,7 @@ export function MediosPagoSection() {
       if (data.success) {
         toast.success(data.message)
         setIsDialogOpen(false)
+        invalidateCatalog(CATALOG_KEYS.MEDIOS_PAGO)
         await fetchMediosPago()
       } else {
         setError(data.message)
@@ -106,6 +108,7 @@ export function MediosPagoSection() {
       const data = await res.json()
       if (data.success) {
         toast.success(data.message)
+        invalidateCatalog(CATALOG_KEYS.MEDIOS_PAGO)
         await fetchMediosPago()
       }
     } catch {
@@ -120,7 +123,10 @@ export function MediosPagoSection() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-[#F0F0F0]">
           <CardTitle>Medios de Pago</CardTitle>
-          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f] text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4">
+          <Button
+            onClick={handleOpenNew}
+            className="bg-[#002868] hover:bg-[#003d8f] text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
+          >
             + Nuevo Medio de Pago
           </Button>
         </CardHeader>

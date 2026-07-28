@@ -9,6 +9,7 @@ import { parseInputMonto } from '@/lib/formatters'
 import { isMedioPagoChequeLike, tieneNumeroChequeCargado } from '@/lib/cheque'
 import { DateRange } from 'react-day-picker'
 import { useAuthStore } from '@/store/authStore'
+import { cachedFetch, CATALOG_KEYS } from '@/lib/catalog-cache'
 import type { Transaction, BancoParcial, Categoria, Subcategoria, SelectOption, DescripcionOption } from '@/lib/types'
 
 // =============================================
@@ -106,6 +107,13 @@ function sortByFechaOrdenDesc(a: Transaction, b: Transaction): number {
   const fechaB = b.fecha ? new Date(b.fecha).getTime() : 0
   if (fechaA !== fechaB) return fechaB - fechaA
   return (a.orden ?? a.id) - (b.orden ?? b.id)
+}
+
+async function fetchCatalogo<T>(url: string): Promise<T[]> {
+  const response = await apiFetch(url)
+  if (!response.ok) throw new Error('Error al cargar el catálogo')
+  const data = await response.json()
+  return (data.data ?? []) as T[]
 }
 
 // =============================================
@@ -362,9 +370,10 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
 
   const fetchCategorias = useCallback(async () => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL)
-      const data = await response.json()
-      if (response.ok) setCategorias(data.data || [])
+      const data = await cachedFetch(CATALOG_KEYS.CATEGORIAS, () =>
+        fetchCatalogo<Categoria>(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL),
+      )
+      setCategorias(data)
     } catch {
       // Catalogue fetch failure is non-critical
     }
@@ -372,9 +381,10 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
 
   const fetchSubcategorias = useCallback(async (categoriaId: number) => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId))
-      const data = await response.json()
-      if (response.ok) setSubcategorias(data.data || [])
+      const data = await cachedFetch(CATALOG_KEYS.SUBCATEGORIAS(categoriaId), () =>
+        fetchCatalogo<Subcategoria>(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId)),
+      )
+      setSubcategorias(data)
     } catch {
       // Non-critical
     }
@@ -382,9 +392,10 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
 
   const fetchBancos = useCallback(async () => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL)
-      const data = await response.json()
-      if (response.ok) setBancos(data.data || [])
+      const data = await cachedFetch(CATALOG_KEYS.BANCOS, () =>
+        fetchCatalogo<SelectOption>(API_ENDPOINTS.CONFIGURACION.BANCOS.GET_ALL),
+      )
+      setBancos(data)
     } catch {
       // Non-critical
     }
@@ -392,9 +403,10 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
 
   const fetchMediosPago = useCallback(async () => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL)
-      const data = await response.json()
-      if (response.ok) setMediosPago(data.data || [])
+      const data = await cachedFetch(CATALOG_KEYS.MEDIOS_PAGO, () =>
+        fetchCatalogo<SelectOption>(API_ENDPOINTS.CONFIGURACION.MEDIOS_PAGO.GET_ALL),
+      )
+      setMediosPago(data)
     } catch {
       // Non-critical
     }
@@ -402,9 +414,10 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
 
   const fetchDescripciones = useCallback(async () => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ACTIVE)
-      const data = await response.json()
-      if (response.ok) setDescripciones(data.data || [])
+      const data = await cachedFetch(CATALOG_KEYS.DESCRIPCIONES, () =>
+        fetchCatalogo<DescripcionOption>(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ACTIVE),
+      )
+      setDescripciones(data)
     } catch {
       // Non-critical
     }
@@ -412,9 +425,10 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
 
   const fetchProveedores = useCallback(async () => {
     try {
-      const response = await apiFetch(API_ENDPOINTS.CONFIGURACION.PROVEEDORES.GET_ALL)
-      const data = await response.json()
-      if (response.ok) setProveedores(data.data || [])
+      const data = await cachedFetch(CATALOG_KEYS.PROVEEDORES, () =>
+        fetchCatalogo<SelectOption>(API_ENDPOINTS.CONFIGURACION.PROVEEDORES.GET_ALL),
+      )
+      setProveedores(data)
     } catch {
       // Non-critical
     }

@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
@@ -14,10 +15,14 @@ import { Download, TrendingUp, TrendingDown, AlertTriangle, ArrowLeft, Loader2 }
 import { useAuthStore } from '@/store/authStore'
 import { SectionHeading } from '@/components/reportes/SectionHeading'
 import { SummaryCard } from '@/components/reportes/SummaryCard'
-import { BreakdownPanel } from '@/components/reportes/BreakdownPanel'
+const BreakdownPanel = dynamic(() => import('@/components/reportes/BreakdownPanel').then(m => m.BreakdownPanel), {
+  ssr: false,
+})
 import { DeudaPanel } from '@/components/reportes/DeudaPanel'
 import { CreditoPanel } from '@/components/reportes/CreditoPanel'
-import { MonthlyLineChart } from '@/components/reportes/MonthlyLineChart'
+const MonthlyLineChart = dynamic(() => import('@/components/reportes/MonthlyLineChart').then(m => m.MonthlyLineChart), {
+  ssr: false,
+})
 import { MonthlyCategoryBarChart } from '@/components/reportes/MonthlyCategoryBarChart'
 import { TopConceptosPanel } from '@/components/reportes/TopConceptosPanel'
 import { SaludFinancieraPanel } from '@/components/reportes/SaludFinancieraPanel'

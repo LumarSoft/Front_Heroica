@@ -1,10 +1,11 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { subMonths, addMonths } from 'date-fns'
 import { Button } from '@/components/ui/button'
-import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
+const NuevoMovimientoDialog = dynamic(() => import('@/components/NuevoMovimientoDialog'))
 import { CompraVentaDivisasDialog } from '@/components/caja/CompraVentaDivisasDialog'
 import { useCajaData } from '@/hooks/use-caja-data'
 import { calcularTotal } from '@/lib/formatters'

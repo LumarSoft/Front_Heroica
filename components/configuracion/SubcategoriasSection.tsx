@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
+import { invalidateCatalogPrefix, CATALOG_KEYS } from '@/lib/catalog-cache'
 
 interface Categoria {
   id: number
@@ -116,6 +117,7 @@ export function SubcategoriasSection() {
       if (data.success) {
         toast.success(data.message)
         setIsDialogOpen(false)
+        invalidateCatalogPrefix(CATALOG_KEYS.SUBCATEGORIAS_PREFIX)
         await fetchSubcategorias()
       } else {
         setError(data.message)
@@ -136,6 +138,7 @@ export function SubcategoriasSection() {
       const data = await res.json()
       if (data.success) {
         toast.success(data.message)
+        invalidateCatalogPrefix(CATALOG_KEYS.SUBCATEGORIAS_PREFIX)
         await fetchSubcategorias()
       }
     } catch {
@@ -170,7 +173,10 @@ export function SubcategoriasSection() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f] text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4">
+          <Button
+            onClick={handleOpenNew}
+            className="bg-[#002868] hover:bg-[#003d8f] text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
+          >
             + Nueva Subcategoría
           </Button>
         </CardHeader>

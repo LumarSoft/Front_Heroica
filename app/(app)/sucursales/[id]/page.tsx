@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useEmployeeNotifications } from '@/hooks/use-employee-notifications'
+import { usePolling } from '@/hooks/use-polling'
 import { formatMonto } from '@/lib/formatters'
 import type { Sucursal, Documento, CuentaBancaria } from '@/lib/types'
 import { Mail, Paperclip, ArrowLeft, Download, Trash2, AlertTriangle, Info, BarChart2, Upload, X } from 'lucide-react'
@@ -178,26 +179,19 @@ export default function SucursalDetailPage() {
     fetchCuentasBancarias()
   }, [sucursalId, fetchDocumentos, fetchTotales, fetchCuentasBancarias])
 
-  useEffect(() => {
-    if (canAprobarPendientes) {
-      const fetchPendingCount = async () => {
-        try {
-          const response = await apiFetch(API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(sucursalId))
-          if (response.ok) {
-            const data = await response.json()
-            setPendingCount(data.data.length)
-          }
-        } catch {
-          // Polling failure is non-critical; silently ignore
-        }
+  const fetchPendingCount = useCallback(async () => {
+    try {
+      const response = await apiFetch(API_ENDPOINTS.PAGOS_PENDIENTES.GET_COUNT(sucursalId))
+      if (response.ok) {
+        const data = await response.json()
+        setPendingCount(data.data.total)
       }
-
-      fetchPendingCount()
-      // Polling every 30 seconds
-      const interval = setInterval(fetchPendingCount, 30000)
-      return () => clearInterval(interval)
+    } catch {
+      // Polling failure is non-critical; silently ignore
     }
-  }, [user?.rol])
+  }, [sucursalId])
+
+  usePolling(fetchPendingCount, { intervalMs: 30_000, enabled: canAprobarPendientes })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name } = e.target

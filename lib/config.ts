@@ -70,6 +70,7 @@ export const API_ENDPOINTS = {
   PAGOS_PENDIENTES: {
     GET_ALL: `${API_URL}/api/pagos-pendientes/all`,
     GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/pagos-pendientes/${sucursalId}`,
+    GET_COUNT: (sucursalId: number) => `${API_URL}/api/pagos-pendientes/${sucursalId}/count`,
     CREATE: `${API_URL}/api/pagos-pendientes`,
     APROBAR: (id: number) => `${API_URL}/api/pagos-pendientes/${id}/aprobar`,
     RECHAZAR: (id: number) => `${API_URL}/api/pagos-pendientes/${id}/rechazar`,
@@ -234,6 +235,7 @@ export const API_ENDPOINTS = {
   },
   NOTIFICACIONES: {
     MIS: `${API_URL}/api/notificaciones/mis`,
+    MIS_COUNT: `${API_URL}/api/notificaciones/mis/count`,
     CREATE: `${API_URL}/api/notificaciones`,
     LEER: `${API_URL}/api/notificaciones/leer`,
     EMAIL_DESTINATARIOS: (tipo: NotificacionEventoTipo, entidadId: number) =>

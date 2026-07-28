@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
 import { handleCuitChange, isValidCuit } from '@/lib/validators'
+import { invalidateCatalog, CATALOG_KEYS } from '@/lib/catalog-cache'
 
 interface ProveedorItem {
   id: number
@@ -148,6 +149,7 @@ export function ProveedoresSection() {
       if (data.success) {
         toast.success(data.message)
         setIsDialogOpen(false)
+        invalidateCatalog(CATALOG_KEYS.PROVEEDORES)
         await fetchItems()
       } else {
         setError(data.message)
@@ -166,6 +168,7 @@ export function ProveedoresSection() {
       const data = await res.json()
       if (data.success) {
         toast.success(data.message)
+        invalidateCatalog(CATALOG_KEYS.PROVEEDORES)
         await fetchItems()
       }
     } catch {

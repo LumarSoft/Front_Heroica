@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -8,7 +9,7 @@ import { apiFetch } from '@/lib/api'
 import { AlertTriangle, ArrowLeft, Plus } from 'lucide-react'
 import { ErrorBanner } from '@/components/ui/error-banner'
 import { Button } from '@/components/ui/button'
-import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
+const NuevoMovimientoDialog = dynamic(() => import('@/components/NuevoMovimientoDialog'))
 import { useAuthStore } from '@/store/authStore'
 import { calcularTotal } from '@/lib/formatters'
 import { PagosPendientesTable } from '@/components/pagos-pendientes/PagosPendientesTable'
