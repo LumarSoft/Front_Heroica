@@ -276,6 +276,8 @@ function DndBoundary({
 const VIRTUALIZE_THRESHOLD = 60
 /** Altura estimada de fila (px) — el virtualizador la corrige midiendo cada fila */
 const ESTIMATED_ROW_HEIGHT = 48
+
+const LOAD_MORE_THRESHOLD = 20
 /** Alto máximo del panel scrolleable cuando se virtualiza */
 const VIRTUAL_SCROLL_MAX_H = 'max-h-[70vh]'
 
@@ -322,6 +324,9 @@ interface TransactionTableProps {
   fixedHeightClass?: string
   /** Id de la fila sobre la que se está arrastrando algo: se resalta como "vas a soltar acá" */
   dropTargetRowId?: number | null
+  hasMore?: boolean
+  isLoadingMore?: boolean
+  onLoadMore?: () => void
   /** Clases del resalte de `dropTargetRowId` (colores según el panel de destino) */
   dropIndicatorClassName?: string
 }
@@ -350,6 +355,9 @@ export function TransactionTable({
   fixedHeightClass,
   dropTargetRowId = null,
   dropIndicatorClassName,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
 }: TransactionTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   // Gap donde se crea un movimiento en línea: gapKey -1 = arriba de todo; i = debajo de la fila i
@@ -688,6 +696,17 @@ export function TransactionTable({
 
   // Filas visibles cuando se virtualiza: sólo la ventana + espaciadores arriba/abajo
   const virtualItems = virtualize ? virtualizer.getVirtualItems() : []
+
+  const loadMoreRef = useRef(onLoadMore)
+  loadMoreRef.current = onLoadMore
+  const lastVisibleIndex = virtualItems.length > 0 ? virtualItems[virtualItems.length - 1].index : -1
+  useEffect(() => {
+    if (!hasMore || isLoadingMore) return
+    const total = transactions.length
+    if (total === 0) return
+    const cerca = virtualize ? lastVisibleIndex >= total - LOAD_MORE_THRESHOLD : true
+    if (cerca) loadMoreRef.current?.()
+  }, [hasMore, isLoadingMore, lastVisibleIndex, transactions.length, virtualize])
   const virtualPaddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0
   const virtualPaddingBottom =
     virtualItems.length > 0 ? virtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end : 0
@@ -872,6 +891,20 @@ export function TransactionTable({
             </SortableContext>
           </DndBoundary>
         </div>
+        {(isLoadingMore || hasMore) && (
+          <div className="flex items-center justify-center gap-2 py-3 text-xs text-[#64748B] border-t border-[#E0E0E0]">
+            {isLoadingMore ? (
+              <>
+                <span className="inline-block w-3 h-3 border-2 border-[#94A3B8] border-t-transparent rounded-full animate-spin" />
+                Cargando más movimientos…
+              </>
+            ) : (
+              <button type="button" onClick={onLoadMore} className="hover:text-[#002868] hover:underline">
+                Cargar más movimientos
+              </button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   )

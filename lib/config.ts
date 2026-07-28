@@ -38,10 +38,10 @@ export const API_ENDPOINTS = {
       `${API_URL}/api/sucursales/${sucursalId}/documentos/${docId}`,
   },
   MOVIMIENTOS: {
-    GET_BY_SUCURSAL: (sucursalId: number, moneda: string = 'ARS') =>
-      `${API_URL}/api/movimientos/${sucursalId}?moneda=${moneda}`,
-    GET_TOTALES: (sucursalId: number, moneda: string = 'ARS') =>
-      `${API_URL}/api/movimientos/${sucursalId}/totales?moneda=${moneda}`,
+    GET_BY_SUCURSAL: (sucursalId: number, moneda: string = 'ARS', qs: string = '') =>
+      `${API_URL}/api/movimientos/${sucursalId}?moneda=${moneda}${qs}`,
+    GET_TOTALES: (sucursalId: number, moneda: string = 'ARS', qs: string = '') =>
+      `${API_URL}/api/movimientos/${sucursalId}/totales?moneda=${moneda}${qs}`,
     GET_DEUDAS: (sucursalId: number, fechaInicio?: string, fechaFin?: string) => {
       const params = new URLSearchParams({ sucursalId: String(sucursalId) })
       if (fechaInicio) params.append('fechaInicio', fechaInicio)
@@ -77,10 +77,10 @@ export const API_ENDPOINTS = {
     GET_HISTORIAL: (userId: number) => `${API_URL}/api/pagos-pendientes/historial/${userId}`,
   },
   CAJA_BANCO: {
-    GET_BY_SUCURSAL: (sucursalId: number, moneda: string = 'ARS') =>
-      `${API_URL}/api/caja-banco/${sucursalId}?moneda=${moneda}`,
-    GET_TOTALES: (sucursalId: number, moneda: string = 'ARS') =>
-      `${API_URL}/api/caja-banco/${sucursalId}/totales?moneda=${moneda}`,
+    GET_BY_SUCURSAL: (sucursalId: number, moneda: string = 'ARS', qs: string = '') =>
+      `${API_URL}/api/caja-banco/${sucursalId}?moneda=${moneda}${qs}`,
+    GET_TOTALES: (sucursalId: number, moneda: string = 'ARS', qs: string = '') =>
+      `${API_URL}/api/caja-banco/${sucursalId}/totales?moneda=${moneda}${qs}`,
     CREATE: `${API_URL}/api/caja-banco`,
     UPDATE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
     PATCH_COMENTARIO: (id: number) => `${API_URL}/api/caja-banco/${id}/comentario`,
