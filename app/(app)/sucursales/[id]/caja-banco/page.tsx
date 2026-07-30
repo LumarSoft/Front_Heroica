@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
 import { useCajaData } from '@/hooks/use-caja-data'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { formatMonto, calcularTotal } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { ContentLoadingSpinner } from '@/components/ui/loading-spinner'
@@ -58,6 +59,9 @@ export default function CajaBancoPage() {
   const [bulkSelectedIds, setBulkSelectedIds] = useState<number[]>([])
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
   const [highlightId, setHighlightId] = useState<number | null>(null)
+
+  // Identifica la sucursal en la pestaña (útil con varias ventanas abiertas)
+  useDocumentTitle(sucursalNombre ? `${sucursalNombre} · Caja Banco` : '')
 
   const handleBulkDelete = (ids: number[]) => {
     setBulkSelectedIds(ids)

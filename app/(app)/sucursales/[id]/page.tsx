@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useEmployeeNotifications } from '@/hooks/use-employee-notifications'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { formatMonto } from '@/lib/formatters'
 import type { Sucursal, Documento, CuentaBancaria } from '@/lib/types'
 import { Mail, Paperclip, ArrowLeft, Download, Trash2, AlertTriangle, Info, BarChart2, Upload, X } from 'lucide-react'
@@ -101,6 +102,9 @@ export default function SucursalDetailPage() {
   })
   const [isAddingCuenta, setIsAddingCuenta] = useState(false)
   const [isSavingCuenta, setIsSavingCuenta] = useState(false)
+
+  // Identifica la sucursal en la pestaña (útil con varias ventanas abiertas)
+  useDocumentTitle(sucursal?.nombre)
 
   // Funciones para manejo de documentos (múltiples)
   const fetchDocumentos = useCallback(async () => {

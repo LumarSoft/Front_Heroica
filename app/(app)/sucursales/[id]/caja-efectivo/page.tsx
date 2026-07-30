@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
 import { CompraVentaDivisasDialog } from '@/components/caja/CompraVentaDivisasDialog'
 import { useCajaData } from '@/hooks/use-caja-data'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { calcularTotal } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { PageHeader } from '@/components/caja/PageHeader'
@@ -56,6 +57,9 @@ export default function CajaEfectivoPage() {
   const [bulkSelectedIds, setBulkSelectedIds] = useState<number[]>([])
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
   const [highlightId, setHighlightId] = useState<number | null>(null)
+
+  // Identifica la sucursal en la pestaña (útil con varias ventanas abiertas)
+  useDocumentTitle(sucursalNombre ? `${sucursalNombre} · Caja Efectivo` : '')
 
   const handleBulkDelete = (ids: number[]) => {
     setBulkSelectedIds(ids)

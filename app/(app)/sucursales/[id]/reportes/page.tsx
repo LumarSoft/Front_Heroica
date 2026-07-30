@@ -12,6 +12,7 @@ import { formatMonto } from '@/lib/formatters'
 import type { Sucursal } from '@/lib/types'
 import { Download, TrendingUp, TrendingDown, AlertTriangle, ArrowLeft, Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { SectionHeading } from '@/components/reportes/SectionHeading'
 import { SummaryCard } from '@/components/reportes/SummaryCard'
 import { BreakdownPanel } from '@/components/reportes/BreakdownPanel'
@@ -58,6 +59,9 @@ export default function ReportesPage() {
     const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
     return debouncedMonth < currentMonthStr
   }, [debouncedMonth])
+
+  // Identifica la sucursal en la pestaña (útil con varias ventanas abiertas)
+  useDocumentTitle(sucursal?.nombre ? `${sucursal.nombre} · Reportes` : '')
 
   const { startDate, endDate } = useMemo(() => {
     const [year, month] = debouncedMonth.split('-')
