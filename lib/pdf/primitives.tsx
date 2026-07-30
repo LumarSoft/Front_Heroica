@@ -76,9 +76,7 @@ export function PdfHeader({ title, sucursal }: HeaderProps) {
       <View style={pdfStyles.header} fixed>
         <Text style={pdfStyles.headerBrand}>HEROICA</Text>
         <View style={{ alignItems: 'flex-end' }}>
-          <Text style={{ fontSize: pdfSize.sm, color: pdfColors.ink, fontFamily: pdfFonts.sansBold }}>
-            {title}
-          </Text>
+          <Text style={{ fontSize: pdfSize.sm, color: pdfColors.ink, fontFamily: pdfFonts.sansBold }}>{title}</Text>
           <Text style={pdfStyles.headerMeta}>{sucursal}</Text>
         </View>
       </View>
@@ -311,13 +309,7 @@ export function Table<T>({ columns, rows, emptyMessage, zebra = true }: TablePro
     <View style={tableStyles.table}>
       <View style={tableStyles.headRow} fixed>
         {columns.map(col => (
-          <Text
-            key={col.key}
-            style={[
-              tableStyles.th,
-              { width: col.width as any, textAlign: col.align ?? 'left' },
-            ]}
-          >
+          <Text key={col.key} style={[tableStyles.th, { width: col.width as any, textAlign: col.align ?? 'left' }]}>
             {col.header}
           </Text>
         ))}
@@ -334,10 +326,7 @@ export function Table<T>({ columns, rows, emptyMessage, zebra = true }: TablePro
                 const rendered = col.render(row, i)
                 const isPrimitive = typeof rendered === 'string' || typeof rendered === 'number'
                 return (
-                  <View
-                    key={col.key}
-                    style={{ width: col.width as any, paddingVertical: 4, paddingHorizontal: 6 }}
-                  >
+                  <View key={col.key} style={{ width: col.width as any, paddingVertical: 4, paddingHorizontal: 6 }}>
                     {isPrimitive ? (
                       <Text style={{ fontSize: pdfSize.sm, color: pdfColors.body, textAlign: col.align ?? 'left' }}>
                         {rendered as any}
@@ -368,7 +357,13 @@ export function Table<T>({ columns, rows, emptyMessage, zebra = true }: TablePro
 
 // ── Lightweight cell primitives ──────────────────────────────────────────────
 
-export function Cell({ children, align = 'left', bold = false, color, size }: {
+export function Cell({
+  children,
+  align = 'left',
+  bold = false,
+  color,
+  size,
+}: {
   children: ReactNode
   align?: 'left' | 'center' | 'right'
   bold?: boolean
@@ -390,9 +385,7 @@ export function Cell({ children, align = 'left', bold = false, color, size }: {
 }
 
 export function Muted({ children, size }: { children: ReactNode; size?: number }) {
-  return (
-    <Text style={{ fontSize: size ?? pdfSize.xs, color: pdfColors.muted }}>{children}</Text>
-  )
+  return <Text style={{ fontSize: size ?? pdfSize.xs, color: pdfColors.muted }}>{children}</Text>
 }
 
 export function Divider({ thick }: { thick?: boolean }) {

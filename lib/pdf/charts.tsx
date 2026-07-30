@@ -33,9 +33,7 @@ export function Sparkline({ values, width = 80, height = 18, stroke = pdfColors.
     .join(' ')
 
   // Build closed polygon for fill (area chart)
-  const areaPoints = fill
-    ? `0,${height} ${points} ${width},${height}`
-    : null
+  const areaPoints = fill ? `0,${height} ${points} ${width},${height}` : null
 
   return (
     <View style={{ width, height }}>
@@ -86,11 +84,7 @@ export function MonthlyBarChart({ data, width = 720, height = 180 }: MonthlyBarC
     return (
       <View style={{ width, height, borderWidth: 0.5, borderColor: pdfColors.border }}>
         <Svg width={width} height={height}>
-          <SvgText
-            x={width / 2}
-            y={height / 2}
-            style={{ fontSize: 9, fill: pdfColors.muted, textAnchor: 'middle' }}
-          >
+          <SvgText x={width / 2} y={height / 2} style={{ fontSize: 9, fill: pdfColors.muted, textAnchor: 'middle' }}>
             Sin datos disponibles
           </SvgText>
         </Svg>
@@ -139,11 +133,7 @@ export function MonthlyBarChart({ data, width = 720, height = 180 }: MonthlyBarC
           return (
             <G key={i}>
               <Line x1={padLeft} y1={y} x2={padLeft + plotW} y2={y} stroke={pdfColors.border} strokeWidth={0.3} />
-              <SvgText
-                x={padLeft - 4}
-                y={y + 2.5}
-                style={{ fontSize: 6.5, fill: pdfColors.muted, textAnchor: 'end' }}
-              >
+              <SvgText x={padLeft - 4} y={y + 2.5} style={{ fontSize: 6.5, fill: pdfColors.muted, textAnchor: 'end' }}>
                 {formatTick(tv)}
               </SvgText>
             </G>
@@ -151,7 +141,14 @@ export function MonthlyBarChart({ data, width = 720, height = 180 }: MonthlyBarC
         })}
 
         {/* Zero line stronger */}
-        <Line x1={padLeft} y1={yZero} x2={padLeft + plotW} y2={yZero} stroke={pdfColors.borderStrong} strokeWidth={0.6} />
+        <Line
+          x1={padLeft}
+          y1={yZero}
+          x2={padLeft + plotW}
+          y2={yZero}
+          stroke={pdfColors.borderStrong}
+          strokeWidth={0.6}
+        />
 
         {/* Bars */}
         {data.map((d, i) => {
@@ -197,11 +194,7 @@ export function MonthlyBarChart({ data, width = 720, height = 180 }: MonthlyBarC
           ].map((l, i) => (
             <G key={i}>
               <Rect x={l.x} y={height - 10} width={6} height={6} fill={l.color} />
-              <SvgText
-                x={l.x + 9}
-                y={height - 4.5}
-                style={{ fontSize: 7, fill: pdfColors.muted }}
-              >
+              <SvgText x={l.x + 9} y={height - 4.5} style={{ fontSize: 7, fill: pdfColors.muted }}>
                 {l.label}
               </SvgText>
             </G>
@@ -226,11 +219,7 @@ export function DonutChart({ slices, size = 110 }: DonutChartProps) {
       <View style={{ width: size, height: size }}>
         <Svg width={size} height={size}>
           <Circle cx={size / 2} cy={size / 2} r={size / 2 - 6} stroke={pdfColors.border} strokeWidth={6} fill="none" />
-          <SvgText
-            x={size / 2}
-            y={size / 2 + 2}
-            style={{ fontSize: 7, fill: pdfColors.muted, textAnchor: 'middle' }}
-          >
+          <SvgText x={size / 2} y={size / 2 + 2} style={{ fontSize: 7, fill: pdfColors.muted, textAnchor: 'middle' }}>
             Sin datos
           </SvgText>
         </Svg>

@@ -103,10 +103,7 @@ function DescripcionRow({
           </div>
         )}
         <div className="h-1 bg-slate-100 rounded-full overflow-hidden mt-1.5">
-          <div
-            className="h-full rounded-full transition-all"
-            style={{ width: `${pct}%`, backgroundColor: color }}
-          />
+          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
         </div>
       </div>
       <div className="text-right flex-shrink-0 mt-0.5">
@@ -156,7 +153,11 @@ export function TopConceptosPanel({ ingresos, egresos, moneda, limit = 10 }: Pro
           {topIngresos.length > 0 && (
             <div className="px-5 py-3 border-t border-slate-100 flex justify-between items-center bg-slate-50/50">
               <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">
-                Mostrados: {formatMonto(topIngresos.reduce((s, g) => s + g.total, 0), moneda)}
+                Mostrados:{' '}
+                {formatMonto(
+                  topIngresos.reduce((s, g) => s + g.total, 0),
+                  moneda,
+                )}
               </span>
               <span className="text-xs font-bold text-emerald-700 tabular-nums">
                 Total: {formatMonto(totalIng, moneda)}
@@ -190,7 +191,11 @@ export function TopConceptosPanel({ ingresos, egresos, moneda, limit = 10 }: Pro
           {topEgresos.length > 0 && (
             <div className="px-5 py-3 border-t border-slate-100 flex justify-between items-center bg-slate-50/50">
               <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">
-                Mostrados: {formatMonto(topEgresos.reduce((s, g) => s + g.total, 0), moneda)}
+                Mostrados:{' '}
+                {formatMonto(
+                  topEgresos.reduce((s, g) => s + g.total, 0),
+                  moneda,
+                )}
               </span>
               <span className="text-xs font-bold text-rose-600 tabular-nums">
                 Total: {formatMonto(totalEgr, moneda)}
@@ -226,10 +231,18 @@ export function TopConceptosPanel({ ingresos, egresos, moneda, limit = 10 }: Pro
                 <thead>
                   <tr>
                     <th style={{ width: '6%', textAlign: 'center' }}>#</th>
-                    <th className="text-left" style={{ width: '38%' }}>Descripción</th>
-                    <th className="text-left" style={{ width: '28%' }}>Categorías</th>
-                    <th className="text-right" style={{ width: '10%' }}>Movs.</th>
-                    <th className="text-right" style={{ width: '18%' }}>Total</th>
+                    <th className="text-left" style={{ width: '38%' }}>
+                      Descripción
+                    </th>
+                    <th className="text-left" style={{ width: '28%' }}>
+                      Categorías
+                    </th>
+                    <th className="text-right" style={{ width: '10%' }}>
+                      Movs.
+                    </th>
+                    <th className="text-right" style={{ width: '18%' }}>
+                      Total
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -256,8 +269,17 @@ export function TopConceptosPanel({ ingresos, egresos, moneda, limit = 10 }: Pro
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colSpan={4} style={{ fontWeight: 700 }}>Total ingresos</td>
-                    <td style={{ textAlign: 'right', fontWeight: 700, color: '#059669', fontVariantNumeric: 'tabular-nums' }}>
+                    <td colSpan={4} style={{ fontWeight: 700 }}>
+                      Total ingresos
+                    </td>
+                    <td
+                      style={{
+                        textAlign: 'right',
+                        fontWeight: 700,
+                        color: '#059669',
+                        fontVariantNumeric: 'tabular-nums',
+                      }}
+                    >
                       {formatMonto(totalIng, moneda)}
                     </td>
                   </tr>
@@ -289,10 +311,18 @@ export function TopConceptosPanel({ ingresos, egresos, moneda, limit = 10 }: Pro
                 <thead>
                   <tr>
                     <th style={{ width: '6%', textAlign: 'center' }}>#</th>
-                    <th className="text-left" style={{ width: '38%' }}>Descripción</th>
-                    <th className="text-left" style={{ width: '28%' }}>Categorías</th>
-                    <th className="text-right" style={{ width: '10%' }}>Movs.</th>
-                    <th className="text-right" style={{ width: '18%' }}>Total</th>
+                    <th className="text-left" style={{ width: '38%' }}>
+                      Descripción
+                    </th>
+                    <th className="text-left" style={{ width: '28%' }}>
+                      Categorías
+                    </th>
+                    <th className="text-right" style={{ width: '10%' }}>
+                      Movs.
+                    </th>
+                    <th className="text-right" style={{ width: '18%' }}>
+                      Total
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -319,8 +349,17 @@ export function TopConceptosPanel({ ingresos, egresos, moneda, limit = 10 }: Pro
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colSpan={4} style={{ fontWeight: 700 }}>Total egresos</td>
-                    <td style={{ textAlign: 'right', fontWeight: 700, color: '#e11d48', fontVariantNumeric: 'tabular-nums' }}>
+                    <td colSpan={4} style={{ fontWeight: 700 }}>
+                      Total egresos
+                    </td>
+                    <td
+                      style={{
+                        textAlign: 'right',
+                        fontWeight: 700,
+                        color: '#e11d48',
+                        fontVariantNumeric: 'tabular-nums',
+                      }}
+                    >
                       {formatMonto(totalEgr, moneda)}
                     </td>
                   </tr>

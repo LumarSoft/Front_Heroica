@@ -14,12 +14,7 @@ import {
 import { MonthlyBarChart, ProportionBar, type MonthlySeriesPoint } from './charts'
 import { pdfColors, pdfFonts, pdfSize, accentPalette } from './theme'
 import { formatMonto } from '../formatters'
-import type {
-  ReportData,
-  ReportBreakdownItem,
-  ReportDeuda,
-  ReportMovimiento,
-} from '@/components/reportes/types'
+import type { ReportData, ReportBreakdownItem, ReportDeuda, ReportMovimiento } from '@/components/reportes/types'
 import type { Sucursal } from '@/lib/types'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -231,7 +226,16 @@ interface CoverProps {
   resumen: ReportData['resumen']
 }
 
-function CoverPage({ sucursal, moneda, periodoLabel, isClosedMonth, startDate, endDate, generatedAt, resumen }: CoverProps) {
+function CoverPage({
+  sucursal,
+  moneda,
+  periodoLabel,
+  isClosedMonth,
+  startDate,
+  endDate,
+  generatedAt,
+  resumen,
+}: CoverProps) {
   return (
     <Page size="A4" style={coverStyles.page}>
       <View style={coverStyles.accent} />
@@ -246,9 +250,7 @@ function CoverPage({ sucursal, moneda, periodoLabel, isClosedMonth, startDate, e
         <Text style={coverStyles.subtitle}>{sucursal.nombre}</Text>
 
         <View style={{ flexDirection: 'row', marginTop: 6, gap: 8 }}>
-          <Pill accent={isClosedMonth ? 'blue' : 'emerald'}>
-            {isClosedMonth ? 'Período Cerrado' : 'Mes en Curso'}
-          </Pill>
+          <Pill accent={isClosedMonth ? 'blue' : 'emerald'}>{isClosedMonth ? 'Período Cerrado' : 'Mes en Curso'}</Pill>
           <Pill accent="indigo">Moneda {moneda}</Pill>
         </View>
 
@@ -320,7 +322,14 @@ interface ExecSummaryProps {
 
 function ExecutiveSummary({ report, moneda, deltas }: ExecSummaryProps) {
   const resumen = report.resumen
-  const cards: { label: string; value: string; accent: keyof typeof accentPalette; sub?: string; delta?: number | null; invertDelta?: boolean }[] = [
+  const cards: {
+    label: string
+    value: string
+    accent: keyof typeof accentPalette
+    sub?: string
+    delta?: number | null
+    invertDelta?: boolean
+  }[] = [
     {
       label: 'Ingresos Totales',
       value: formatMonto(resumen.ingresos, moneda),
@@ -376,13 +385,7 @@ function ExecutiveSummary({ report, moneda, deltas }: ExecSummaryProps) {
 
 // ── Monthly evolution (bar chart + table) ────────────────────────────────────
 
-function MonthlyEvolution({
-  data,
-  moneda,
-}: {
-  data: ReporteMensualPDFProps['monthly']
-  moneda: 'ARS' | 'USD'
-}) {
+function MonthlyEvolution({ data, moneda }: { data: ReporteMensualPDFProps['monthly']; moneda: 'ARS' | 'USD' }) {
   const last12 = data.slice(-12)
   const chartData: MonthlySeriesPoint[] = last12.map(d => ({
     label: monthLabel(d.mes),
@@ -391,7 +394,7 @@ function MonthlyEvolution({
     resultado: d.resultado,
   }))
 
-  const columns: ColumnDef<typeof last12[number]>[] = [
+  const columns: ColumnDef<(typeof last12)[number]>[] = [
     {
       key: 'mes',
       header: 'Mes',
@@ -670,16 +673,17 @@ function TopConceptosSection({ report, moneda }: { report: ReportData; moneda: '
             }}
           >
             <Text
-              style={{ fontSize: pdfSize.xs, fontFamily: pdfFonts.sansBold, color: pdfColors.positive, letterSpacing: 1 }}
+              style={{
+                fontSize: pdfSize.xs,
+                fontFamily: pdfFonts.sansBold,
+                color: pdfColors.positive,
+                letterSpacing: 1,
+              }}
             >
               INGRESOS
             </Text>
           </View>
-          <Table
-            columns={makeColumns(pdfColors.positive)}
-            rows={topIng}
-            emptyMessage="Sin ingresos en el período"
-          />
+          <Table columns={makeColumns(pdfColors.positive)} rows={topIng} emptyMessage="Sin ingresos en el período" />
         </View>
         <View style={{ flex: 1 }}>
           <View
@@ -693,16 +697,17 @@ function TopConceptosSection({ report, moneda }: { report: ReportData; moneda: '
             }}
           >
             <Text
-              style={{ fontSize: pdfSize.xs, fontFamily: pdfFonts.sansBold, color: pdfColors.negative, letterSpacing: 1 }}
+              style={{
+                fontSize: pdfSize.xs,
+                fontFamily: pdfFonts.sansBold,
+                color: pdfColors.negative,
+                letterSpacing: 1,
+              }}
             >
               EGRESOS
             </Text>
           </View>
-          <Table
-            columns={makeColumns(pdfColors.negative)}
-            rows={topEgr}
-            emptyMessage="Sin egresos en el período"
-          />
+          <Table columns={makeColumns(pdfColors.negative)} rows={topEgr} emptyMessage="Sin egresos en el período" />
         </View>
       </View>
     </Section>
@@ -749,10 +754,8 @@ function SaludFinanciera({ report, moneda }: { report: ReportData; moneda: 'ARS'
     {
       label: 'Concentración mayor egreso',
       value: `${topEgresoConcentracion.toFixed(1)}%`,
-      detail:
-        topEgresoConcentracion >= 50 ? 'Alta' : topEgresoConcentracion >= 25 ? 'Moderada' : 'Baja',
-      accent:
-        topEgresoConcentracion >= 50 ? 'rose' : topEgresoConcentracion >= 25 ? 'orange' : 'emerald',
+      detail: topEgresoConcentracion >= 50 ? 'Alta' : topEgresoConcentracion >= 25 ? 'Moderada' : 'Baja',
+      accent: topEgresoConcentracion >= 50 ? 'rose' : topEgresoConcentracion >= 25 ? 'orange' : 'emerald',
     },
   ]
 
@@ -923,7 +926,8 @@ function DetalleMovimientos({ report, moneda }: { report: ReportData; moneda: 'A
 // ── Main document ────────────────────────────────────────────────────────────
 
 export function ReporteMensualPDF(props: ReporteMensualPDFProps) {
-  const { sucursal, moneda, periodoLabel, isClosedMonth, startDate, endDate, generatedAt, report, monthly, deltas } = props
+  const { sucursal, moneda, periodoLabel, isClosedMonth, startDate, endDate, generatedAt, report, monthly, deltas } =
+    props
 
   const headerTitle = `Reporte ${periodoLabel} · ${moneda}`
   const emitidoEl = generatedAt.toLocaleDateString('es-AR', {

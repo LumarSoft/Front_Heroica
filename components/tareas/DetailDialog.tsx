@@ -1,7 +1,19 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Pencil, X, MessageCircle, Send, Bell, CalendarDays, RefreshCw, User, CheckCheck } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  X,
+  MessageCircle,
+  Send,
+  Bell,
+  CalendarDays,
+  RefreshCw,
+  User,
+  CheckCheck,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
@@ -9,7 +21,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
-import { TIPO_CONFIG, PRIORIDAD_CONFIG, ESTADO_CONFIG, ESTADO_SIGUIENTE, ESTADO_ANTERIOR, MODULO_CONFIG } from './constants'
+import {
+  TIPO_CONFIG,
+  PRIORIDAD_CONFIG,
+  ESTADO_CONFIG,
+  ESTADO_SIGUIENTE,
+  ESTADO_ANTERIOR,
+  MODULO_CONFIG,
+} from './constants'
 import { formatDate, timeAgo } from './utils'
 import { Avatar } from './Avatar'
 import { MetaItem } from './MetaItem'

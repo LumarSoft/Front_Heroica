@@ -8,9 +8,18 @@ import type { CategoryDataPoint } from './MonthlyCategoryBarChart'
 // =============================================
 
 const MESES_ES: Record<string, string> = {
-  '01': 'Ene', '02': 'Feb', '03': 'Mar', '04': 'Abr',
-  '05': 'May', '06': 'Jun', '07': 'Jul', '08': 'Ago',
-  '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dic',
+  '01': 'Ene',
+  '02': 'Feb',
+  '03': 'Mar',
+  '04': 'Abr',
+  '05': 'May',
+  '06': 'Jun',
+  '07': 'Jul',
+  '08': 'Ago',
+  '09': 'Sep',
+  '10': 'Oct',
+  '11': 'Nov',
+  '12': 'Dic',
 }
 
 function formatMesLabel(mes: string): string {
@@ -46,15 +55,15 @@ interface Props {
 }
 
 function DeltaBadge({ delta }: { delta: number | null }) {
-  if (delta === null)
-    return <span className="text-slate-300 text-xs font-mono">—</span>
+  if (delta === null) return <span className="text-slate-300 text-xs font-mono">—</span>
   const positive = delta >= 0
   const sign = positive ? '+' : ''
   return (
     <span
       className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold tabular-nums ${positive ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}
     >
-      {sign}{delta.toFixed(1)}%
+      {sign}
+      {delta.toFixed(1)}%
     </span>
   )
 }
@@ -125,11 +134,18 @@ export function ComparativoCategoriaPanel({ categoryData, currentMonth, moneda }
             <tbody className="divide-y divide-slate-100">
               {rows.map((row, i) => (
                 <tr key={i} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3 font-semibold text-slate-800 sticky left-0 bg-white z-10 border-r border-slate-100 truncate max-w-[160px]" title={row.cat}>
+                  <td
+                    className="px-4 py-3 font-semibold text-slate-800 sticky left-0 bg-white z-10 border-r border-slate-100 truncate max-w-[160px]"
+                    title={row.cat}
+                  >
                     {row.cat}
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-slate-800 tabular-nums">
-                    {row.current > 0 ? formatMonto(row.current, moneda) : <span className="text-slate-300 font-normal">—</span>}
+                    {row.current > 0 ? (
+                      formatMonto(row.current, moneda)
+                    ) : (
+                      <span className="text-slate-300 font-normal">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right text-slate-500 tabular-nums">
                     {row.prev > 0 ? formatMonto(row.prev, moneda) : <span className="text-slate-300">—</span>}
@@ -152,10 +168,16 @@ export function ComparativoCategoriaPanel({ categoryData, currentMonth, moneda }
                   Totales
                 </td>
                 <td className="px-4 py-2.5 text-right font-bold text-slate-800 tabular-nums">
-                  {formatMonto(rows.reduce((s, r) => s + r.current, 0), moneda)}
+                  {formatMonto(
+                    rows.reduce((s, r) => s + r.current, 0),
+                    moneda,
+                  )}
                 </td>
                 <td className="px-4 py-2.5 text-right font-semibold text-slate-500 tabular-nums">
-                  {formatMonto(rows.reduce((s, r) => s + r.prev, 0), moneda)}
+                  {formatMonto(
+                    rows.reduce((s, r) => s + r.prev, 0),
+                    moneda,
+                  )}
                 </td>
                 <td colSpan={3} />
               </tr>
@@ -169,12 +191,24 @@ export function ComparativoCategoriaPanel({ categoryData, currentMonth, moneda }
         <table className="print-table w-full">
           <thead>
             <tr>
-              <th className="text-left" style={{ width: '22%' }}>Categoría</th>
-              <th className="text-right" style={{ width: '16%' }}>{formatMesLabel(currentMonth)} (actual)</th>
-              <th className="text-right" style={{ width: '16%' }}>{formatMesLabel(prevMes)} (ant.)</th>
-              <th className="text-right" style={{ width: '10%' }}>Δ vs ant.</th>
-              <th className="text-right" style={{ width: '16%' }}>Prom. 6 meses</th>
-              <th className="text-right" style={{ width: '10%' }}>Δ vs prom.</th>
+              <th className="text-left" style={{ width: '22%' }}>
+                Categoría
+              </th>
+              <th className="text-right" style={{ width: '16%' }}>
+                {formatMesLabel(currentMonth)} (actual)
+              </th>
+              <th className="text-right" style={{ width: '16%' }}>
+                {formatMesLabel(prevMes)} (ant.)
+              </th>
+              <th className="text-right" style={{ width: '10%' }}>
+                Δ vs ant.
+              </th>
+              <th className="text-right" style={{ width: '16%' }}>
+                Prom. 6 meses
+              </th>
+              <th className="text-right" style={{ width: '10%' }}>
+                Δ vs prom.
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -203,7 +237,9 @@ export function ComparativoCategoriaPanel({ categoryData, currentMonth, moneda }
                     <span style={{ color: '#cbd5e1' }}>—</span>
                   )}
                 </td>
-                <td style={{ textAlign: 'right', color: '#94a3b8', fontVariantNumeric: 'tabular-nums', fontSize: '8pt' }}>
+                <td
+                  style={{ textAlign: 'right', color: '#94a3b8', fontVariantNumeric: 'tabular-nums', fontSize: '8pt' }}
+                >
                   {row.avg6 > 0 ? formatMonto(row.avg6, moneda) : <span style={{ color: '#cbd5e1' }}>—</span>}
                 </td>
                 <td style={{ textAlign: 'right' }}>
@@ -229,10 +265,16 @@ export function ComparativoCategoriaPanel({ categoryData, currentMonth, moneda }
             <tr>
               <td style={{ fontWeight: 700 }}>Totales</td>
               <td style={{ textAlign: 'right', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                {formatMonto(rows.reduce((s, r) => s + r.current, 0), moneda)}
+                {formatMonto(
+                  rows.reduce((s, r) => s + r.current, 0),
+                  moneda,
+                )}
               </td>
               <td style={{ textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: '#64748b' }}>
-                {formatMonto(rows.reduce((s, r) => s + r.prev, 0), moneda)}
+                {formatMonto(
+                  rows.reduce((s, r) => s + r.prev, 0),
+                  moneda,
+                )}
               </td>
               <td colSpan={3} />
             </tr>
