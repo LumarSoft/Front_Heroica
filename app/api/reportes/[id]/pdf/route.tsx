@@ -32,10 +32,7 @@ const calcDelta = (curr: number, prev: number): number | null => {
   return ((curr - prev) / prev) * 100
 }
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const auth = req.headers.get('authorization')
   if (!auth) {
@@ -78,17 +75,17 @@ export async function GET(
 
     if (!sucursalRes.ok) {
       const body = await sucursalRes.text()
-      return new Response(
-        JSON.stringify({ message: 'No se pudo cargar la sucursal', detail: body }),
-        { status: sucursalRes.status, headers: { 'Content-Type': 'application/json' } },
-      )
+      return new Response(JSON.stringify({ message: 'No se pudo cargar la sucursal', detail: body }), {
+        status: sucursalRes.status,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
     if (!reportRes.ok) {
       const body = await reportRes.text()
-      return new Response(
-        JSON.stringify({ message: 'No se pudieron cargar los reportes', detail: body }),
-        { status: reportRes.status, headers: { 'Content-Type': 'application/json' } },
-      )
+      return new Response(JSON.stringify({ message: 'No se pudieron cargar los reportes', detail: body }), {
+        status: reportRes.status,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
 
     const sucursalJson = (await sucursalRes.json()) as { data: Sucursal }

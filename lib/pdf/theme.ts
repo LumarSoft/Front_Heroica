@@ -44,10 +44,7 @@ export const pdfSize = {
 
 export type AccentKey = 'emerald' | 'rose' | 'blue' | 'red' | 'orange' | 'indigo'
 
-export const accentPalette: Record<
-  AccentKey,
-  { fg: string; soft: string; border: string }
-> = {
+export const accentPalette: Record<AccentKey, { fg: string; soft: string; border: string }> = {
   emerald: { fg: pdfColors.positive, soft: pdfColors.positiveSoft, border: '#a7f3d0' },
   rose: { fg: pdfColors.negative, soft: pdfColors.negativeSoft, border: '#fecdd3' },
   blue: { fg: pdfColors.info, soft: pdfColors.infoSoft, border: '#bfdbfe' },

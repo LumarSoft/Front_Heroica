@@ -30,14 +30,18 @@ export function CajaTabs({ saldoReal, saldoNecesario, children, value, onValueCh
         <div className="flex items-center justify-between gap-3 mb-3 sm:hidden">
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-[#999999] mb-0.5">Saldo Real</p>
-            <p className={`text-lg font-bold tabular-nums truncate ${totalReal >= 0 ? 'text-[#002868]' : 'text-rose-600'}`}>
+            <p
+              className={`text-lg font-bold tabular-nums truncate ${totalReal >= 0 ? 'text-[#002868]' : 'text-rose-600'}`}
+            >
               {formatMonto(totalReal)}
             </p>
           </div>
           <div className="w-px h-8 bg-[#E0E0E0] flex-shrink-0" />
           <div className="flex-1 min-w-0 text-right">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-[#999999] mb-0.5">Necesario</p>
-            <p className={`text-lg font-bold tabular-nums truncate ${diferenciaTotal >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <p
+              className={`text-lg font-bold tabular-nums truncate ${diferenciaTotal >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
+            >
               {formatMonto(diferenciaTotal)}
             </p>
           </div>
@@ -49,7 +53,9 @@ export function CajaTabs({ saldoReal, saldoNecesario, children, value, onValueCh
             <TabsTrigger value="real" className={TRIGGER_CLASS}>
               <div className="flex flex-col items-center gap-0.5">
                 <span className="font-bold text-xs sm:text-sm">Saldo Real</span>
-                <span className={`font-medium text-[10px] sm:text-xs tabular-nums hidden sm:block ${totalReal >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                <span
+                  className={`font-medium text-[10px] sm:text-xs tabular-nums hidden sm:block ${totalReal >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
+                >
                   {formatMonto(totalReal)}
                 </span>
               </div>
@@ -57,7 +63,9 @@ export function CajaTabs({ saldoReal, saldoNecesario, children, value, onValueCh
             <TabsTrigger value="necesario" className={TRIGGER_CLASS}>
               <div className="flex flex-col items-center gap-0.5">
                 <span className="font-bold text-xs sm:text-sm">Saldo Necesario</span>
-                <span className={`font-medium text-[10px] sm:text-xs tabular-nums hidden sm:block ${diferenciaTotal >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                <span
+                  className={`font-medium text-[10px] sm:text-xs tabular-nums hidden sm:block ${diferenciaTotal >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}
+                >
                   {formatMonto(diferenciaTotal)}
                 </span>
               </div>

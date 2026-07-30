@@ -175,16 +175,17 @@ export function DescripcionesSection() {
   }
 
   // Categorías filtradas según el tipo elegido en el form
-  const categoriasFiltradas = form.tipo
-    ? categorias.filter(c => !c.tipo || c.tipo === form.tipo)
-    : categorias
+  const categoriasFiltradas = form.tipo ? categorias.filter(c => !c.tipo || c.tipo === form.tipo) : categorias
 
   return (
     <>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-[#F0F0F0]">
           <CardTitle>Descripciones (Clasificación de Movimientos)</CardTitle>
-          <Button onClick={handleOpenNew} className="bg-[#002868] hover:bg-[#003d8f] text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4">
+          <Button
+            onClick={handleOpenNew}
+            className="bg-[#002868] hover:bg-[#003d8f] text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
+          >
             + Nueva Descripción
           </Button>
         </CardHeader>
@@ -283,7 +284,12 @@ export function DescripcionesSection() {
                 id="desc-tipo"
                 value={form.tipo}
                 onChange={e => {
-                  setForm({ ...form, tipo: e.target.value as 'ingreso' | 'egreso' | '', categoria_id: '', subcategoria_id: '' })
+                  setForm({
+                    ...form,
+                    tipo: e.target.value as 'ingreso' | 'egreso' | '',
+                    categoria_id: '',
+                    subcategoria_id: '',
+                  })
                   setSubcategorias([])
                 }}
                 className={selectClasses}
