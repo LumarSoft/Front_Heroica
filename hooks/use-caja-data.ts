@@ -795,13 +795,6 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     }
   }, [saldoNecesario, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda, filtroChequesPendientes])
 
-  // Lista combinada: saldo real + saldo necesario intercalados y ordenados por fecha.
-  // Alimenta la vista "Combinada" (una sola tabla con filas pintadas según su estado).
-  const saldoCombinadoFiltrado = useMemo<Transaction[]>(
-    () => [...saldoRealFiltrado, ...saldoNecesarioFiltrado].sort(sortByFechaOrden),
-    [saldoRealFiltrado, saldoNecesarioFiltrado],
-  )
-
   // Parciales filtrados: agrupar saldoReal + saldoNecesarioSinDeudaFiltrado por banco_id
   const parcialesFiltrados = useMemo<BancoParcial[]>(() => {
     const map = new Map<number | string, BancoParcial>()
@@ -855,7 +848,6 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     // Datos filtrados por fecha
     saldoNecesarioFiltrado,
     saldoNecesarioSinDeudaFiltrado,
-    saldoCombinadoFiltrado,
     parcialesFiltrados,
 
     // Filtros

@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
-import { subMonths, addMonths } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
 import { CompraVentaDivisasDialog } from '@/components/caja/CompraVentaDivisasDialog'
@@ -194,16 +193,6 @@ export default function CajaEfectivoPage() {
     if (viewMode === 'dual') setSidebarCollapsed(true)
   }, [viewMode, setSidebarCollapsed])
 
-  // Vista Combinada: al entrar (si no hay rango), filtrar por defecto de 1 mes atrás a 1 mes adelante
-  const { dateRange, setDateRange } = caja
-  const prevViewModeRef = useRef<CajaViewMode>(viewMode)
-  useEffect(() => {
-    if (viewMode === 'combinada' && prevViewModeRef.current !== 'combinada' && !dateRange) {
-      setDateRange({ from: subMonths(new Date(), 1), to: addMonths(new Date(), 1) })
-    }
-    prevViewModeRef.current = viewMode
-  }, [viewMode, dateRange, setDateRange])
-
   return (
     <div className="min-h-full bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
       <header className="bg-white border-b border-[#E0E0E0] sticky top-0 z-40">
@@ -282,29 +271,7 @@ export default function CajaEfectivoPage() {
                   onViewModeChange={setViewMode}
                 />
 
-                {viewMode === 'combinada' ? (
-                  <TransactionTable
-                    title="Movimientos combinados"
-                    description="Saldo real y necesario intercalados por fecha. Verde = pagado, amarillo = por pagar."
-                    transactions={caja.saldoCombinadoFiltrado}
-                    customTotal={
-                      calcularTotal(caja.saldoRealFiltrado) + calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
-                    }
-                    columns={columns}
-                    onViewDetails={caja.handleOpenDetails}
-                    onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
-                    onDelete={canDelete ? caja.handleOpenDelete : undefined}
-                    onToggleDeuda={canToggleDeuda ? caja.handleOpenDeuda : undefined}
-                    onMove={canCrear ? caja.handleOpenMover : undefined}
-                    onBulkDelete={canDelete ? handleBulkDelete : undefined}
-                    onBulkMove={canCrear ? handleBulkMove : undefined}
-                    isReadOnly={isStrictlyReadOnly}
-                    inlineEdit={inlineEdit}
-                    onReorder={caja.reorderMovimiento}
-                    highlightId={highlightId}
-                    rowTint={t => (t.estado === 'completado' ? 'green' : 'yellow')}
-                  />
-                ) : viewMode === 'dual' ? (
+                {viewMode === 'dual' ? (
                   <DualSaldoBoard
                     real={caja.saldoRealFiltrado}
                     necesario={caja.saldoNecesarioFiltrado}

@@ -12,7 +12,6 @@ import {
   FilterX,
   Landmark,
   LayoutList,
-  Rows3,
   Search,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -25,7 +24,6 @@ import { cn } from '@/lib/utils'
 
 const VIEW_MODE_OPTIONS: { value: CajaViewMode; label: string; icon: typeof LayoutList }[] = [
   { value: 'tabla', label: 'Tabla', icon: LayoutList },
-  { value: 'combinada', label: 'Combinada', icon: Rows3 },
   { value: 'dual', label: 'Dual', icon: Columns2 },
   { value: 'calendario', label: 'Calendario', icon: CalendarDays },
 ]
@@ -245,7 +243,7 @@ export function EndDateFilter({
           </div>
         )}
 
-        {/* Toggle de vista: Tabla / Combinada / Dual / Calendario */}
+        {/* Toggle de vista: Tabla / Dual / Calendario */}
         {onViewModeChange && (
           <div className="flex items-center gap-0.5 p-0.5 bg-[#F0F4FF] rounded-lg border border-[#002868]/15 ml-auto">
             {VIEW_MODE_OPTIONS.map(opt => {
