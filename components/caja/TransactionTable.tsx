@@ -310,7 +310,7 @@ interface TransactionTableProps {
     context: InlineEditContext
     onSave: (id: number, patch: Partial<Transaction>) => Promise<boolean>
   }
-  /** Tinte de fondo por fila (verde = pago, amarillo = impago) para la vista combinada */
+  /** Tinte de fondo por fila (verde = pago, amarillo = impago) para la vista dual */
   rowTint?: (t: Transaction) => 'green' | 'yellow' | null
   /**
    * Modo de drag & drop:

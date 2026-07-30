@@ -5,7 +5,7 @@ import type { Transaction } from '@/lib/types'
 // Modos de vista de las cajas (efectivo / banco)
 // =============================================
 
-export type CajaViewMode = 'tabla' | 'combinada' | 'dual' | 'calendario'
+export type CajaViewMode = 'tabla' | 'dual' | 'calendario'
 
 // =============================================
 // Orden efectivo de una fila: posición manual (fallback al id)
