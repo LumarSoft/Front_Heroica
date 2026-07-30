@@ -1,7 +1,7 @@
 'use client'
 
 import { format, isToday } from 'date-fns'
-import { TrendingDown, TrendingUp, Minus, Wallet } from 'lucide-react'
+import { TrendingDown, TrendingUp, Minus, Wallet, AlertTriangle } from 'lucide-react'
 import type { Transaction } from '@/lib/types'
 import { formatMonto } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
@@ -14,6 +14,10 @@ export interface DayData {
   egresos: number
   ingresos: number
   items: Transaction[]
+  /** Monto de egresos vencidos (de fechas anteriores) reagrupados en este día */
+  egresosVencidos: number
+  /** Cantidad de movimientos vencidos reagrupados en este día */
+  cantidadVencidos: number
 }
 
 export interface WeekTotals {
@@ -41,6 +45,7 @@ export function DayCell({ date, data, isCurrentMonth, onClick, animationDelay, s
   const neto = hasData ? data.ingresos - data.egresos : 0
   const esModoNecesario = saldoRealActual !== undefined
   const diferencia = esModoNecesario ? saldoRealActual - (data?.egresos ?? 0) : 0
+  const cantidadVencidos = data?.cantidadVencidos ?? 0
 
   return (
     <div
@@ -74,6 +79,17 @@ export function DayCell({ date, data, isCurrentMonth, onClick, animationDelay, s
             <div className="flex items-center gap-1 min-w-0">
               <TrendingDown className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
               <span className="text-xs font-semibold text-rose-600 truncate">Sale {formatMonto(data.egresos)}</span>
+            </div>
+          )}
+          {cantidadVencidos > 0 && (
+            <div
+              className="flex items-center gap-1 min-w-0"
+              title={`Incluye ${cantidadVencidos} movimiento${cantidadVencidos !== 1 ? 's' : ''} vencido${cantidadVencidos !== 1 ? 's' : ''} de fechas anteriores`}
+            >
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+              <span className="text-[11px] font-semibold text-amber-600 truncate">
+                Vencido {formatMonto(data.egresosVencidos)}
+              </span>
             </div>
           )}
           <div className="flex items-center gap-1 min-w-0">

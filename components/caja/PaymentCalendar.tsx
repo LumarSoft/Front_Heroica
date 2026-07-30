@@ -12,11 +12,21 @@ import {
   isSameMonth,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { ArrowLeft, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Minus, Wallet } from 'lucide-react'
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  TrendingDown,
+  TrendingUp,
+  Minus,
+  Wallet,
+  AlertTriangle,
+} from 'lucide-react'
 import type { Transaction } from '@/lib/types'
 import type { ColumnDef } from '@/components/caja/TransactionTable'
 import { TransactionTable } from '@/components/caja/TransactionTable'
-import { DayCell, WeekTotalsCell, type DayData, type WeekTotals } from '@/components/caja/PaymentCalendarCells'
+import { DayCell, WeekTotalsCell, type WeekTotals } from '@/components/caja/PaymentCalendarCells'
+import { buildDayMap } from '@/components/caja/paymentCalendarData'
 import { formatMonto } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 
@@ -43,6 +53,11 @@ interface PaymentCalendarProps {
    * compara contra este saldo, mostrando cuánto sobra o cuánto falta para cubrirlo.
    */
   saldoRealActual?: number
+  /**
+   * Reagrupa en el día actual todos los egresos con fecha anterior a hoy que todavía no
+   * pasaron a saldo real (por ejemplo un cheque que vencía ayer y sigue impago).
+   */
+  agruparVencidos?: boolean
 }
 
 const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
@@ -69,30 +84,20 @@ export function PaymentCalendar({
   title,
   description,
   saldoRealActual,
+  agruparVencidos,
 }: PaymentCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(() => new Date())
   const [selectedDay, setSelectedDay] = useState<Date | null>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [transitionDir, setTransitionDir] = useState<'in' | 'out'>('in')
 
-  // Agrupar transactions por fecha ISO
-  const dayMap = useMemo(() => {
-    const map = new Map<string, DayData>()
-    for (const t of transactions) {
-      const datePart = t.fecha?.includes('T') ? t.fecha.split('T')[0] : t.fecha
-      if (!datePart) continue
-      const existing = map.get(datePart) ?? { egresos: 0, ingresos: 0, items: [] }
-      const monto = typeof t.monto === 'string' ? parseFloat(t.monto) : (t.monto ?? 0)
-      if (t.tipo === 'egreso') {
-        existing.egresos += Math.abs(monto)
-      } else {
-        existing.ingresos += Math.abs(monto)
-      }
-      existing.items.push(t)
-      map.set(datePart, existing)
-    }
-    return map
-  }, [transactions])
+  const hoyISO = useMemo(() => getISODate(new Date()), [])
+
+  // Agrupar transactions por fecha ISO (los egresos vencidos caen en el día actual)
+  const dayMap = useMemo(
+    () => buildDayMap(transactions, { agruparVencidos, hoyISO }),
+    [transactions, agruparVencidos, hoyISO],
+  )
 
   // Calcular semanas del mes actual
   const weeks = useMemo(() => {
@@ -253,6 +258,18 @@ export function PaymentCalendar({
               >
                 <Minus className="w-3.5 h-3.5" />
                 Neto: {formatMonto(selectedDayNeto)}
+              </span>
+            </div>
+          )}
+
+          {(selectedDayData?.cantidadVencidos ?? 0) > 0 && selectedDayData && (
+            <div className="flex items-center gap-1.5 mt-2 text-xs font-semibold text-amber-600">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>
+                Incluye {selectedDayData.cantidadVencidos} movimiento
+                {selectedDayData.cantidadVencidos !== 1 ? 's' : ''} vencido
+                {selectedDayData.cantidadVencidos !== 1 ? 's' : ''} de fechas anteriores por{' '}
+                {formatMonto(selectedDayData.egresosVencidos)}
               </span>
             </div>
           )}
@@ -471,6 +488,12 @@ export function PaymentCalendar({
                 <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
                 <span>Sobra / Falta</span>
               </div>
+              {agruparVencidos && (
+                <div className="flex items-center gap-1.5 text-xs text-[#5A6070]">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Vencidos agrupados en el día de hoy</span>
+                </div>
+              )}
             </>
           ) : (
             <>

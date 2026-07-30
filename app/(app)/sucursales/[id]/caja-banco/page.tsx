@@ -421,7 +421,7 @@ export default function CajaBancoPage() {
                       {viewMode === 'calendario' ? (
                         <PaymentCalendar
                           title="Saldo Necesario"
-                          description="Pagos y compromisos programados que impactarán en bancos."
+                          description="Pagos y compromisos programados que impactarán en bancos. Los vencidos impagos se agrupan en el día de hoy."
                           transactions={caja.saldoNecesarioFiltrado}
                           columns={columns}
                           onViewDetails={caja.handleOpenDetails}
@@ -433,6 +433,7 @@ export default function CajaBancoPage() {
                           onBulkMove={canCrear ? handleBulkMove : undefined}
                           isReadOnly={isStrictlyReadOnly}
                           saldoRealActual={calcularTotal(caja.saldoRealFiltrado)}
+                          agruparVencidos
                         />
                       ) : (
                         <TransactionTable

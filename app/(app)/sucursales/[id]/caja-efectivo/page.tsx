@@ -373,7 +373,7 @@ export default function CajaEfectivoPage() {
                       {viewMode === 'calendario' ? (
                         <PaymentCalendar
                           title="Saldo Necesario"
-                          description="Pagos y compromisos en efectivo programados."
+                          description="Pagos y compromisos en efectivo programados. Los vencidos impagos se agrupan en el día de hoy."
                           transactions={caja.saldoNecesarioFiltrado}
                           columns={columns}
                           onViewDetails={caja.handleOpenDetails}
@@ -385,6 +385,7 @@ export default function CajaEfectivoPage() {
                           onBulkMove={canCrear ? handleBulkMove : undefined}
                           isReadOnly={isStrictlyReadOnly}
                           saldoRealActual={calcularTotal(caja.saldoRealFiltrado)}
+                          agruparVencidos
                         />
                       ) : (
                         <TransactionTable
