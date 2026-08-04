@@ -289,8 +289,10 @@ export function BreakdownPanel({
                         {catPct.toFixed(1)}%
                       </td>
                       <td style={{ textAlign: 'right', color: '#94a3b8', fontSize: '8pt' }}>—</td>
-                      <td style={{ textAlign: 'right', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}
-                        className={valueColorClass}>
+                      <td
+                        style={{ textAlign: 'right', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}
+                        className={valueColorClass}
+                      >
                         {formatMonto(cat.value, moneda)}
                       </td>
                     </tr>
@@ -304,13 +306,24 @@ export function BreakdownPanel({
                             <span style={{ color: '#94a3b8', marginRight: '4px' }}>└</span>
                             {sub.name}
                           </td>
-                          <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#94a3b8', fontSize: '8pt' }}>
+                          <td
+                            style={{ textAlign: 'right', fontFamily: 'monospace', color: '#94a3b8', fontSize: '8pt' }}
+                          >
                             {subGlobalPct.toFixed(1)}%
                           </td>
-                          <td style={{ textAlign: 'right', fontFamily: 'monospace', color: '#64748b', fontSize: '8pt' }}>
+                          <td
+                            style={{ textAlign: 'right', fontFamily: 'monospace', color: '#64748b', fontSize: '8pt' }}
+                          >
                             {subCatPct.toFixed(1)}%
                           </td>
-                          <td style={{ textAlign: 'right', color: '#475569', fontVariantNumeric: 'tabular-nums', fontSize: '9pt' }}>
+                          <td
+                            style={{
+                              textAlign: 'right',
+                              color: '#475569',
+                              fontVariantNumeric: 'tabular-nums',
+                              fontSize: '9pt',
+                            }}
+                          >
                             {formatMonto(sub.value, moneda)}
                           </td>
                         </tr>
@@ -322,11 +335,16 @@ export function BreakdownPanel({
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={3} style={{ fontWeight: 800, color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <td
+                  colSpan={3}
+                  style={{ fontWeight: 800, color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                >
                   Total
                 </td>
-                <td style={{ textAlign: 'right', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}
-                  className={valueColorClass}>
+                <td
+                  style={{ textAlign: 'right', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}
+                  className={valueColorClass}
+                >
                   {formatMonto(printTotal, moneda)}
                 </td>
               </tr>

@@ -17,6 +17,8 @@ export const PERMISOS = {
   EDITAR_MOVIMIENTOS: 'editar_movimientos',
   ELIMINAR_MOVIMIENTOS: 'eliminar_movimientos',
   APROBAR_MOVIMIENTOS: 'aprobar_movimientos',
+  IMPORTAR_MOVIMIENTOS: 'importar_movimientos',
+  REVERTIR_IMPORTACIONES: 'revertir_importaciones',
 
   // Pagos pendientes
   VER_PENDIENTES: 'ver_pendientes',

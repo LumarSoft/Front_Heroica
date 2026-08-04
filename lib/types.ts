@@ -4,6 +4,17 @@
 
 export type TransactionEstado = 'pendiente' | 'aprobado' | 'rechazado' | 'completado'
 
+export type ExportTipoMovimiento = 'todos' | 'ingresos' | 'egresos'
+export type ExportTipoSaldo = 'todos' | 'saldo_real' | 'saldo_necesario'
+/** 'actual' exporta solo la caja de la pantalla; 'ambas' incluye efectivo y banco */
+export type ExportAlcanceCaja = 'actual' | 'ambas'
+
+export interface ExportExcelOpciones {
+  tipo: ExportTipoMovimiento
+  saldo: ExportTipoSaldo
+  caja: ExportAlcanceCaja
+}
+
 export interface Transaction {
   id: number
   sucursal_id: number

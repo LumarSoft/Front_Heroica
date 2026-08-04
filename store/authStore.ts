@@ -22,6 +22,8 @@ interface AuthState {
   logout: () => void
   isSuperAdmin: () => boolean
   hasPermiso: (clave: string) => boolean
+  canImportarMovimientos: () => boolean
+  canRevertirImportaciones: () => boolean
   canAccessModulo: (clave: string) => boolean
 
   // Configuración
@@ -136,6 +138,8 @@ export const useAuthStore = create<AuthState>()(
       canEliminarMovimientos: () => get().hasPermiso('eliminar_movimientos'),
       canComentarMovimientos: () => get().hasPermiso('agregar_comentarios'),
       canAprobarMovimientos: () => get().hasPermiso('aprobar_movimientos'),
+      canImportarMovimientos: () => get().hasPermiso('importar_movimientos'),
+      canRevertirImportaciones: () => get().hasPermiso('revertir_importaciones'),
 
       // Pagos pendientes
       canVerPendientes: () => get().hasPermiso('ver_pendientes'),

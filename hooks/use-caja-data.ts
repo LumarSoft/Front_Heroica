@@ -744,10 +744,11 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
           m => isMedioPagoChequeLike(m.medio_pago_nombre) && !tieneNumeroChequeCargado(m.numero_cheque),
         )
       : filteredBySearch
-    if (filtroDeuda === 'solo_deudas') return filteredByChequePendiente.filter(m => m.es_deuda)
-    if (filtroDeuda === 'sin_deudas') return filteredByChequePendiente.filter(m => !m.es_deuda)
+    // El filtro de deudas NO se aplica en saldo real: una deuda es plata que ya
+    // salió de la cuenta, así que siempre tiene que estar contemplada en el saldo.
+    // El control del filtro se oculta en esa pestaña (ver caja-banco/caja-efectivo).
     return filteredByChequePendiente
-  }, [saldoReal, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda, filtroChequesPendientes])
+  }, [saldoReal, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroChequesPendientes])
 
   const { saldoNecesarioFiltrado, saldoNecesarioSinDeudaFiltrado } = useMemo(() => {
     let filteredByDate = saldoNecesario
@@ -794,13 +795,6 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
       saldoNecesarioSinDeudaFiltrado: filtered.filter(m => !m.es_deuda),
     }
   }, [saldoNecesario, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda, filtroChequesPendientes])
-
-  // Lista combinada: saldo real + saldo necesario intercalados y ordenados por fecha.
-  // Alimenta la vista "Combinada" (una sola tabla con filas pintadas según su estado).
-  const saldoCombinadoFiltrado = useMemo<Transaction[]>(
-    () => [...saldoRealFiltrado, ...saldoNecesarioFiltrado].sort(sortByFechaOrden),
-    [saldoRealFiltrado, saldoNecesarioFiltrado],
-  )
 
   // Parciales filtrados: agrupar saldoReal + saldoNecesarioSinDeudaFiltrado por banco_id
   const parcialesFiltrados = useMemo<BancoParcial[]>(() => {
@@ -855,7 +849,6 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     // Datos filtrados por fecha
     saldoNecesarioFiltrado,
     saldoNecesarioSinDeudaFiltrado,
-    saldoCombinadoFiltrado,
     parcialesFiltrados,
 
     // Filtros

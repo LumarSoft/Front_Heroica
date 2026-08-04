@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
-import { subMonths, addMonths } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
 import { useCajaData } from '@/hooks/use-caja-data'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { formatMonto, calcularTotal } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
 import { ContentLoadingSpinner } from '@/components/ui/loading-spinner'
@@ -15,6 +15,8 @@ import { AccessDenied } from '@/components/ui/access-denied'
 import { useAuthStore } from '@/store/authStore'
 import { useSidebarStore } from '@/store/sidebarStore'
 import { BancoParcial } from '@/lib/types'
+import type { ExportExcelOpciones } from '@/lib/types'
+import { ExportExcelDialog } from '@/components/caja/ExportExcelDialog'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { PageHeader } from '@/components/caja/PageHeader'
 import { CajaTabs, TabsContent } from '@/components/caja/CajaTabs'
@@ -26,6 +28,7 @@ import type { CajaViewMode } from '@/lib/caja-reorder'
 import { DetailsDialog, StateDialog, DeleteDialog, DeudaDialog } from '@/components/caja/TransactionDialogs'
 import { MoverMovimientoDialog } from '@/components/caja/MoverMovimientoDialog'
 import { BulkMoverDialog } from '@/components/caja/BulkMoverDialog'
+import { ImportacionMasivaDialog } from '@/components/caja/ImportacionMasivaDialog'
 import { EndDateFilter } from '@/components/caja/EndDateFilter'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
@@ -51,13 +54,15 @@ export default function CajaBancoPage() {
   const [sucursalNombre, setSucursalNombre] = useState('')
   const [isExporting, setIsExporting] = useState(false)
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)
-  const [exportTipo, setExportTipo] = useState<'todos' | 'ingresos' | 'egresos'>('todos')
-  const [exportSaldo, setExportSaldo] = useState<'todos' | 'saldo_real' | 'saldo_necesario'>('todos')
   const [isBulkMoverDialogOpen, setIsBulkMoverDialogOpen] = useState(false)
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false)
   const [bulkSelectedIds, setBulkSelectedIds] = useState<number[]>([])
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
   const [highlightId, setHighlightId] = useState<number | null>(null)
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
+
+  // Identifica la sucursal en la pestaña (útil con varias ventanas abiertas)
+  useDocumentTitle(sucursalNombre ? `${sucursalNombre} · Caja Banco` : '')
 
   const handleBulkDelete = (ids: number[]) => {
     setBulkSelectedIds(ids)
@@ -91,7 +96,7 @@ export default function CajaBancoPage() {
     setIsBulkMoverDialogOpen(true)
   }
 
-  const handleExportConfirm = async () => {
+  const handleExportConfirm = async (opciones: ExportExcelOpciones) => {
     setIsExportDialogOpen(false)
     setIsExporting(true)
     try {
@@ -102,14 +107,16 @@ export default function CajaBancoPage() {
       if (caja.filtroDeuda !== 'todos') qp.set('filtroDeuda', caja.filtroDeuda)
       if (caja.bancosFiltro.length > 0) qp.set('bancos', caja.bancosFiltro.join(','))
       if (caja.filtroChequesPendientes) qp.set('filtroChequesPendientes', 'true')
-      if (exportTipo !== 'todos') qp.set('tipoMovimiento', exportTipo === 'ingresos' ? 'ingreso' : 'egreso')
-      if (exportSaldo !== 'todos') qp.set('tipoSaldo', exportSaldo)
+      if (opciones.tipo !== 'todos') qp.set('tipoMovimiento', opciones.tipo === 'ingresos' ? 'ingreso' : 'egreso')
+      if (opciones.saldo !== 'todos') qp.set('tipoSaldo', opciones.saldo)
+      if (opciones.caja === 'ambas') qp.set('caja', 'ambas')
 
       const url = `${API_ENDPOINTS.CAJA_BANCO.EXPORT_EXCEL(Number(params.id))}?${qp.toString()}`
       const res = await apiFetch(url)
       if (!res.ok) throw new Error('Error en la respuesta del servidor')
       const blob = await res.blob()
-      downloadBlob(blob, `${sucursalNombre}.xlsx`)
+      const sufijo = opciones.caja === 'ambas' ? ' - Efectivo + Banco' : ''
+      downloadBlob(blob, `${sucursalNombre}${sufijo}.xlsx`)
     } catch {
       toast.error('Error al exportar el Excel.')
     } finally {
@@ -138,6 +145,7 @@ export default function CajaBancoPage() {
   const canDelete = !isGlobalReadOnly && hasPermiso('eliminar_movimientos')
   const canChangeState = !isGlobalReadOnly && hasPermiso('aprobar_movimientos')
   const canToggleDeuda = canCrear // because creating mirror debt acts as "crear"
+  const canImportar = !isGlobalReadOnly && hasPermiso('importar_movimientos')
 
   const isStrictlyReadOnly = isGlobalReadOnly || (!canEditInfo && !canAddComment)
 
@@ -192,16 +200,6 @@ export default function CajaBancoPage() {
   useEffect(() => {
     if (viewMode === 'dual') setSidebarCollapsed(true)
   }, [viewMode, setSidebarCollapsed])
-
-  // Vista Combinada: al entrar (si no hay rango), filtrar por defecto de 1 mes atrás a 1 mes adelante
-  const { dateRange, setDateRange } = caja
-  const prevViewModeRef = useRef<CajaViewMode>(viewMode)
-  useEffect(() => {
-    if (viewMode === 'combinada' && prevViewModeRef.current !== 'combinada' && !dateRange) {
-      setDateRange({ from: subMonths(new Date(), 1), to: addMonths(new Date(), 1) })
-    }
-    prevViewModeRef.current = viewMode
-  }, [viewMode, dateRange, setDateRange])
 
   const bancoNeto = Number(selectedBanco?.total_real ?? 0) + Number(selectedBanco?.total_necesario ?? 0)
 
@@ -270,6 +268,7 @@ export default function CajaBancoPage() {
               subtitle={`Gestión de saldos y movimientos bancarios (${moneda})`}
               onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
               onExport={() => setIsExportDialogOpen(true)}
+              onImportarMasivo={canImportar ? () => setIsImportDialogOpen(true) : undefined}
               isExporting={isExporting}
               isReadOnly={!canCrear}
               sucursalId={Number(params.id)}
@@ -319,35 +318,13 @@ export default function CajaBancoPage() {
                   searchText={caja.searchText}
                   onSearchTextChange={caja.setSearchText}
                   filtroDeuda={caja.filtroDeuda}
-                  onFiltroDeudeChange={caja.setFiltroDeuda}
+                  onFiltroDeudeChange={activeTab === 'real' ? undefined : caja.setFiltroDeuda}
                   filtroChequesPendientes={caja.filtroChequesPendientes}
                   onFiltroChequesPendientesChange={caja.setFiltroChequesPendientes}
                   viewMode={viewMode}
                   onViewModeChange={setViewMode}
                 />
-                {viewMode === 'combinada' ? (
-                  <TransactionTable
-                    title="Movimientos combinados"
-                    description="Saldo real y necesario intercalados por fecha. Verde = pagado, amarillo = por pagar."
-                    transactions={caja.saldoCombinadoFiltrado}
-                    customTotal={
-                      calcularTotal(caja.saldoRealFiltrado) + calcularTotal(caja.saldoNecesarioSinDeudaFiltrado)
-                    }
-                    columns={columns}
-                    onViewDetails={caja.handleOpenDetails}
-                    onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
-                    onDelete={canDelete ? caja.handleOpenDelete : undefined}
-                    onToggleDeuda={canToggleDeuda ? caja.handleOpenDeuda : undefined}
-                    onMove={canCrear ? caja.handleOpenMover : undefined}
-                    onBulkDelete={canDelete ? handleBulkDelete : undefined}
-                    onBulkMove={canCrear ? handleBulkMove : undefined}
-                    isReadOnly={isStrictlyReadOnly}
-                    inlineEdit={inlineEdit}
-                    onReorder={caja.reorderMovimiento}
-                    highlightId={highlightId}
-                    rowTint={t => (t.estado === 'completado' ? 'green' : 'yellow')}
-                  />
-                ) : viewMode === 'dual' ? (
+                {viewMode === 'dual' ? (
                   <DualSaldoBoard
                     real={caja.saldoRealFiltrado}
                     necesario={caja.saldoNecesarioFiltrado}
@@ -429,6 +406,7 @@ export default function CajaBancoPage() {
                           onBulkMove={canCrear ? handleBulkMove : undefined}
                           isReadOnly={isStrictlyReadOnly}
                           saldoRealActual={calcularTotal(caja.saldoRealFiltrado)}
+                          acumularVencidosEnHoy
                         />
                       ) : (
                         <TransactionTable
@@ -556,71 +534,20 @@ export default function CajaBancoPage() {
         mediosPagoExternos={caja.mediosPago}
       />
 
+      <ImportacionMasivaDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        sucursalId={caja.sucursalId}
+        onImportado={() => caja.fetchMovimientos()}
+      />
+
       {/* Dialog de opciones de exportación */}
-      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-[#002868] text-xl">Exportar Excel</DialogTitle>
-            <DialogDescription>Elegí qué movimientos exportar</DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-2">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#7A93BB] mb-2">Tipo</p>
-              <div className="space-y-2">
-                {(['todos', 'ingresos', 'egresos'] as const).map(opcion => (
-                  <label
-                    key={opcion}
-                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${exportTipo === opcion ? 'border-[#002868] bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
-                  >
-                    <input
-                      type="radio"
-                      name="exportTipo"
-                      value={opcion}
-                      checked={exportTipo === opcion}
-                      onChange={() => setExportTipo(opcion)}
-                      className="accent-[#002868]"
-                    />
-                    <span className="font-medium text-sm text-gray-700">
-                      {opcion === 'todos' ? 'Todos' : opcion === 'ingresos' ? 'Solo Ingresos' : 'Solo Egresos'}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#7A93BB] mb-2">Saldo</p>
-              <div className="space-y-2">
-                {(['todos', 'saldo_real', 'saldo_necesario'] as const).map(opcion => (
-                  <label
-                    key={opcion}
-                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${exportSaldo === opcion ? 'border-[#002868] bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
-                  >
-                    <input
-                      type="radio"
-                      name="exportSaldo"
-                      value={opcion}
-                      checked={exportSaldo === opcion}
-                      onChange={() => setExportSaldo(opcion)}
-                      className="accent-[#002868]"
-                    />
-                    <span className="font-medium text-sm text-gray-700">
-                      {opcion === 'todos' ? 'Todos' : opcion === 'saldo_real' ? 'Saldo Real' : 'Saldo Necesario'}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleExportConfirm} className="bg-[#002868] hover:bg-[#003d8f] text-white">
-              Exportar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ExportExcelDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+        cajaActual="banco"
+        onConfirm={handleExportConfirm}
+      />
 
       {/* Dialog de detalle de banco */}
       <Dialog open={isBancoDialogOpen} onOpenChange={setIsBancoDialogOpen}>

@@ -94,4 +94,4 @@ Aplicado a: Categorías, Subcategorías, Descripciones, Proveedores, Bancos, Med
 
 ---
 
-*Todos los cambios siguen el sistema de diseño Heroica: azul `#002868`, grises `#F0F0F0`/`#E0E0E0`, tipografía compacta en mobile con escalado `sm:`.*
+_Todos los cambios siguen el sistema de diseño Heroica: azul `#002868`, grises `#F0F0F0`/`#E0E0E0`, tipografía compacta en mobile con escalado `sm:`._

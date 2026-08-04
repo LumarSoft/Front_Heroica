@@ -75,6 +75,14 @@ export const API_ENDPOINTS = {
     RECHAZAR: (id: number) => `${API_URL}/api/pagos-pendientes/${id}/rechazar`,
     GET_HISTORIAL: (userId: number) => `${API_URL}/api/pagos-pendientes/historial/${userId}`,
   },
+  IMPORTACION_BANCARIA: {
+    BANCOS_SOPORTADOS: `${API_URL}/api/importacion-bancaria/bancos`,
+    PREVIEW: `${API_URL}/api/importacion-bancaria/preview`,
+    CONFIRMAR: `${API_URL}/api/importacion-bancaria/confirmar`,
+    HISTORIAL: (sucursalId: number) => `${API_URL}/api/importacion-bancaria/${sucursalId}/historial`,
+    REVERTIR: (id: number) => `${API_URL}/api/importacion-bancaria/${id}/revertir`,
+  },
+
   CAJA_BANCO: {
     GET_BY_SUCURSAL: (sucursalId: number, moneda: string = 'ARS') =>
       `${API_URL}/api/caja-banco/${sucursalId}?moneda=${moneda}`,

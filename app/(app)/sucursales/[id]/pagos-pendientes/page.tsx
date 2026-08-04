@@ -10,6 +10,7 @@ import { ErrorBanner } from '@/components/ui/error-banner'
 import { Button } from '@/components/ui/button'
 import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
 import { useAuthStore } from '@/store/authStore'
+import { useDocumentTitle } from '@/hooks/use-document-title'
 import { calcularTotal } from '@/lib/formatters'
 import { PagosPendientesTable } from '@/components/pagos-pendientes/PagosPendientesTable'
 import { AprobarDialog } from '@/components/pagos-pendientes/AprobarDialog'
@@ -45,6 +46,9 @@ export default function PagosPendientesPage() {
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null)
   const [sucursalNombre, setSucursalNombre] = useState('')
   const [notifyData, setNotifyData] = useState<NotificarEventoData | null>(null)
+
+  // Identifica la sucursal en la pestaña (útil con varias ventanas abiertas)
+  useDocumentTitle(sucursalNombre ? `${sucursalNombre} · Pagos Pendientes` : '')
 
   useEffect(() => {
     if (!params.id) return

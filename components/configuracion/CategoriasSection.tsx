@@ -155,9 +155,7 @@ export function CategoriasSection() {
                       {cat.tipo === 'ingreso' ? '↑ Ingreso' : '↓ Egreso'}
                     </span>
                   </div>
-                  {cat.descripcion && (
-                    <p className="text-xs text-[#888] mt-0.5 truncate">{cat.descripcion}</p>
-                  )}
+                  {cat.descripcion && <p className="text-xs text-[#888] mt-0.5 truncate">{cat.descripcion}</p>}
                 </div>
                 <div className="flex gap-1.5 flex-shrink-0">
                   <Button
