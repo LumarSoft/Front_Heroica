@@ -1,7 +1,7 @@
 'use client'
 
 import { format, isToday } from 'date-fns'
-import { TrendingDown, TrendingUp, Minus, Wallet } from 'lucide-react'
+import { TrendingDown, TrendingUp, Minus, Wallet, History } from 'lucide-react'
 import type { Transaction } from '@/lib/types'
 import { formatMonto } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
@@ -14,6 +14,12 @@ export interface DayData {
   egresos: number
   ingresos: number
   items: Transaction[]
+  /**
+   * Movimientos que vencieron antes de hoy y siguen impagos, arrastrados a este día.
+   * Solo se completa en el calendario de saldo necesario.
+   */
+  arrastrados?: number
+  montoArrastrado?: number
 }
 
 export interface WeekTotals {
@@ -54,17 +60,42 @@ export function DayCell({ date, data, isCurrentMonth, onClick, animationDelay, s
         today && isCurrentMonth && 'ring-2 ring-[#002868] ring-offset-1',
       )}
     >
-      {/* Número del día */}
-      <div className="flex items-center justify-between mb-1">
+      {/*
+        Número del día, cantidad de movimientos y —si corresponde— el indicador de
+        vencidos arrastrados.
+
+        El indicador va DENTRO de esta fila y no como bloque aparte: la grilla del
+        calendario usa `items-start`, así que cada celda toma su altura natural y
+        cualquier elemento extra hace que ese día quede más alto que el resto y
+        desalinee la semana. Acá no suma altura.
+      */}
+      <div className="flex items-center justify-between gap-1 mb-1">
         <span
           className={cn(
-            'text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full',
+            'text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0',
             today && isCurrentMonth ? 'bg-[#002868] text-white' : 'text-[#5A6070]',
           )}
         >
           {format(date, 'd')}
         </span>
-        {hasData && <span className="text-[11px] text-[#9AA0AC] font-medium">{data.items.length} mov.</span>}
+
+        {hasData && (
+          <span className="flex items-center gap-1 min-w-0">
+            {(data.arrastrados ?? 0) > 0 && (
+              <span
+                className="flex items-center gap-0.5 px-1 py-px rounded bg-amber-100 text-amber-700 flex-shrink-0"
+                title={
+                  `${data.arrastrados} compromiso(s) con fecha anterior que siguen impagos y se ` +
+                  `acumulan en el día de hoy. La plata queda reservada hasta que el pago se efectivice.`
+                }
+              >
+                <History className="w-2.5 h-2.5" />
+                <span className="text-[10px] font-bold leading-none">{data.arrastrados}</span>
+              </span>
+            )}
+            <span className="text-[11px] text-[#9AA0AC] font-medium truncate">{data.items.length} mov.</span>
+          </span>
+        )}
       </div>
 
       {/* Datos financieros */}

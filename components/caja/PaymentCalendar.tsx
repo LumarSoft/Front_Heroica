@@ -12,7 +12,7 @@ import {
   isSameMonth,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { ArrowLeft, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Minus, Wallet } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, Minus, Wallet, History } from 'lucide-react'
 import type { Transaction } from '@/lib/types'
 import type { ColumnDef } from '@/components/caja/TransactionTable'
 import { TransactionTable } from '@/components/caja/TransactionTable'
@@ -43,9 +43,28 @@ interface PaymentCalendarProps {
    * compara contra este saldo, mostrando cuánto sobra o cuánto falta para cubrirlo.
    */
   saldoRealActual?: number
+  /**
+   * Acumula en el día de hoy todo compromiso con fecha anterior que siga impago.
+   *
+   * El caso real: un cheque con fecha 20 que el cliente todavía no cobró. La plata
+   * sigue en la cuenta y tiene que seguir reservada — si el cliente lo presenta el
+   * 27, no puede rebotar. Dejarlo en el día 20 haría creer que ese dinero ya se
+   * liberó. Cuando el pago se efectiviza el movimiento pasa a saldo real y recién
+   * ahí se descuenta de verdad.
+   *
+   * Solo tiene sentido en el calendario de saldo necesario.
+   */
+  acumularVencidosEnHoy?: boolean
 }
 
 const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+/**
+ * Columnas de la grilla. `minmax(0, 1fr)` y no `1fr`: `1fr` tiene mínimo `auto`
+ * (el ancho del contenido), así que un importe largo ensancharía su columna y
+ * dejaría las demás angostas. Con mínimo 0 los siete días miden exactamente igual.
+ */
+const GRID_COLUMNAS = 'repeat(7, minmax(0, 1fr)) 140px'
 
 function getISODate(date: Date): string {
   return format(date, 'yyyy-MM-dd')
@@ -69,19 +88,33 @@ export function PaymentCalendar({
   title,
   description,
   saldoRealActual,
+  acumularVencidosEnHoy = false,
 }: PaymentCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(() => new Date())
+  const hoyISO = useMemo(() => getISODate(new Date()), [])
   const [selectedDay, setSelectedDay] = useState<Date | null>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [transitionDir, setTransitionDir] = useState<'in' | 'out'>('in')
 
-  // Agrupar transactions por fecha ISO
+  // Agrupar transactions por fecha ISO.
+  // Con `acumularVencidosEnHoy`, todo lo que venció y sigue impago se reasigna al
+  // día de hoy en lugar de quedar en su fecha original.
   const dayMap = useMemo(() => {
     const map = new Map<string, DayData>()
     for (const t of transactions) {
       const datePart = t.fecha?.includes('T') ? t.fecha.split('T')[0] : t.fecha
       if (!datePart) continue
-      const existing = map.get(datePart) ?? { egresos: 0, ingresos: 0, items: [] }
+
+      const estaVencido = acumularVencidosEnHoy && datePart < hoyISO
+      const clave = estaVencido ? hoyISO : datePart
+
+      const existing = map.get(clave) ?? {
+        egresos: 0,
+        ingresos: 0,
+        items: [],
+        arrastrados: 0,
+        montoArrastrado: 0,
+      }
       const monto = typeof t.monto === 'string' ? parseFloat(t.monto) : (t.monto ?? 0)
       if (t.tipo === 'egreso') {
         existing.egresos += Math.abs(monto)
@@ -89,10 +122,14 @@ export function PaymentCalendar({
         existing.ingresos += Math.abs(monto)
       }
       existing.items.push(t)
-      map.set(datePart, existing)
+      if (estaVencido) {
+        existing.arrastrados = (existing.arrastrados ?? 0) + 1
+        existing.montoArrastrado = (existing.montoArrastrado ?? 0) + Math.abs(monto)
+      }
+      map.set(clave, existing)
     }
     return map
-  }, [transactions])
+  }, [transactions, acumularVencidosEnHoy, hoyISO])
 
   // Calcular semanas del mes actual
   const weeks = useMemo(() => {
@@ -196,6 +233,24 @@ export function PaymentCalendar({
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
           Volver al mes
         </button>
+
+        {/* Aviso de compromisos arrastrados */}
+        {(selectedDayData?.arrastrados ?? 0) > 0 && (
+          <div className="mb-4 flex gap-3 px-4 py-3 bg-amber-50 rounded-xl border border-amber-200">
+            <History className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold text-amber-800">
+                {selectedDayData!.arrastrados} compromiso(s) vencido(s) por{' '}
+                {formatMonto(selectedDayData!.montoArrastrado ?? 0)}
+              </p>
+              <p className="text-amber-700/80">
+                Tienen fecha anterior a hoy y siguen impagos, así que la plata se mantiene reservada acá. En la tabla de
+                abajo vas a ver la fecha original de cada uno. Cuando el pago se efectivice, el movimiento pasa a saldo
+                real y recién ahí se descuenta.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Título del día */}
         <div className="mb-4 px-4 py-3 bg-[#F0F4FF] rounded-xl border border-[#002868]/10">
@@ -379,79 +434,89 @@ export function PaymentCalendar({
           </div>
         </div>
 
-        <div className="p-4">
-          {/* Headers de días de la semana */}
-          <div className="grid gap-1 mb-2" style={{ gridTemplateColumns: 'repeat(7, 1fr) 140px' }}>
-            {DAY_NAMES.map(name => (
-              <div
-                key={name}
-                className="text-center text-[10px] font-bold text-[#9AA0AC] uppercase tracking-wider py-1"
-              >
-                {name}
-              </div>
-            ))}
-            <div className="hidden sm:block text-[10px] font-bold text-[#002868]/50 uppercase tracking-wider py-1 px-3 text-center">
-              Total
-            </div>
-          </div>
+        {/*
+          El calendario se desliza en horizontal cuando no entra.
 
-          {/* Semanas */}
-          <div className="space-y-1">
-            {weeks.map((week, weekIdx) => {
-              // Calcular totales de la semana
-              const weekTotals: WeekTotals = { egresos: 0, ingresos: 0, neto: 0 }
-              let weekHasData = false
-              week.forEach(day => {
-                if (!day || !isSameMonth(day, currentMonth)) return
-                const data = dayMap.get(getISODate(day))
-                if (data) {
-                  weekTotals.egresos += data.egresos
-                  weekTotals.ingresos += data.ingresos
-                  weekHasData = true
-                }
-              })
-              weekTotals.neto = weekTotals.ingresos - weekTotals.egresos
+          Antes las columnas eran `repeat(7, 1fr)`, y `1fr` equivale a
+          `minmax(auto, 1fr)`: el mínimo es el ancho del contenido, así que los días
+          con importes largos empujaban su columna y los días vacíos se achicaban.
+          En pantallas chicas eso daba columnas de anchos distintos.
 
-              return (
+          Ahora son `minmax(0, 1fr)` —todas iguales, sin importar el contenido— y la
+          grilla tiene un ancho mínimo. Si no entra, se scrollea en vez de deformarse
+          o de truncar los importes, que en una caja no se puede.
+        */}
+        <div className="overflow-x-auto p-4">
+          <div className="min-w-[76rem]">
+            {/* Headers de días de la semana */}
+            <div className="mb-2 grid gap-1" style={{ gridTemplateColumns: GRID_COLUMNAS }}>
+              {DAY_NAMES.map(name => (
                 <div
-                  key={weekIdx}
-                  className="grid gap-1 items-start"
-                  style={{ gridTemplateColumns: 'repeat(7, 1fr) 140px' }}
+                  key={name}
+                  className="text-center text-[10px] font-bold text-[#9AA0AC] uppercase tracking-wider py-1"
                 >
-                  {week.map((day, dayIdx) => {
-                    const globalIdx = weekIdx * 7 + dayIdx
-                    if (!day) {
+                  {name}
+                </div>
+              ))}
+              <div className="text-[10px] font-bold text-[#002868]/50 uppercase tracking-wider py-1 px-3 text-center">
+                Total
+              </div>
+            </div>
+
+            {/* Semanas */}
+            <div className="space-y-1">
+              {weeks.map((week, weekIdx) => {
+                // Calcular totales de la semana
+                const weekTotals: WeekTotals = { egresos: 0, ingresos: 0, neto: 0 }
+                let weekHasData = false
+                week.forEach(day => {
+                  if (!day || !isSameMonth(day, currentMonth)) return
+                  const data = dayMap.get(getISODate(day))
+                  if (data) {
+                    weekTotals.egresos += data.egresos
+                    weekTotals.ingresos += data.ingresos
+                    weekHasData = true
+                  }
+                })
+                weekTotals.neto = weekTotals.ingresos - weekTotals.egresos
+
+                return (
+                  <div key={weekIdx} className="grid gap-1 items-start" style={{ gridTemplateColumns: GRID_COLUMNAS }}>
+                    {week.map((day, dayIdx) => {
+                      const globalIdx = weekIdx * 7 + dayIdx
+                      if (!day) {
+                        return (
+                          <div
+                            key={`empty-${weekIdx}-${dayIdx}`}
+                            className="min-h-[110px] rounded-xl bg-[#F8F9FA]/50 border border-dashed border-[#E8EAED]"
+                          />
+                        )
+                      }
+                      const isCurrentMonth = isSameMonth(day, currentMonth)
                       return (
-                        <div
-                          key={`empty-${weekIdx}-${dayIdx}`}
-                          className="min-h-[110px] rounded-xl bg-[#F8F9FA]/50 border border-dashed border-[#E8EAED]"
+                        <DayCell
+                          key={getISODate(day)}
+                          date={day}
+                          data={dayMap.get(getISODate(day))}
+                          isCurrentMonth={isCurrentMonth}
+                          onClick={handleDayClick}
+                          animationDelay={globalIdx * 20}
+                          saldoRealActual={saldoRealActual}
                         />
                       )
-                    }
-                    const isCurrentMonth = isSameMonth(day, currentMonth)
-                    return (
-                      <DayCell
-                        key={getISODate(day)}
-                        date={day}
-                        data={dayMap.get(getISODate(day))}
-                        isCurrentMonth={isCurrentMonth}
-                        onClick={handleDayClick}
-                        animationDelay={globalIdx * 20}
-                        saldoRealActual={saldoRealActual}
-                      />
-                    )
-                  })}
-                  {/* Columna totales semanales */}
-                  <div className="flex items-stretch min-h-[110px]">
-                    {weekHasData ? (
-                      <WeekTotalsCell totals={weekTotals} saldoRealActual={saldoRealActual} />
-                    ) : (
-                      <div className="hidden sm:block min-h-[110px] rounded-xl bg-transparent" />
-                    )}
+                    })}
+                    {/* Columna totales semanales */}
+                    <div className="flex items-stretch min-h-[110px]">
+                      {weekHasData ? (
+                        <WeekTotalsCell totals={weekTotals} saldoRealActual={saldoRealActual} />
+                      ) : (
+                        <div className="min-h-[110px] rounded-xl bg-transparent" />
+                      )}
+                    </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         </div>
 

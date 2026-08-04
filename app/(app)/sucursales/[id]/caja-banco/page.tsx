@@ -28,6 +28,7 @@ import type { CajaViewMode } from '@/lib/caja-reorder'
 import { DetailsDialog, StateDialog, DeleteDialog, DeudaDialog } from '@/components/caja/TransactionDialogs'
 import { MoverMovimientoDialog } from '@/components/caja/MoverMovimientoDialog'
 import { BulkMoverDialog } from '@/components/caja/BulkMoverDialog'
+import { ImportacionMasivaDialog } from '@/components/caja/ImportacionMasivaDialog'
 import { EndDateFilter } from '@/components/caja/EndDateFilter'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
@@ -58,6 +59,7 @@ export default function CajaBancoPage() {
   const [bulkSelectedIds, setBulkSelectedIds] = useState<number[]>([])
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
   const [highlightId, setHighlightId] = useState<number | null>(null)
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
 
   // Identifica la sucursal en la pestaña (útil con varias ventanas abiertas)
   useDocumentTitle(sucursalNombre ? `${sucursalNombre} · Caja Banco` : '')
@@ -143,6 +145,7 @@ export default function CajaBancoPage() {
   const canDelete = !isGlobalReadOnly && hasPermiso('eliminar_movimientos')
   const canChangeState = !isGlobalReadOnly && hasPermiso('aprobar_movimientos')
   const canToggleDeuda = canCrear // because creating mirror debt acts as "crear"
+  const canImportar = !isGlobalReadOnly && hasPermiso('importar_movimientos')
 
   const isStrictlyReadOnly = isGlobalReadOnly || (!canEditInfo && !canAddComment)
 
@@ -265,6 +268,7 @@ export default function CajaBancoPage() {
               subtitle={`Gestión de saldos y movimientos bancarios (${moneda})`}
               onNewMovimiento={() => caja.setIsNuevoMovimientoDialogOpen(true)}
               onExport={() => setIsExportDialogOpen(true)}
+              onImportarMasivo={canImportar ? () => setIsImportDialogOpen(true) : undefined}
               isExporting={isExporting}
               isReadOnly={!canCrear}
               sucursalId={Number(params.id)}
@@ -314,7 +318,7 @@ export default function CajaBancoPage() {
                   searchText={caja.searchText}
                   onSearchTextChange={caja.setSearchText}
                   filtroDeuda={caja.filtroDeuda}
-                  onFiltroDeudeChange={caja.setFiltroDeuda}
+                  onFiltroDeudeChange={activeTab === 'real' ? undefined : caja.setFiltroDeuda}
                   filtroChequesPendientes={caja.filtroChequesPendientes}
                   onFiltroChequesPendientesChange={caja.setFiltroChequesPendientes}
                   viewMode={viewMode}
@@ -402,6 +406,7 @@ export default function CajaBancoPage() {
                           onBulkMove={canCrear ? handleBulkMove : undefined}
                           isReadOnly={isStrictlyReadOnly}
                           saldoRealActual={calcularTotal(caja.saldoRealFiltrado)}
+                          acumularVencidosEnHoy
                         />
                       ) : (
                         <TransactionTable
@@ -527,6 +532,13 @@ export default function CajaBancoPage() {
         onSuccess={caja.fetchMovimientos}
         bancosExternos={caja.bancos}
         mediosPagoExternos={caja.mediosPago}
+      />
+
+      <ImportacionMasivaDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        sucursalId={caja.sucursalId}
+        onImportado={() => caja.fetchMovimientos()}
       />
 
       {/* Dialog de opciones de exportación */}

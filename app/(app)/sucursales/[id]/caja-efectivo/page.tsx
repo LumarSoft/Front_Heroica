@@ -266,7 +266,7 @@ export default function CajaEfectivoPage() {
                   searchText={caja.searchText}
                   onSearchTextChange={caja.setSearchText}
                   filtroDeuda={caja.filtroDeuda}
-                  onFiltroDeudeChange={caja.setFiltroDeuda}
+                  onFiltroDeudeChange={activeTab === 'real' ? undefined : caja.setFiltroDeuda}
                   viewMode={viewMode}
                   onViewModeChange={setViewMode}
                 />
@@ -353,6 +353,7 @@ export default function CajaEfectivoPage() {
                           onBulkMove={canCrear ? handleBulkMove : undefined}
                           isReadOnly={isStrictlyReadOnly}
                           saldoRealActual={calcularTotal(caja.saldoRealFiltrado)}
+                          acumularVencidosEnHoy
                         />
                       ) : (
                         <TransactionTable
