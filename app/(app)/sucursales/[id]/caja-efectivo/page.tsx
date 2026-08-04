@@ -266,7 +266,7 @@ export default function CajaEfectivoPage() {
                   searchText={caja.searchText}
                   onSearchTextChange={caja.setSearchText}
                   filtroDeuda={caja.filtroDeuda}
-                  onFiltroDeudeChange={activeTab === 'real' ? undefined : caja.setFiltroDeuda}
+                  onFiltroDeudeChange={viewMode !== 'dual' && activeTab === 'real' ? undefined : caja.setFiltroDeuda}
                   viewMode={viewMode}
                   onViewModeChange={setViewMode}
                 />
