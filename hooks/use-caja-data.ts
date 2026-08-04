@@ -227,13 +227,12 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
 
       const movimientosCompletados = allMovimientos.filter(m => m.estado === 'completado').sort(sortByFechaOrdenDesc)
 
-      const movimientosAprobados = allMovimientos
-        .filter(m => m.estado === 'aprobado' || m.estado === 'pendiente')
-        .sort(sortByFechaOrden)
+      const movimientosAprobados = allMovimientos.filter(m => m.estado === 'aprobado').sort(sortByFechaOrden)
 
       setSaldoReal(movimientosCompletados)
-      // Saldo necesario incluye TODOS los aprobados/pendientes (incluyendo deuda),
-      // pero la deuda se identifica con es_deuda=1 para excluirla del total en UI
+      // Saldo necesario incluye TODOS los aprobados (incluyendo deuda), pero la deuda se
+      // identifica con es_deuda=1 para excluirla del total en UI. Los 'pendiente' quedan
+      // fuera: son solicitudes que esperan aprobación del superadmin (Pagos Pendientes).
       setSaldoNecesario(movimientosAprobados)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al cargar movimientos'
