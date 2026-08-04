@@ -318,7 +318,7 @@ export default function CajaBancoPage() {
                   searchText={caja.searchText}
                   onSearchTextChange={caja.setSearchText}
                   filtroDeuda={caja.filtroDeuda}
-                  onFiltroDeudeChange={activeTab === 'real' ? undefined : caja.setFiltroDeuda}
+                  onFiltroDeudeChange={viewMode !== 'dual' && activeTab === 'real' ? undefined : caja.setFiltroDeuda}
                   filtroChequesPendientes={caja.filtroChequesPendientes}
                   onFiltroChequesPendientesChange={caja.setFiltroChequesPendientes}
                   viewMode={viewMode}
