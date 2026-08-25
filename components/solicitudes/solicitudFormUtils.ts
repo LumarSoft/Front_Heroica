@@ -954,14 +954,7 @@ export function validateSolicitudForm(form: SolicitudFormState, options?: { isEd
           return 'Adjunte el archivo del carnet de manipulación de alimentos'
         }
       }
-      if (!isEditing) {
-        if (!form.alta_doc_dni_url.trim()) return 'Adjunte el DNI (ambos lados)'
-        if (!form.alta_doc_ddjj_url.trim()) return 'Adjunte la DDJJ de domicilio'
-        if (!form.alta_doc_puesto_url.trim()) return 'Adjunte la descripción de puesto firmada'
-        if (!form.alta_doc_foto_url.trim()) return 'Adjunte la foto del colaborador'
-        if (!form.alta_doc_normas_url.trim()) return 'Adjunte las normas de convivencia firmadas'
-        if (!form.alta_doc_uniforme_url.trim()) return 'Adjunte la constancia de entrega de uniforme'
-      }
+      // Documentación adjunta opcional: se permite la carga inicial sin adjuntos y completarla luego editando.
       return null
     case 'Bajas':
       if (form.personal_id === 'general') return 'Seleccione el colaborador a desvincular'
