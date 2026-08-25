@@ -386,7 +386,7 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
       <SectionCard
         title="Documentación adjunta"
         icon={<FileStack className="w-4 h-4" />}
-        subtitle="Subir PDF escaneados según checklist; la foto también puede ser imagen JPG o PNG"
+        subtitle="Opcional: podés guardar la ficha sin adjuntos y completarlos más adelante editando la solicitud. Subir PDF escaneados según checklist; la foto también puede ser imagen JPG o PNG"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <SolicitudArchivoAdjunto
