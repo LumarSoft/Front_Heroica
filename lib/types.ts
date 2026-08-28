@@ -230,8 +230,16 @@ export interface Personal {
   activo: boolean
   /** Lista de tipo_doc de documentos requeridos que faltan en la solicitud de alta. */
   adjuntos_faltantes?: string[]
+  vencimientos_proximos?: VencimientoLegajo[]
   created_at: string
   updated_at: string
+}
+
+export interface VencimientoLegajo {
+  tipo: 'carnet_manipulacion' | 'documento_legajo'
+  label: string
+  fecha_vencimiento: string
+  dias_restantes: number
 }
 
 export interface PersonalArchivo {
@@ -244,6 +252,8 @@ export interface PersonalArchivo {
   fecha_solicitud: string
   estado: string
   documento_id?: number
+  fecha_vencimiento?: string | null
+  subido_por_nombre?: string | null
 }
 
 export type RhIncentivoTipo = 'Incentivo' | 'Premio'

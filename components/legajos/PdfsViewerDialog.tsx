@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { apiFetch } from '@/lib/api'
 import { API_ENDPOINTS } from '@/lib/config'
+import { openPersonalArchivo } from '@/lib/document-url'
 import type { PersonalArchivo } from '@/lib/types'
 
 interface PdfsViewerDialogProps {
@@ -112,6 +113,15 @@ export function PdfsViewerDialog({ open, onOpenChange, personalId, personalNombr
   const hayFaltantes = (faltantes ?? []).length > 0
   const total = archivos.length
 
+  async function handleOpenArchivo(url: string) {
+    if (personalId == null) return
+    try {
+      await openPersonalArchivo(personalId, url)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'No se pudo abrir el archivo')
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl w-[calc(100vw-2rem)] max-h-[85vh] flex flex-col gap-0 p-0 overflow-hidden">
@@ -176,11 +186,10 @@ export function PdfsViewerDialog({ open, onOpenChange, personalId, personalNombr
                     const esImg = isImagen(a.nombre_original, a.url)
                     const Icon = esImg ? FileImage : FileText
                     return (
-                      <a
+                      <button
+                        type="button"
                         key={`${a.solicitud_id}-${a.tipo_doc}-${idx}`}
-                        href={a.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        onClick={() => handleOpenArchivo(a.url)}
                         className="flex items-center gap-3 px-3 py-2.5 hover:bg-[#F5F7FA] transition-colors group"
                       >
                         <div
@@ -194,6 +203,9 @@ export function PdfsViewerDialog({ open, onOpenChange, personalId, personalNombr
                           <p className="text-sm font-semibold text-[#1A1A1A] truncate">{a.label}</p>
                           <p className="text-[11px] text-[#8A8F9C] truncate" title={a.nombre_original ?? ''}>
                             {shortFilename(a.nombre_original)}
+                          </p>
+                          <p className="text-[11px] text-[#5A6070] truncate">
+                            Subido por: {a.subido_por_nombre ?? 'No informado'}
                           </p>
                         </div>
                         <div className="hidden sm:flex flex-col items-end gap-0.5 shrink-0">
@@ -211,7 +223,7 @@ export function PdfsViewerDialog({ open, onOpenChange, personalId, personalNombr
                           </span>
                         </div>
                         <ExternalLink className="w-4 h-4 text-[#C8CCD4] group-hover:text-[#002868] transition-colors shrink-0" />
-                      </a>
+                      </button>
                     )
                   })}
                 </div>

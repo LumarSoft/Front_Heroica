@@ -259,6 +259,7 @@ export const API_ENDPOINTS = {
   },
   PERSONAL: {
     GET_ALL: `${API_URL}/api/personal`,
+    ALERTAS_DOCUMENTACION: `${API_URL}/api/personal/alertas-documentacion`,
     GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/personal?sucursal_id=${sucursalId}`,
     GET_BY_ID: (id: number) => `${API_URL}/api/personal/${id}`,
     CREATE: `${API_URL}/api/personal`,
@@ -267,6 +268,12 @@ export const API_ENDPOINTS = {
     GET_PROFESIONAL: (id: number) => `${API_URL}/api/personal/${id}/profesional`,
     GET_ANALITICO: (id: number) => `${API_URL}/api/personal/${id}/analitico`,
     GET_ARCHIVOS: (id: number) => `${API_URL}/api/personal/${id}/archivos`,
+    OPEN_ARCHIVO: (id: number) => `${API_URL}/api/personal/${id}/archivos/abrir`,
+    GET_RECIBOS_SUELDO: (id: number) => `${API_URL}/api/personal/${id}/recibos-sueldo`,
+    UPLOAD_RECIBO_SUELDO: (id: number) => `${API_URL}/api/personal/${id}/recibos-sueldo`,
+    OPEN_RECIBO_SUELDO: (id: number, reciboId: number) =>
+      `${API_URL}/api/personal/${id}/recibos-sueldo/${reciboId}/abrir`,
+    DELETE_RECIBO_SUELDO: (id: number, reciboId: number) => `${API_URL}/api/personal/${id}/recibos-sueldo/${reciboId}`,
     GET_NOTAS: (id: number) => `${API_URL}/api/personal/${id}/notas`,
     CREATE_NOTA: (id: number) => `${API_URL}/api/personal/${id}/notas`,
     DELETE_NOTA: (id: number, notaId: number) => `${API_URL}/api/personal/${id}/notas/${notaId}`,

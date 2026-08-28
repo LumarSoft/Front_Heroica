@@ -15,6 +15,7 @@ import { DocumentosTab } from '@/components/legajos/DocumentosTab'
 import { HistorialTab } from '@/components/legajos/HistorialTab'
 import { ProfesionalTab } from '@/components/legajos/ProfesionalTab'
 import { AnaliticoTab } from '@/components/legajos/AnaliticoTab'
+import { RecibosSueldoTab } from '@/components/legajos/RecibosSueldoTab'
 import type { Personal, Puesto, Sucursal } from '@/lib/types'
 
 function getInitials(nombre: string): string {
@@ -196,6 +197,12 @@ export default function FichaPersonalPage() {
               Analítico
             </TabsTrigger>
             <TabsTrigger
+              value="recibos"
+              className="text-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[#002868] data-[state=active]:font-semibold"
+            >
+              Recibos de sueldo
+            </TabsTrigger>
+            <TabsTrigger
               value="historial"
               className="text-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[#002868] data-[state=active]:font-semibold"
             >
@@ -221,12 +228,29 @@ export default function FichaPersonalPage() {
 
           <TabsContent value="documentos">
             <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm p-5 sm:p-6">
-              <DocumentosTab personalId={personal.id} canEditar={canEditar} />
+              <DocumentosTab
+                personalId={personal.id}
+                canEditar={canEditar}
+                requiereCarnet={personal.carnet_manipulacion_alimentos}
+                faltantes={personal.adjuntos_faltantes}
+              />
             </div>
           </TabsContent>
 
           <TabsContent value="analitico">
             <AnaliticoTab personalId={personal.id} />
+          </TabsContent>
+
+          <TabsContent value="recibos">
+            <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm p-5 sm:p-6">
+              {Number(personal.condicion_laboral) === 1 ? (
+                <RecibosSueldoTab personalId={personal.id} canEditar={canEditar} />
+              ) : (
+                <p className="py-10 text-center text-sm text-[#8A8F9C]">
+                  Los recibos de sueldo solo aplican a colaboradores con condición laboral 1.
+                </p>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="historial">

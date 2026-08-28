@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   ArrowRight,
+  AlertTriangle,
   MessageCircle,
   CheckCheck,
   X,
@@ -40,6 +41,13 @@ interface Notificacion {
   tarea_codigo: string
   tarea_titulo: string
   de_nombre: string
+}
+
+interface AlertaDocumentacion {
+  sucursal_id: number
+  sucursal_nombre: string
+  faltantes: number
+  vencimientos: number
 }
 
 function timeAgo(iso: string): string {
@@ -235,10 +243,11 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
 
   // ── Notifications ─────────────────────────────────────────────────────────────
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([])
+  const [alertasDocumentacion, setAlertasDocumentacion] = useState<AlertaDocumentacion[]>([])
   const [bellOpen, setBellOpen] = useState(false)
   const [loadingNotif, setLoadingNotif] = useState(false)
   const notifPanelRef = useRef<HTMLDivElement>(null)
-  const unread = notificaciones.filter(n => !n.leida).length
+  const unread = notificaciones.filter(n => !n.leida).length + alertasDocumentacion.length
 
   useEffect(() => {
     if (!user) return
@@ -259,10 +268,18 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
     if (loadingNotif) return
     setLoadingNotif(true)
     try {
-      const res = await apiFetch(API_ENDPOINTS.NOTIFICACIONES.MIS)
-      if (!res.ok) return
-      const data = await res.json()
-      setNotificaciones(data.data ?? [])
+      const [notificacionesRes, alertasRes] = await Promise.all([
+        apiFetch(API_ENDPOINTS.NOTIFICACIONES.MIS),
+        apiFetch(API_ENDPOINTS.PERSONAL.ALERTAS_DOCUMENTACION),
+      ])
+      if (notificacionesRes.ok) {
+        const data = await notificacionesRes.json()
+        setNotificaciones(data.data ?? [])
+      }
+      if (alertasRes.ok) {
+        const data = await alertasRes.json()
+        setAlertasDocumentacion(Array.isArray(data.data) ? (data.data as AlertaDocumentacion[]) : [])
+      }
     } catch {
       /* silent */
     } finally {
@@ -676,7 +693,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
 
         {/* List */}
         <div className="flex-1 overflow-y-auto min-h-0">
-          {notificaciones.length === 0 ? (
+          {notificaciones.length === 0 && alertasDocumentacion.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full px-8 text-center">
               <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
                 <Bell className="w-6 h-6 text-slate-400" />
@@ -688,6 +705,33 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
+              {alertasDocumentacion.length > 0 && (
+                <div className="bg-amber-50/70 px-5 py-4">
+                  <div className="flex items-center gap-2 text-amber-900">
+                    <AlertTriangle className="w-4 h-4" />
+                    <p className="text-xs font-bold uppercase tracking-wide">Documentación a revisar</p>
+                  </div>
+                  <div className="mt-2 space-y-2">
+                    {alertasDocumentacion.map(alerta => (
+                      <button
+                        key={alerta.sucursal_id}
+                        onClick={() => {
+                          setBellOpen(false)
+                          router.push(`/recursos-humanos/${alerta.sucursal_id}/legajos`)
+                        }}
+                        className="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-left hover:bg-amber-50 transition-colors cursor-pointer"
+                      >
+                        <p className="text-xs font-semibold text-slate-800">{alerta.sucursal_nombre}</p>
+                        <p className="mt-0.5 text-[11px] text-amber-800">
+                          {alerta.faltantes > 0 ? `${alerta.faltantes} documento(s) faltante(s)` : ''}
+                          {alerta.faltantes > 0 && alerta.vencimientos > 0 ? ' · ' : ''}
+                          {alerta.vencimientos > 0 ? `${alerta.vencimientos} vencimiento(s)` : ''}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {notificaciones.map(n => {
                 const isUnread = !n.leida
                 const isMove = n.tipo === 'movimiento'
