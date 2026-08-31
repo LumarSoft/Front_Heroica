@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, ClipboardList, Plus } from 'lucide-react'
 import { API_ENDPOINTS } from '@/lib/config'
@@ -9,13 +10,21 @@ import { Button } from '@/components/ui/button'
 import { ErrorBanner } from '@/components/ui/error-banner'
 import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
 import { SolicitudesTable } from '@/components/solicitudes/SolicitudesTable'
-import { SolicitudDialog } from '@/components/solicitudes/SolicitudDialog'
-import { AprobarSolicitudDialog } from '@/components/solicitudes/AprobarSolicitudDialog'
-import { NotificarEventoDialog, type NotificarEventoData } from '@/components/notificaciones/NotificarEventoDialog'
+import type { NotificarEventoData } from '@/components/notificaciones/NotificarEventoDialog'
 import { SolicitudesFilters, type SolicitudesFilterState } from '@/components/solicitudes/SolicitudesFilters'
 import { SolicitudTiposGrid } from '@/components/solicitudes/SolicitudTiposGrid'
 import { useAuthStore } from '@/store/authStore'
 import type { Area, Personal, Puesto, RhIncentivoPremio, RhSolicitud, RhSolicitudTipo, Sucursal } from '@/lib/types'
+
+const SolicitudDialog = dynamic(() =>
+  import('@/components/solicitudes/SolicitudDialog').then(module => module.SolicitudDialog),
+)
+const AprobarSolicitudDialog = dynamic(() =>
+  import('@/components/solicitudes/AprobarSolicitudDialog').then(module => module.AprobarSolicitudDialog),
+)
+const NotificarEventoDialog = dynamic(() =>
+  import('@/components/notificaciones/NotificarEventoDialog').then(module => module.NotificarEventoDialog),
+)
 
 const TIPOS_GRID: RhSolicitudTipo[] = [
   'Altas',
@@ -233,19 +242,21 @@ export default function SolicitudesPage() {
           </div>
         )}
 
-        <AprobarSolicitudDialog
-          solicitud={selectedSolicitud}
-          open={Boolean(selectedSolicitud)}
-          onOpenChange={open => !open && setSelectedSolicitud(null)}
-          onSuccess={handleSuccess}
-          canAprobar={canAprobarSolicitudes}
-          canEditar={canEditarSolicitudes}
-          onEdit={solicitud => {
-            setSelectedSolicitud(null)
-            setEditingSolicitud(solicitud)
-            setIsDialogOpen(true)
-          }}
-        />
+        {selectedSolicitud && (
+          <AprobarSolicitudDialog
+            solicitud={selectedSolicitud}
+            open
+            onOpenChange={open => !open && setSelectedSolicitud(null)}
+            onSuccess={handleSuccess}
+            canAprobar={canAprobarSolicitudes}
+            canEditar={canEditarSolicitudes}
+            onEdit={solicitud => {
+              setSelectedSolicitud(null)
+              setEditingSolicitud(solicitud)
+              setIsDialogOpen(true)
+            }}
+          />
+        )}
 
         {isDialogOpen && (
           <SolicitudDialog
@@ -264,7 +275,7 @@ export default function SolicitudesPage() {
           />
         )}
 
-        <NotificarEventoDialog data={notifyData} onClose={() => setNotifyData(null)} />
+        {notifyData && <NotificarEventoDialog data={notifyData} onClose={() => setNotifyData(null)} />}
       </main>
     </div>
   )

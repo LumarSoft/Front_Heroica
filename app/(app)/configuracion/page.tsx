@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import {
@@ -21,20 +22,45 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
-import { CategoriasSection } from '@/components/configuracion/CategoriasSection'
-import { SubcategoriasSection } from '@/components/configuracion/SubcategoriasSection'
-import { BancosSection } from '@/components/configuracion/BancosSection'
-import { MediosPagoSection } from '@/components/configuracion/MediosPagoSection'
-import { UsuariosSection } from '@/components/configuracion/UsuariosSection'
-import { RolesSection } from '@/components/configuracion/RolesSection'
-import { CambiarPasswordSection } from '@/components/configuracion/CambiarPasswordSection'
-import { DispositivosConfianzaSection } from '@/components/configuracion/DispositivosConfianzaSection'
-import { DescripcionesSection } from '@/components/configuracion/DescripcionesSection'
-import { ProveedoresSection } from '@/components/configuracion/ProveedoresSection'
-import { AreasSection } from '@/components/configuracion/AreasSection'
-import { PuestosSection } from '@/components/configuracion/PuestosSection'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+
+const CategoriasSection = dynamic(() =>
+  import('@/components/configuracion/CategoriasSection').then(module => module.CategoriasSection),
+)
+const SubcategoriasSection = dynamic(() =>
+  import('@/components/configuracion/SubcategoriasSection').then(module => module.SubcategoriasSection),
+)
+const BancosSection = dynamic(() =>
+  import('@/components/configuracion/BancosSection').then(module => module.BancosSection),
+)
+const MediosPagoSection = dynamic(() =>
+  import('@/components/configuracion/MediosPagoSection').then(module => module.MediosPagoSection),
+)
+const UsuariosSection = dynamic(() =>
+  import('@/components/configuracion/UsuariosSection').then(module => module.UsuariosSection),
+)
+const RolesSection = dynamic(() =>
+  import('@/components/configuracion/RolesSection').then(module => module.RolesSection),
+)
+const CambiarPasswordSection = dynamic(() =>
+  import('@/components/configuracion/CambiarPasswordSection').then(module => module.CambiarPasswordSection),
+)
+const DispositivosConfianzaSection = dynamic(() =>
+  import('@/components/configuracion/DispositivosConfianzaSection').then(module => module.DispositivosConfianzaSection),
+)
+const DescripcionesSection = dynamic(() =>
+  import('@/components/configuracion/DescripcionesSection').then(module => module.DescripcionesSection),
+)
+const ProveedoresSection = dynamic(() =>
+  import('@/components/configuracion/ProveedoresSection').then(module => module.ProveedoresSection),
+)
+const AreasSection = dynamic(() =>
+  import('@/components/configuracion/AreasSection').then(module => module.AreasSection),
+)
+const PuestosSection = dynamic(() =>
+  import('@/components/configuracion/PuestosSection').then(module => module.PuestosSection),
+)
 
 type ActiveTab =
   | 'categorias'

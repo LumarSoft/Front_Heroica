@@ -1,10 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
-import { CompraVentaDivisasDialog } from '@/components/caja/CompraVentaDivisasDialog'
 import { useCajaData } from '@/hooks/use-caja-data'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { calcularTotal } from '@/lib/formatters'
@@ -18,20 +17,36 @@ import { useSidebarStore } from '@/store/sidebarStore'
 import { CajaTabs, TabsContent } from '@/components/caja/CajaTabs'
 import { TransactionTable, getEfectivoColumns, getCompactColumns } from '@/components/caja/TransactionTable'
 import { InlineMovimientoRow } from '@/components/caja/InlineMovimientoRow'
-import { PaymentCalendar } from '@/components/caja/PaymentCalendar'
-import { DualSaldoBoard } from '@/components/caja/DualSaldoBoard'
 import { EndDateFilter } from '@/components/caja/EndDateFilter'
 import type { CajaViewMode } from '@/lib/caja-reorder'
-import { DetailsDialog, StateDialog, DeleteDialog, DeudaDialog } from '@/components/caja/TransactionDialogs'
-import { MoverMovimientoDialog } from '@/components/caja/MoverMovimientoDialog'
-import { BulkMoverDialog } from '@/components/caja/BulkMoverDialog'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { downloadBlob, toDateOnly } from '@/lib/downloadBlob'
-import { ExportExcelDialog } from '@/components/caja/ExportExcelDialog'
 import type { ExportExcelOpciones } from '@/lib/types'
+
+const NuevoMovimientoDialog = dynamic(() => import('@/components/NuevoMovimientoDialog'))
+const CompraVentaDivisasDialog = dynamic(() =>
+  import('@/components/caja/CompraVentaDivisasDialog').then(module => module.CompraVentaDivisasDialog),
+)
+const ExportExcelDialog = dynamic(() =>
+  import('@/components/caja/ExportExcelDialog').then(module => module.ExportExcelDialog),
+)
+const PaymentCalendar = dynamic(() =>
+  import('@/components/caja/PaymentCalendar').then(module => module.PaymentCalendar),
+)
+const DualSaldoBoard = dynamic(() => import('@/components/caja/DualSaldoBoard').then(module => module.DualSaldoBoard))
+const DetailsDialog = dynamic(() => import('@/components/caja/TransactionDialogs').then(module => module.DetailsDialog))
+const StateDialog = dynamic(() => import('@/components/caja/TransactionDialogs').then(module => module.StateDialog))
+const DeleteDialog = dynamic(() => import('@/components/caja/TransactionDialogs').then(module => module.DeleteDialog))
+const DeudaDialog = dynamic(() => import('@/components/caja/TransactionDialogs').then(module => module.DeudaDialog))
+const MoverMovimientoDialog = dynamic(() =>
+  import('@/components/caja/MoverMovimientoDialog').then(module => module.MoverMovimientoDialog),
+)
+const BulkMoverDialog = dynamic(() =>
+  import('@/components/caja/BulkMoverDialog').then(module => module.BulkMoverDialog),
+)
 
 const columns = getEfectivoColumns()
 const compactColumns = getCompactColumns()
@@ -389,111 +404,131 @@ export default function CajaEfectivoPage() {
       </main>
 
       {/* Dialogs */}
-      <DetailsDialog
-        open={caja.isDetailsDialogOpen}
-        onOpenChange={caja.setIsDetailsDialogOpen}
-        formData={caja.formData}
-        onInputChange={caja.handleInputChange}
-        onSave={caja.handleSaveDetails}
-        isSaving={caja.isSaving}
-        categorias={caja.categorias}
-        subcategorias={caja.subcategorias}
-        bancos={caja.bancos}
-        mediosPago={caja.mediosPago}
-        descripciones={caja.descripciones}
-        proveedores={caja.proveedores}
-        showBancoFields={false}
-        isReadOnly={isStrictlyReadOnly}
-        canEditInfo={canEditInfo}
-        canEditComment={canAddComment}
-        movimientoId={caja.selectedTransaction?.id}
-        cajaTipo="efectivo"
-      />
+      {caja.isDetailsDialogOpen && (
+        <DetailsDialog
+          open
+          onOpenChange={caja.setIsDetailsDialogOpen}
+          formData={caja.formData}
+          onInputChange={caja.handleInputChange}
+          onSave={caja.handleSaveDetails}
+          isSaving={caja.isSaving}
+          categorias={caja.categorias}
+          subcategorias={caja.subcategorias}
+          bancos={caja.bancos}
+          mediosPago={caja.mediosPago}
+          descripciones={caja.descripciones}
+          proveedores={caja.proveedores}
+          showBancoFields={false}
+          isReadOnly={isStrictlyReadOnly}
+          canEditInfo={canEditInfo}
+          canEditComment={canAddComment}
+          movimientoId={caja.selectedTransaction?.id}
+          cajaTipo="efectivo"
+        />
+      )}
 
-      <StateDialog
-        open={caja.isStateDialogOpen}
-        onOpenChange={caja.setIsStateDialogOpen}
-        nuevoEstado={caja.nuevoEstado}
-        onEstadoChange={caja.setNuevoEstado}
-        onSave={caja.handleSaveStateChange}
-        isSaving={caja.isSaving}
-      />
+      {caja.isStateDialogOpen && (
+        <StateDialog
+          open
+          onOpenChange={caja.setIsStateDialogOpen}
+          nuevoEstado={caja.nuevoEstado}
+          onEstadoChange={caja.setNuevoEstado}
+          onSave={caja.handleSaveStateChange}
+          isSaving={caja.isSaving}
+        />
+      )}
 
-      <DeleteDialog
-        open={caja.isDeleteDialogOpen}
-        onOpenChange={caja.setIsDeleteDialogOpen}
-        onConfirm={caja.handleDelete}
-        isSaving={caja.isSaving}
-      />
+      {caja.isDeleteDialogOpen && (
+        <DeleteDialog
+          open
+          onOpenChange={caja.setIsDeleteDialogOpen}
+          onConfirm={caja.handleDelete}
+          isSaving={caja.isSaving}
+        />
+      )}
 
-      <DeleteDialog
-        open={isBulkDeleteDialogOpen}
-        onOpenChange={setIsBulkDeleteDialogOpen}
-        onConfirm={handleBulkDeleteConfirm}
-        isSaving={isBulkDeleting}
-        count={bulkSelectedIds.length}
-      />
+      {isBulkDeleteDialogOpen && (
+        <DeleteDialog
+          open
+          onOpenChange={setIsBulkDeleteDialogOpen}
+          onConfirm={handleBulkDeleteConfirm}
+          isSaving={isBulkDeleting}
+          count={bulkSelectedIds.length}
+        />
+      )}
 
-      <DeudaDialog
-        open={caja.isDeudaDialogOpen}
-        onOpenChange={caja.setIsDeudaDialogOpen}
-        transaction={caja.selectedTransaction}
-        onSave={caja.handleSaveDeuda}
-        isSaving={caja.isSaving}
-      />
+      {caja.isDeudaDialogOpen && (
+        <DeudaDialog
+          open
+          onOpenChange={caja.setIsDeudaDialogOpen}
+          transaction={caja.selectedTransaction}
+          onSave={caja.handleSaveDeuda}
+          isSaving={caja.isSaving}
+        />
+      )}
 
-      <NuevoMovimientoDialog
-        isOpen={caja.isNuevoMovimientoDialogOpen}
-        onClose={() => caja.setIsNuevoMovimientoDialogOpen(false)}
-        sucursalId={caja.sucursalId}
-        onSuccess={() => {
-          caja.fetchMovimientos()
-          caja.fetchDescripciones()
-        }}
-        cajaTipo="efectivo"
-        moneda={moneda}
-        categoriasExternas={caja.categorias}
-        descripcionesExternas={caja.descripciones}
-        proveedoresExternas={caja.proveedores}
-        bancosExternos={caja.bancos}
-        mediosPagoExternos={caja.mediosPago}
-      />
+      {caja.isNuevoMovimientoDialogOpen && (
+        <NuevoMovimientoDialog
+          isOpen
+          onClose={() => caja.setIsNuevoMovimientoDialogOpen(false)}
+          sucursalId={caja.sucursalId}
+          onSuccess={() => {
+            caja.fetchMovimientos()
+            caja.fetchDescripciones()
+          }}
+          cajaTipo="efectivo"
+          moneda={moneda}
+          categoriasExternas={caja.categorias}
+          descripcionesExternas={caja.descripciones}
+          proveedoresExternas={caja.proveedores}
+          bancosExternos={caja.bancos}
+          mediosPagoExternos={caja.mediosPago}
+        />
+      )}
 
-      <MoverMovimientoDialog
-        open={caja.isMoverMovimientoDialogOpen}
-        onOpenChange={caja.setIsMoverMovimientoDialogOpen}
-        transaction={caja.selectedTransaction}
-        currentSucursalId={caja.sucursalId}
-        onSuccess={caja.fetchMovimientos}
-        bancosExternos={caja.bancos}
-        mediosPagoExternos={caja.mediosPago}
-      />
+      {caja.isMoverMovimientoDialogOpen && (
+        <MoverMovimientoDialog
+          open
+          onOpenChange={caja.setIsMoverMovimientoDialogOpen}
+          transaction={caja.selectedTransaction}
+          currentSucursalId={caja.sucursalId}
+          onSuccess={caja.fetchMovimientos}
+          bancosExternos={caja.bancos}
+          mediosPagoExternos={caja.mediosPago}
+        />
+      )}
 
-      <CompraVentaDivisasDialog
-        isOpen={isCompraVentaDialogOpen}
-        onClose={() => setIsCompraVentaDialogOpen(false)}
-        sucursalId={caja.sucursalId}
-        onSuccess={caja.fetchMovimientos}
-      />
+      {isCompraVentaDialogOpen && (
+        <CompraVentaDivisasDialog
+          isOpen
+          onClose={() => setIsCompraVentaDialogOpen(false)}
+          sucursalId={caja.sucursalId}
+          onSuccess={caja.fetchMovimientos}
+        />
+      )}
 
-      <BulkMoverDialog
-        open={isBulkMoverDialogOpen}
-        onOpenChange={setIsBulkMoverDialogOpen}
-        selectedIds={bulkSelectedIds}
-        currentSucursalId={caja.sucursalId}
-        cajaTipo="efectivo"
-        onSuccess={caja.fetchMovimientos}
-        bancosExternos={caja.bancos}
-        mediosPagoExternos={caja.mediosPago}
-      />
+      {isBulkMoverDialogOpen && (
+        <BulkMoverDialog
+          open
+          onOpenChange={setIsBulkMoverDialogOpen}
+          selectedIds={bulkSelectedIds}
+          currentSucursalId={caja.sucursalId}
+          cajaTipo="efectivo"
+          onSuccess={caja.fetchMovimientos}
+          bancosExternos={caja.bancos}
+          mediosPagoExternos={caja.mediosPago}
+        />
+      )}
 
       {/* Dialog de opciones de exportación */}
-      <ExportExcelDialog
-        open={isExportDialogOpen}
-        onOpenChange={setIsExportDialogOpen}
-        cajaActual="efectivo"
-        onConfirm={handleExportConfirm}
-      />
+      {isExportDialogOpen && (
+        <ExportExcelDialog
+          open
+          onOpenChange={setIsExportDialogOpen}
+          cajaActual="efectivo"
+          onConfirm={handleExportConfirm}
+        />
+      )}
     </div>
   )
 }

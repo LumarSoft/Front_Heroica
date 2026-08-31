@@ -269,8 +269,8 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
     setLoadingNotif(true)
     try {
       const [notificacionesRes, alertasRes] = await Promise.all([
-        apiFetch(API_ENDPOINTS.NOTIFICACIONES.MIS),
-        apiFetch(API_ENDPOINTS.PERSONAL.ALERTAS_DOCUMENTACION),
+        apiFetch(API_ENDPOINTS.NOTIFICACIONES.MIS, { cache: 'no-store' }),
+        apiFetch(API_ENDPOINTS.PERSONAL.ALERTAS_DOCUMENTACION, { cache: 'no-store' }),
       ])
       if (notificacionesRes.ok) {
         const data = await notificacionesRes.json()
@@ -510,7 +510,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
           ) : (
             <>
               <Image
-                src="/HEROICA.svg"
+                src="/heroica.webp"
                 alt="Heroica"
                 width={88}
                 height={36}
@@ -595,7 +595,7 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
           <aside className="absolute left-0 top-0 bottom-0 w-72 bg-[#F7F9FD] shadow-2xl flex flex-col overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-4 h-16 border-b border-[#E2E8F5] flex-shrink-0">
-              <Image src="/HEROICA.svg" alt="Heroica" width={88} height={36} className="h-7 w-auto" priority />
+              <Image src="/heroica.webp" alt="Heroica" width={88} height={36} className="h-7 w-auto" priority />
               <button
                 onClick={onMobileClose}
                 className="w-8 h-8 flex items-center justify-center rounded-lg text-[#94A3B8] hover:text-[#1E293B] hover:bg-[#EEF3FF] transition-all"

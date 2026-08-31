@@ -118,6 +118,7 @@ export function useEmployeeNotifications(userId: number | undefined, sucursalId:
     try {
       const res = await apiFetch(
         `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(userId)}?sucursal_id=${encodeURIComponent(String(sucursalId))}`,
+        { cache: 'no-store' },
       )
       if (!res.ok) return
 
@@ -181,7 +182,7 @@ export function useEmployeeNotifications(userId: number | undefined, sucursalId:
         localStorage.setItem(storageKey(userId, 'seen'), JSON.stringify(merged))
         setUnseenCount(prev => prev + newCount)
       }
-    } catch (_err: unknown) {
+    } catch {
       // Error no crítico: el polling reintentará en el próximo ciclo.
     }
   }, [userId, sucursalId, isEmployee])

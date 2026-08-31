@@ -151,7 +151,7 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col justify-center items-center w-full px-16">
           <div className="max-w-lg text-center">
             {/* Logo SVG */}
-            <Image src="/HEROICA.svg" alt="Heroica" width={200} height={80} className="h-20 mb-6 mx-auto" priority />
+            <Image src="/heroica.webp" alt="Heroica" width={200} height={80} className="h-20 mb-6 mx-auto" priority />
 
             {/* Separador */}
             <div className="h-[1px] w-32 bg-gradient-to-r from-[#002868]/20 via-[#002868]/50 to-[#002868]/20 mb-10 mx-auto"></div>
@@ -181,7 +181,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md relative z-10">
           {/* Logo móvil */}
           <div className="lg:hidden text-center mb-8">
-            <Image src="/HEROICA.svg" alt="Heroica" width={120} height={48} className="h-12 mx-auto mb-2" />
+            <Image src="/heroica.webp" alt="Heroica" width={120} height={48} className="h-12 mx-auto mb-2" />
             <p className="text-[#666666]">Sistema de Contabilidad</p>
           </div>
 

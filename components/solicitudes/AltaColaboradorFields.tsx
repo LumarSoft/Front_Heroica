@@ -15,7 +15,7 @@ import { handleDniChange, handleCuitChange } from '@/lib/validators'
 import type { SolicitudFormState } from './solicitudFormUtils'
 import { SolicitudArchivoAdjunto } from './SolicitudArchivoAdjunto'
 
-const ACCEPT_PDF = 'application/pdf,.pdf'
+const ACCEPT_PDF_PNG = 'application/pdf,image/png,.pdf,.png'
 const ACCEPT_IMG_PDF = 'application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp'
 
 interface SectionCardProps {
@@ -386,13 +386,13 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
       <SectionCard
         title="Documentación adjunta"
         icon={<FileStack className="w-4 h-4" />}
-        subtitle="Opcional: podés guardar la ficha sin adjuntos y completarlos más adelante editando la solicitud. Subir PDF escaneados según checklist; la foto también puede ser imagen JPG o PNG"
+        subtitle="Opcional: podés guardar la ficha sin adjuntos y completarlos más adelante editando la solicitud. Todos los adjuntos aceptan PDF o PNG; la foto también puede ser imagen JPG"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <SolicitudArchivoAdjunto
             label="DNI (ambos lados)"
-            uploadHint="Archivo PDF"
-            accept={ACCEPT_PDF}
+            uploadHint="Archivo PDF o PNG"
+            accept={ACCEPT_PDF_PNG}
             url={form.alta_doc_dni_url}
             nombre={form.alta_doc_dni_nombre}
             onUpload={(url, nombre) => onChange({ alta_doc_dni_url: url, alta_doc_dni_nombre: nombre })}
@@ -400,8 +400,8 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
           />
           <SolicitudArchivoAdjunto
             label="DDJJ domicilio"
-            uploadHint="Archivo PDF"
-            accept={ACCEPT_PDF}
+            uploadHint="Archivo PDF o PNG"
+            accept={ACCEPT_PDF_PNG}
             url={form.alta_doc_ddjj_url}
             nombre={form.alta_doc_ddjj_nombre}
             onUpload={(url, nombre) => onChange({ alta_doc_ddjj_url: url, alta_doc_ddjj_nombre: nombre })}
@@ -409,8 +409,8 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
           />
           <SolicitudArchivoAdjunto
             label="Descripción de puesto firmada"
-            uploadHint="Archivo PDF"
-            accept={ACCEPT_PDF}
+            uploadHint="Archivo PDF o PNG"
+            accept={ACCEPT_PDF_PNG}
             url={form.alta_doc_puesto_url}
             nombre={form.alta_doc_puesto_nombre}
             onUpload={(url, nombre) => onChange({ alta_doc_puesto_url: url, alta_doc_puesto_nombre: nombre })}
@@ -427,8 +427,8 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
           />
           <SolicitudArchivoAdjunto
             label="Normas de convivencia firmadas"
-            uploadHint="Archivo PDF"
-            accept={ACCEPT_PDF}
+            uploadHint="Archivo PDF o PNG"
+            accept={ACCEPT_PDF_PNG}
             url={form.alta_doc_normas_url}
             nombre={form.alta_doc_normas_nombre}
             onUpload={(url, nombre) => onChange({ alta_doc_normas_url: url, alta_doc_normas_nombre: nombre })}
@@ -436,8 +436,8 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
           />
           <SolicitudArchivoAdjunto
             label="Constancia de entrega de uniforme"
-            uploadHint="Archivo PDF"
-            accept={ACCEPT_PDF}
+            uploadHint="Archivo PDF o PNG"
+            accept={ACCEPT_PDF_PNG}
             url={form.alta_doc_uniforme_url}
             nombre={form.alta_doc_uniforme_nombre}
             onUpload={(url, nombre) => onChange({ alta_doc_uniforme_url: url, alta_doc_uniforme_nombre: nombre })}

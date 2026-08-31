@@ -25,7 +25,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Mobile top bar */}
         <div className="md:hidden flex items-center gap-3 px-4 h-14 bg-white border-b border-[#E0E0E0] flex-shrink-0">
           <MobileMenuButton onClick={() => setMobileSidebarOpen(true)} />
-          <Image src="/HEROICA.svg" alt="Heroica" width={80} height={32} className="h-7 w-auto" />
+          <Image src="/heroica.webp" alt="Heroica" width={80} height={32} className="h-7 w-auto" />
         </div>
 
         {/* Page content */}
