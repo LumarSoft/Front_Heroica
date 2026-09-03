@@ -82,6 +82,10 @@ function UploadForm({ personalId, tipoDoc, onUploaded, onCancel }: UploadFormPro
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!file) return
+    if (tipoDoc === 'carnet_manipulacion_alimentos' && !fechaVencimiento) {
+      toast.error('Indicá la fecha de vencimiento del carnet')
+      return
+    }
     setUploading(true)
     try {
       const fd = new FormData()
@@ -126,7 +130,9 @@ function UploadForm({ personalId, tipoDoc, onUploaded, onCancel }: UploadFormPro
       <p className="text-sm font-semibold text-[#1A1A1A]">{LABELS_FALTANTES[tipoDoc]}</p>
 
       <div>
-        <label className="text-xs text-[#5A6070] font-medium block mb-1">Fecha de vencimiento (opcional)</label>
+        <label className="text-xs text-[#5A6070] font-medium block mb-1">
+          Fecha de vencimiento {tipoDoc === 'carnet_manipulacion_alimentos' ? '*' : '(opcional)'}
+        </label>
         <input
           type="date"
           value={fechaVencimiento}
@@ -168,7 +174,7 @@ function UploadForm({ personalId, tipoDoc, onUploaded, onCancel }: UploadFormPro
         <Button
           type="submit"
           size="sm"
-          disabled={uploading || !file}
+          disabled={uploading || !file || (tipoDoc === 'carnet_manipulacion_alimentos' && !fechaVencimiento)}
           className="h-8 px-3 text-xs bg-[#002868] hover:bg-[#003d8f] text-white cursor-pointer"
         >
           {uploading ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : null}

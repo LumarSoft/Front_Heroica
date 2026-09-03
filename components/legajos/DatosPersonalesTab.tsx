@@ -11,6 +11,7 @@ import { apiFetch } from '@/lib/api'
 import { API_ENDPOINTS } from '@/lib/config'
 import type { Personal, Puesto } from '@/lib/types'
 import { handleDniChange, isValidDni } from '@/lib/validators'
+import { CarnetManipulacionEditFields } from './CarnetManipulacionEditFields'
 
 interface DatosPersonalesTabProps {
   personal: Personal
@@ -27,6 +28,9 @@ interface FormState {
   puesto_id: number
   fecha_incorporacion: string
   carnet_manipulacion_alimentos: boolean
+  carnet_archivo: File | null
+  carnet_archivo_nombre: string
+  carnet_vencimiento: string
   activo: boolean
   condicion_laboral: '' | '1' | '2'
   fecha_alta_temprana: string
@@ -48,8 +52,14 @@ function buildInitialForm(personal: Personal): FormState {
     email: personal.email ?? '',
     puesto_id: personal.puesto_id,
     fecha_incorporacion: normalizeFecha(personal.fecha_incorporacion),
-    carnet_manipulacion_alimentos: personal.carnet_manipulacion_alimentos,
-    activo: personal.activo,
+    carnet_manipulacion_alimentos: Boolean(personal.carnet_manipulacion_alimentos),
+    carnet_archivo: null,
+    carnet_archivo_nombre: personal.carnet_manipulacion_alimentos ? (personal.carnet_archivo_nombre ?? '') : '',
+    carnet_vencimiento:
+      personal.carnet_manipulacion_alimentos && personal.carnet_vencimiento
+        ? normalizeFecha(personal.carnet_vencimiento)
+        : '',
+    activo: Boolean(personal.activo),
     condicion_laboral: personal.condicion_laboral === 1 ? '1' : personal.condicion_laboral === 2 ? '2' : '',
     fecha_alta_temprana: personal.fecha_alta_temprana ? normalizeFecha(personal.fecha_alta_temprana) : '',
   }
@@ -327,12 +337,33 @@ function EditMode({
           <Switch
             id="carnet-edit"
             checked={form.carnet_manipulacion_alimentos}
-            onCheckedChange={v => onChange({ carnet_manipulacion_alimentos: v })}
+            onCheckedChange={v =>
+              onChange(
+                v
+                  ? { carnet_manipulacion_alimentos: true }
+                  : {
+                      carnet_manipulacion_alimentos: false,
+                      carnet_archivo: null,
+                      carnet_archivo_nombre: '',
+                      carnet_vencimiento: '',
+                    },
+              )
+            }
           />
           <Label htmlFor="carnet-edit" className="text-sm cursor-pointer select-none">
             Carnet Manip. Alimentos
           </Label>
         </div>
+
+        {form.carnet_manipulacion_alimentos && (
+          <CarnetManipulacionEditFields
+            archivoActual={form.carnet_archivo_nombre}
+            archivoSeleccionado={form.carnet_archivo}
+            vencimiento={form.carnet_vencimiento}
+            onArchivoChange={file => onChange({ carnet_archivo: file })}
+            onVencimientoChange={value => onChange({ carnet_vencimiento: value })}
+          />
+        )}
 
         {/* Estado */}
         <div className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E9F0] p-4">
@@ -432,6 +463,24 @@ export function DatosPersonalesTab({
       toast.error('Ingresá un email válido')
       return
     }
+    if (form.carnet_manipulacion_alimentos) {
+      if (!form.carnet_archivo && !form.carnet_archivo_nombre) {
+        toast.error('Adjuntá el archivo del carnet de manipulación')
+        return
+      }
+      if (!form.carnet_vencimiento) {
+        toast.error('Indicá la fecha de vencimiento del carnet')
+        return
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(form.carnet_vencimiento)) {
+        toast.error('La fecha de vencimiento del carnet no es válida')
+        return
+      }
+      if (form.carnet_archivo && form.carnet_archivo.size > 10 * 1024 * 1024) {
+        toast.error('El archivo del carnet no puede superar los 10 MB')
+        return
+      }
+    }
     if (form.condicion_laboral === '1' && form.fecha_alta_temprana) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(form.fecha_alta_temprana)) {
         toast.error('La fecha de alta temprana no es válida')
@@ -441,23 +490,28 @@ export function DatosPersonalesTab({
 
     setSaving(true)
     try {
+      const body = new FormData()
+      body.append('nombre', form.nombre.trim())
+      body.append('dni', form.dni.trim())
+      body.append('email', form.email.trim())
+      body.append('puesto_id', String(form.puesto_id))
+      body.append('sucursal_id', String(personal.sucursal_id))
+      body.append('fecha_incorporacion', form.fecha_incorporacion)
+      body.append('periodo_prueba', String(personal.periodo_prueba ?? false))
+      body.append('periodo_prueba_dias', personal.periodo_prueba ? String(personal.periodo_prueba_dias ?? 180) : '')
+      body.append('carnet_manipulacion_alimentos', String(form.carnet_manipulacion_alimentos))
+      body.append('carnet_vencimiento', form.carnet_manipulacion_alimentos ? form.carnet_vencimiento : '')
+      body.append('activo', String(form.activo))
+      body.append('condicion_laboral', form.condicion_laboral)
+      body.append(
+        'fecha_alta_temprana',
+        form.condicion_laboral === '1' && form.fecha_alta_temprana ? form.fecha_alta_temprana : '',
+      )
+      if (form.carnet_archivo) body.append('carnet_archivo', form.carnet_archivo)
+
       const res = await apiFetch(API_ENDPOINTS.PERSONAL.UPDATE(personal.id), {
         method: 'PUT',
-        body: JSON.stringify({
-          nombre: form.nombre.trim(),
-          dni: form.dni.trim(),
-          email: form.email.trim() || null,
-          puesto_id: form.puesto_id,
-          sucursal_id: personal.sucursal_id,
-          fecha_incorporacion: form.fecha_incorporacion,
-          periodo_prueba: personal.periodo_prueba ?? false,
-          periodo_prueba_dias: personal.periodo_prueba_dias ?? null,
-          carnet_manipulacion_alimentos: form.carnet_manipulacion_alimentos,
-          activo: form.activo,
-          condicion_laboral: form.condicion_laboral === '' ? null : Number(form.condicion_laboral),
-          fecha_alta_temprana:
-            form.condicion_laboral === '1' && form.fecha_alta_temprana ? form.fecha_alta_temprana : null,
-        }),
+        body,
       })
 
       const data = await res.json()
