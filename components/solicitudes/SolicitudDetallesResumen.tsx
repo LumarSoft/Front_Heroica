@@ -1,6 +1,7 @@
 'use client'
 
 import type { RhEmpleadoNovedad, RhSolicitud } from '@/lib/types'
+import { getProvinciaPostalNombre } from '@/lib/codigos-postales'
 
 interface SolicitudDetallesResumenProps {
   solicitud: RhSolicitud
@@ -95,7 +96,21 @@ export function SolicitudDetallesResumen({ solicitud }: SolicitudDetallesResumen
             { label: 'DNI', value: String(detalles.dni ?? '-') },
             { label: 'CUIL / CUIT', value: String(detalles.cuil ?? '-') },
             { label: 'Domicilio real', value: String(detalles.domicilio ?? '-') },
+            {
+              label: 'CP dirección real',
+              value:
+                detalles.domicilio_real_localidad && detalles.domicilio_real_codigo_postal
+                  ? `${String(detalles.domicilio_real_localidad)}, ${getProvinciaPostalNombre(String(detalles.domicilio_real_provincia_codigo ?? ''))} · CP ${String(detalles.domicilio_real_codigo_postal)}`
+                  : '-',
+            },
             { label: 'Domicilio en DNI', value: detalles.domicilio_dni ? String(detalles.domicilio_dni) : '-' },
+            {
+              label: 'CP domicilio en DNI',
+              value:
+                detalles.domicilio_dni_localidad && detalles.domicilio_dni_codigo_postal
+                  ? `${String(detalles.domicilio_dni_localidad)}, ${getProvinciaPostalNombre(String(detalles.domicilio_dni_provincia_codigo ?? ''))} · CP ${String(detalles.domicilio_dni_codigo_postal)}`
+                  : '-',
+            },
             { label: 'Fecha de nacimiento', value: String(detalles.fecha_nacimiento ?? '-') },
             { label: 'Teléfono', value: String(detalles.telefono ?? '-') },
             { label: 'Correo electrónico', value: String(detalles.email ?? '-') },

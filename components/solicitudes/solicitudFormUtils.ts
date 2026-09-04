@@ -160,6 +160,12 @@ export interface SolicitudFormState {
   alta_cuil: string
   alta_domicilio: string
   alta_direccion_dni: string
+  alta_domicilio_real_provincia_codigo: string
+  alta_domicilio_real_localidad: string
+  alta_domicilio_real_codigo_postal: string
+  alta_domicilio_dni_provincia_codigo: string
+  alta_domicilio_dni_localidad: string
+  alta_domicilio_dni_codigo_postal: string
   alta_fecha_nacimiento: string
   alta_telefono: string
   alta_email: string
@@ -278,6 +284,12 @@ export function createInitialSolicitudFormState(): SolicitudFormState {
     alta_cuil: '',
     alta_domicilio: '',
     alta_direccion_dni: '',
+    alta_domicilio_real_provincia_codigo: '',
+    alta_domicilio_real_localidad: '',
+    alta_domicilio_real_codigo_postal: '',
+    alta_domicilio_dni_provincia_codigo: '',
+    alta_domicilio_dni_localidad: '',
+    alta_domicilio_dni_codigo_postal: '',
     alta_fecha_nacimiento: '',
     alta_telefono: '',
     alta_email: '',
@@ -452,6 +464,12 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
     alta_cuil: typeof detalles.cuil === 'number' ? String(detalles.cuil) : String(detalles.cuil ?? ''),
     alta_domicilio: String(detalles.domicilio ?? ''),
     alta_direccion_dni: String(detalles.domicilio_dni ?? ''),
+    alta_domicilio_real_provincia_codigo: String(detalles.domicilio_real_provincia_codigo ?? ''),
+    alta_domicilio_real_localidad: String(detalles.domicilio_real_localidad ?? ''),
+    alta_domicilio_real_codigo_postal: String(detalles.domicilio_real_codigo_postal ?? ''),
+    alta_domicilio_dni_provincia_codigo: String(detalles.domicilio_dni_provincia_codigo ?? ''),
+    alta_domicilio_dni_localidad: String(detalles.domicilio_dni_localidad ?? ''),
+    alta_domicilio_dni_codigo_postal: String(detalles.domicilio_dni_codigo_postal ?? ''),
     alta_fecha_nacimiento: String(detalles.fecha_nacimiento ?? ''),
     alta_telefono: String(detalles.telefono ?? ''),
     alta_email: String(detalles.email ?? ''),
@@ -713,6 +731,12 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
         cuil: form.alta_cuil.replace(/\D/g, ''),
         domicilio: form.alta_domicilio.trim(),
         domicilio_dni: form.alta_direccion_dni.trim(),
+        domicilio_real_provincia_codigo: form.alta_domicilio_real_provincia_codigo,
+        domicilio_real_localidad: form.alta_domicilio_real_localidad.trim(),
+        domicilio_real_codigo_postal: form.alta_domicilio_real_codigo_postal,
+        domicilio_dni_provincia_codigo: form.alta_domicilio_dni_provincia_codigo,
+        domicilio_dni_localidad: form.alta_domicilio_dni_localidad.trim(),
+        domicilio_dni_codigo_postal: form.alta_domicilio_dni_codigo_postal,
         fecha_nacimiento: form.alta_fecha_nacimiento,
         telefono: form.alta_telefono.trim(),
         email: form.alta_email.trim() || null,
@@ -898,6 +922,16 @@ export function validateSolicitudForm(form: SolicitudFormState, options?: { isEd
       if (!isValidCuit(form.alta_cuil)) return 'El CUIL/CUIT debe tener exactamente 11 dígitos'
       if (!form.alta_domicilio.trim()) return 'Ingrese la dirección real'
       if (!form.alta_direccion_dni.trim()) return 'Ingrese la dirección según consta en el DNI'
+      if (!form.alta_domicilio_real_provincia_codigo) return 'Seleccione la provincia de la dirección real'
+      if (!form.alta_domicilio_real_localidad.trim()) return 'Seleccione o ingrese la localidad de la dirección real'
+      if (!/^\d{4}$/.test(form.alta_domicilio_real_codigo_postal)) {
+        return 'El código postal de la dirección real debe tener exactamente 4 dígitos'
+      }
+      if (!form.alta_domicilio_dni_provincia_codigo) return 'Seleccione la provincia del domicilio según DNI'
+      if (!form.alta_domicilio_dni_localidad.trim()) return 'Seleccione o ingrese la localidad del domicilio según DNI'
+      if (!/^\d{4}$/.test(form.alta_domicilio_dni_codigo_postal)) {
+        return 'El código postal del domicilio según DNI debe tener exactamente 4 dígitos'
+      }
       if (!form.alta_fecha_nacimiento) return 'Ingrese la fecha de nacimiento'
       {
         const añoNac = new Date(form.alta_fecha_nacimiento).getFullYear()

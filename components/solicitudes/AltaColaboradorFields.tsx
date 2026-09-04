@@ -14,6 +14,7 @@ import { CBU_DIGITOS } from '@/lib/schemas'
 import { handleDniChange, handleCuitChange } from '@/lib/validators'
 import type { SolicitudFormState } from './solicitudFormUtils'
 import { SolicitudArchivoAdjunto } from './SolicitudArchivoAdjunto'
+import { CodigoPostalSelector } from '@/components/CodigoPostalSelector'
 
 const ACCEPT_PDF_PNG = 'application/pdf,image/png,.pdf,.png'
 const ACCEPT_IMG_PDF = 'application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp'
@@ -118,6 +119,20 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
               onChange={e => onChange({ alta_domicilio: e.target.value })}
             />
           </div>
+          <CodigoPostalSelector
+            required
+            title="Código postal de la dirección real"
+            provinciaCodigo={form.alta_domicilio_real_provincia_codigo}
+            localidad={form.alta_domicilio_real_localidad}
+            codigoPostal={form.alta_domicilio_real_codigo_postal}
+            onChange={value =>
+              onChange({
+                alta_domicilio_real_provincia_codigo: value.provinciaCodigo,
+                alta_domicilio_real_localidad: value.localidad,
+                alta_domicilio_real_codigo_postal: value.codigoPostal,
+              })
+            }
+          />
           <div className="sm:col-span-2 space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Domicilio según DNI *</Label>
             <Input
@@ -127,6 +142,20 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
               onChange={e => onChange({ alta_direccion_dni: e.target.value })}
             />
           </div>
+          <CodigoPostalSelector
+            required
+            title="Código postal del domicilio según DNI"
+            provinciaCodigo={form.alta_domicilio_dni_provincia_codigo}
+            localidad={form.alta_domicilio_dni_localidad}
+            codigoPostal={form.alta_domicilio_dni_codigo_postal}
+            onChange={value =>
+              onChange({
+                alta_domicilio_dni_provincia_codigo: value.provinciaCodigo,
+                alta_domicilio_dni_localidad: value.localidad,
+                alta_domicilio_dni_codigo_postal: value.codigoPostal,
+              })
+            }
+          />
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-[#5A6070]">Fecha de nacimiento *</Label>
             <Input

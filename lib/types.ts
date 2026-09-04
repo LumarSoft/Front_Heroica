@@ -206,6 +206,12 @@ export interface Personal {
   fecha_nacimiento?: string | null
   domicilio_real?: string | null
   domicilio_dni?: string | null
+  domicilio_real_provincia_codigo?: string | null
+  domicilio_real_localidad?: string | null
+  domicilio_real_codigo_postal?: string | null
+  domicilio_dni_provincia_codigo?: string | null
+  domicilio_dni_localidad?: string | null
+  domicilio_dni_codigo_postal?: string | null
   puesto_id: number
   puesto_nombre: string
   sucursal_id: number
@@ -233,6 +239,18 @@ export interface Personal {
   vencimientos_proximos?: VencimientoLegajo[]
   created_at: string
   updated_at: string
+}
+
+export interface ProvinciaPostal {
+  codigo: string
+  nombre: string
+}
+
+export interface CodigoPostalOpcion {
+  id: string
+  localidad: string
+  partido: string | null
+  codigo_postal: string
 }
 
 export interface VencimientoLegajo {

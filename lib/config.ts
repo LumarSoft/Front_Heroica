@@ -260,6 +260,9 @@ export const API_ENDPOINTS = {
   PERSONAL: {
     GET_ALL: `${API_URL}/api/personal`,
     ALERTAS_DOCUMENTACION: `${API_URL}/api/personal/alertas-documentacion`,
+    PROVINCIAS_POSTALES: `${API_URL}/api/personal/catalogos/provincias`,
+    CODIGOS_POSTALES: (provinciaCodigo: string) =>
+      `${API_URL}/api/personal/catalogos/codigos-postales?provincia=${encodeURIComponent(provinciaCodigo)}`,
     GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/personal?sucursal_id=${sucursalId}`,
     GET_BY_ID: (id: number) => `${API_URL}/api/personal/${id}`,
     CREATE: `${API_URL}/api/personal`,

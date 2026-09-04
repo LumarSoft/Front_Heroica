@@ -1,9 +1,18 @@
 /**
  * Spinner reutilizable con tres variantes de contenedor.
  */
+import { cn } from '@/lib/utils'
 
-export function LoadingSpinner() {
-  return <div className="w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin" />
+interface LoadingSpinnerProps {
+  className?: string
+}
+
+export function LoadingSpinner({ className }: LoadingSpinnerProps) {
+  return (
+    <div
+      className={cn('w-12 h-12 border-4 border-[#002868]/30 border-t-[#002868] rounded-full animate-spin', className)}
+    />
+  )
 }
 
 /** Spinner de página completa (usado mientras carga el auth guard) */
