@@ -653,6 +653,13 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
         categoria_id: '',
         subcategoria_id: '',
       }))
+    } else if (name === 'medio_pago_id') {
+      const medioSeleccionado = mediosPago.find(medio => String(medio.id) === value)
+      setFormData(prev => ({
+        ...prev,
+        medio_pago_id: value,
+        numero_cheque: isMedioPagoChequeLike(medioSeleccionado?.nombre) ? prev.numero_cheque : '',
+      }))
     } else {
       setFormData(prev => ({ ...prev, [name]: value }))
     }

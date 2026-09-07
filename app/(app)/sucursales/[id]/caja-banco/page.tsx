@@ -287,6 +287,7 @@ export default function CajaBancoPage() {
               isExporting={isExporting}
               isReadOnly={!canCrear}
               sucursalId={Number(params.id)}
+              moneda={moneda}
             />
 
             {caja.isLoading ? (

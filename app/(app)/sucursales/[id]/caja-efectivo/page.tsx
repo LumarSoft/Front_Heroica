@@ -266,6 +266,7 @@ export default function CajaEfectivoPage() {
               isExporting={isExporting}
               isReadOnly={!canCrear}
               sucursalId={Number(params.id)}
+              moneda={moneda}
             />
 
             {caja.isLoading ? (

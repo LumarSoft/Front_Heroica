@@ -48,6 +48,9 @@ export const API_ENDPOINTS = {
       if (fechaFin) params.append('fechaFin', fechaFin)
       return `${API_URL}/api/movimientos/deudas?${params.toString()}`
     },
+    GET_RESUMEN_DIARIO: (sucursalId: number, moneda: string, fecha: string) =>
+      `${API_URL}/api/movimientos/resumen-diario?sucursalId=${encodeURIComponent(sucursalId)}&moneda=${encodeURIComponent(moneda)}&fecha=${encodeURIComponent(fecha)}`,
+    EMAIL_RESUMEN_DIARIO: `${API_URL}/api/movimientos/resumen-diario/email`,
     CREATE_EFECTIVO: `${API_URL}/api/movimientos/efectivo`,
     COMPRA_VENTA_DIVISAS: `${API_URL}/api/movimientos/compra-venta-divisas`,
     UPDATE: (id: number) => `${API_URL}/api/movimientos/${id}`,
@@ -73,6 +76,8 @@ export const API_ENDPOINTS = {
     CREATE: `${API_URL}/api/pagos-pendientes`,
     APROBAR: (id: number) => `${API_URL}/api/pagos-pendientes/${id}/aprobar`,
     RECHAZAR: (id: number) => `${API_URL}/api/pagos-pendientes/${id}/rechazar`,
+    APROBAR_BULK: `${API_URL}/api/pagos-pendientes/bulk/aprobar`,
+    RECHAZAR_BULK: `${API_URL}/api/pagos-pendientes/bulk/rechazar`,
     GET_HISTORIAL: (userId: number) => `${API_URL}/api/pagos-pendientes/historial/${userId}`,
   },
   IMPORTACION_BANCARIA: {

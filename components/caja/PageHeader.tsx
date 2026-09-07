@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { ArrowRightLeft, FileSpreadsheet, Upload } from 'lucide-react'
+import { ArrowRightLeft, CalendarDays, CircleDollarSign, FileSpreadsheet, Plus, Upload } from 'lucide-react'
 import { DeudasInterSucursalDialog } from './DeudasInterSucursalDialog'
+import { ResumenTesoreriaDialog } from './ResumenTesoreriaDialog'
 
 interface PageHeaderProps {
   title: string
@@ -15,6 +16,7 @@ interface PageHeaderProps {
   isExporting?: boolean
   isReadOnly?: boolean
   sucursalId: number
+  moneda: 'ARS' | 'USD'
 }
 
 export function PageHeader({
@@ -27,8 +29,10 @@ export function PageHeader({
   isExporting = false,
   isReadOnly = false,
   sucursalId,
+  moneda,
 }: PageHeaderProps) {
   const [showDeudas, setShowDeudas] = useState(false)
+  const [showResumen, setShowResumen] = useState(false)
 
   return (
     <>
@@ -43,17 +47,16 @@ export function PageHeader({
             variant="outline"
             className="cursor-pointer border-orange-300 bg-white text-orange-600 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-400 font-semibold px-3 sm:px-5 py-2 sm:py-3 shadow-sm hover:shadow-md transition-all flex items-center gap-2"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-5 h-5"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <CircleDollarSign className="w-5 h-5" />
             Deudas
+          </Button>
+          <Button
+            onClick={() => setShowResumen(true)}
+            variant="outline"
+            className="cursor-pointer border-sky-300 text-sky-700 hover:bg-sky-50 font-semibold px-3 sm:px-5 flex items-center gap-2"
+          >
+            <CalendarDays className="w-4 h-4" />
+            Resumen diario
           </Button>
           {onImportarMasivo && (
             <Button
@@ -96,16 +99,7 @@ export function PageHeader({
             disabled={isReadOnly}
             className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-3 sm:px-6 py-2 sm:py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-5 h-5"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
+            <Plus className="w-5 h-5" />
             <span className="hidden sm:inline">Nuevo Movimiento</span>
             <span className="sm:hidden">Nuevo</span>
           </Button>
@@ -113,6 +107,12 @@ export function PageHeader({
       </div>
 
       <DeudasInterSucursalDialog open={showDeudas} onOpenChange={setShowDeudas} sucursalId={sucursalId} />
+      <ResumenTesoreriaDialog
+        open={showResumen}
+        onOpenChange={setShowResumen}
+        sucursalId={sucursalId}
+        moneda={moneda}
+      />
     </>
   )
 }

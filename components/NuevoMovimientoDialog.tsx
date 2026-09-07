@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
-import { AlertTriangle, Upload, X, FileText, Download } from 'lucide-react'
+import { AlertTriangle, Upload, X, FileText } from 'lucide-react'
 import { Combobox } from '@/components/ui/combobox'
 import { trackCreatedPago } from '@/hooks/use-employee-notifications'
 import type { NotificarEventoData } from '@/components/notificaciones/NotificarEventoDialog'
@@ -127,14 +127,13 @@ export default function NuevoMovimientoDialog({
   const [bancosInternos, setBancosInternos] = useState<SelectOption[]>([])
   const [mediosPagoInternos, setMediosPagoInternos] = useState<SelectOption[]>([])
   const [descripcionesInternas, setDescripcionesInternas] = useState<DescripcionOption[]>([])
-  const [proveedoresInternos, setProveedoresInternos] = useState<SelectOption[]>([])
+  const [, setProveedoresInternos] = useState<SelectOption[]>([])
 
   // Usa los catálogos externos si se proveen, si no usa los internos (fetched)
   const categorias = categoriasExternas?.length ? categoriasExternas : categoriasInternas
   const bancos = bancosExternos?.length ? bancosExternos : bancosInternos
   const mediosPago = mediosPagoExternos?.length ? mediosPagoExternos : mediosPagoInternos
   const descripciones = descripcionesExternas?.length ? descripcionesExternas : descripcionesInternas
-  const proveedores = proveedoresExternas?.length ? proveedoresExternas : proveedoresInternos
 
   const fetchCategorias = useCallback(async () => {
     if (categoriasExternas?.length) return
@@ -283,6 +282,14 @@ export default function NuevoMovimientoDialog({
         banco_id: '',
         medio_pago_id: '',
         comprobante: '',
+        numero_cheque: '',
+      }))
+    } else if (name === 'medio_pago_id') {
+      const medioSeleccionado = mediosPago.find(medio => String(medio.id) === value)
+      setFormData(prev => ({
+        ...prev,
+        medio_pago_id: value,
+        numero_cheque: isMedioPagoChequeLike(medioSeleccionado?.nombre) ? prev.numero_cheque : '',
       }))
     } else {
       setFormData(prev => ({ ...prev, [name]: value }))
@@ -493,6 +500,11 @@ export default function NuevoMovimientoDialog({
 
     if (moneda === 'USD' && (!formData.tipo_cambio || Number(formData.tipo_cambio) <= 0)) {
       setError('Debes ingresar un tipo de cambio válido')
+      return
+    }
+
+    if (isPagoPendiente && !formData.comentarios.trim()) {
+      setError('Las observaciones son obligatorias para un pago pendiente')
       return
     }
 
@@ -1019,12 +1031,16 @@ export default function NuevoMovimientoDialog({
 
                 <div className="space-y-1.5">
                   <Label htmlFor="comentarios" className={labelClasses}>
-                    Comentarios
+                    {isPagoPendiente ? 'Observaciones *' : 'Comentarios'}
                   </Label>
                   <Input
                     id="comentarios"
                     name="comentarios"
-                    placeholder="Comentarios adicionales (opcional)"
+                    placeholder={
+                      isPagoPendiente
+                        ? 'Indicá el motivo y los datos necesarios del pago'
+                        : 'Comentarios adicionales (opcional)'
+                    }
                     value={formData.comentarios}
                     onChange={handleInputChange}
                     className={inputClasses}

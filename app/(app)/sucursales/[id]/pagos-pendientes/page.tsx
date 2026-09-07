@@ -16,6 +16,7 @@ import { PagosPendientesTable } from '@/components/pagos-pendientes/PagosPendien
 import { AprobarDialog } from '@/components/pagos-pendientes/AprobarDialog'
 import { RechazarDialog } from '@/components/pagos-pendientes/RechazarDialog'
 import { HistorialFiltros } from '@/components/pagos-pendientes/HistorialFiltros'
+import { AprobarMasivoDialog } from '@/components/pagos-pendientes/AprobarMasivoDialog'
 import { NotificarEventoDialog, type NotificarEventoData } from '@/components/notificaciones/NotificarEventoDialog'
 import type { PagoPendiente } from '@/lib/types'
 
@@ -46,6 +47,9 @@ export default function PagosPendientesPage() {
   const [sucursalActiva, setSucursalActiva] = useState<boolean | null>(null)
   const [sucursalNombre, setSucursalNombre] = useState('')
   const [notifyData, setNotifyData] = useState<NotificarEventoData | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [isAprobarMasivoOpen, setIsAprobarMasivoOpen] = useState(false)
+  const [isRechazoMasivo, setIsRechazoMasivo] = useState(false)
 
   // Identifica la sucursal en la pestaña (útil con varias ventanas abiertas)
   useDocumentTitle(sucursalNombre ? `${sucursalNombre} · Pagos Pendientes` : '')
@@ -73,6 +77,7 @@ export default function PagosPendientesPage() {
       const data = await response.json()
       if (!response.ok) throw new Error(data.message || 'Error al cargar pagos pendientes')
       setPagosPendientes(data.data || [])
+      setSelectedIds(new Set())
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al cargar pagos pendientes')
     } finally {
@@ -122,7 +127,7 @@ export default function PagosPendientesPage() {
   }
 
   const handleRechazar = async () => {
-    if (!selectedPago || !user || !motivoRechazo.trim()) {
+    if ((!selectedPago && !isRechazoMasivo) || !user || !motivoRechazo.trim()) {
       setError('Debe proporcionar un motivo de rechazo')
       setTimeout(() => setError(''), 3000)
       return
@@ -130,24 +135,56 @@ export default function PagosPendientesPage() {
     try {
       setIsSaving(true)
       setError('')
-      const response = await apiFetch(API_ENDPOINTS.PAGOS_PENDIENTES.RECHAZAR(selectedPago.id), {
-        method: 'PUT',
-        body: JSON.stringify({
-          usuario_revisor_id: user.id,
-          motivo_rechazo: motivoRechazo,
-        }),
-      })
+      const response = await apiFetch(
+        isRechazoMasivo
+          ? API_ENDPOINTS.PAGOS_PENDIENTES.RECHAZAR_BULK
+          : API_ENDPOINTS.PAGOS_PENDIENTES.RECHAZAR(selectedPago!.id),
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            usuario_revisor_id: user.id,
+            motivo_rechazo: motivoRechazo,
+            ...(isRechazoMasivo && { ids: Array.from(selectedIds) }),
+          }),
+        },
+      )
       const data = await response.json()
       if (!response.ok) throw new Error(data.message || 'Error al rechazar pago')
-      toast.success('Pago rechazado exitosamente')
+      toast.success(isRechazoMasivo ? `${selectedIds.size} pagos rechazados` : 'Pago rechazado exitosamente')
       setIsRechazarDialogOpen(false)
-      const pagoId = selectedPago.id
+      const pagoId = selectedPago?.id
+      setIsRechazoMasivo(false)
       fetchPagosPendientes()
-      setNotifyData({ tipo: 'pago_pendiente_rechazado', entidadId: pagoId })
+      if (pagoId) setNotifyData({ tipo: 'pago_pendiente_rechazado', entidadId: pagoId })
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al rechazar pago'
       setError(message)
       setTimeout(() => setError(''), 3000)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleAprobarMasivo = async (datos: {
+    tipo_caja: 'efectivo' | 'banco'
+    banco_id?: number
+    medio_pago_id?: number
+    numero_cheque?: string
+  }) => {
+    if (!user || selectedIds.size === 0) return
+    try {
+      setIsSaving(true)
+      const response = await apiFetch(API_ENDPOINTS.PAGOS_PENDIENTES.APROBAR_BULK, {
+        method: 'PUT',
+        body: JSON.stringify({ ids: Array.from(selectedIds), usuario_revisor_id: user.id, ...datos }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || 'Error al aprobar pagos')
+      toast.success(`${selectedIds.size} pagos aprobados`)
+      setIsAprobarMasivoOpen(false)
+      await fetchPagosPendientes()
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al aprobar pagos')
     } finally {
       setIsSaving(false)
     }
@@ -173,7 +210,6 @@ export default function PagosPendientesPage() {
     return true
   })
 
-  const hayFiltrosActivos = filtroEstado !== 'todos' || filtroUsuario !== ''
   const displayData = activeTab === 'pendientes' ? pagosPendientes : isAdmin ? historialFiltrado : historial
 
   return (
@@ -273,6 +309,15 @@ export default function PagosPendientesPage() {
           isLoading={isLoading}
           onAprobar={handleOpenAprobar}
           onRechazar={handleOpenRechazar}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          onAprobarSeleccionados={() => setIsAprobarMasivoOpen(true)}
+          onRechazarSeleccionados={() => {
+            setSelectedPago(null)
+            setMotivoRechazo('')
+            setIsRechazoMasivo(true)
+            setIsRechazarDialogOpen(true)
+          }}
         />
       </main>
 
@@ -290,6 +335,14 @@ export default function PagosPendientesPage() {
         onMotivoChange={setMotivoRechazo}
         onConfirm={handleRechazar}
         isSaving={isSaving}
+      />
+
+      <AprobarMasivoDialog
+        open={isAprobarMasivoOpen}
+        onOpenChange={setIsAprobarMasivoOpen}
+        cantidad={selectedIds.size}
+        isSaving={isSaving}
+        onConfirm={handleAprobarMasivo}
       />
 
       <NuevoMovimientoDialog

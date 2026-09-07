@@ -4,6 +4,7 @@ import { Check, X, Inbox, Megaphone, User } from 'lucide-react'
 import { ContentLoadingSpinner } from '@/components/ui/loading-spinner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { StatusBadge } from '@/components/caja/StatusBadge'
 import { formatFecha, formatMonto, ESTADO_COLOR_MAP, PRIORIDAD_COLOR_MAP, truncarTexto } from '@/lib/formatters'
@@ -18,6 +19,10 @@ interface PagosPendientesTableProps {
   isLoading: boolean
   onAprobar: (pago: PagoPendiente) => void
   onRechazar: (pago: PagoPendiente) => void
+  selectedIds: Set<number>
+  onSelectionChange: (ids: Set<number>) => void
+  onAprobarSeleccionados: () => void
+  onRechazarSeleccionados: () => void
 }
 
 export function PagosPendientesTable({
@@ -29,16 +34,30 @@ export function PagosPendientesTable({
   isLoading,
   onAprobar,
   onRechazar,
+  selectedIds,
+  onSelectionChange,
+  onAprobarSeleccionados,
+  onRechazarSeleccionados,
 }: PagosPendientesTableProps) {
   const showAcciones = activeTab === 'pendientes' && userRole === 'superadmin'
-  const colSpan = 7 + (activeTab === 'historial' ? 1 : 0) + (showAcciones ? 1 : 0)
+  const colSpan = 7 + (activeTab === 'historial' ? 1 : 0) + (showAcciones ? 2 : 0)
+  const seleccionables = displayData.filter(pago => pago.estado === 'pendiente').map(pago => pago.id)
+  const todosSeleccionados = seleccionables.length > 0 && seleccionables.every(id => selectedIds.has(id))
+
+  const toggleTodos = () => onSelectionChange(todosSeleccionados ? new Set() : new Set(seleccionables))
+  const togglePago = (id: number) => {
+    const siguiente = new Set(selectedIds)
+    if (siguiente.has(id)) siguiente.delete(id)
+    else siguiente.add(id)
+    onSelectionChange(siguiente)
+  }
 
   if (isLoading) return <ContentLoadingSpinner />
 
   return (
     <Card className="border-[#E0E0E0] bg-white shadow-lg overflow-hidden">
       <CardHeader className="border-b border-[#E0E0E0] bg-[#F8F9FA]/50">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <CardTitle className="text-xl font-bold text-[#002868]">
               {activeTab === 'pendientes' ? 'Pendientes de Autorización' : 'Historial de Solicitudes'}
@@ -50,16 +69,38 @@ export function PagosPendientesTable({
             </CardDescription>
           </div>
           {activeTab === 'pendientes' && (
-            <div className="text-right">
-              <p className="text-xs text-[#666666] font-bold uppercase tracking-wider mb-1">Total Pendiente</p>
-              <div
-                className={`inline-flex items-center justify-center px-4 py-1.5 rounded-lg ${
-                  total >= 0 ? 'bg-emerald-50 border border-emerald-200' : 'bg-rose-50 border border-rose-200'
-                }`}
-              >
-                <p className={`text-xl font-black ${total >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                  {formatMonto(Math.abs(total))}
-                </p>
+            <div className="flex items-center gap-3">
+              {showAcciones && selectedIds.size > 0 && (
+                <>
+                  <Button
+                    size="sm"
+                    onClick={onAprobarSeleccionados}
+                    disabled={isReadOnly}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    Aprobar ({selectedIds.size})
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={onRechazarSeleccionados}
+                    disabled={isReadOnly}
+                    className="bg-rose-600 hover:bg-rose-700"
+                  >
+                    Rechazar ({selectedIds.size})
+                  </Button>
+                </>
+              )}
+              <div className="text-right">
+                <p className="text-xs text-[#666666] font-bold uppercase tracking-wider mb-1">Total Pendiente</p>
+                <div
+                  className={`inline-flex items-center justify-center px-4 py-1.5 rounded-lg ${
+                    total >= 0 ? 'bg-emerald-50 border border-emerald-200' : 'bg-rose-50 border border-rose-200'
+                  }`}
+                >
+                  <p className={`text-xl font-black ${total >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    {formatMonto(Math.abs(total))}
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -70,6 +111,15 @@ export function PagosPendientesTable({
           <Table>
             <TableHeader>
               <TableRow className="bg-[#F8F9FA] hover:bg-[#F8F9FA] border-b-2 border-[#E0E0E0]">
+                {showAcciones && (
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={todosSeleccionados}
+                      onCheckedChange={toggleTodos}
+                      aria-label="Seleccionar todos los pagos"
+                    />
+                  </TableHead>
+                )}
                 <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Fecha</TableHead>
                 <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Concepto</TableHead>
                 <TableHead className="font-bold text-[#002868] text-xs uppercase tracking-wider">Solicitante</TableHead>
@@ -115,6 +165,15 @@ export function PagosPendientesTable({
                     key={pago.id}
                     className="hover:bg-[#F8F9FA]/50 transition-colors border-b border-[#E0E0E0]/50"
                   >
+                    {showAcciones && (
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(pago.id)}
+                          onCheckedChange={() => togglePago(pago.id)}
+                          aria-label={`Seleccionar ${pago.concepto}`}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell className="font-medium text-[#1A1A1A]">{formatFecha(pago.fecha)}</TableCell>
                     <TableCell>
                       <div className="flex flex-col">
