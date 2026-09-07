@@ -8,10 +8,12 @@ import { apiFetch } from '@/lib/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ErrorBanner } from '@/components/ui/error-banner'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { useAuthStore } from '@/store/authStore'
 import type { Sucursal } from '@/lib/types'
 
 export default function RecursosHumanosPage() {
   const router = useRouter()
+  const canVerAnaliticoRrhh = useAuthStore(state => state.canVerAnaliticoRrhh)
   const [sucursales, setSucursales] = useState<Sucursal[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -56,14 +58,16 @@ export default function RecursosHumanosPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={() => router.push('/recursos-humanos/analitico')}
-              className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-[#002868] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
-            >
-              <BarChart3 className="w-4 h-4" />
-              Analítico Global
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-            </button>
+            {canVerAnaliticoRrhh() && (
+              <button
+                onClick={() => router.push('/recursos-humanos/analitico')}
+                className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-[#002868] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
+              >
+                <BarChart3 className="w-4 h-4" />
+                Analítico Global
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              </button>
+            )}
 
             <button
               onClick={() => router.push('/recursos-humanos/calendario')}

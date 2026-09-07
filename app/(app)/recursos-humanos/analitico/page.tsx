@@ -20,9 +20,11 @@ import {
 } from 'recharts'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
+import { AccessDenied } from '@/components/ui/access-denied'
 import { ErrorBanner } from '@/components/ui/error-banner'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { formatMonto } from '@/lib/formatters'
+import { useAuthStore } from '@/store/authStore'
 import type { Sucursal } from '@/lib/types'
 
 interface AnaliticoData {
@@ -79,15 +81,22 @@ export default function AnaliticoGlobalPage() {
   const [data, setData] = useState<AnaliticoData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const canVerAnaliticoRrhh = useAuthStore(state => state.canVerAnaliticoRrhh)
+  const puedeVer = canVerAnaliticoRrhh()
 
   useEffect(() => {
+    if (!puedeVer) return
     apiFetch(API_ENDPOINTS.SUCURSALES.GET_ALL)
       .then(r => r.json())
       .then(d => setSucursales(d.data || []))
       .catch(() => {})
-  }, [])
+  }, [puedeVer])
 
   const fetchData = useCallback(async () => {
+    if (!puedeVer) {
+      setIsLoading(false)
+      return
+    }
     setIsLoading(true)
     setError('')
     try {
@@ -100,11 +109,21 @@ export default function AnaliticoGlobalPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [sucursalId, desde, hasta])
+  }, [sucursalId, desde, hasta, puedeVer])
 
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  if (!puedeVer) {
+    return (
+      <div className="min-h-full bg-gradient-to-br from-[#F0F5FF] via-[#F8FAFF] to-white">
+        <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-10">
+          <AccessDenied resource="el analítico de Recursos Humanos" backUrl="/recursos-humanos" />
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-full bg-gradient-to-br from-[#F0F5FF] via-[#F8FAFF] to-white">

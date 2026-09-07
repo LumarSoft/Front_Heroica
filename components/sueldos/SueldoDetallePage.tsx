@@ -55,6 +55,8 @@ export function SueldoDetallePage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const user = useAuthStore(state => state.user)
+  const canGestionarSueldos = useAuthStore(state => state.canGestionarSueldos)
+  const puedeGestionar = canGestionarSueldos()
   const sucursalId = Number(params.id)
   const personalId = Number(params.personalId)
   const hoy = new Date()
@@ -558,8 +560,10 @@ export function SueldoDetallePage() {
                 </span>
               ) : editing ? (
                 'Editá los valores y guardá los cambios.'
-              ) : (
+              ) : puedeGestionar ? (
                 'Revisá el sueldo. Editá o enviá a Pagos Pendientes.'
+              ) : (
+                'Solo lectura: no tenés permiso para modificar ni enviar sueldos.'
               )}
             </div>
             <div className="flex items-center gap-2">
@@ -580,7 +584,7 @@ export function SueldoDetallePage() {
                 </>
               ) : (
                 <>
-                  {!enviado && (
+                  {!enviado && puedeGestionar && (
                     <Button
                       variant="outline"
                       onClick={() => setEditing(true)}
@@ -590,14 +594,16 @@ export function SueldoDetallePage() {
                       Editar
                     </Button>
                   )}
-                  <Button
-                    onClick={enviar}
-                    disabled={sending || enviado}
-                    className="h-9 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer disabled:opacity-50"
-                  >
-                    {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    Enviar a Pagos Pendientes
-                  </Button>
+                  {puedeGestionar && (
+                    <Button
+                      onClick={enviar}
+                      disabled={sending || enviado}
+                      className="h-9 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer disabled:opacity-50"
+                    >
+                      {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      Enviar a Pagos Pendientes
+                    </Button>
+                  )}
                 </>
               )}
             </div>

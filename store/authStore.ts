@@ -79,6 +79,10 @@ interface AuthState {
 
   // RRHH — Sueldos
   canVerSueldos: () => boolean
+  canGestionarSueldos: () => boolean
+
+  // RRHH — Analítico
+  canVerAnaliticoRrhh: () => boolean
 
   // RRHH — Solicitudes
   canVerSolicitudes: () => boolean
@@ -181,6 +185,8 @@ export const useAuthStore = create<AuthState>()(
 
       // RRHH — Sueldos
       canVerSueldos: () => get().hasPermiso('ver_sueldos'),
+      canGestionarSueldos: () => get().hasPermiso('gestionar_sueldos'),
+      canVerAnaliticoRrhh: () => get().hasPermiso('ver_analitico_rrhh'),
 
       // RRHH — Solicitudes
       canVerSolicitudes: () => get().hasPermiso('ver_solicitudes'),
