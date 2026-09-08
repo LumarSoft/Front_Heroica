@@ -550,8 +550,6 @@ export function TablaMensualSection({
 }) {
   const router = useRouter()
   const user = useAuthStore(state => state.user)
-  const canGestionarSueldos = useAuthStore(state => state.canGestionarSueldos)
-  const puedeGestionar = canGestionarSueldos()
   const [simulationMode, setSimulationMode] = useState(false)
   const [draftRows, setDraftRows] = useState<TablaMensualRow[]>(rows)
   const [saving, setSaving] = useState(false)
@@ -978,9 +976,7 @@ export function TablaMensualSection({
               <p className="text-xs text-[#9AA0AC] max-w-md">
                 {simulationMode
                   ? 'Ajustá los valores y aceptá la simulación para guardarlos en el período.'
-                  : puedeGestionar
-                    ? 'Paso 1: simulá y guardá los valores. Paso 2: enviá a Pagos Pendientes para impactar la acreditación.'
-                    : 'Solo lectura: no tenés permiso para modificar ni enviar sueldos.'}
+                  : 'Paso 1: simulá y guardá los valores. Paso 2: enviá a Pagos Pendientes para impactar la acreditación.'}
               </p>
               {!simulationMode && enviadosCount > 0 && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
@@ -1010,32 +1006,30 @@ export function TablaMensualSection({
                 </Button>
               </div>
             ) : (
-              puedeGestionar && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={enterSimulation}
-                    variant="outline"
-                    className="h-9 gap-2 border-[#002868]/30 text-[#002868] hover:bg-[#002868]/8 cursor-pointer"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                    Modo simulación
-                  </Button>
-                  <Button
-                    onClick={enviarPagos}
-                    disabled={sending || pendientesEnvio.length === 0}
-                    className="h-9 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer disabled:opacity-50"
-                    title={
-                      pendientesEnvio.length === 0
-                        ? 'No hay sueldos pendientes de enviar'
-                        : `Enviar ${pendientesEnvio.length} sueldo(s) a Pagos Pendientes`
-                    }
-                  >
-                    {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    Enviar a Pagos Pendientes
-                    {pendientesEnvio.length > 0 && ` (${pendientesEnvio.length})`}
-                  </Button>
-                </div>
-              )
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={enterSimulation}
+                  variant="outline"
+                  className="h-9 gap-2 border-[#002868]/30 text-[#002868] hover:bg-[#002868]/8 cursor-pointer"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Modo simulación
+                </Button>
+                <Button
+                  onClick={enviarPagos}
+                  disabled={sending || pendientesEnvio.length === 0}
+                  className="h-9 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer disabled:opacity-50"
+                  title={
+                    pendientesEnvio.length === 0
+                      ? 'No hay sueldos pendientes de enviar'
+                      : `Enviar ${pendientesEnvio.length} sueldo(s) a Pagos Pendientes`
+                  }
+                >
+                  {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  Enviar a Pagos Pendientes
+                  {pendientesEnvio.length > 0 && ` (${pendientesEnvio.length})`}
+                </Button>
+              </div>
             )}
           </div>
         </CardContent>

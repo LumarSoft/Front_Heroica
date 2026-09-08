@@ -67,8 +67,6 @@ export function LiqFinalDetallePage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const user = useAuthStore(state => state.user)
-  const canGestionarSueldos = useAuthStore(state => state.canGestionarSueldos)
-  const puedeGestionar = canGestionarSueldos()
   const sucursalId = Number(params.id)
   const liquidacionId = Number(params.liquidacionId)
   const hoy = new Date()
@@ -705,10 +703,8 @@ export function LiqFinalDetallePage() {
                 </span>
               ) : editing ? (
                 'Editá los valores y guardá los cambios.'
-              ) : puedeGestionar ? (
-                'Revisá la liquidación. Editá o enviá a Pagos Pendientes.'
               ) : (
-                'Solo lectura: no tenés permiso para modificar ni enviar liquidaciones.'
+                'Revisá la liquidación. Editá o enviá a Pagos Pendientes.'
               )}
             </div>
             <div className="flex items-center gap-2">
@@ -729,7 +725,7 @@ export function LiqFinalDetallePage() {
                 </>
               ) : (
                 <>
-                  {!enviado && puedeGestionar && (
+                  {!enviado && (
                     <Button
                       variant="outline"
                       onClick={() => setEditing(true)}
@@ -739,16 +735,14 @@ export function LiqFinalDetallePage() {
                       Editar
                     </Button>
                   )}
-                  {puedeGestionar && (
-                    <Button
-                      onClick={enviar}
-                      disabled={sending || enviado}
-                      className="h-9 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer disabled:opacity-50"
-                    >
-                      {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                      Enviar a Pagos Pendientes
-                    </Button>
-                  )}
+                  <Button
+                    onClick={enviar}
+                    disabled={sending || enviado}
+                    className="h-9 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer disabled:opacity-50"
+                  >
+                    {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    Enviar a Pagos Pendientes
+                  </Button>
                 </>
               )}
             </div>
