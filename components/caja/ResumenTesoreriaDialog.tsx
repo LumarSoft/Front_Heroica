@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 
 interface MovimientoResumen {
   id: number
-  concepto: string
+  descripcion: string | null
   comentarios?: string
   monto: number
   tipo: 'ingreso' | 'egreso'
@@ -116,7 +116,7 @@ export function ResumenTesoreriaDialog({ open, onOpenChange, sucursalId, moneda 
                   {dia.movimientos.map(movimiento => (
                     <div key={movimiento.id} className="border-b pb-2 last:border-0">
                       <div className="flex justify-between gap-2 text-sm">
-                        <span className="font-medium">{movimiento.concepto || 'Sin concepto'}</span>
+                        <span className="font-medium">{movimiento.descripcion || 'Sin descripción'}</span>
                         <b className={movimiento.tipo === 'egreso' ? 'text-rose-700' : 'text-emerald-700'}>
                           {movimiento.tipo === 'egreso' ? '−' : '+'}
                           {formatMonto(Math.abs(movimiento.monto), resumen.moneda)}
