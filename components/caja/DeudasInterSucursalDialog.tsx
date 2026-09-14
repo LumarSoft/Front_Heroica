@@ -68,7 +68,7 @@ export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: De
               Deudas entre sucursales
             </DialogTitle>
             <DialogDescription>
-              Resumen neto por sucursal. Abrí una fila para ver conceptos y movimientos.
+              Resumen neto por sucursal. Abrí una fila para ver descripciones y movimientos.
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -126,7 +126,8 @@ export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: De
                       <thead>
                         <tr className="text-xs uppercase text-[#5A6070]">
                           <th className="text-left p-3">Fecha</th>
-                          <th className="text-left p-3">Concepto</th>
+                          <th className="text-left p-3">Descripción</th>
+                          <th className="text-left p-3">Observaciones</th>
                           <th className="text-left p-3">Situación</th>
                           <th className="text-right p-3">Monto</th>
                         </tr>
@@ -135,12 +136,8 @@ export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: De
                         {grupo.movimientos.map(deuda => (
                           <tr key={deuda.id} className="border-t border-[#ECEEF1]">
                             <td className="p-3 whitespace-nowrap">{formatFecha(deuda.fecha)}</td>
-                            <td className="p-3">
-                              <b>{deuda.concepto}</b>
-                              {deuda.comentarios && (
-                                <span className="block text-xs text-[#777]">{deuda.comentarios}</span>
-                              )}
-                            </td>
+                            <td className="p-3 font-semibold">{deuda.descripcion || 'Sin descripción'}</td>
+                            <td className="p-3 text-xs text-[#777]">{deuda.comentarios || '—'}</td>
                             <td className="p-3">{deuda.tipo === 'ingreso' ? 'Nos debe' : 'Le debemos'}</td>
                             <td className="p-3 text-right font-bold">
                               {formatMonto(Math.abs(deuda.monto), grupo.moneda)}

@@ -4,7 +4,7 @@ export interface DeudaInterSucursal {
   sucursal_nombre: string
   sucursal_relacionada_nombre?: string
   fecha: string
-  concepto: string
+  descripcion: string | null
   monto: number
   comentarios?: string
   tipo: 'ingreso' | 'egreso'
