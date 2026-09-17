@@ -1,47 +1,28 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { FileText, Loader2, Trash2, Upload } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { FileText, Trash2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { PERIODOS_RECIBOS } from '@/lib/recibos-sueldo'
 import { apiFetch } from '@/lib/api'
 import { API_ENDPOINTS } from '@/lib/config'
 import { openArchivo } from '@/lib/document-url'
+import type { PersonalReciboSueldo as ReciboSueldo } from '@/lib/types'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
-
-interface ReciboSueldo {
-  id: number
-  mes: number
-  anio: number
-  nombre_original: string | null
-  subido_por_nombre: string | null
-  created_at: string
-}
 
 interface RecibosSueldoTabProps {
   personalId: number
   canEditar: boolean
 }
 
-const MESES = [
-  'Enero',
-  'Febrero',
-  'Marzo',
-  'Abril',
-  'Mayo',
-  'Junio',
-  'Julio',
-  'Agosto',
-  'Septiembre',
-  'Octubre',
-  'Noviembre',
-  'Diciembre',
-]
-
 export function RecibosSueldoTab({ personalId, canEditar }: RecibosSueldoTabProps) {
-  const today = new Date()
+  const today = useMemo(() => new Date(), [])
   const [recibosAnio, setRecibosAnio] = useState<ReciboSueldo[]>([])
-  const [mes, setMes] = useState(today.getMonth() + 1)
+  const [periodo, setPeriodo] = useState(today.getMonth() + 1)
   const [anio, setAnio] = useState(today.getFullYear())
   const [archivo, setArchivo] = useState<File | null>(null)
   const [loading, setLoading] = useState(true)
@@ -49,32 +30,34 @@ export function RecibosSueldoTab({ personalId, canEditar }: RecibosSueldoTabProp
   const [reciboAEliminar, setReciboAEliminar] = useState<ReciboSueldo | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  async function cargarRecibos() {
+  const cargarRecibos = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams({ anio: String(anio) })
       const response = await apiFetch(`${API_ENDPOINTS.PERSONAL.GET_RECIBOS_SUELDO(personalId)}?${params.toString()}`)
-      const data = await response.json()
+      const data: { data?: ReciboSueldo[]; message?: string } = await response.json()
       if (!response.ok) throw new Error(data.message || 'No se pudieron cargar los recibos')
-      setRecibosAnio(Array.isArray(data.data) ? (data.data as ReciboSueldo[]) : [])
+      setRecibosAnio(Array.isArray(data.data) ? data.data : [])
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'No se pudieron cargar los recibos')
     } finally {
       setLoading(false)
     }
-  }
+  }, [personalId, anio])
 
   useEffect(() => {
     cargarRecibos()
-  }, [personalId, anio])
+  }, [cargarRecibos])
 
   const anios = useMemo(() => Array.from({ length: 6 }, (_, index) => today.getFullYear() - index), [today])
-  const recibos = useMemo(() => recibosAnio.filter(recibo => recibo.mes === mes), [recibosAnio, mes])
+  const recibos = useMemo(() => recibosAnio.filter(recibo => recibo.mes === periodo), [recibosAnio, periodo])
 
-  function getEstadoMes(numeroMes: number): string {
-    const yaPaso = anio < today.getFullYear() || (anio === today.getFullYear() && numeroMes < today.getMonth() + 1)
+  const nombrePeriodo = PERIODOS_RECIBOS.find(item => item.id === periodo)?.nombre ?? ''
+
+  function getEstadoPeriodo(numeroPeriodo: number, mesCalendario: number): string {
+    const yaPaso = anio < today.getFullYear() || (anio === today.getFullYear() && mesCalendario < today.getMonth() + 1)
     if (!yaPaso) return 'border-[#D8E3F8] bg-white text-[#5A6070] hover:bg-[#EEF3FF]'
-    return recibosAnio.some(recibo => recibo.mes === numeroMes)
+    return recibosAnio.some(recibo => recibo.mes === numeroPeriodo)
       ? 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
       : 'border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100'
   }
@@ -93,13 +76,13 @@ export function RecibosSueldoTab({ personalId, canEditar }: RecibosSueldoTabProp
     try {
       const data = new FormData()
       data.append('file', archivo)
-      data.append('mes', String(mes))
+      data.append('mes', String(periodo))
       data.append('anio', String(anio))
       const response = await apiFetch(API_ENDPOINTS.PERSONAL.UPLOAD_RECIBO_SUELDO(personalId), {
         method: 'POST',
         body: data,
       })
-      const result = await response.json()
+      const result: { message?: string } = await response.json()
       if (!response.ok) throw new Error(result.message || 'No se pudo subir el recibo')
       setArchivo(null)
       toast.success('Recibo cargado correctamente')
@@ -117,7 +100,7 @@ export function RecibosSueldoTab({ personalId, canEditar }: RecibosSueldoTabProp
       const response = await apiFetch(API_ENDPOINTS.PERSONAL.DELETE_RECIBO_SUELDO(personalId, reciboAEliminar.id), {
         method: 'DELETE',
       })
-      const data = await response.json()
+      const data: { message?: string } = await response.json()
       if (!response.ok) throw new Error(data.message || 'No se pudo eliminar el recibo')
       setRecibosAnio(prev => prev.filter(recibo => recibo.id !== reciboAEliminar.id))
       setReciboAEliminar(null)
@@ -163,37 +146,38 @@ export function RecibosSueldoTab({ personalId, canEditar }: RecibosSueldoTabProp
       <div className="rounded-xl border border-[#E0E0E0] p-4">
         <p className="text-xs font-bold uppercase tracking-wider text-[#002868]">Período</p>
         <div className="mt-3 grid grid-cols-3 sm:grid-cols-6 gap-2">
-          {MESES.map((nombre, index) => (
+          {PERIODOS_RECIBOS.map(item => (
             <Button
-              key={nombre}
+              key={item.id}
               type="button"
               variant="outline"
-              onClick={() => setMes(index + 1)}
-              className={`text-xs ${getEstadoMes(index + 1)} ${mes === index + 1 ? 'ring-2 ring-[#002868] ring-offset-1' : ''}`}
+              onClick={() => setPeriodo(item.id)}
+              className={`text-xs ${item.id > 12 ? 'col-span-3 whitespace-normal' : ''} ${getEstadoPeriodo(item.id, item.mesCalendario)} ${periodo === item.id ? 'ring-2 ring-[#002868] ring-offset-1' : ''}`}
             >
-              {nombre.slice(0, 3)}
+              {item.corto}
             </Button>
           ))}
         </div>
         <div className="mt-3 flex gap-2 items-center">
           <span className="text-xs font-semibold text-[#5A6070]">Año:</span>
-          <select
-            value={anio}
-            onChange={event => setAnio(Number(event.target.value))}
-            className="h-9 rounded-lg border border-[#D8E3F8] px-3 text-sm"
-          >
-            {anios.map(year => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+          <Select value={String(anio)} onValueChange={value => setAnio(Number(value))}>
+            <SelectTrigger className="h-9 w-24 rounded-lg border-[#D8E3F8]" aria-label="Año de los recibos">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {anios.map(year => (
+                <SelectItem key={year} value={String(year)}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       {canEditar && (
         <div className="rounded-xl border border-[#002868]/20 bg-[#F0F4FF] p-4 flex flex-wrap items-center gap-3">
-          <input
+          <Input
             ref={inputRef}
             type="file"
             accept=".pdf,.jpg,.jpeg,.png,.webp"
@@ -204,22 +188,22 @@ export function RecibosSueldoTab({ personalId, canEditar }: RecibosSueldoTabProp
             <Upload className="mr-2 h-4 w-4" /> {archivo?.name ?? 'Seleccionar recibo'}
           </Button>
           <Button type="button" disabled={!archivo || uploading} onClick={subir} className="bg-[#002868] text-white">
-            {uploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Subir recibo de {MESES[mes - 1]} {anio}
+            {uploading && <LoadingSpinner className="mr-2 h-4 w-4" />} Subir recibo de {nombrePeriodo} {anio}
           </Button>
         </div>
       )}
 
       {loading ? (
         <div className="py-10 text-center text-sm text-[#8A8F9C]">
-          <Loader2 className="inline h-4 w-4 animate-spin mr-2" />
+          <LoadingSpinner className="inline-block h-4 w-4 mr-2" />
           Cargando recibos…
         </div>
       ) : recibos.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[#E0E0E0] py-12 text-center text-sm text-[#8A8F9C]">
-          No hay recibos para {MESES[mes - 1]} de {anio}.
+          No hay recibos para {nombrePeriodo} de {anio}.
         </div>
       ) : recibos.length === 1 ? (
-        reciboItem(recibos[0], `Ver recibo de ${MESES[mes - 1]} ${anio}`)
+        reciboItem(recibos[0], `Ver recibo de ${nombrePeriodo} ${anio}`)
       ) : (
         <div className="space-y-2">
           {recibos.map((recibo, index) =>

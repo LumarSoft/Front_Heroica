@@ -1,6 +1,8 @@
 'use client'
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { getEstadoSolicitudLabel } from '@/lib/solicitud-adelantos'
+import { SOLICITUD_ESTADO_COLORS } from '@/lib/formatters'
 import type { RhSolicitud } from '@/lib/types'
 
 interface SolicitudesTableProps {
@@ -72,17 +74,9 @@ export function SolicitudesTable({ solicitudes, onSelect, showSucursal = false }
                 <TableCell className="text-[#666666] hidden md:table-cell">{solicitud.usuario_nombre}</TableCell>
                 <TableCell className="text-center">
                   <span
-                    className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                      solicitud.estado === 'Pendiente'
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : solicitud.estado === 'Aprobada'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : solicitud.estado === 'Rechazada'
-                            ? 'bg-rose-50 text-rose-600 border-rose-200'
-                            : 'bg-slate-50 text-slate-600 border-slate-200'
-                    }`}
+                    className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${SOLICITUD_ESTADO_COLORS[getEstadoSolicitudLabel(solicitud)]}`}
                   >
-                    {solicitud.estado}
+                    {getEstadoSolicitudLabel(solicitud)}
                   </span>
                 </TableCell>
               </TableRow>

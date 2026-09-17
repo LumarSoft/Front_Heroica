@@ -1,97 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { VacacionesFields } from './VacacionesFields'
+import { DateDMY } from './DateDMY'
 import { Input } from '@/components/ui/input'
 import { MontoInput } from '@/components/ui/monto-input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Combobox } from '@/components/ui/combobox'
 import type { Area, Personal, Puesto, RhIncentivoPremio, Sucursal } from '@/lib/types'
 import type { SolicitudFormState } from './solicitudFormUtils'
+import { ApercibimientoFields } from './ApercibimientoFields'
+import { SuspensionFields } from './SuspensionFields'
+import { LicenciaFields } from './LicenciaFields'
 import { AltaColaboradorFields } from './AltaColaboradorFields'
 import { BajaColaboradorFields } from './BajaColaboradorFields'
 import { NovedadSueldoFields } from './NovedadSueldoFields'
 import { SolicitudArchivoAdjunto } from './SolicitudArchivoAdjunto'
 
 const ACCEPT_PDF = 'application/pdf,.pdf'
-
-function DateDMY({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [day, setDay] = useState('')
-  const [month, setMonth] = useState('')
-  const [year, setYear] = useState('')
-
-  useEffect(() => {
-    if (value) {
-      const [y, m, d] = value.split('-')
-      setYear(y || '')
-      setMonth(m ? String(Number(m)) : '')
-      setDay(d ? String(Number(d)) : '')
-    } else {
-      setDay('')
-      setMonth('')
-      setYear('')
-    }
-  }, [value])
-
-  const commit = (d: string, m: string, y: string) => {
-    if (d && m && y && y.length === 4) {
-      onChange(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`)
-    } else {
-      onChange('')
-    }
-  }
-
-  return (
-    <div className="flex items-end gap-1.5">
-      <div>
-        <p className="text-[10px] text-[#9AA0AC] mb-0.5">Día</p>
-        <Input
-          type="number"
-          min={1}
-          max={31}
-          placeholder="DD"
-          className="h-10 w-16 text-center rounded-lg border-[#E0E0E0]"
-          value={day}
-          onChange={e => {
-            setDay(e.target.value)
-            commit(e.target.value, month, year)
-          }}
-        />
-      </div>
-      <span className="text-[#C0C0C0] pb-2.5 select-none">/</span>
-      <div>
-        <p className="text-[10px] text-[#9AA0AC] mb-0.5">Mes</p>
-        <Input
-          type="number"
-          min={1}
-          max={12}
-          placeholder="MM"
-          className="h-10 w-16 text-center rounded-lg border-[#E0E0E0]"
-          value={month}
-          onChange={e => {
-            setMonth(e.target.value)
-            commit(day, e.target.value, year)
-          }}
-        />
-      </div>
-      <span className="text-[#C0C0C0] pb-2.5 select-none">/</span>
-      <div>
-        <p className="text-[10px] text-[#9AA0AC] mb-0.5">Año</p>
-        <Input
-          type="number"
-          min={2020}
-          max={2100}
-          placeholder="AAAA"
-          className="h-10 w-24 text-center rounded-lg border-[#E0E0E0]"
-          value={year}
-          onChange={e => {
-            setYear(e.target.value)
-            commit(day, month, e.target.value)
-          }}
-        />
-      </div>
-    </div>
-  )
-}
 
 interface SolicitudSpecificFieldsProps {
   form: SolicitudFormState
@@ -137,55 +62,9 @@ export function SolicitudSpecificFields({
     )
   }
 
-  if (form.tipo === 'Vacaciones') {
-    return (
-      <div className="grid grid-cols-3 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
-        <Input
-          type="date"
-          value={form.vacaciones_desde}
-          onChange={event => onChange({ vacaciones_desde: event.target.value })}
-        />
-        <Input
-          type="date"
-          value={form.vacaciones_hasta}
-          onChange={event => onChange({ vacaciones_hasta: event.target.value })}
-        />
-        <Input
-          type="number"
-          placeholder="Cantidad de días"
-          value={form.vacaciones_dias}
-          onChange={event => onChange({ vacaciones_dias: event.target.value })}
-        />
-      </div>
-    )
-  }
+  if (form.tipo === 'Vacaciones') return <VacacionesFields form={form} onChange={onChange} />
 
-  if (form.tipo === 'Licencias') {
-    return (
-      <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
-        <Input
-          placeholder="Tipo de licencia"
-          value={form.licencia_tipo}
-          onChange={event => onChange({ licencia_tipo: event.target.value })}
-        />
-        <Input
-          placeholder="Motivo"
-          value={form.licencia_motivo}
-          onChange={event => onChange({ licencia_motivo: event.target.value })}
-        />
-        <Input
-          type="date"
-          value={form.licencia_desde}
-          onChange={event => onChange({ licencia_desde: event.target.value })}
-        />
-        <Input
-          type="date"
-          value={form.licencia_hasta}
-          onChange={event => onChange({ licencia_hasta: event.target.value })}
-        />
-      </div>
-    )
-  }
+  if (form.tipo === 'Licencias') return <LicenciaFields form={form} onChange={onChange} />
 
   if (form.tipo === 'Novedades de sueldo') {
     return (
@@ -200,51 +79,7 @@ export function SolicitudSpecificFields({
     )
   }
 
-  if (form.tipo === 'Apercibimientos') {
-    return (
-      <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
-        <Input
-          type="date"
-          value={form.apercibimiento_fecha}
-          onChange={event => onChange({ apercibimiento_fecha: event.target.value })}
-        />
-        <Select
-          value={form.apercibimiento_severidad}
-          onValueChange={value =>
-            onChange({ apercibimiento_severidad: value as SolicitudFormState['apercibimiento_severidad'] })
-          }
-        >
-          <SelectTrigger className="h-10 rounded-lg border border-[#E0E0E0] bg-white text-sm text-[#1A1A1A]">
-            <SelectValue placeholder="Severidad" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Leve">Leve</SelectItem>
-            <SelectItem value="Moderada">Moderada</SelectItem>
-            <SelectItem value="Grave">Grave</SelectItem>
-          </SelectContent>
-        </Select>
-        <Input
-          className="col-span-2"
-          placeholder="Motivo"
-          value={form.apercibimiento_motivo}
-          onChange={event => onChange({ apercibimiento_motivo: event.target.value })}
-        />
-        <div className="col-span-2">
-          <SolicitudArchivoAdjunto
-            label="Archivo adjunto"
-            url={form.apercibimiento_archivo_url}
-            nombre={form.apercibimiento_archivo_nombre}
-            accept={ACCEPT_PDF}
-            uploadHint="Opcional. Subir PDF si corresponde."
-            onUpload={(url, nombre) =>
-              onChange({ apercibimiento_archivo_url: url, apercibimiento_archivo_nombre: nombre })
-            }
-            onRemove={() => onChange({ apercibimiento_archivo_url: '', apercibimiento_archivo_nombre: '' })}
-          />
-        </div>
-      </div>
-    )
-  }
+  if (form.tipo === 'Apercibimientos') return <ApercibimientoFields form={form} onChange={onChange} />
 
   if (form.tipo === 'Descuentos') {
     return (
@@ -295,39 +130,7 @@ export function SolicitudSpecificFields({
     )
   }
 
-  if (form.tipo === 'Suspensiones') {
-    return (
-      <div className="grid grid-cols-2 gap-4 rounded-xl border border-[#E0E0E0] bg-[#F8F9FA] p-4">
-        <Input
-          type="date"
-          value={form.suspension_fecha_desde}
-          onChange={event => onChange({ suspension_fecha_desde: event.target.value })}
-        />
-        <Input
-          type="date"
-          value={form.suspension_fecha_hasta}
-          onChange={event => onChange({ suspension_fecha_hasta: event.target.value })}
-        />
-        <Input
-          className="col-span-2"
-          placeholder="Motivo de la suspensión"
-          value={form.suspension_motivo}
-          onChange={event => onChange({ suspension_motivo: event.target.value })}
-        />
-        <div className="col-span-2">
-          <SolicitudArchivoAdjunto
-            label="Archivo adjunto"
-            url={form.suspension_archivo_url}
-            nombre={form.suspension_archivo_nombre}
-            accept={ACCEPT_PDF}
-            uploadHint="Opcional. Subir PDF si corresponde."
-            onUpload={(url, nombre) => onChange({ suspension_archivo_url: url, suspension_archivo_nombre: nombre })}
-            onRemove={() => onChange({ suspension_archivo_url: '', suspension_archivo_nombre: '' })}
-          />
-        </div>
-      </div>
-    )
-  }
+  if (form.tipo === 'Suspensiones') return <SuspensionFields form={form} onChange={onChange} />
 
   if (form.tipo === 'Capacitaciones') {
     return (
