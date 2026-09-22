@@ -20,6 +20,7 @@ interface UploadFormProps {
 }
 
 export function DocumentoUploadForm({ personalId, tipoDoc, onUploaded, onCancel }: UploadFormProps) {
+  const requiereVencimiento = tipoDoc === 'carnet_manipulacion_alimentos'
   const [fechaVencimiento, setFechaVencimiento] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -33,7 +34,7 @@ export function DocumentoUploadForm({ personalId, tipoDoc, onUploaded, onCancel 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!file) return
-    if (tipoDoc === 'carnet_manipulacion_alimentos' && !fechaVencimiento) {
+    if (requiereVencimiento && !fechaVencimiento) {
       toast.error('Indicá la fecha de vencimiento del carnet')
       return
     }
@@ -42,7 +43,7 @@ export function DocumentoUploadForm({ personalId, tipoDoc, onUploaded, onCancel 
       const fd = new FormData()
       fd.append('file', file)
       fd.append('tipo_doc', tipoDoc)
-      if (fechaVencimiento) fd.append('fecha_vencimiento', fechaVencimiento)
+      if (requiereVencimiento) fd.append('fecha_vencimiento', fechaVencimiento)
 
       const res = await apiFetch(API_ENDPOINTS.PERSONAL.UPLOAD_DOCUMENTO(personalId), {
         method: 'POST',
@@ -83,17 +84,19 @@ export function DocumentoUploadForm({ personalId, tipoDoc, onUploaded, onCancel 
 
       <p className="text-sm font-semibold text-[#1A1A1A]">{LABELS_DOCUMENTOS[tipoDoc]}</p>
 
-      <div>
-        <Label className="text-xs text-[#5A6070] font-medium block mb-1">
-          Fecha de vencimiento {tipoDoc === 'carnet_manipulacion_alimentos' ? '*' : '(opcional)'}
-        </Label>
-        <Input
-          type="date"
-          value={fechaVencimiento}
-          onChange={e => setFechaVencimiento(e.target.value)}
-          className="w-full text-sm rounded-lg border border-[#E5E9F0] px-3 py-2 outline-none focus:border-[#002868] focus:ring-2 focus:ring-[#002868]/15 transition bg-white"
-        />
-      </div>
+      {requiereVencimiento && (
+        <div>
+          <Label className="text-xs text-[#5A6070] font-medium block mb-1">
+            Fecha de vencimiento <span className="text-rose-500">*</span>
+          </Label>
+          <Input
+            type="date"
+            value={fechaVencimiento}
+            onChange={e => setFechaVencimiento(e.target.value)}
+            className="w-full text-sm rounded-lg border border-[#E5E9F0] px-3 py-2 outline-none focus:border-[#002868] focus:ring-2 focus:ring-[#002868]/15 transition bg-white"
+          />
+        </div>
+      )}
 
       <div>
         <Label className="text-xs text-[#5A6070] font-medium block mb-1">Archivo (PDF, JPG, PNG — máx. 10 MB)</Label>
@@ -128,7 +131,7 @@ export function DocumentoUploadForm({ personalId, tipoDoc, onUploaded, onCancel 
         <Button
           type="submit"
           size="sm"
-          disabled={uploading || !file || (tipoDoc === 'carnet_manipulacion_alimentos' && !fechaVencimiento)}
+          disabled={uploading || !file || (requiereVencimiento && !fechaVencimiento)}
           className="h-8 px-3 text-xs bg-[#002868] hover:bg-[#003d8f] text-white cursor-pointer"
         >
           {uploading ? <LoadingSpinner className="w-3.5 h-3.5 mr-1.5" /> : null}

@@ -76,7 +76,7 @@ export function DocumentoArchivoRow({ archivo, canEliminar, onDeleted, personalI
           <p className="text-[11px] text-[#5A6070] truncate">
             Subido por: {archivo.subido_por_nombre ?? 'No informado'}
           </p>
-          {archivo.fecha_vencimiento && (
+          {archivo.tipo_doc === 'carnet_manipulacion_alimentos' && archivo.fecha_vencimiento && (
             <p
               className={
                 estadoVencimiento(archivo.fecha_vencimiento) === 'Vencido'
