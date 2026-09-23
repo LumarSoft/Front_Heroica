@@ -34,6 +34,7 @@ export function createRrhhEndpoints(API_URL: string) {
       CANCEL: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}/cancelar`,
       DELETE: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}`,
       UPLOAD_ARCHIVO: `${API_URL}/api/rrhh/solicitudes/archivos`,
+      UPLOAD_ARCHIVO_TOKEN: `${API_URL}/api/rrhh/solicitudes/archivos/token`,
       OPEN_ARCHIVO: (id: number) => `${API_URL}/api/rrhh/solicitudes/${id}/archivos/abrir`,
     },
     ESCALAS_SALARIALES: {

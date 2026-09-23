@@ -3,8 +3,7 @@
 import { useRef, useState } from 'react'
 import { FileText, Loader2, Paperclip, X } from 'lucide-react'
 import { Label } from '@/components/ui/label'
-import { apiFetch } from '@/lib/api'
-import { API_ENDPOINTS } from '@/lib/config'
+import { subirArchivoSolicitud } from '@/lib/solicitud-archivo-upload'
 import { toast } from 'sonner'
 
 export interface SolicitudArchivoAdjuntoProps {
@@ -32,16 +31,8 @@ export function SolicitudArchivoAdjunto({
   async function handleFile(file: File) {
     setUploading(true)
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await apiFetch(API_ENDPOINTS.RRHH_SOLICITUDES.UPLOAD_ARCHIVO, {
-        method: 'POST',
-        body: fd,
-        headers: {},
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Error al subir archivo')
-      onUpload(data.data.url, data.data.nombre_original)
+      const subido = await subirArchivoSolicitud(file)
+      onUpload(subido.url, subido.nombre)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Error al subir el archivo')
     } finally {
@@ -80,6 +71,7 @@ export function SolicitudArchivoAdjunto({
         onChange={e => {
           const f = e.target.files?.[0]
           if (f) handleFile(f)
+          e.target.value = ''
         }}
       />
     </div>
