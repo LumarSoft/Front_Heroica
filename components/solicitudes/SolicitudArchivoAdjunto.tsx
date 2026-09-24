@@ -14,6 +14,7 @@ export interface SolicitudArchivoAdjuntoProps {
   uploadHint?: string
   onUpload: (url: string, nombre: string) => void
   onRemove: () => void
+  onUploadingChange?: (uploading: boolean) => void
 }
 
 export function SolicitudArchivoAdjunto({
@@ -24,12 +25,14 @@ export function SolicitudArchivoAdjunto({
   uploadHint,
   onUpload,
   onRemove,
+  onUploadingChange,
 }: SolicitudArchivoAdjuntoProps) {
   const [uploading, setUploading] = useState(false)
   const ref = useRef<HTMLInputElement>(null)
 
   async function handleFile(file: File) {
     setUploading(true)
+    onUploadingChange?.(true)
     try {
       const subido = await subirArchivoSolicitud(file)
       onUpload(subido.url, subido.nombre)
@@ -37,6 +40,7 @@ export function SolicitudArchivoAdjunto({
       toast.error(err instanceof Error ? err.message : 'Error al subir el archivo')
     } finally {
       setUploading(false)
+      onUploadingChange?.(false)
     }
   }
 

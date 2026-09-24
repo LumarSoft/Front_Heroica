@@ -14,6 +14,7 @@ import { CBU_DIGITOS } from '@/lib/schemas'
 import { handleDniChange, handleCuitChange } from '@/lib/validators'
 import type { SolicitudFormState } from './solicitudFormUtils'
 import { SolicitudArchivoAdjunto } from './SolicitudArchivoAdjunto'
+import { SolicitudArchivosAdjuntos } from './SolicitudArchivosAdjuntos'
 import { CodigoPostalSelector } from '@/components/CodigoPostalSelector'
 
 const ACCEPT_PDF_PNG = 'application/pdf,image/png,.pdf,.png'
@@ -48,6 +49,7 @@ interface AltaColaboradorFieldsProps {
   puestos: Puesto[]
   sucursalNombre: string
   onChange: (patch: Partial<SolicitudFormState>) => void
+  onUploadingChange?: (uploading: boolean) => void
 }
 
 function validarFecha(valor: string, max: string): string | null {
@@ -58,7 +60,13 @@ function validarFecha(valor: string, max: string): string | null {
   return null
 }
 
-export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange }: AltaColaboradorFieldsProps) {
+export function AltaColaboradorFields({
+  form,
+  puestos,
+  sucursalNombre,
+  onChange,
+  onUploadingChange,
+}: AltaColaboradorFieldsProps) {
   const today = new Date().toISOString().split('T')[0]
   const puestosOptions = puestos.map(p => ({ value: String(p.id), label: p.nombre }))
 
@@ -397,6 +405,7 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
                   onChange({ alta_carnet_archivo_url: url, alta_carnet_archivo_nombre: nombre })
                 }
                 onRemove={() => onChange({ alta_carnet_archivo_url: '', alta_carnet_archivo_nombre: '' })}
+                onUploadingChange={onUploadingChange}
               />
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-[#5A6070]">Vencimiento del carnet *</Label>
@@ -418,32 +427,29 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
         subtitle="Opcional: podés guardar la ficha sin adjuntos y completarlos más adelante editando la solicitud. Todos los adjuntos aceptan PDF o PNG; la foto también puede ser imagen JPG"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <SolicitudArchivoAdjunto
+          <SolicitudArchivosAdjuntos
             label="DNI (ambos lados)"
             uploadHint="Archivo PDF o PNG"
             accept={ACCEPT_PDF_PNG}
-            url={form.alta_doc_dni_url}
-            nombre={form.alta_doc_dni_nombre}
-            onUpload={(url, nombre) => onChange({ alta_doc_dni_url: url, alta_doc_dni_nombre: nombre })}
-            onRemove={() => onChange({ alta_doc_dni_url: '', alta_doc_dni_nombre: '' })}
+            archivos={form.alta_doc_dni_archivos}
+            onChange={archivos => onChange({ alta_doc_dni_archivos: archivos })}
+            onUploadingChange={onUploadingChange}
           />
-          <SolicitudArchivoAdjunto
+          <SolicitudArchivosAdjuntos
             label="DDJJ domicilio"
             uploadHint="Archivo PDF o PNG"
             accept={ACCEPT_PDF_PNG}
-            url={form.alta_doc_ddjj_url}
-            nombre={form.alta_doc_ddjj_nombre}
-            onUpload={(url, nombre) => onChange({ alta_doc_ddjj_url: url, alta_doc_ddjj_nombre: nombre })}
-            onRemove={() => onChange({ alta_doc_ddjj_url: '', alta_doc_ddjj_nombre: '' })}
+            archivos={form.alta_doc_ddjj_archivos}
+            onChange={archivos => onChange({ alta_doc_ddjj_archivos: archivos })}
+            onUploadingChange={onUploadingChange}
           />
-          <SolicitudArchivoAdjunto
+          <SolicitudArchivosAdjuntos
             label="Descripción de puesto firmada"
             uploadHint="Archivo PDF o PNG"
             accept={ACCEPT_PDF_PNG}
-            url={form.alta_doc_puesto_url}
-            nombre={form.alta_doc_puesto_nombre}
-            onUpload={(url, nombre) => onChange({ alta_doc_puesto_url: url, alta_doc_puesto_nombre: nombre })}
-            onRemove={() => onChange({ alta_doc_puesto_url: '', alta_doc_puesto_nombre: '' })}
+            archivos={form.alta_doc_puesto_archivos}
+            onChange={archivos => onChange({ alta_doc_puesto_archivos: archivos })}
+            onUploadingChange={onUploadingChange}
           />
           <SolicitudArchivoAdjunto
             label="Foto del colaborador"
@@ -453,24 +459,23 @@ export function AltaColaboradorFields({ form, puestos, sucursalNombre, onChange 
             nombre={form.alta_doc_foto_nombre}
             onUpload={(url, nombre) => onChange({ alta_doc_foto_url: url, alta_doc_foto_nombre: nombre })}
             onRemove={() => onChange({ alta_doc_foto_url: '', alta_doc_foto_nombre: '' })}
+            onUploadingChange={onUploadingChange}
           />
-          <SolicitudArchivoAdjunto
+          <SolicitudArchivosAdjuntos
             label="Normas de convivencia firmadas"
             uploadHint="Archivo PDF o PNG"
             accept={ACCEPT_PDF_PNG}
-            url={form.alta_doc_normas_url}
-            nombre={form.alta_doc_normas_nombre}
-            onUpload={(url, nombre) => onChange({ alta_doc_normas_url: url, alta_doc_normas_nombre: nombre })}
-            onRemove={() => onChange({ alta_doc_normas_url: '', alta_doc_normas_nombre: '' })}
+            archivos={form.alta_doc_normas_archivos}
+            onChange={archivos => onChange({ alta_doc_normas_archivos: archivos })}
+            onUploadingChange={onUploadingChange}
           />
-          <SolicitudArchivoAdjunto
+          <SolicitudArchivosAdjuntos
             label="Constancia de entrega de uniforme"
             uploadHint="Archivo PDF o PNG"
             accept={ACCEPT_PDF_PNG}
-            url={form.alta_doc_uniforme_url}
-            nombre={form.alta_doc_uniforme_nombre}
-            onUpload={(url, nombre) => onChange({ alta_doc_uniforme_url: url, alta_doc_uniforme_nombre: nombre })}
-            onRemove={() => onChange({ alta_doc_uniforme_url: '', alta_doc_uniforme_nombre: '' })}
+            archivos={form.alta_doc_uniforme_archivos}
+            onChange={archivos => onChange({ alta_doc_uniforme_archivos: archivos })}
+            onUploadingChange={onUploadingChange}
           />
         </div>
 

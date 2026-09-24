@@ -1,9 +1,14 @@
 'use client'
 
+import { FileText } from 'lucide-react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import type { RhSolicitud } from '@/lib/types'
 import { SolicitudResumenFilas } from './SolicitudResumenFilas'
 import { formatCurrency } from '@/lib/solicitud-resumen'
 import { getProvinciaPostalNombre } from '@/lib/codigos-postales'
+import { API_ENDPOINTS } from '@/lib/config'
+import { openArchivo } from '@/lib/document-url'
 
 interface AltaDetallesResumenProps {
   solicitud: RhSolicitud
@@ -15,9 +20,30 @@ export function AltaDetallesResumen({ solicitud }: AltaDetallesResumenProps) {
   const archivosTabla = solicitud.archivos ?? []
   const adjLegacy = detalles.adjuntos as Record<string, { url?: string; nombre_original?: string } | null> | undefined
   const carnetAdjLegacy = detalles.carnet_adjunto as { url?: string } | undefined
-  const tieneAdj = (k: string) => archivosTabla.some(a => a.tipo_doc === k) || Boolean(adjLegacy?.[k]?.url)
+  const cantidadAdjuntos = (tipoDoc: string) => {
+    const cantidadTabla = archivosTabla.filter(archivo => archivo.tipo_doc === tipoDoc).length
+    if (cantidadTabla > 0) return cantidadTabla
+    return adjLegacy?.[tipoDoc]?.url ? 1 : 0
+  }
   const tieneCarnetArchivo =
     archivosTabla.some(a => a.tipo_doc === 'carnet_manipulacion_alimentos') || Boolean(carnetAdjLegacy?.url)
+  const etiquetasArchivos: Record<string, string> = {
+    dni_frente_dorso: 'DNI',
+    ddjj_domicilio: 'DDJJ domicilio',
+    descripcion_puesto_firmada: 'Descripción de puesto',
+    foto_colaborador: 'Foto',
+    normas_convivencia: 'Normas de convivencia',
+    constancia_uniforme: 'Constancia de uniforme',
+    carnet_manipulacion_alimentos: 'Carnet',
+  }
+
+  async function abrirAdjunto(url: string) {
+    try {
+      await openArchivo(API_ENDPOINTS.RRHH_SOLICITUDES.OPEN_ARCHIVO(solicitud.id), { url })
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'No se pudo abrir el archivo')
+    }
+  }
   return (
     <div className="space-y-4">
       <div>
@@ -130,18 +156,22 @@ export function AltaDetallesResumen({ solicitud }: AltaDetallesResumenProps) {
             ['foto_colaborador', 'Foto'],
             ['normas_convivencia', 'Normas conv.'],
             ['constancia_uniforme', 'Constancia uniforme'],
-          ].map(([key, short]) => (
-            <span
-              key={key}
-              className={`text-[10px] px-2 py-1 rounded-full font-medium border ${
-                tieneAdj(key)
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : 'bg-[#F8F9FA] text-[#9AA0AC] border-[#E0E0E0]'
-              }`}
-            >
-              {short}
-            </span>
-          ))}
+          ].map(([key, short]) => {
+            const cantidad = cantidadAdjuntos(key)
+            return (
+              <span
+                key={key}
+                className={`text-[10px] px-2 py-1 rounded-full font-medium border ${
+                  cantidad > 0
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-[#F8F9FA] text-[#9AA0AC] border-[#E0E0E0]'
+                }`}
+              >
+                {short}
+                {cantidad > 1 ? ` · ${cantidad}` : ''}
+              </span>
+            )
+          })}
           {detalles.carnet_manipulacion_alimentos === true ? (
             <span
               className={`text-[10px] px-2 py-1 rounded-full font-medium border ${
@@ -154,6 +184,25 @@ export function AltaDetallesResumen({ solicitud }: AltaDetallesResumenProps) {
             </span>
           ) : null}
         </div>
+        {archivosTabla.length > 0 ? (
+          <div className="mt-3 grid grid-cols-1 gap-1.5">
+            {archivosTabla.map((archivo, index) => (
+              <Button
+                key={`${archivo.tipo_doc}-${archivo.url}-${index}`}
+                type="button"
+                variant="outline"
+                onClick={() => void abrirAdjunto(archivo.url)}
+                className="h-auto min-h-9 w-full justify-start whitespace-normal px-3 py-2 text-left"
+              >
+                <FileText className="w-4 h-4 shrink-0 text-[#002868]" />
+                <span className="min-w-0 truncate">
+                  {etiquetasArchivos[archivo.tipo_doc] ?? archivo.tipo_doc}:{' '}
+                  {archivo.nombre_original ?? 'Archivo adjunto'}
+                </span>
+              </Button>
+            ))}
+          </div>
+        ) : null}
       </div>
     </div>
   )

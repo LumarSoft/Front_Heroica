@@ -1,5 +1,13 @@
 import type { SolicitudFormState } from '@/lib/types'
 import { mapEmpleadoNovedadToApiPayload } from './solicitudEmpleadosUtils'
+
+function mapAdjuntos(archivos: Array<{ url: string; nombre: string }>) {
+  return archivos.map(archivo => ({
+    url: archivo.url.trim(),
+    nombre_original: archivo.nombre.trim() || null,
+  }))
+}
+
 export function buildSolicitudDetalles(form: SolicitudFormState) {
   switch (form.tipo) {
     case 'Altas':
@@ -42,30 +50,15 @@ export function buildSolicitudDetalles(form: SolicitudFormState) {
           : null,
         carnet_fecha_vencimiento: form.alta_carnet ? form.alta_carnet_vencimiento : null,
         adjuntos: {
-          dni_frente_dorso: {
-            url: form.alta_doc_dni_url.trim(),
-            nombre_original: form.alta_doc_dni_nombre.trim() || null,
-          },
-          ddjj_domicilio: {
-            url: form.alta_doc_ddjj_url.trim(),
-            nombre_original: form.alta_doc_ddjj_nombre.trim() || null,
-          },
-          descripcion_puesto_firmada: {
-            url: form.alta_doc_puesto_url.trim(),
-            nombre_original: form.alta_doc_puesto_nombre.trim() || null,
-          },
+          dni_frente_dorso: mapAdjuntos(form.alta_doc_dni_archivos),
+          ddjj_domicilio: mapAdjuntos(form.alta_doc_ddjj_archivos),
+          descripcion_puesto_firmada: mapAdjuntos(form.alta_doc_puesto_archivos),
           foto_colaborador: {
             url: form.alta_doc_foto_url.trim(),
             nombre_original: form.alta_doc_foto_nombre.trim() || null,
           },
-          normas_convivencia: {
-            url: form.alta_doc_normas_url.trim(),
-            nombre_original: form.alta_doc_normas_nombre.trim() || null,
-          },
-          constancia_uniforme: {
-            url: form.alta_doc_uniforme_url.trim(),
-            nombre_original: form.alta_doc_uniforme_nombre.trim() || null,
-          },
+          normas_convivencia: mapAdjuntos(form.alta_doc_normas_archivos),
+          constancia_uniforme: mapAdjuntos(form.alta_doc_uniforme_archivos),
         },
       }
     case 'Bajas':

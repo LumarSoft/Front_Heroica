@@ -1,5 +1,10 @@
 import type { RhSolicitudTipo } from './types'
 
+export interface SolicitudArchivoForm {
+  url: string
+  nombre: string
+}
+
 export interface EmpleadoNovedadData {
   personal_id: number
   personal_nombre: string
@@ -68,18 +73,13 @@ export interface SolicitudFormState {
   alta_propuesta_economica: string
   alta_beneficios: string
   alta_otras_observaciones: string
-  alta_doc_dni_url: string
-  alta_doc_dni_nombre: string
-  alta_doc_ddjj_url: string
-  alta_doc_ddjj_nombre: string
-  alta_doc_puesto_url: string
-  alta_doc_puesto_nombre: string
+  alta_doc_dni_archivos: SolicitudArchivoForm[]
+  alta_doc_ddjj_archivos: SolicitudArchivoForm[]
+  alta_doc_puesto_archivos: SolicitudArchivoForm[]
   alta_doc_foto_url: string
   alta_doc_foto_nombre: string
-  alta_doc_normas_url: string
-  alta_doc_normas_nombre: string
-  alta_doc_uniforme_url: string
-  alta_doc_uniforme_nombre: string
+  alta_doc_normas_archivos: SolicitudArchivoForm[]
+  alta_doc_uniforme_archivos: SolicitudArchivoForm[]
   alta_periodo_prueba: boolean
   alta_periodo_prueba_dias: string
   alta_carnet: boolean

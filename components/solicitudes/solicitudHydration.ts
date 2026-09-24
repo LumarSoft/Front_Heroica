@@ -43,18 +43,13 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
     alta_propuesta_economica: detalles.propuesta_economica != null ? String(detalles.propuesta_economica) : '',
     alta_beneficios: String(detalles.beneficios ?? ''),
     alta_otras_observaciones: String(detalles.otras_observaciones_alta ?? ''),
-    alta_doc_dni_url: '',
-    alta_doc_dni_nombre: '',
-    alta_doc_ddjj_url: '',
-    alta_doc_ddjj_nombre: '',
-    alta_doc_puesto_url: '',
-    alta_doc_puesto_nombre: '',
+    alta_doc_dni_archivos: [],
+    alta_doc_ddjj_archivos: [],
+    alta_doc_puesto_archivos: [],
     alta_doc_foto_url: '',
     alta_doc_foto_nombre: '',
-    alta_doc_normas_url: '',
-    alta_doc_normas_nombre: '',
-    alta_doc_uniforme_url: '',
-    alta_doc_uniforme_nombre: '',
+    alta_doc_normas_archivos: [],
+    alta_doc_uniforme_archivos: [],
     alta_periodo_prueba: detalles.periodo_prueba === true,
     alta_periodo_prueba_dias: detalles.periodo_prueba_dias ? String(detalles.periodo_prueba_dias) : '180',
     alta_carnet: detalles.carnet_manipulacion_alimentos === true,
@@ -88,27 +83,19 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
     const findArchivo = (tipoDoc: string) => archivos.find(a => a.tipo_doc === tipoDoc)
     // Fallback a adjuntos del JSON para registros anteriores a RH-60
     const fallbackAdj = (key: string) => readAltaAdjuntoSlot(detalles, key)
+    const findArchivos = (tipoDoc: string) => {
+      const encontrados = archivos
+        .filter(archivo => archivo.tipo_doc === tipoDoc)
+        .map(archivo => ({ url: archivo.url, nombre: archivo.nombre_original ?? '' }))
+      if (encontrados.length > 0) return encontrados
+      const legacy = fallbackAdj(tipoDoc)
+      return legacy.url ? [legacy] : []
+    }
 
-    const dniA = findArchivo('dni_frente_dorso')
-    const ddjjA = findArchivo('ddjj_domicilio')
-    const puestoA = findArchivo('descripcion_puesto_firmada')
     const fotoA = findArchivo('foto_colaborador')
-    const normasA = findArchivo('normas_convivencia')
-    const uniformeA = findArchivo('constancia_uniforme')
     const carnetA = findArchivo('carnet_manipulacion_alimentos')
 
-    const dniS = dniA ? { url: dniA.url, nombre: dniA.nombre_original ?? '' } : fallbackAdj('dni_frente_dorso')
-    const ddjjS = ddjjA ? { url: ddjjA.url, nombre: ddjjA.nombre_original ?? '' } : fallbackAdj('ddjj_domicilio')
-    const puestoS = puestoA
-      ? { url: puestoA.url, nombre: puestoA.nombre_original ?? '' }
-      : fallbackAdj('descripcion_puesto_firmada')
     const fotoS = fotoA ? { url: fotoA.url, nombre: fotoA.nombre_original ?? '' } : fallbackAdj('foto_colaborador')
-    const normasS = normasA
-      ? { url: normasA.url, nombre: normasA.nombre_original ?? '' }
-      : fallbackAdj('normas_convivencia')
-    const uniformeS = uniformeA
-      ? { url: uniformeA.url, nombre: uniformeA.nombre_original ?? '' }
-      : fallbackAdj('constancia_uniforme')
 
     // carnet_adjunto legacy desde JSON
     const carnetSlotLegacy = detalles.carnet_adjunto as { url?: string; nombre_original?: string } | null | undefined
@@ -118,18 +105,13 @@ export function createSolicitudFormStateFromSolicitud(solicitud: RhSolicitud): S
 
     return {
       ...base,
-      alta_doc_dni_url: dniS.url,
-      alta_doc_dni_nombre: dniS.nombre,
-      alta_doc_ddjj_url: ddjjS.url,
-      alta_doc_ddjj_nombre: ddjjS.nombre,
-      alta_doc_puesto_url: puestoS.url,
-      alta_doc_puesto_nombre: puestoS.nombre,
+      alta_doc_dni_archivos: findArchivos('dni_frente_dorso'),
+      alta_doc_ddjj_archivos: findArchivos('ddjj_domicilio'),
+      alta_doc_puesto_archivos: findArchivos('descripcion_puesto_firmada'),
       alta_doc_foto_url: fotoS.url,
       alta_doc_foto_nombre: fotoS.nombre,
-      alta_doc_normas_url: normasS.url,
-      alta_doc_normas_nombre: normasS.nombre,
-      alta_doc_uniforme_url: uniformeS.url,
-      alta_doc_uniforme_nombre: uniformeS.nombre,
+      alta_doc_normas_archivos: findArchivos('normas_convivencia'),
+      alta_doc_uniforme_archivos: findArchivos('constancia_uniforme'),
       alta_carnet_archivo_url: carnetUrl,
       alta_carnet_archivo_nombre: carnetNombre,
     }

@@ -29,6 +29,7 @@ interface SolicitudSpecificFieldsProps {
   sucursales?: Sucursal[]
   isEditing?: boolean
   onChange: (patch: Partial<SolicitudFormState>) => void
+  onUploadingChange?: (uploading: boolean) => void
 }
 
 export function SolicitudSpecificFields({
@@ -42,9 +43,18 @@ export function SolicitudSpecificFields({
   sucursales = [],
   isEditing = false,
   onChange,
+  onUploadingChange,
 }: SolicitudSpecificFieldsProps) {
   if (form.tipo === 'Altas') {
-    return <AltaColaboradorFields form={form} puestos={puestos} sucursalNombre={sucursalNombre} onChange={onChange} />
+    return (
+      <AltaColaboradorFields
+        form={form}
+        puestos={puestos}
+        sucursalNombre={sucursalNombre}
+        onChange={onChange}
+        onUploadingChange={onUploadingChange}
+      />
+    )
   }
 
   if (form.tipo === 'Bajas') {
