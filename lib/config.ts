@@ -81,6 +81,7 @@ export const API_ENDPOINTS = {
     APROBAR_BULK: `${API_URL}/api/pagos-pendientes/bulk/aprobar`,
     RECHAZAR_BULK: `${API_URL}/api/pagos-pendientes/bulk/rechazar`,
     GET_HISTORIAL: (userId: number) => `${API_URL}/api/pagos-pendientes/historial/${userId}`,
+    GET_MIS_SOLICITUDES: `${API_URL}/api/pagos-pendientes/mis-solicitudes`,
   },
   IMPORTACION_BANCARIA: {
     BANCOS_SOPORTADOS: `${API_URL}/api/importacion-bancaria/bancos`,

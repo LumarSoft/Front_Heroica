@@ -61,6 +61,7 @@ export interface BancoParcial {
 
 export interface PagoPendiente {
   id: number
+  user_id?: number
   fecha: string
   concepto: string
   monto: number
@@ -80,7 +81,25 @@ export interface PagoPendiente {
   motivo_rechazo?: string
   usuario_creador_nombre?: string
   usuario_revisor_nombre?: string
+  fecha_revision?: string
   created_at?: string
+  updated_at?: string
+}
+
+export type SeguimientoEstadoFiltro = 'todos' | 'pendiente' | 'aprobado' | 'rechazado'
+export type PagosPendientesTab = 'pendientes' | 'seguimiento' | 'historial'
+
+export interface SeguimientoPagosResumen {
+  todos: number
+  pendiente: number
+  aprobado: number
+  rechazado: number
+}
+
+export interface MisSolicitudesPagoResponse {
+  success: boolean
+  data: PagoPendiente[]
+  message?: string
 }
 
 export interface Categoria {

@@ -5,9 +5,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
-import { AlertTriangle, ArrowLeft, Plus } from 'lucide-react'
 import { ErrorBanner } from '@/components/ui/error-banner'
-import { Button } from '@/components/ui/button'
 import NuevoMovimientoDialog from '@/components/NuevoMovimientoDialog'
 import { useAuthStore } from '@/store/authStore'
 import { useDocumentTitle } from '@/hooks/use-document-title'
@@ -17,29 +15,30 @@ import { AprobarDialog } from '@/components/pagos-pendientes/AprobarDialog'
 import { RechazarDialog } from '@/components/pagos-pendientes/RechazarDialog'
 import { HistorialFiltros } from '@/components/pagos-pendientes/HistorialFiltros'
 import { AprobarMasivoDialog } from '@/components/pagos-pendientes/AprobarMasivoDialog'
+import { MisSolicitudesPanel } from '@/components/pagos-pendientes/MisSolicitudesPanel'
+import { PagosPendientesHeader } from '@/components/pagos-pendientes/PagosPendientesHeader'
+import { PagosPendientesNavigation } from '@/components/pagos-pendientes/PagosPendientesNavigation'
 import { NotificarEventoDialog, type NotificarEventoData } from '@/components/notificaciones/NotificarEventoDialog'
-import type { PagoPendiente } from '@/lib/types'
+import { useMisSolicitudes } from '@/hooks/use-mis-solicitudes'
+import { usePagosPendientesActions } from '@/hooks/use-pagos-pendientes-actions'
+import type { PagoPendiente, PagosPendientesTab } from '@/lib/types'
 
 export default function PagosPendientesPage() {
   const params = useParams()
+  const sucursalId = Number(params.id)
   const router = useRouter()
   const user = useAuthStore(state => state.user)
+  const isEmployee = user?.rol === 'empleado'
+  const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin'
   const searchParams = useSearchParams()
   const moneda = (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS'
 
   const [isLoading, setIsLoading] = useState(true)
   const [pagosPendientes, setPagosPendientes] = useState<PagoPendiente[]>([])
   const [historial, setHistorial] = useState<PagoPendiente[]>([])
-  const [activeTab, setActiveTab] = useState<'pendientes' | 'historial'>('pendientes')
+  const [activeTab, setActiveTab] = useState<PagosPendientesTab>('pendientes')
   const [error, setError] = useState('')
 
-  const [isAprobarDialogOpen, setIsAprobarDialogOpen] = useState(false)
-  const [isRechazarDialogOpen, setIsRechazarDialogOpen] = useState(false)
-  const [isAprobacionMovimientoOpen, setIsAprobacionMovimientoOpen] = useState(false)
-  const [selectedPago, setSelectedPago] = useState<PagoPendiente | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
-  const [tipoCaja, setTipoCaja] = useState<'efectivo' | 'banco'>('efectivo')
-  const [motivoRechazo, setMotivoRechazo] = useState('')
   const [isNuevoMovimientoDialogOpen, setIsNuevoMovimientoDialogOpen] = useState(false)
 
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'aprobado' | 'rechazado'>('todos')
@@ -48,22 +47,27 @@ export default function PagosPendientesPage() {
   const [sucursalNombre, setSucursalNombre] = useState('')
   const [notifyData, setNotifyData] = useState<NotificarEventoData | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
-  const [isAprobarMasivoOpen, setIsAprobarMasivoOpen] = useState(false)
-  const [isRechazoMasivo, setIsRechazoMasivo] = useState(false)
+  const visibleTab = isEmployee ? 'seguimiento' : activeTab
 
-  // Identifica la sucursal en la pestaña (útil con varias ventanas abiertas)
   useDocumentTitle(sucursalNombre ? `${sucursalNombre} · Pagos Pendientes` : '')
+
+  const {
+    solicitudes: misSolicitudes,
+    isLoading: isSeguimientoLoading,
+    error: seguimientoError,
+    refresh: refreshMisSolicitudes,
+  } = useMisSolicitudes({ sucursalId, moneda, enabled: visibleTab === 'seguimiento' })
 
   useEffect(() => {
     if (!params.id) return
-    apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(Number(params.id)))
+    apiFetch(API_ENDPOINTS.SUCURSALES.GET_BY_ID(sucursalId))
       .then(r => r.json())
       .then(d => {
         setSucursalActiva(Boolean(d.data?.activo))
         setSucursalNombre(d.data?.nombre || '')
       })
       .catch(() => setSucursalActiva(true))
-  }, [params.id])
+  }, [sucursalId])
 
   const isReadOnly = sucursalActiva === false
 
@@ -71,9 +75,7 @@ export default function PagosPendientesPage() {
     try {
       setIsLoading(true)
       setError('')
-      const response = await apiFetch(
-        `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(Number(params.id))}?moneda=${moneda}`,
-      )
+      const response = await apiFetch(`${API_ENDPOINTS.PAGOS_PENDIENTES.GET_BY_SUCURSAL(sucursalId)}?moneda=${moneda}`)
       const data = await response.json()
       if (!response.ok) throw new Error(data.message || 'Error al cargar pagos pendientes')
       setPagosPendientes(data.data || [])
@@ -83,7 +85,7 @@ export default function PagosPendientesPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [params.id, moneda])
+  }, [sucursalId, moneda])
 
   const fetchHistorial = useCallback(async () => {
     if (!user) return
@@ -91,7 +93,7 @@ export default function PagosPendientesPage() {
       setIsLoading(true)
       setError('')
       const response = await apiFetch(
-        `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(user.id)}?sucursal_id=${params.id}&moneda=${moneda}`,
+        `${API_ENDPOINTS.PAGOS_PENDIENTES.GET_HISTORIAL(user.id)}?sucursal_id=${sucursalId}&moneda=${moneda}`,
       )
       const data = await response.json()
       if (!response.ok) throw new Error(data.message || 'Error al cargar historial')
@@ -101,99 +103,48 @@ export default function PagosPendientesPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [params.id, user, moneda])
+  }, [sucursalId, user, moneda])
 
   useEffect(() => {
-    if (activeTab === 'pendientes') fetchPagosPendientes()
-    else fetchHistorial()
-  }, [activeTab, fetchPagosPendientes, fetchHistorial])
+    if (visibleTab === 'pendientes') void fetchPagosPendientes()
+    if (visibleTab === 'historial') void fetchHistorial()
+  }, [visibleTab, fetchPagosPendientes, fetchHistorial])
 
-  const handleOpenAprobar = (pago: PagoPendiente) => {
-    setSelectedPago(pago)
-    setTipoCaja('efectivo')
-    setIsAprobarDialogOpen(true)
-  }
+  const handlePagoRechazado = useCallback((pagoId: number): void => {
+    setNotifyData({ tipo: 'pago_pendiente_rechazado', entidadId: pagoId })
+  }, [])
 
-  const handleSelectCajaYContinuar = (caja: 'efectivo' | 'banco') => {
-    setTipoCaja(caja)
-    setIsAprobarDialogOpen(false)
-    setIsAprobacionMovimientoOpen(true)
-  }
-
-  const handleOpenRechazar = (pago: PagoPendiente) => {
-    setSelectedPago(pago)
-    setMotivoRechazo('')
-    setIsRechazarDialogOpen(true)
-  }
-
-  const handleRechazar = async () => {
-    if ((!selectedPago && !isRechazoMasivo) || !user || !motivoRechazo.trim()) {
-      setError('Debe proporcionar un motivo de rechazo')
-      setTimeout(() => setError(''), 3000)
-      return
-    }
-    try {
-      setIsSaving(true)
-      setError('')
-      const response = await apiFetch(
-        isRechazoMasivo
-          ? API_ENDPOINTS.PAGOS_PENDIENTES.RECHAZAR_BULK
-          : API_ENDPOINTS.PAGOS_PENDIENTES.RECHAZAR(selectedPago!.id),
-        {
-          method: 'PUT',
-          body: JSON.stringify({
-            usuario_revisor_id: user.id,
-            motivo_rechazo: motivoRechazo,
-            ...(isRechazoMasivo && { ids: Array.from(selectedIds) }),
-          }),
-        },
-      )
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Error al rechazar pago')
-      toast.success(isRechazoMasivo ? `${selectedIds.size} pagos rechazados` : 'Pago rechazado exitosamente')
-      setIsRechazarDialogOpen(false)
-      const pagoId = selectedPago?.id
-      setIsRechazoMasivo(false)
-      fetchPagosPendientes()
-      if (pagoId) setNotifyData({ tipo: 'pago_pendiente_rechazado', entidadId: pagoId })
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al rechazar pago'
-      setError(message)
-      setTimeout(() => setError(''), 3000)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const handleAprobarMasivo = async (datos: {
-    tipo_caja: 'efectivo' | 'banco'
-    banco_id?: number
-    medio_pago_id?: number
-    numero_cheque?: string
-  }) => {
-    if (!user || selectedIds.size === 0) return
-    try {
-      setIsSaving(true)
-      const response = await apiFetch(API_ENDPOINTS.PAGOS_PENDIENTES.APROBAR_BULK, {
-        method: 'PUT',
-        body: JSON.stringify({ ids: Array.from(selectedIds), usuario_revisor_id: user.id, ...datos }),
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Error al aprobar pagos')
-      toast.success(`${selectedIds.size} pagos aprobados`)
-      setIsAprobarMasivoOpen(false)
-      await fetchPagosPendientes()
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al aprobar pagos')
-    } finally {
-      setIsSaving(false)
-    }
-  }
+  const {
+    actionError,
+    isSaving,
+    selectedPago,
+    tipoCaja,
+    motivoRechazo,
+    isAprobarDialogOpen,
+    isRechazarDialogOpen,
+    isAprobacionMovimientoOpen,
+    isAprobarMasivoOpen,
+    setMotivoRechazo,
+    setSelectedPago,
+    setIsAprobarDialogOpen,
+    setIsRechazarDialogOpen,
+    setIsAprobacionMovimientoOpen,
+    setIsAprobarMasivoOpen,
+    openAprobar,
+    selectCaja,
+    openRechazar,
+    openRechazoMasivo,
+    rechazar,
+    aprobarMasivo,
+  } = usePagosPendientesActions({
+    userId: user?.id,
+    selectedIds,
+    refreshPendientes: fetchPagosPendientes,
+    refreshSeguimiento: refreshMisSolicitudes,
+    onPagoRechazado: handlePagoRechazado,
+  })
 
   const total = calcularTotal(pagosPendientes)
-  const isEmployee = user?.rol === 'empleado'
-  const isAdmin = user?.rol === 'admin' || user?.rol === 'superadmin'
-
   const usuariosRevisores = Array.from(
     new Set(historial.map(p => p.usuario_revisor_nombre).filter((n): n is string => Boolean(n))),
   ).sort()
@@ -210,85 +161,31 @@ export default function PagosPendientesPage() {
     return true
   })
 
-  const displayData = activeTab === 'pendientes' ? pagosPendientes : isAdmin ? historialFiltrado : historial
+  const displayData = visibleTab === 'pendientes' ? pagosPendientes : isAdmin ? historialFiltrado : historial
 
   return (
     <div className="min-h-full bg-gradient-to-br from-[#F8F9FA] to-[#E8EAED]">
-      <header className="bg-white border-b border-[#E0E0E0] sticky top-0 z-40">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex items-center h-14 gap-3">
-            <Button
-              onClick={() => router.push(`/sucursales/${params.id}?moneda=${moneda}`)}
-              variant="ghost"
-              size="icon"
-              className="w-9 h-9 text-[#5A6070] hover:text-[#002868] hover:bg-[#002868]/8 cursor-pointer rounded-lg"
-              aria-label="Volver a la sucursal"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9AA0AC] leading-none mb-1">
-                Sucursal
-              </p>
-              <h2 className="text-sm sm:text-base font-semibold text-[#002868] truncate leading-none">
-                {sucursalNombre || 'Cargando...'}
-              </h2>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PagosPendientesHeader
+        sucursalNombre={sucursalNombre}
+        isReadOnly={isReadOnly}
+        onBack={() => router.push(`/sucursales/${sucursalId}?moneda=${moneda}`)}
+        onNuevoMovimiento={() => setIsNuevoMovimientoDialogOpen(true)}
+      />
 
-      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <ErrorBanner error={error} />
+      <main className="container mx-auto px-4 pb-8 sm:px-6">
+        {visibleTab !== 'seguimiento' && <ErrorBanner error={error || actionError} />}
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-[#002868]">Pagos Pendientes</h1>
-            <p className="text-[#666666] mt-1">Gestión y seguimiento de movimientos por autorizar</p>
-          </div>
-          <Button
-            onClick={!isReadOnly ? () => setIsNuevoMovimientoDialogOpen(true) : undefined}
-            disabled={isReadOnly}
-            className="cursor-pointer bg-[#002868] hover:bg-[#003d8f] text-white font-semibold px-6 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 self-end md:self-auto disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
-          >
-            <Plus className="w-5 h-5" strokeWidth={2} />
-            Nuevo Movimiento
-          </Button>
-        </div>
+        <PagosPendientesNavigation
+          activeTab={visibleTab}
+          isEmployee={Boolean(isEmployee)}
+          onTabChange={setActiveTab}
+          onPendientesSelect={() => {
+            setFiltroEstado('todos')
+            setFiltroUsuario('')
+          }}
+        />
 
-        {isReadOnly && (
-          <div className="mb-6 p-4 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-            <p className="text-sm text-amber-800 font-medium">
-              Esta sucursal está <strong>inactiva</strong>. Podés ver los datos pero no crear ni autorizar movimientos.
-            </p>
-          </div>
-        )}
-
-        <div className="flex mb-4 bg-white/50 p-1 rounded-xl border border-[#E0E0E0] w-fit">
-          <button
-            onClick={() => {
-              setActiveTab('pendientes')
-              setFiltroEstado('todos')
-              setFiltroUsuario('')
-            }}
-            className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
-              activeTab === 'pendientes' ? 'bg-[#002868] text-white shadow-md' : 'text-[#666666] hover:bg-[#F0F0F0]'
-            }`}
-          >
-            {isEmployee ? 'Mis Pendientes' : 'Pendientes'}
-          </button>
-          <button
-            onClick={() => setActiveTab('historial')}
-            className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
-              activeTab === 'historial' ? 'bg-[#002868] text-white shadow-md' : 'text-[#666666] hover:bg-[#F0F0F0]'
-            }`}
-          >
-            {isEmployee ? 'Mi Historial' : 'Historial General'}
-          </button>
-        </div>
-
-        {activeTab === 'historial' && isAdmin && (
+        {visibleTab === 'historial' && isAdmin && (
           <HistorialFiltros
             filtroEstado={filtroEstado}
             onFiltroEstadoChange={setFiltroEstado}
@@ -300,32 +197,31 @@ export default function PagosPendientesPage() {
           />
         )}
 
-        <PagosPendientesTable
-          displayData={displayData}
-          activeTab={activeTab}
-          userRole={user?.rol}
-          isReadOnly={isReadOnly}
-          total={total}
-          isLoading={isLoading}
-          onAprobar={handleOpenAprobar}
-          onRechazar={handleOpenRechazar}
-          selectedIds={selectedIds}
-          onSelectionChange={setSelectedIds}
-          onAprobarSeleccionados={() => setIsAprobarMasivoOpen(true)}
-          onRechazarSeleccionados={() => {
-            setSelectedPago(null)
-            setMotivoRechazo('')
-            setIsRechazoMasivo(true)
-            setIsRechazarDialogOpen(true)
-          }}
-        />
+        {visibleTab === 'seguimiento' ? (
+          <MisSolicitudesPanel solicitudes={misSolicitudes} isLoading={isSeguimientoLoading} error={seguimientoError} />
+        ) : (
+          <PagosPendientesTable
+            displayData={displayData}
+            activeTab={visibleTab}
+            userRole={user?.rol}
+            isReadOnly={isReadOnly}
+            total={total}
+            isLoading={isLoading}
+            onAprobar={openAprobar}
+            onRechazar={openRechazar}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
+            onAprobarSeleccionados={() => setIsAprobarMasivoOpen(true)}
+            onRechazarSeleccionados={openRechazoMasivo}
+          />
+        )}
       </main>
 
       <AprobarDialog
         open={isAprobarDialogOpen}
         onOpenChange={setIsAprobarDialogOpen}
         selectedPago={selectedPago}
-        onSelectCaja={handleSelectCajaYContinuar}
+        onSelectCaja={selectCaja}
       />
 
       <RechazarDialog
@@ -333,7 +229,7 @@ export default function PagosPendientesPage() {
         onOpenChange={setIsRechazarDialogOpen}
         motivoRechazo={motivoRechazo}
         onMotivoChange={setMotivoRechazo}
-        onConfirm={handleRechazar}
+        onConfirm={rechazar}
         isSaving={isSaving}
       />
 
@@ -342,19 +238,20 @@ export default function PagosPendientesPage() {
         onOpenChange={setIsAprobarMasivoOpen}
         cantidad={selectedIds.size}
         isSaving={isSaving}
-        onConfirm={handleAprobarMasivo}
+        onConfirm={aprobarMasivo}
       />
 
       <NuevoMovimientoDialog
         isOpen={isNuevoMovimientoDialogOpen}
         onClose={() => setIsNuevoMovimientoDialogOpen(false)}
-        sucursalId={Number(params.id)}
+        sucursalId={sucursalId}
         moneda={moneda}
         isPagoPendiente={true}
         onSuccess={notify => {
           toast.success('Solicitud de movimiento creada correctamente')
-          if (activeTab === 'pendientes') fetchPagosPendientes()
-          else fetchHistorial()
+          if (visibleTab === 'pendientes') void fetchPagosPendientes()
+          if (visibleTab === 'historial') void fetchHistorial()
+          void refreshMisSolicitudes()
           if (notify) setNotifyData(notify)
         }}
       />
@@ -366,7 +263,7 @@ export default function PagosPendientesPage() {
             setIsAprobacionMovimientoOpen(false)
             setSelectedPago(null)
           }}
-          sucursalId={Number(params.id)}
+          sucursalId={sucursalId}
           moneda={moneda}
           cajaTipo={tipoCaja}
           pagoIdToApprove={selectedPago.id}
@@ -391,6 +288,7 @@ export default function PagosPendientesPage() {
             setIsAprobacionMovimientoOpen(false)
             setSelectedPago(null)
             fetchPagosPendientes()
+            void refreshMisSolicitudes()
             if (notify) setNotifyData(notify)
           }}
         />
