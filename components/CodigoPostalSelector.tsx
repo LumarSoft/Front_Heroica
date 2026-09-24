@@ -10,6 +10,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCodigosPostales } from '@/hooks/use-codigos-postales'
+import { CABA_BARRIOS } from '@/lib/codigos-postales'
 import { cn } from '@/lib/utils'
 
 interface CodigoPostalSelectorProps {
@@ -50,6 +51,18 @@ export function CodigoPostalSelector({
     )
   }, [codigos, search])
 
+  const cabaLocalidades = useMemo(() => {
+    const barrios: string[] = [...CABA_BARRIOS]
+    if (localidad && !barrios.includes(localidad)) barrios.unshift(localidad)
+    return barrios
+  }, [localidad])
+
+  const filteredCabaLocalidades = useMemo(() => {
+    const query = normalizeSearch(search.trim())
+    if (!query) return cabaLocalidades
+    return cabaLocalidades.filter(item => normalizeSearch(item).includes(query))
+  }, [cabaLocalidades, search])
+
   const selected = useMemo(
     () => codigos.find(item => item.localidad === localidad && item.codigo_postal === codigoPostal),
     [codigoPostal, codigos, localidad],
@@ -76,12 +89,12 @@ export function CodigoPostalSelector({
     setOpen(false)
     onChange({
       provinciaCodigo: codigo,
-      localidad: codigo === 'C' ? 'Ciudad Autónoma de Buenos Aires' : '',
+      localidad: '',
       codigoPostal: '',
     })
   }
 
-  const manualMode = provinciaCodigo === 'C' || Boolean(error)
+  const manualMode = Boolean(error)
   const selectedLabel = selected
     ? `${selected.localidad} · CP ${selected.codigo_postal}`
     : localidad && codigoPostal
@@ -98,7 +111,7 @@ export function CodigoPostalSelector({
           <div>
             <p className="text-sm font-semibold text-[#1A1A1A]">{title}</p>
             <p className="text-[11px] leading-snug text-[#7A8493]">
-              Elegí la provincia y buscá por localidad o por los 4 dígitos del código postal.
+              Elegí la provincia y buscá por localidad, barrio o por los 4 dígitos del código postal.
             </p>
           </div>
         </div>
@@ -138,7 +151,94 @@ export function CodigoPostalSelector({
           <Label className="text-xs font-semibold text-[#444]">
             Localidad y código postal{required ? <span className="ml-0.5 text-rose-500">*</span> : null}
           </Label>
-          {loadingCodigos ? (
+          {provinciaCodigo === 'C' ? (
+            <div className="grid grid-cols-[1fr_112px] gap-2">
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="h-10 w-full justify-between bg-white px-3 font-normal"
+                  >
+                    <span className={cn('truncate', !localidad && 'text-muted-foreground')}>
+                      {localidad || 'Seleccioná un barrio'}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-0">
+                  <div className="flex items-center gap-2 border-b px-3">
+                    <Search className="h-4 w-4 shrink-0 text-[#8A8F9C]" />
+                    <Input
+                      autoFocus
+                      value={search}
+                      onChange={event => setSearch(event.target.value)}
+                      onKeyDown={event => {
+                        if (event.key !== 'Enter' || !filteredCabaLocalidades[0]) return
+                        event.preventDefault()
+                        onChange({
+                          provinciaCodigo,
+                          localidad: filteredCabaLocalidades[0],
+                          codigoPostal,
+                        })
+                        setOpen(false)
+                        setSearch('')
+                      }}
+                      placeholder="Ej.: Caballito"
+                      className="h-11 border-0 px-0 shadow-none focus-visible:ring-0"
+                    />
+                  </div>
+                  <div role="listbox" aria-label="Barrios de CABA" className="max-h-64 overflow-auto py-1">
+                    {filteredCabaLocalidades.length === 0 ? (
+                      <p className="px-4 py-8 text-center text-sm text-[#8A8F9C]">No encontramos ese barrio.</p>
+                    ) : (
+                      filteredCabaLocalidades.map(item => {
+                        const isSelected = item === localidad
+                        const isLegacy = !CABA_BARRIOS.some(barrio => barrio === item)
+                        return (
+                          <Button
+                            key={item}
+                            type="button"
+                            variant="ghost"
+                            role="option"
+                            aria-selected={isSelected}
+                            className="h-10 w-full justify-start rounded-none px-3 font-normal"
+                            onClick={() => {
+                              onChange({ provinciaCodigo, localidad: item, codigoPostal })
+                              setOpen(false)
+                              setSearch('')
+                            }}
+                          >
+                            <Check className={cn('mr-2 h-4 w-4 shrink-0', isSelected ? 'opacity-100' : 'opacity-0')} />
+                            <span className="truncate">{item}</span>
+                            {isLegacy ? (
+                              <span className="ml-auto pl-2 text-[10px] text-[#8A8F9C]">Registro anterior</span>
+                            ) : null}
+                          </Button>
+                        )
+                      })
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <Input
+                inputMode="numeric"
+                value={codigoPostal}
+                onChange={event =>
+                  onChange({
+                    provinciaCodigo,
+                    localidad,
+                    codigoPostal: event.target.value.replace(/\D/g, '').slice(0, 4),
+                  })
+                }
+                placeholder="CP"
+                maxLength={4}
+                aria-label="Código postal"
+              />
+            </div>
+          ) : loadingCodigos ? (
             <div className="flex h-10 items-center gap-2 rounded-md border bg-white px-3 text-sm text-[#7A8493]">
               <LoadingSpinner className="h-4 w-4" /> Cargando códigos postales…
             </div>
@@ -267,7 +367,8 @@ export function CodigoPostalSelector({
 
       {provinciaCodigo === 'C' ? (
         <p className="mt-2 text-[11px] text-amber-700">
-          En CABA el código exacto depende de la calle y altura; ingresá los 4 dígitos correspondientes al domicilio.
+          Elegí uno de los 48 barrios de CABA. El código exacto depende de la calle y altura; ingresá los 4 dígitos
+          correspondientes al domicilio.
         </p>
       ) : error ? (
         <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-amber-700">
