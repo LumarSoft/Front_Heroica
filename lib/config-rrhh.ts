@@ -61,6 +61,7 @@ export function createRrhhEndpoints(API_URL: string) {
       GET_ANALITICO: (id: number) => `${API_URL}/api/personal/${id}/analitico`,
       GET_ARCHIVOS: (id: number) => `${API_URL}/api/personal/${id}/archivos`,
       OPEN_ARCHIVO: (id: number) => `${API_URL}/api/personal/${id}/archivos/abrir`,
+      UPLOAD_ARCHIVO_TOKEN: (id: number) => `${API_URL}/api/personal/${id}/uploads/token`,
       GET_RECIBOS_SUELDO: (id: number) => `${API_URL}/api/personal/${id}/recibos-sueldo`,
       UPLOAD_RECIBO_SUELDO: (id: number) => `${API_URL}/api/personal/${id}/recibos-sueldo`,
       OPEN_RECIBO_SUELDO: (id: number, reciboId: number) =>

@@ -11,6 +11,7 @@ import { apiFetch } from '@/lib/api'
 import { API_ENDPOINTS } from '@/lib/config'
 import { LABELS_DOCUMENTOS, shortFilename } from '@/lib/personal-documentos'
 import type { PersonalArchivo } from '@/lib/types'
+import { prepararArchivoPersonal } from '@/lib/personal-archivo-upload'
 
 interface UploadFormProps {
   personalId: number
@@ -40,14 +41,26 @@ export function DocumentoUploadForm({ personalId, tipoDoc, onUploaded, onCancel 
     }
     setUploading(true)
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      fd.append('tipo_doc', tipoDoc)
-      if (requiereVencimiento) fd.append('fecha_vencimiento', fechaVencimiento)
+      const preparado = await prepararArchivoPersonal(file, personalId, 'documento')
+      let body: FormData | string
+      if (preparado.modo === 'servidor') {
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('tipo_doc', tipoDoc)
+        if (requiereVencimiento) fd.append('fecha_vencimiento', fechaVencimiento)
+        body = fd
+      } else {
+        body = JSON.stringify({
+          tipo_doc: tipoDoc,
+          fecha_vencimiento: requiereVencimiento ? fechaVencimiento : null,
+          url: preparado.url,
+          nombre_original: preparado.nombre_original,
+        })
+      }
 
       const res = await apiFetch(API_ENDPOINTS.PERSONAL.UPLOAD_DOCUMENTO(personalId), {
         method: 'POST',
-        body: fd,
+        body,
       })
       const data: {
         message?: string
@@ -71,8 +84,8 @@ export function DocumentoUploadForm({ personalId, tipoDoc, onUploaded, onCancel 
         fecha_vencimiento: data.data.fecha_vencimiento ?? null,
         subido_por_nombre: data.data.subido_por_nombre ?? null,
       })
-    } catch {
-      toast.error('Error de conexión al subir el documento')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Error de conexión al subir el documento')
     } finally {
       setUploading(false)
     }

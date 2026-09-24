@@ -13,6 +13,7 @@ import { API_ENDPOINTS } from '@/lib/config'
 import { openArchivo } from '@/lib/document-url'
 import type { PersonalReciboSueldo as ReciboSueldo } from '@/lib/types'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
+import { prepararArchivoPersonal } from '@/lib/personal-archivo-upload'
 
 interface RecibosSueldoTabProps {
   personalId: number
@@ -74,13 +75,25 @@ export function RecibosSueldoTab({ personalId, canEditar }: RecibosSueldoTabProp
     if (!archivo) return
     setUploading(true)
     try {
-      const data = new FormData()
-      data.append('file', archivo)
-      data.append('mes', String(periodo))
-      data.append('anio', String(anio))
+      const preparado = await prepararArchivoPersonal(archivo, personalId, 'recibo')
+      let body: FormData | string
+      if (preparado.modo === 'servidor') {
+        const data = new FormData()
+        data.append('file', archivo)
+        data.append('mes', String(periodo))
+        data.append('anio', String(anio))
+        body = data
+      } else {
+        body = JSON.stringify({
+          mes: periodo,
+          anio,
+          url: preparado.url,
+          nombre_original: preparado.nombre_original,
+        })
+      }
       const response = await apiFetch(API_ENDPOINTS.PERSONAL.UPLOAD_RECIBO_SUELDO(personalId), {
         method: 'POST',
-        body: data,
+        body,
       })
       const result: { message?: string } = await response.json()
       if (!response.ok) throw new Error(result.message || 'No se pudo subir el recibo')
