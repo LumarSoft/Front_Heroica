@@ -8,10 +8,13 @@ import { apiFetch } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { ErrorBanner } from '@/components/ui/error-banner'
 import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
+import { Checkbox } from '@/components/ui/checkbox'
 import { LegajosTable } from '@/components/legajos/LegajosTable'
+import { LegajosVencimientosAlert } from '@/components/legajos/LegajosVencimientosAlert'
 import type { Personal, Puesto, Sucursal } from '@/lib/types'
 
 type EstadoFiltro = 'todos' | 'activos' | 'inactivos'
+type CondicionFiltro = 'todas' | '1' | '2'
 
 const ESTADO_OPTIONS: { value: EstadoFiltro; label: string }[] = [
   { value: 'todos', label: 'Todos' },
@@ -32,6 +35,8 @@ export default function LegajosPage() {
 
   const [filterEstado, setFilterEstado] = useState<EstadoFiltro>('activos')
   const [filterPuestoId, setFilterPuestoId] = useState<number | ''>('')
+  const [soloConIncidencias, setSoloConIncidencias] = useState(false)
+  const [filterCondicion, setFilterCondicion] = useState<CondicionFiltro>('todas')
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -70,9 +75,16 @@ export default function LegajosPage() {
       if (filterEstado === 'activos' && !p.activo) return false
       if (filterEstado === 'inactivos' && p.activo) return false
       if (filterPuestoId !== '' && p.puesto_id !== filterPuestoId) return false
+      if (filterCondicion !== 'todas' && Number(p.condicion_laboral) !== Number(filterCondicion)) return false
+      if (
+        soloConIncidencias &&
+        (p.adjuntos_faltantes?.length ?? 0) === 0 &&
+        (p.vencimientos_proximos?.length ?? 0) === 0
+      )
+        return false
       return true
     })
-  }, [personal, filterEstado, filterPuestoId])
+  }, [personal, filterEstado, filterPuestoId, soloConIncidencias, filterCondicion])
 
   if (isLoading) return <PageLoadingSpinner />
 
@@ -113,6 +125,8 @@ export default function LegajosPage() {
             </p>
           </div>
         </div>
+
+        <LegajosVencimientosAlert personal={personal} />
 
         {/* Filtros */}
         <div className="flex flex-wrap items-center gap-3 mb-5 p-4 bg-white rounded-xl border border-[#E0E0E0] shadow-sm">
@@ -155,11 +169,43 @@ export default function LegajosPage() {
             </div>
           )}
 
-          {(filterEstado !== 'activos' || filterPuestoId !== '') && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#9AA0AC]">Condición:</span>
+            <div className="flex rounded-lg border border-[#D8E3F8] overflow-hidden">
+              {(['todas', '1', '2'] as const).map(condicion => (
+                <button
+                  key={condicion}
+                  onClick={() => setFilterCondicion(condicion)}
+                  className={`px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
+                    filterCondicion === condicion
+                      ? 'bg-[#002868] text-white'
+                      : 'bg-white text-[#5A6070] hover:bg-[#EEF3FF] hover:text-[#002868]'
+                  }`}
+                >
+                  {condicion === 'todas' ? 'Todas' : condicion}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <label className="flex items-center gap-2 text-xs font-semibold text-[#5A6070] cursor-pointer">
+            <Checkbox
+              checked={soloConIncidencias}
+              onCheckedChange={checked => setSoloConIncidencias(checked === true)}
+            />
+            Solo documentación pendiente o vencida
+          </label>
+
+          {(filterEstado !== 'activos' ||
+            filterPuestoId !== '' ||
+            soloConIncidencias ||
+            filterCondicion !== 'todas') && (
             <button
               onClick={() => {
                 setFilterEstado('activos')
                 setFilterPuestoId('')
+                setSoloConIncidencias(false)
+                setFilterCondicion('todas')
               }}
               className="text-xs text-[#002868] underline underline-offset-2 hover:text-[#003d8f] cursor-pointer ml-auto"
             >

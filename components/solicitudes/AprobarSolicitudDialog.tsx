@@ -17,6 +17,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { API_ENDPOINTS, type NotificacionEventoTipo } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import type { NotificarEventoData } from '@/components/notificaciones/NotificarEventoDialog'
+import { getEstadoSolicitudLabel } from '@/lib/solicitud-adelantos'
+import { SOLICITUD_ESTADO_COLORS } from '@/lib/formatters'
 import type { RhSolicitud } from '@/lib/types'
 import { SolicitudDetallesResumen } from './SolicitudDetallesResumen'
 
@@ -114,9 +116,9 @@ export function AprobarSolicitudDialog({
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-[#9AA0AC] mb-1">Estado</p>
               <span
-                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${solicitud.estado === 'Pendiente' ? 'bg-amber-100 text-amber-700' : solicitud.estado === 'Aprobada' ? 'bg-emerald-100 text-emerald-700' : solicitud.estado === 'Rechazada' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-700'}`}
+                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${SOLICITUD_ESTADO_COLORS[getEstadoSolicitudLabel(solicitud)]}`}
               >
-                {solicitud.estado}
+                {getEstadoSolicitudLabel(solicitud)}
               </span>
             </div>
           </div>

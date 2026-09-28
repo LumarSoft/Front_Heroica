@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { isValidCuit, cuitToDigits } from './validators'
+import { isValidCuit } from './validators'
 
 // ── CBU / CVU ─────────────────────────────────────────────────────────────
 export const CBU_DIGITOS = 22
@@ -80,3 +80,52 @@ export const medioPagoSchema = z.object({
   descripcion: z.string().optional(),
 })
 export type MedioPagoFormValues = z.infer<typeof medioPagoSchema>
+
+// ── Seguimiento personal de pagos ─────────────────────────────────────────
+const nullableString = z
+  .string()
+  .nullish()
+  .transform(value => value ?? undefined)
+
+const nullableNumber = z.coerce
+  .number()
+  .nullish()
+  .transform(value => value ?? undefined)
+
+export const pagoPendienteSchema = z
+  .object({
+    id: z.coerce.number().int().positive(),
+    user_id: z.coerce.number().int().positive().optional(),
+    sucursal_id: nullableNumber,
+    fecha: z.string(),
+    concepto: z.string(),
+    monto: z.coerce.number(),
+    comentarios: nullableString,
+    descripcion_id: nullableNumber,
+    proveedor_id: nullableNumber,
+    categoria_id: nullableNumber,
+    subcategoria_id: nullableNumber,
+    descripcion_nombre: nullableString,
+    proveedor_nombre: nullableString,
+    sucursal_nombre: nullableString,
+    moneda: z.enum(['ARS', 'USD']).optional(),
+    estado: z.enum(['pendiente', 'aprobado', 'rechazado', 'completado']),
+    prioridad: z
+      .enum(['baja', 'media', 'alta'])
+      .nullish()
+      .transform(value => value ?? 'media'),
+    tipo: nullableString,
+    motivo_rechazo: nullableString,
+    usuario_creador_nombre: nullableString,
+    usuario_revisor_nombre: nullableString,
+    fecha_revision: nullableString,
+    created_at: nullableString,
+    updated_at: nullableString,
+  })
+  .passthrough()
+
+export const misSolicitudesPagoResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.array(pagoPendienteSchema),
+  message: z.string().optional(),
+})

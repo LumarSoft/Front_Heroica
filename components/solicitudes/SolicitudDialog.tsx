@@ -85,6 +85,7 @@ export function SolicitudDialog({
   tipoInicial,
 }: SolicitudDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [activeUploads, setActiveUploads] = useState(0)
   const [error, setError] = useState('')
   const [form, setForm] = useState<SolicitudFormState>(createInitialSolicitudFormState)
   const [bajaAreaFilter, setBajaAreaFilter] = useState('')
@@ -105,6 +106,7 @@ export function SolicitudDialog({
       setForm(createInitialSolicitudFormState())
       setBajaAreaFilter('')
       setError('')
+      setActiveUploads(0)
       return
     }
 
@@ -131,6 +133,11 @@ export function SolicitudDialog({
   }, [open, solicitud, tipoInicial, personal, puestos])
 
   async function handleSave() {
+    if (activeUploads > 0) {
+      setError('Esperá a que terminen de subir los archivos antes de guardar.')
+      return
+    }
+
     const validationError = validateSolicitudForm(form, { isEditing: isEditMode })
     if (validationError) {
       setError(validationError)
@@ -503,6 +510,7 @@ export function SolicitudDialog({
             sucursales={sucursales}
             isEditing={isEditMode}
             onChange={patch => setForm(prev => ({ ...prev, ...patch }))}
+            onUploadingChange={uploading => setActiveUploads(current => Math.max(0, current + (uploading ? 1 : -1)))}
           />
 
           {form.tipo !== 'Novedades de sueldo' && form.tipo !== 'Altas' && (
@@ -532,18 +540,22 @@ export function SolicitudDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || activeUploads > 0}
               className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] transition-all"
             >
               Cancelar
             </Button>
             <Button
               onClick={handleSave}
-              disabled={isSubmitting || !form.tipo}
+              disabled={isSubmitting || activeUploads > 0 || !form.tipo}
               className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all flex items-center gap-2"
             >
-              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {isEditMode ? 'Guardar cambios' : 'Guardar'}
+              {isSubmitting || activeUploads > 0 ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {activeUploads > 0 ? 'Subiendo archivos…' : isEditMode ? 'Guardar cambios' : 'Guardar'}
             </Button>
           </DialogFooter>
         </div>

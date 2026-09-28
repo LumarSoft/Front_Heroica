@@ -3,12 +3,23 @@
 import { useState } from 'react'
 import { AlertTriangle, CheckCircle2, FileText, XCircle } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { Personal } from '@/lib/types'
 import { PdfsViewerDialog } from './PdfsViewerDialog'
 
 interface LegajosTableProps {
   personal: Personal[]
   onSelect: (persona: Personal) => void
+}
+
+const DOCUMENTO_LABELS: Record<string, string> = {
+  dni_frente_dorso: 'DNI (ambos lados)',
+  ddjj_domicilio: 'DDJJ de domicilio',
+  descripcion_puesto_firmada: 'Descripción de puesto firmada',
+  foto_colaborador: 'Foto del colaborador',
+  normas_convivencia: 'Normas de convivencia firmadas',
+  constancia_uniforme: 'Constancia de entrega de uniforme',
+  carnet_manipulacion_alimentos: 'Carnet de manipulación',
 }
 
 function formatFecha(fecha: string) {
@@ -72,7 +83,9 @@ export function LegajosTable({ personal, onSelect }: LegajosTableProps) {
             ) : (
               personal.map(persona => {
                 const faltantes = persona.adjuntos_faltantes ?? []
+                const vencimientos = persona.vencimientos_proximos ?? []
                 const tieneFaltantes = faltantes.length > 0
+                const tieneVencimientos = vencimientos.length > 0
                 return (
                   <TableRow
                     key={persona.id}
@@ -80,7 +93,9 @@ export function LegajosTable({ personal, onSelect }: LegajosTableProps) {
                     className={`transition-colors border-b border-[#E0E0E0]/50 cursor-pointer ${
                       tieneFaltantes
                         ? 'bg-rose-50/60 hover:bg-rose-50 border-l-2 border-l-rose-400'
-                        : 'hover:bg-[#F8F9FA]/50'
+                        : tieneVencimientos
+                          ? 'bg-amber-50/60 hover:bg-amber-50 border-l-2 border-l-amber-400'
+                          : 'hover:bg-[#F8F9FA]/50'
                     }`}
                   >
                     <TableCell className="font-mono text-sm text-[#666666]">#{persona.legajo}</TableCell>
@@ -88,12 +103,32 @@ export function LegajosTable({ personal, onSelect }: LegajosTableProps) {
                       <div className="flex items-center gap-2">
                         <span>{persona.nombre}</span>
                         {tieneFaltantes && (
+                          <TooltipProvider delayDuration={100}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
+                                  <AlertTriangle className="w-3 h-3" />
+                                  {faltantes.length}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-semibold">Documentos faltantes</p>
+                                <ul className="mt-1 list-disc pl-3">
+                                  {faltantes.map(documento => (
+                                    <li key={documento}>{DOCUMENTO_LABELS[documento] ?? documento}</li>
+                                  ))}
+                                </ul>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        {tieneVencimientos && (
                           <span
-                            className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200"
-                            title={`Faltan ${faltantes.length} documento${faltantes.length === 1 ? '' : 's'}`}
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200"
+                            title={vencimientos.map(v => `${v.label}: ${v.fecha_vencimiento}`).join(', ')}
                           >
                             <AlertTriangle className="w-3 h-3" />
-                            {faltantes.length}
+                            Vence{vencimientos.length > 1 ? 'n' : ''} {vencimientos.length}
                           </span>
                         )}
                       </div>

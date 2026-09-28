@@ -14,6 +14,21 @@ export function formatFecha(fechaISO: string): string {
   return `${day}/${month}/${year.substring(0, 4)}`
 }
 
+/** Formatea una marca de tiempo para mostrar cuándo se resolvió una solicitud. */
+export function formatFechaHora(fechaISO: string): string {
+  if (!fechaISO) return '-'
+  const fecha = new Date(fechaISO)
+  if (Number.isNaN(fecha.getTime())) return formatFecha(fechaISO)
+
+  return new Intl.DateTimeFormat('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(fecha)
+}
+
 /**
  * Formatea un monto numérico a formato de moneda (ARS o USD)
  */
@@ -58,6 +73,11 @@ export const PRIORIDAD_COLOR_MAP: Record<string, string> = {
   alta: 'bg-rose-100 text-rose-800',
   media: 'bg-amber-100 text-amber-800',
   baja: 'bg-gray-100 text-gray-800',
+}
+
+export const TIPO_MOVIMIENTO_COLOR_MAP: Record<string, string> = {
+  egreso: 'bg-rose-100 text-rose-800',
+  ingreso: 'bg-emerald-100 text-emerald-800',
 }
 
 /**
@@ -134,4 +154,16 @@ export function formatInputMonto(value: string | number): string {
   }
 
   return formattedInteger
+}
+
+export const SOLICITUD_ESTADO_COLORS: Record<string, string> = {
+  Pendiente: 'bg-amber-50 text-amber-700 border-amber-200',
+  'Pendiente de Tesorería': 'bg-amber-50 text-amber-700 border-amber-200',
+  'Proyectado en Tesorería': 'bg-blue-50 text-blue-700 border-blue-200',
+  Aprobada: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Completado: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Rechazada: 'bg-rose-50 text-rose-600 border-rose-200',
+  'Rechazado en Tesorería': 'bg-rose-50 text-rose-600 border-rose-200',
+  'Pago eliminado en Tesorería': 'bg-slate-50 text-slate-600 border-slate-200',
+  Cancelada: 'bg-slate-50 text-slate-600 border-slate-200',
 }
