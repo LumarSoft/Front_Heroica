@@ -88,6 +88,12 @@ interface AuthState {
   canAprobarSolicitudes: () => boolean
   canVerHistorialSolicitudesGlobal: () => boolean
   canVerSolicitudesTodasSucursales: () => boolean
+
+  // Ventas
+  canVerVentas: () => boolean
+  canExportarVentas: () => boolean
+  canSincronizarVentas: () => boolean
+  canConfigurarVentas: () => boolean
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -190,6 +196,12 @@ export const useAuthStore = create<AuthState>()(
       canAprobarSolicitudes: () => get().hasPermiso('aprobar_solicitudes'),
       canVerHistorialSolicitudesGlobal: () => get().hasPermiso('ver_historial_solicitudes_global'),
       canVerSolicitudesTodasSucursales: () => get().hasPermiso('ver_solicitudes_todas_sucursales'),
+
+      // Ventas
+      canVerVentas: () => get().hasPermiso('ver_ventas'),
+      canExportarVentas: () => get().hasPermiso('exportar_ventas'),
+      canSincronizarVentas: () => get().hasPermiso('sincronizar_ventas'),
+      canConfigurarVentas: () => get().hasPermiso('configurar_ventas'),
     }),
     {
       name: 'auth-storage',

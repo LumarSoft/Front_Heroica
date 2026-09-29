@@ -10,6 +10,7 @@ import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
 const MODULO_HOME: Record<string, string> = {
   [MODULOS.TESORERIA]: '/sucursales',
   [MODULOS.RECURSOS_HUMANOS]: '/recursos-humanos',
+  [MODULOS.VENTAS]: '/ventas',
 }
 
 /**

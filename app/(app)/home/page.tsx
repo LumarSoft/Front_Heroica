@@ -1,7 +1,19 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Building2, Users, ArrowRight, DollarSign, BarChart2, FileCheck, Briefcase, TrendingUp } from 'lucide-react'
+import {
+  Building2,
+  Users,
+  ArrowRight,
+  DollarSign,
+  BarChart2,
+  FileCheck,
+  Briefcase,
+  TrendingUp,
+  ShoppingBag,
+  RefreshCw,
+  PieChart,
+} from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
 import { MODULOS } from '@/lib/constants'
@@ -39,6 +51,22 @@ const MODULES = [
       { icon: Users, text: 'Gestión de empleados' },
       { icon: Briefcase, text: 'Nómina y recibos' },
       { icon: TrendingUp, text: 'Reportes de RRHH' },
+    ],
+  },
+  {
+    id: 'ventas',
+    modulo: MODULOS.VENTAS,
+    label: 'Ventas',
+    description: 'Ventas consolidadas de Bistrosoft y Hiopos con panel gerencial.',
+    icon: ShoppingBag,
+    href: '/ventas',
+    available: true,
+    color: '#2E9E6B',
+    lightBg: '#E8F6EF',
+    features: [
+      { icon: BarChart2, text: 'Panel gerencial' },
+      { icon: PieChart, text: 'Productos y medios de pago' },
+      { icon: RefreshCw, text: 'Sincronización automática' },
     ],
   },
 ]

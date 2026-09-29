@@ -167,3 +167,66 @@ export const SOLICITUD_ESTADO_COLORS: Record<string, string> = {
   'Pago eliminado en Tesorería': 'bg-slate-50 text-slate-600 border-slate-200',
   Cancelada: 'bg-slate-50 text-slate-600 border-slate-200',
 }
+
+// ─── Ventas ──────────────────────────────────────────────────────────────────
+
+/** Índice 0 = lunes … 6 = domingo (WEEKDAY() de MySQL). */
+export const DIAS_SEMANA_CORTO = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] as const
+
+const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+/** '2026-09-14' → '14/09' · '2026-09' → 'Sep 2026'. En semana se muestra el lunes. */
+export function formatPeriodoVentas(periodo: string, agrupacion: 'dia' | 'semana' | 'mes'): string {
+  const [anio, mes, dia] = periodo.split('-')
+  if (agrupacion === 'mes') return `${MESES_CORTO[Number(mes) - 1] ?? mes} ${anio}`
+  return agrupacion === 'semana' ? `Sem. ${dia}/${mes}` : `${dia}/${mes}`
+}
+
+export function formatCantidad(valor: number, decimales = 0): string {
+  return new Intl.NumberFormat('es-AR', { maximumFractionDigits: decimales }).format(valor)
+}
+
+/** Monto compacto para ejes: $ 1,2 M · $ 350 k. */
+export function formatMontoCompacto(valor: number): string {
+  return `$ ${new Intl.NumberFormat('es-AR', { notation: 'compact', maximumFractionDigits: 1 }).format(valor)}`
+}
+
+/** Variación % entre dos valores; null si no hay base de comparación. */
+export function variacionPorcentual(actual: number, anterior: number): number | null {
+  if (!anterior) return null
+  return ((actual - anterior) / Math.abs(anterior)) * 100
+}
+
+/** "del 01/09/2026 al 28/09/2026" · un solo día: "el 01/09/2026". */
+export function formatRangoFechas(desde: string, hasta: string): string {
+  return desde === hasta ? `el ${formatFecha(desde)}` : `del ${formatFecha(desde)} al ${formatFecha(hasta)}`
+}
+
+/** "hace 5 min", "hace 3 h", "ayer", "hace 4 días". */
+export function formatHaceCuanto(fechaISO: string): string {
+  const minutos = Math.floor((Date.now() - new Date(fechaISO).getTime()) / 60_000)
+  if (minutos < 1) return 'recién'
+  if (minutos < 60) return `hace ${minutos} min`
+  const horas = Math.floor(minutos / 60)
+  if (horas < 24) return `hace ${horas} h`
+  const dias = Math.floor(horas / 24)
+  return dias === 1 ? 'ayer' : `hace ${dias} días`
+}
+
+export function pluralDias(dias: number): string {
+  return `${formatCantidad(dias)} ${dias === 1 ? 'día' : 'días'}`
+}
+
+export const SINCRONIZACION_ESTADO_LABEL: Record<'en_curso' | 'exitosa' | 'con_observaciones' | 'fallida', string> = {
+  en_curso: 'En curso',
+  exitosa: 'Completada',
+  con_observaciones: 'Completada con avisos',
+  fallida: 'Fallida',
+}
+
+export const SINCRONIZACION_ESTADO_COLORS: Record<'en_curso' | 'exitosa' | 'con_observaciones' | 'fallida', string> = {
+  en_curso: 'bg-blue-50 text-blue-700 border-blue-200',
+  exitosa: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  con_observaciones: 'bg-amber-50 text-amber-700 border-amber-200',
+  fallida: 'bg-rose-50 text-rose-700 border-rose-200',
+}

@@ -8,6 +8,7 @@ export const ROLES = {
 export const MODULOS = {
   TESORERIA: 'tesoreria',
   RECURSOS_HUMANOS: 'recursos_humanos',
+  VENTAS: 'ventas',
 } as const
 
 export const PERMISOS = {
@@ -71,4 +72,10 @@ export const PERMISOS = {
   APROBAR_SOLICITUDES: 'aprobar_solicitudes',
   VER_HISTORIAL_SOLICITUDES_GLOBAL: 'ver_historial_solicitudes_global',
   VER_SOLICITUDES_TODAS_SUCURSALES: 'ver_solicitudes_todas_sucursales',
+
+  // Ventas
+  VER_VENTAS: 'ver_ventas',
+  EXPORTAR_VENTAS: 'exportar_ventas',
+  SINCRONIZAR_VENTAS: 'sincronizar_ventas',
+  CONFIGURAR_VENTAS: 'configurar_ventas',
 } as const

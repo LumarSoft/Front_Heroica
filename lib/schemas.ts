@@ -129,3 +129,20 @@ export const misSolicitudesPagoResponseSchema = z.object({
   data: z.array(pagoPendienteSchema),
   message: z.string().optional(),
 })
+
+// ─── Ventas ──────────────────────────────────────────────────────────────────
+
+/** Máximo que acepta la API por corrida manual (ver MAX_DIAS_SINCRONIZACION en el backend). */
+export const MAX_DIAS_SINCRONIZACION_VENTAS = 366
+
+export const sincronizacionVentasSchema = z
+  .object({
+    desde: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Ingresá la fecha desde'),
+    hasta: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Ingresá la fecha hasta'),
+    hoy: z.string(),
+  })
+  .refine(v => v.desde <= v.hasta, { message: 'La fecha desde no puede ser posterior a hasta' })
+  .refine(v => v.hasta <= v.hoy, { message: 'No se pueden sincronizar fechas futuras' })
+  .refine(v => (Date.parse(v.hasta) - Date.parse(v.desde)) / 86_400_000 < MAX_DIAS_SINCRONIZACION_VENTAS, {
+    message: `El rango no puede superar ${MAX_DIAS_SINCRONIZACION_VENTAS} días`,
+  })

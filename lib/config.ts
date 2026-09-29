@@ -1,4 +1,5 @@
 import { createRrhhEndpoints } from './config-rrhh'
+import { createVentasEndpoints } from './config-ventas'
 
 // Configuración de la API
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
@@ -214,6 +215,7 @@ export const API_ENDPOINTS = {
     DELETE_COMENTARIO: (id: number, comentarioId: number) => `${API_URL}/api/tareas/${id}/comentarios/${comentarioId}`,
   },
   ...createRrhhEndpoints(API_URL),
+  ...createVentasEndpoints(API_URL),
   NOTIFICACIONES: {
     MIS: `${API_URL}/api/notificaciones/mis`,
     CREATE: `${API_URL}/api/notificaciones`,

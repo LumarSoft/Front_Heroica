@@ -19,6 +19,7 @@ import {
   X,
   Menu,
   PanelLeftClose,
+  ShoppingBag,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/store/authStore'
@@ -81,6 +82,14 @@ const MODULES = [
     icon: Users,
     defaultHref: '/recursos-humanos',
     matchPaths: ['/recursos-humanos'],
+  },
+  {
+    id: 'ventas',
+    modulo: MODULOS.VENTAS,
+    label: 'Ventas',
+    icon: ShoppingBag,
+    defaultHref: '/ventas',
+    matchPaths: ['/ventas'],
   },
 ] as const
 
