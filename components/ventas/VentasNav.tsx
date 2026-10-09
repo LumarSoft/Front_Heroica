@@ -2,13 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, ListOrdered, RefreshCw } from 'lucide-react'
+import { BarChart3, Clock, ListOrdered, Mail, Package, RefreshCw, TableProperties } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
 
 const TABS = [
   { href: '/ventas', label: 'Panel', icon: BarChart3, permiso: 'ver' },
+  { href: '/ventas/reportes', label: 'Reportes', icon: TableProperties, permiso: 'ver' },
+  { href: '/ventas/productos', label: 'Productos', icon: Package, permiso: 'ver' },
+  { href: '/ventas/horarios', label: 'Horarios y equipo', icon: Clock, permiso: 'ver' },
   { href: '/ventas/operaciones', label: 'Operaciones', icon: ListOrdered, permiso: 'ver' },
+  { href: '/ventas/envios', label: 'Envíos por mail', icon: Mail, permiso: 'envios' },
   { href: '/ventas/integraciones', label: 'Integraciones', icon: RefreshCw, permiso: 'integraciones' },
 ] as const
 
@@ -16,8 +20,11 @@ export function VentasNav() {
   const pathname = usePathname()
   const canVer = useAuthStore(state => state.canVerVentas())
   const canIntegraciones = useAuthStore(state => state.canSincronizarVentas() || state.canConfigurarVentas())
+  const canEnvios = useAuthStore(state => state.canGestionarReportesVentas())
 
-  const visibles = TABS.filter(t => (t.permiso === 'ver' ? canVer : canIntegraciones))
+  const visibles = TABS.filter(t =>
+    t.permiso === 'ver' ? canVer : t.permiso === 'envios' ? canEnvios : canIntegraciones,
+  )
 
   return (
     <nav className="flex gap-1 p-1 rounded-xl bg-white border border-[#E6EDF9] w-fit max-w-full overflow-x-auto">

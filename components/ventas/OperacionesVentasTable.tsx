@@ -37,11 +37,11 @@ export function OperacionesVentasTable({ operaciones, onVerDetalle }: Operacione
             <th className={TH}>Día operativo</th>
             <th className={TH}>Hora</th>
             <th className={TH}>Sucursal</th>
-            <th className={TH}>Operación</th>
+            <th className={TH}>Documento</th>
             <th className={`${TH} text-right`}>Unidades</th>
             <th className={`${TH} text-right`}>Total</th>
             <th className={TH}>Medios de pago</th>
-            <th className={TH}>Canal</th>
+            <th className={TH}>Vendedor</th>
             <th className={TH}>
               <span className="sr-only">Detalle</span>
             </th>
@@ -64,7 +64,7 @@ export function OperacionesVentasTable({ operaciones, onVerDetalle }: Operacione
                 )}
               </td>
               <td className={`${TD} font-mono text-xs text-[#5A6B8C]`}>
-                {op.transaccionId}
+                {op.documento ?? op.transaccionId}
                 {op.anulada && (
                   <span className="ml-2 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 font-sans text-[11px] font-semibold text-rose-700">
                     Anulada
@@ -80,7 +80,7 @@ export function OperacionesVentasTable({ operaciones, onVerDetalle }: Operacione
               <td className={`${TD} max-w-[220px] truncate`} title={op.mediosPago ?? undefined}>
                 {op.mediosPago ?? '—'}
               </td>
-              <td className={TD}>{op.canal ?? '—'}</td>
+              <td className={TD}>{op.vendedor ?? op.canal ?? '—'}</td>
               <td className={`${TD} text-right`}>
                 <button
                   type="button"

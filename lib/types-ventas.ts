@@ -1,6 +1,7 @@
-// Tipos del módulo de Ventas (panel gerencial + integraciones Bistrosoft/Hiopos).
+// Tipos del módulo de Ventas (panel gerencial, reportes e integración con Hiopos).
 
-export type FuenteVentas = 'bistrosoft' | 'hiopos'
+export type FuenteVentas = 'hiopos'
+export type TipoSincronizacionVentas = 'rango' | 'cambios'
 export type AgrupacionVentas = 'dia' | 'semana' | 'mes'
 export type ComparacionVentas = 'periodo_anterior' | 'anio_anterior'
 export type EstadoSincronizacionVentas = 'en_curso' | 'exitosa' | 'con_observaciones' | 'fallida'
@@ -15,6 +16,8 @@ export interface FiltrosVentas {
   medioPago: string
   canal: string
   producto: string
+  vendedor: string
+  caja: string
 }
 
 export interface OpcionesFiltrosVentas {
@@ -22,6 +25,8 @@ export interface OpcionesFiltrosVentas {
   categorias: string[]
   mediosPago: string[]
   canales: string[]
+  vendedores: string[]
+  cajas: string[]
 }
 
 export interface KpisVentas {
@@ -88,6 +93,11 @@ export interface OperacionVenta {
   unidades: number
   mediosPago: string | null
   canal: string | null
+  /** Serie-número del ticket/factura en HiOffice. */
+  documento: string | null
+  tipoDocumento: string | null
+  vendedor: string | null
+  caja: string | null
   anulada: boolean
   observada: boolean
 }
@@ -111,6 +121,8 @@ export interface LineaOperacionVenta {
   descuento: number
   medioPago: string | null
   canal: string | null
+  vendedor: string | null
+  caja: string | null
   estadoOrigen: string | null
   anulada: boolean
   fechaHora: string | null
@@ -120,8 +132,13 @@ export interface EstadoIntegracionVentas {
   fuente: FuenteVentas
   nombre: string
   disponible: boolean
+  /** HIOPOS_EMAIL / HIOPOS_PASSWORD cargadas en el servidor. */
+  credenciales: boolean
+  /** Credenciales + dashboard de exportación. */
   configurada: boolean
   syncAutomatica: boolean
+  /** Trae solo lo modificado (filtro Fecha Modificado del dashboard). */
+  incremental: boolean
   enCurso: boolean
   ultimaExitosa: string | null
   ultimoEstado: EstadoSincronizacionVentas | null
@@ -133,6 +150,7 @@ export interface SincronizacionVentas {
   id: number
   fuente: FuenteVentas
   origen: OrigenSincronizacionVentas
+  tipo: TipoSincronizacionVentas
   estado: EstadoSincronizacionVentas
   fechaDesde: string
   fechaHasta: string
@@ -200,4 +218,275 @@ export interface CoberturaVentas {
   /** Días sin importar dentro del período consultado (panel/operaciones). */
   faltantesEnPeriodo: TramoFechas[]
   diasFaltantesEnPeriodo: number
+}
+
+// ─── Integración con Hiopos ──────────────────────────────────────────────────
+
+export interface CampoMapeoHiopos {
+  campo: string
+  etiqueta: string
+  ayuda: string
+  requerido: boolean
+}
+
+export interface FiltroDashboardHiopos {
+  attributeId: number
+  arithmeticOperator: string
+  type: string
+}
+
+export interface ColumnaDetectadaHiopos {
+  nombre: string
+  ejemplos: string[]
+}
+
+export interface ConfigHioposVentas {
+  credenciales: boolean
+  exportationId: string | null
+  exportationIdOrigen: 'pantalla' | 'entorno' | null
+  attrFechaModificado: number | null
+  mapeo: Record<string, string>
+  faltantesMapeo: string[]
+  columnasDetectadas: ColumnaDetectadaHiopos[]
+  filtrosDashboard: FiltroDashboardHiopos[]
+  diasPorTramo: number
+  watermark: string | null
+  verificadoAt: string | null
+  ultimoError: string | null
+  campos: CampoMapeoHiopos[]
+}
+
+export interface DiagnosticoHiopos {
+  ok: boolean
+  pasos: Array<{ paso: string; ok: boolean; detalle: string }>
+  servidor: string | null
+  filtros: FiltroDashboardHiopos[]
+  attrFechaModificadoSugerido: number | null
+  filas: number
+  columnas: ColumnaDetectadaHiopos[]
+  mapeoUsado: Record<string, string>
+  faltantesMapeo: string[]
+  documentos: number
+  rechazadas: Array<{ motivo: string; cantidad: number }>
+  ejemplos: Array<{
+    fecha: string
+    fechaHora: string | null
+    localNombre: string | null
+    documento: string | null
+    transaccionId: string
+    tipoLinea: TipoLineaVenta
+    productoNombre: string | null
+    categoria: string | null
+    cantidad: number
+    importe: number
+    medioPago: string | null
+    vendedor: string | null
+  }>
+}
+
+// ─── Constructor de reportes ─────────────────────────────────────────────────
+
+export type DimensionReporte =
+  | 'sucursal'
+  | 'dia'
+  | 'semana'
+  | 'mes'
+  | 'anio'
+  | 'dia_semana'
+  | 'hora'
+  | 'producto'
+  | 'categoria'
+  | 'medio_pago'
+  | 'canal'
+  | 'vendedor'
+  | 'caja'
+  | 'tipo_documento'
+
+export type MetricaReporte =
+  | 'facturacion'
+  | 'unidades'
+  | 'tickets'
+  | 'ticket_promedio'
+  | 'descuentos'
+  | 'precio_promedio'
+  | 'unidades_por_ticket'
+  | 'participacion'
+  | 'promedio_diario'
+
+export type ComparacionReporte = 'ninguna' | 'periodo_anterior' | 'anio_anterior'
+
+export type PeriodoRelativoReporte =
+  | 'hoy'
+  | 'ayer'
+  | 'ultimos_7'
+  | 'ultimos_30'
+  | 'semana_actual'
+  | 'semana_anterior'
+  | 'mes_actual'
+  | 'mes_anterior'
+  | 'anio_actual'
+
+export interface FiltrosReporteVentas {
+  sucursal_ids?: number[]
+  categoria?: string
+  medio_pago?: string
+  canal?: string
+  producto?: string
+  vendedor?: string
+  caja?: string
+}
+
+export interface ConfigReporteVentas {
+  dimensiones: DimensionReporte[]
+  metricas: MetricaReporte[]
+  comparacion: ComparacionReporte
+  orden: { campo: string; direccion: 'asc' | 'desc' }
+  limite: number
+  periodo: { tipo: 'relativo'; clave: PeriodoRelativoReporte } | { tipo: 'fijo'; desde: string; hasta: string }
+  filtros: FiltrosReporteVentas
+}
+
+export interface ColumnaReporteVentas {
+  clave: string
+  etiqueta: string
+  tipo: 'dimension' | 'moneda' | 'numero' | 'porcentaje'
+}
+
+export interface FilaReporteVentas {
+  dimensiones: Record<string, string>
+  valores: Record<string, number | null>
+  comparado?: Record<string, number | null>
+  variacion?: Record<string, number | null>
+}
+
+export interface ResultadoReporteVentas {
+  columnas: ColumnaReporteVentas[]
+  filas: FilaReporteVentas[]
+  totales: Record<string, number | null>
+  totalesComparados: Record<string, number | null> | null
+  variacionTotales: Record<string, number | null> | null
+  periodo: { desde: string; hasta: string }
+  periodoComparado: { desde: string; hasta: string } | null
+  truncado: boolean
+  avisos: string[]
+}
+
+export interface ReporteGuardadoVentas {
+  id: number
+  nombre: string
+  descripcion: string | null
+  config: ConfigReporteVentas
+  compartido: boolean
+  propio: boolean
+  autor: string | null
+  actualizadoAt: string
+}
+
+export type FrecuenciaEnvioVentas = 'diaria' | 'semanal' | 'mensual'
+
+export interface ReporteProgramadoVentas {
+  id: number
+  nombre: string
+  frecuencia: FrecuenciaEnvioVentas
+  diaSemana: number | null
+  hora: number
+  destinatarios: string[]
+  sucursalIds: number[] | null
+  reporteGuardadoId: number | null
+  reporteNombre: string | null
+  activo: boolean
+  ultimoEnvioAt: string | null
+  ultimoPeriodo: string | null
+  ultimoError: string | null
+  proximoPeriodo: string
+}
+
+// ─── Análisis ────────────────────────────────────────────────────────────────
+
+export type ClaseAbc = 'A' | 'B' | 'C'
+
+export interface ProductoAnalizado {
+  producto: string
+  codigo: string | null
+  categoria: string | null
+  facturacion: number
+  unidades: number
+  tickets: number
+  sucursales: number
+  precioPromedio: number | null
+  participacion: number
+  acumulado: number
+  clase: ClaseAbc
+  penetracion: number | null
+  facturacionAnterior: number
+  unidadesAnterior: number
+  variacionFacturacion: number | null
+  variacionUnidades: number | null
+}
+
+export interface AnalisisProductosVentas {
+  periodo: { desde: string; hasta: string }
+  periodoAnterior: { desde: string; hasta: string }
+  resumen: {
+    productos: number
+    facturacion: number
+    ticketsTotales: number
+    clases: Array<{ clase: ClaseAbc; productos: number; facturacion: number; participacion: number }>
+  }
+  productos: ProductoAnalizado[]
+  enAlza: ProductoAnalizado[]
+  enBaja: ProductoAnalizado[]
+  nuevos: ProductoAnalizado[]
+  sinVentas: Array<{
+    producto: string
+    categoria: string | null
+    unidadesAnterior: number
+    facturacionAnterior: number
+  }>
+  truncado: boolean
+}
+
+export interface CeldaMapaCalor {
+  /** 0 = lunes … 6 = domingo */
+  dia: number
+  hora: number
+  facturacion: number
+  tickets: number
+  unidades: number
+  promedioFacturacion: number
+  promedioTickets: number
+}
+
+export interface MapaCalorVentas {
+  periodo: { desde: string; hasta: string }
+  jornadas: number[]
+  celdas: CeldaMapaCalor[]
+  porHora: Array<{ hora: number; facturacion: number; tickets: number }>
+  pico: CeldaMapaCalor | null
+  horaPico: number | null
+  sinHora: boolean
+}
+
+export interface DesempenioVentas {
+  nombre: string
+  sucursales: string | null
+  facturacion: number
+  participacion: number
+  tickets: number
+  ticketPromedio: number
+  unidades: number
+  unidadesPorTicket: number
+  descuentos: number
+  porcentajeDescuento: number
+  jornadas: number
+  promedioDiario: number
+  anuladas: { tickets: number; importe: number }
+}
+
+export interface AnalisisVendedoresVentas {
+  periodo: { desde: string; hasta: string }
+  vendedoresDisponibles: boolean
+  cajasDisponibles: boolean
+  vendedores: DesempenioVentas[]
+  cajas: DesempenioVentas[]
 }

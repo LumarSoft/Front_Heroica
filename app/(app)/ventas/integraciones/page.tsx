@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AccessDenied } from '@/components/ui/access-denied'
 import { ErrorBanner } from '@/components/ui/error-banner'
 import { ContentLoadingSpinner } from '@/components/ui/loading-spinner'
+import { HioposConfigCard } from '@/components/ventas/HioposConfigCard'
 import { IntegracionEstadoCard } from '@/components/ventas/IntegracionEstadoCard'
 import { LocalesExternosTable } from '@/components/ventas/LocalesExternosTable'
 import { SincronizacionesVentasTable } from '@/components/ventas/SincronizacionesVentasTable'
@@ -50,11 +51,10 @@ export default function VentasIntegracionesPage() {
   )
   const { cobertura } = useVentasCobertura(undefined, undefined, versionFinal * 10_000 + avance)
 
-  const bistrosoft = integraciones.estados.find(e => e.fuente === 'bistrosoft' && e.disponible) ?? null
+  const hiopos = integraciones.estados.find(e => e.fuente === 'hiopos') ?? null
   const abrirConRango = useCallback((desde: string, hasta: string) => setRangoPedido({ desde, hasta }), [])
-  // El diálogo se abre con el rango del enlace cuando ya se sabe el estado de Bistrosoft.
-  const dialogoIntegracion =
-    aSincronizar ?? (rangoPedido && canSincronizar && bistrosoft?.configurada ? bistrosoft : null)
+  // El diálogo se abre con el rango del enlace cuando ya se sabe el estado de Hiopos.
+  const dialogoIntegracion = aSincronizar ?? (rangoPedido && canSincronizar && hiopos?.configurada ? hiopos : null)
 
   const cerrarDialogo = useCallback(() => {
     setASincronizar(null)
@@ -85,18 +85,17 @@ export default function VentasIntegracionesPage() {
           <ContentLoadingSpinner />
         ) : (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {integraciones.estados.map(estado => (
-                <div key={estado.fuente} className={estado.disponible ? 'lg:col-span-2' : ''}>
-                  <IntegracionEstadoCard
-                    estado={estado}
-                    cobertura={estado.disponible ? cobertura : null}
-                    canSincronizar={canSincronizar}
-                    onSincronizar={() => setASincronizar(estado)}
-                  />
-                </div>
-              ))}
-            </div>
+            {integraciones.estados.map(estado => (
+              <IntegracionEstadoCard
+                key={estado.fuente}
+                estado={estado}
+                cobertura={cobertura}
+                canSincronizar={canSincronizar}
+                onSincronizar={() => setASincronizar(estado)}
+              />
+            ))}
+
+            <HioposConfigCard editable={canConfigurar} />
 
             <VentasChartCard
               title="Importaciones"
@@ -110,7 +109,7 @@ export default function VentasIntegracionesPage() {
             </VentasChartCard>
 
             <VentasChartCard
-              title="Locales de Bistrosoft"
+              title="Locales de Hiopos"
               subtitle="A qué sucursal de Heroica corresponde cada local. Se vinculan solos por nombre; si alguno no se reconoce, se elige una única vez."
             >
               {locales.isLoading ? (

@@ -8,8 +8,8 @@ export interface RangoRapido {
   hasta: string
 }
 
-/** Segundos aproximados por día: la API de Bistrosoft admite 12 consultas por minuto. */
-const SEGUNDOS_POR_DIA = 6
+/** Segundos aproximados por día: Hiopos exporta varios días por consulta. */
+const SEGUNDOS_POR_DIA = 2
 
 function sumarDias(fecha: Date, dias: number): Date {
   const d = new Date(fecha)
@@ -17,7 +17,7 @@ function sumarDias(fecha: Date, dias: number): Date {
   return d
 }
 
-/** Atajos para elegir qué traer de Bistrosoft. */
+/** Atajos para elegir qué traer de Hiopos. */
 export function rangosRapidos(cobertura: CoberturaVentas | null): RangoRapido[] {
   const hoy = new Date()
   const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1)

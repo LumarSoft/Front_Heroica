@@ -97,6 +97,22 @@ export function VentasFiltrosBar({ filtros, opciones, onChange, onLimpiar }: Ven
           opciones={opciones.canales}
           onChange={v => onChange('canal', v)}
         />
+        {opciones.vendedores.length > 0 && (
+          <VentasSelectFiltro
+            label="Vendedor"
+            value={filtros.vendedor}
+            opciones={opciones.vendedores}
+            onChange={v => onChange('vendedor', v)}
+          />
+        )}
+        {opciones.cajas.length > 0 && (
+          <VentasSelectFiltro
+            label="Caja"
+            value={filtros.caja}
+            opciones={opciones.cajas}
+            onChange={v => onChange('caja', v)}
+          />
+        )}
         <button
           type="button"
           onClick={onLimpiar}

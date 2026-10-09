@@ -8,6 +8,8 @@ export function filtrosVentasQuery(filtros: FiltrosVentas): URLSearchParams {
   if (filtros.medioPago) params.set('medio_pago', filtros.medioPago)
   if (filtros.canal) params.set('canal', filtros.canal)
   if (filtros.producto) params.set('producto', filtros.producto)
+  if (filtros.vendedor) params.set('vendedor', filtros.vendedor)
+  if (filtros.caja) params.set('caja', filtros.caja)
   return params
 }
 
@@ -38,6 +40,19 @@ export function createVentasEndpoints(API_URL: string) {
       PROCESAR: `${base}/integraciones/procesar`,
       LOCALES: `${base}/integraciones/locales`,
       LOCAL: (id: number) => `${base}/integraciones/locales/${id}`,
+      HIOPOS_CONFIG: `${base}/integraciones/hiopos/config`,
+      HIOPOS_DIAGNOSTICO: `${base}/integraciones/hiopos/diagnostico`,
+      PRODUCTOS: (filtros: FiltrosVentas) => `${base}/productos?${filtrosVentasQuery(filtros).toString()}`,
+      MAPA_CALOR: (filtros: FiltrosVentas) => `${base}/mapa-calor?${filtrosVentasQuery(filtros).toString()}`,
+      VENDEDORES: (filtros: FiltrosVentas) => `${base}/vendedores?${filtrosVentasQuery(filtros).toString()}`,
+      REPORTES_DEFINICIONES: `${base}/reportes/definiciones`,
+      REPORTES_CONSULTA: `${base}/reportes/consulta`,
+      REPORTES_EXPORTAR: `${base}/reportes/exportar`,
+      REPORTES_GUARDADOS: `${base}/reportes/guardados`,
+      REPORTE_GUARDADO: (id: number) => `${base}/reportes/guardados/${id}`,
+      PROGRAMADOS: `${base}/reportes/programados`,
+      PROGRAMADO: (id: number) => `${base}/reportes/programados/${id}`,
+      PROGRAMADO_ENVIAR: (id: number) => `${base}/reportes/programados/${id}/enviar`,
     },
   }
 }

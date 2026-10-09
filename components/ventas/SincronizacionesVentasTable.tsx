@@ -40,10 +40,19 @@ export function SincronizacionesVentasTable({ sincronizaciones }: Sincronizacion
           {sincronizaciones.map(s => (
             <tr key={s.id}>
               <td className={TD}>
-                <p className="font-semibold text-[#002868] whitespace-nowrap">
-                  {formatRangoFechas(s.fechaDesde, s.fechaHasta)}
-                </p>
-                <p className="text-xs text-[#7A93BB]">{pluralDias(s.diasTotales)}</p>
+                {s.tipo === 'cambios' ? (
+                  <>
+                    <p className="font-semibold text-[#002868] whitespace-nowrap">Cambios en HiOffice</p>
+                    <p className="text-xs text-[#7A93BB]">Tickets nuevos o corregidos</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-semibold text-[#002868] whitespace-nowrap">
+                      {formatRangoFechas(s.fechaDesde, s.fechaHasta)}
+                    </p>
+                    <p className="text-xs text-[#7A93BB]">{pluralDias(s.diasTotales)}</p>
+                  </>
+                )}
               </td>
               <td className={`${TD} min-w-[240px]`}>
                 {s.estado === 'en_curso' ? (

@@ -25,13 +25,15 @@ export function OperacionVentaDetalleDialog({ operacion, onClose }: OperacionVen
             <span className="w-10 h-10 rounded-xl bg-[#002868]/10 flex items-center justify-center">
               <Receipt className="w-5 h-5 text-[#002868]" />
             </span>
-            Operación {operacion?.transaccionId}
+            {operacion?.tipoDocumento ?? 'Ticket'} {operacion?.documento ?? operacion?.transaccionId}
           </DialogTitle>
           {operacion && (
             <DialogDescription className="text-[#666666] mt-2">
               {formatFecha(operacion.fecha)}
               {operacion.fechaHora ? ` · ${operacion.fechaHora.slice(11, 16)} h` : ''} ·{' '}
-              {operacion.sucursal ?? `${operacion.localExterno ?? 'Local'} (sin asignar)`} · Bistrosoft
+              {operacion.sucursal ?? `${operacion.localExterno ?? 'Local'} (sin asignar)`}
+              {operacion.vendedor ? ` · Vendedor: ${operacion.vendedor}` : ''}
+              {operacion.caja ? ` · ${operacion.caja}` : ''}
               {operacion.anulada ? ' · Anulada' : ''}
             </DialogDescription>
           )}

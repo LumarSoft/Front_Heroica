@@ -78,4 +78,5 @@ export const PERMISOS = {
   EXPORTAR_VENTAS: 'exportar_ventas',
   SINCRONIZAR_VENTAS: 'sincronizar_ventas',
   CONFIGURAR_VENTAS: 'configurar_ventas',
+  GESTIONAR_REPORTES_VENTAS: 'gestionar_reportes_ventas',
 } as const

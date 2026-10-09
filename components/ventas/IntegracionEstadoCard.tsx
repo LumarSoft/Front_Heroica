@@ -33,7 +33,9 @@ export function IntegracionEstadoCard({
               {!estado.disponible
                 ? 'Próximamente'
                 : estado.syncAutomatica
-                  ? 'Se actualiza sola al abrir el panel y cada noche'
+                  ? estado.incremental
+                    ? 'Se actualiza sola cada 30 minutos y trae también lo que se corrige en HiOffice'
+                    : 'Se actualiza sola cada 30 minutos mientras se usa el módulo y cada mañana'
                   : 'Actualización automática desactivada: se trae a mano'}
             </p>
           </div>
@@ -89,9 +91,14 @@ export function IntegracionEstadoCard({
               {estado.alerta}
             </p>
           )}
-          {!estado.configurada && (
+          {!estado.credenciales && (
             <p className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
-              Faltan las credenciales de Bistrosoft en el servidor (BISTROSOFT_USERNAME / BISTROSOFT_PASSWORD).
+              Faltan las credenciales de Hiopos en el servidor (HIOPOS_EMAIL / HIOPOS_PASSWORD).
+            </p>
+          )}
+          {estado.credenciales && !estado.configurada && (
+            <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+              Falta indicar el dashboard de exportación de HiOffice: cargalo en la configuración de abajo.
             </p>
           )}
 

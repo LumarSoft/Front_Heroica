@@ -94,6 +94,7 @@ interface AuthState {
   canExportarVentas: () => boolean
   canSincronizarVentas: () => boolean
   canConfigurarVentas: () => boolean
+  canGestionarReportesVentas: () => boolean
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -202,6 +203,7 @@ export const useAuthStore = create<AuthState>()(
       canExportarVentas: () => get().hasPermiso('exportar_ventas'),
       canSincronizarVentas: () => get().hasPermiso('sincronizar_ventas'),
       canConfigurarVentas: () => get().hasPermiso('configurar_ventas'),
+      canGestionarReportesVentas: () => get().hasPermiso('gestionar_reportes_ventas'),
     }),
     {
       name: 'auth-storage',

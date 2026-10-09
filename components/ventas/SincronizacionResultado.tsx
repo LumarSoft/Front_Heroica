@@ -6,6 +6,13 @@ import type { SincronizacionVentas } from '@/lib/types'
  * actualizaron, para que repetir un rango no parezca que "agregó" ventas.
  */
 export function SincronizacionResultado({ sincronizacion: s }: { sincronizacion: SincronizacionVentas }) {
+  if (s.tipo === 'cambios') {
+    return s.importados > 0 ? (
+      <p className="text-sm text-[#5A6B8C]">{formatCantidad(s.importados)} líneas actualizadas</p>
+    ) : (
+      <span className="text-sm text-[#9AAACC]">Sin cambios</span>
+    )
+  }
   if (s.diasNuevos === 0 && s.diasActualizados === 0) {
     return <span className="text-sm text-[#9AAACC]">—</span>
   }
@@ -24,7 +31,7 @@ export function SincronizacionResultado({ sincronizacion: s }: { sincronizacion:
           </span>
         )}
       </p>
-      <p className="text-xs text-[#7A93BB]">{formatCantidad(s.importados)} registros de Bistrosoft</p>
+      <p className="text-xs text-[#7A93BB]">{formatCantidad(s.importados)} líneas de Hiopos</p>
     </div>
   )
 }

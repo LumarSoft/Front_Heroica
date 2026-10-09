@@ -5,8 +5,8 @@ import { API_ENDPOINTS } from '@/lib/config'
 import { formatRangoFechas, pluralDias } from '@/lib/formatters'
 import type { EstadoIntegracionVentas, FuenteVentas, ResultadoProcesoVentas, SincronizacionVentas } from '@/lib/types'
 
-// Mientras hay una sincronización en curso se consulta el avance cada 5 s: la API
-// de Bistrosoft admite 12 req/min, así que una corrida de varios días tarda minutos.
+// Mientras hay una sincronización en curso se consulta el avance cada 5 s: una
+// corrida de muchos días se procesa por tramos y puede tardar unos minutos.
 const POLLING_MS = 5_000
 // En Vercel nada corre en segundo plano: mientras esta pantalla esté abierta y haya
 // corridas en curso, se le pide a la API que las avance (cada llamada procesa ~40 s).

@@ -16,6 +16,8 @@ function filtrosIniciales(): FiltrosVentas {
     medioPago: '',
     canal: '',
     producto: '',
+    vendedor: '',
+    caja: '',
   }
 }
 
