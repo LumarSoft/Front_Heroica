@@ -50,6 +50,7 @@ export const API_ENDPOINTS = {
       if (fechaFin) params.append('fechaFin', fechaFin)
       return `${API_URL}/api/movimientos/deudas?${params.toString()}`
     },
+    EXPORT_DEUDAS_EXCEL: `${API_URL}/api/movimientos/deudas/export`,
     GET_RESUMEN_DIARIO: (sucursalId: number, moneda: string, fecha: string) =>
       `${API_URL}/api/movimientos/resumen-diario?sucursalId=${encodeURIComponent(sucursalId)}&moneda=${encodeURIComponent(moneda)}&fecha=${encodeURIComponent(fecha)}`,
     EMAIL_RESUMEN_DIARIO: `${API_URL}/api/movimientos/resumen-diario/email`,
