@@ -2,6 +2,7 @@ import { History } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
 import { formatFechaHora, formatRangoFechas, pluralDias } from '@/lib/formatters'
 import type { SincronizacionVentas } from '@/lib/types'
+import { NOMBRE_FUENTE_VENTAS } from '@/lib/types-ventas'
 import { SincronizacionEstadoBadge } from './SincronizacionEstadoBadge'
 import { SincronizacionProgreso } from './SincronizacionProgreso'
 import { SincronizacionResultado } from './SincronizacionResultado'
@@ -43,14 +44,16 @@ export function SincronizacionesVentasTable({ sincronizaciones }: Sincronizacion
                 {s.tipo === 'cambios' ? (
                   <>
                     <p className="font-semibold text-[#002868] whitespace-nowrap">Cambios en HiOffice</p>
-                    <p className="text-xs text-[#7A93BB]">Tickets nuevos o corregidos</p>
+                    <p className="text-xs text-[#7A93BB]">Hiopos · tickets nuevos o corregidos</p>
                   </>
                 ) : (
                   <>
                     <p className="font-semibold text-[#002868] whitespace-nowrap">
                       {formatRangoFechas(s.fechaDesde, s.fechaHasta)}
                     </p>
-                    <p className="text-xs text-[#7A93BB]">{pluralDias(s.diasTotales)}</p>
+                    <p className="text-xs text-[#7A93BB]">
+                      {NOMBRE_FUENTE_VENTAS[s.fuente] ?? s.fuente} · {pluralDias(s.diasTotales)}
+                    </p>
                   </>
                 )}
               </td>

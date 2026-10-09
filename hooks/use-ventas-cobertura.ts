@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/api'
 import { API_ENDPOINTS } from '@/lib/config'
-import type { CoberturaVentas } from '@/lib/types'
+import type { CoberturaVentas, FuenteVentas } from '@/lib/types'
 
 export interface UseVentasCoberturaResult {
   cobertura: CoberturaVentas | null
@@ -11,14 +11,20 @@ export interface UseVentasCoberturaResult {
 /**
  * Qué días de ventas hay importados. Si se pasa un período, también informa los días
  * sin importar dentro de él. `version` fuerza otra consulta (ej. al terminar una sync).
+ * Sin `fuente`, un día cuenta como importado si lo trajo cualquiera de las integraciones.
  */
-export function useVentasCobertura(desde?: string, hasta?: string, version = 0): UseVentasCoberturaResult {
+export function useVentasCobertura(
+  desde?: string,
+  hasta?: string,
+  version = 0,
+  fuente?: FuenteVentas,
+): UseVentasCoberturaResult {
   const [cobertura, setCobertura] = useState<CoberturaVentas | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const controller = new AbortController()
-    apiFetch(API_ENDPOINTS.VENTAS.COBERTURA(desde, hasta), { signal: controller.signal })
+    apiFetch(API_ENDPOINTS.VENTAS.COBERTURA(desde, hasta, fuente), { signal: controller.signal })
       .then(async response => {
         if (!response.ok) return
         const json = await response.json()
@@ -30,7 +36,7 @@ export function useVentasCobertura(desde?: string, hasta?: string, version = 0):
         if (!controller.signal.aborted) setIsLoading(false)
       })
     return () => controller.abort()
-  }, [desde, hasta, version])
+  }, [desde, hasta, version, fuente])
 
   return { cobertura, isLoading }
 }

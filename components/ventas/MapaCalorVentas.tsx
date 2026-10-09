@@ -32,7 +32,8 @@ export function MapaCalorVentas({ data, metrica }: MapaCalorVentasProps) {
   if (data.sinHora) {
     return (
       <p className="py-10 text-center text-sm text-[#7A93BB]">
-        El export de Hiopos no trae la hora de los tickets: agregá la columna “Hora” al dashboard para ver el mapa.
+        Las ventas importadas no traen la hora de los tickets. En Hiopos, agregá la columna “Hora” al dashboard de
+        HiOffice para ver el mapa.
       </p>
     )
   }

@@ -1,5 +1,5 @@
 import { toDateOnly } from './downloadBlob'
-import type { CoberturaVentas } from './types-ventas'
+import type { CoberturaVentas, FuenteVentas } from './types-ventas'
 
 export interface RangoRapido {
   id: string
@@ -8,8 +8,11 @@ export interface RangoRapido {
   hasta: string
 }
 
-/** Segundos aproximados por día: Hiopos exporta varios días por consulta. */
-const SEGUNDOS_POR_DIA = 2
+/**
+ * Segundos aproximados por día: Hiopos exporta varios días por consulta; Bistrosoft
+ * admite 12 consultas por minuto y trae un día por consulta.
+ */
+const SEGUNDOS_POR_DIA: Record<FuenteVentas, number> = { hiopos: 2, bistrosoft: 6 }
 
 function sumarDias(fecha: Date, dias: number): Date {
   const d = new Date(fecha)
@@ -17,7 +20,7 @@ function sumarDias(fecha: Date, dias: number): Date {
   return d
 }
 
-/** Atajos para elegir qué traer de Hiopos. */
+/** Atajos para elegir qué días traer de una integración. */
 export function rangosRapidos(cobertura: CoberturaVentas | null): RangoRapido[] {
   const hoy = new Date()
   const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
@@ -60,8 +63,8 @@ export function cantidadDias(desde: string, hasta: string): number {
 }
 
 /** "menos de 1 minuto", "unos 3 minutos", "cerca de 1 h 10 min". */
-export function tiempoEstimado(dias: number): string {
-  const minutos = Math.ceil((dias * SEGUNDOS_POR_DIA) / 60)
+export function tiempoEstimado(dias: number, fuente: FuenteVentas = 'hiopos'): string {
+  const minutos = Math.ceil((dias * SEGUNDOS_POR_DIA[fuente]) / 60)
   if (minutos <= 1) return 'menos de 1 minuto'
   if (minutos < 60) return `unos ${minutos} minutos`
   const h = Math.floor(minutos / 60)

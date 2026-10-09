@@ -18,7 +18,7 @@ import { useVentasCobertura } from '@/hooks/use-ventas-cobertura'
 import { useVentasIntegraciones } from '@/hooks/use-ventas-integraciones'
 import { useVentasLocales } from '@/hooks/use-ventas-locales'
 import { useAuthStore } from '@/store/authStore'
-import type { EstadoIntegracionVentas } from '@/lib/types'
+import type { CoberturaVentas, EstadoIntegracionVentas, FuenteVentas } from '@/lib/types'
 
 export default function VentasIntegracionesPage() {
   useDocumentTitle('Integraciones de ventas')
@@ -49,12 +49,26 @@ export default function VentasIntegracionesPage() {
       ),
     [integraciones.sincronizaciones],
   )
-  const { cobertura } = useVentasCobertura(undefined, undefined, versionFinal * 10_000 + avance)
+  // Cada integración muestra sus propios días importados.
+  const version = versionFinal * 10_000 + avance
+  const { cobertura: coberturaBistrosoft } = useVentasCobertura(undefined, undefined, version, 'bistrosoft')
+  const { cobertura: coberturaHiopos } = useVentasCobertura(undefined, undefined, version, 'hiopos')
+  const coberturas: Record<FuenteVentas, CoberturaVentas | null> = {
+    bistrosoft: coberturaBistrosoft,
+    hiopos: coberturaHiopos,
+  }
 
-  const hiopos = integraciones.estados.find(e => e.fuente === 'hiopos') ?? null
+  // Un enlace "Traer esos días" abre el diálogo de la integración que se está usando:
+  // entre las configuradas, la que sincronizó por última vez.
+  const principal = useMemo(
+    () =>
+      integraciones.estados
+        .filter(e => e.configurada)
+        .sort((a, b) => (b.ultimaExitosa ?? '').localeCompare(a.ultimaExitosa ?? ''))[0] ?? null,
+    [integraciones.estados],
+  )
   const abrirConRango = useCallback((desde: string, hasta: string) => setRangoPedido({ desde, hasta }), [])
-  // El diálogo se abre con el rango del enlace cuando ya se sabe el estado de Hiopos.
-  const dialogoIntegracion = aSincronizar ?? (rangoPedido && canSincronizar && hiopos?.configurada ? hiopos : null)
+  const dialogoIntegracion = aSincronizar ?? (rangoPedido && canSincronizar ? principal : null)
 
   const cerrarDialogo = useCallback(() => {
     setASincronizar(null)
@@ -89,7 +103,7 @@ export default function VentasIntegracionesPage() {
               <IntegracionEstadoCard
                 key={estado.fuente}
                 estado={estado}
-                cobertura={cobertura}
+                cobertura={coberturas[estado.fuente]}
                 canSincronizar={canSincronizar}
                 onSincronizar={() => setASincronizar(estado)}
               />
@@ -109,7 +123,7 @@ export default function VentasIntegracionesPage() {
             </VentasChartCard>
 
             <VentasChartCard
-              title="Locales de Hiopos"
+              title="Locales de las integraciones"
               subtitle="A qué sucursal de Heroica corresponde cada local. Se vinculan solos por nombre; si alguno no se reconoce, se elige una única vez."
             >
               {locales.isLoading ? (
@@ -133,7 +147,7 @@ export default function VentasIntegracionesPage() {
         {dialogoIntegracion && (
           <SincronizarVentasDialog
             integracion={dialogoIntegracion}
-            cobertura={cobertura}
+            cobertura={coberturas[dialogoIntegracion.fuente]}
             rangoInicial={aSincronizar ? null : rangoPedido}
             isSaving={integraciones.isSincronizando}
             onClose={cerrarDialogo}

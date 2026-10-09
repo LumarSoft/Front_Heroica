@@ -93,10 +93,14 @@ export function IntegracionEstadoCard({
           )}
           {!estado.credenciales && (
             <p className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
-              Faltan las credenciales de Hiopos en el servidor (HIOPOS_EMAIL / HIOPOS_PASSWORD).
+              Faltan las credenciales de {estado.nombre} en el servidor (
+              {estado.fuente === 'hiopos'
+                ? 'HIOPOS_EMAIL / HIOPOS_PASSWORD'
+                : 'BISTROSOFT_USERNAME / BISTROSOFT_PASSWORD'}
+              ).
             </p>
           )}
-          {estado.credenciales && !estado.configurada && (
+          {estado.fuente === 'hiopos' && estado.credenciales && !estado.configurada && (
             <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
               Falta indicar el dashboard de exportación de HiOffice: cargalo en la configuración de abajo.
             </p>

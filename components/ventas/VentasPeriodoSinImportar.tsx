@@ -22,7 +22,8 @@ export function VentasPeriodoSinImportar({ desde, hasta, puedeImportar }: Ventas
       </span>
       <h2 className="text-lg font-bold text-[#002868]">No hay ventas importadas {formatRangoFechas(desde, hasta)}</h2>
       <p className="mt-1 max-w-md text-sm text-[#5A6B8C]">
-        Esos días todavía no se trajeron de Hiopos, por eso no hay números para mostrar.
+        Esos días todavía no se trajeron de las integraciones (Bistrosoft / Hiopos), por eso no hay números para
+        mostrar.
       </p>
       {puedeImportar && (
         <Link

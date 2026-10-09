@@ -57,7 +57,7 @@ const MODULES = [
     id: 'ventas',
     modulo: MODULOS.VENTAS,
     label: 'Ventas',
-    description: 'Ventas de Hiopos con panel gerencial, reportes a medida y envíos por mail.',
+    description: 'Ventas de Bistrosoft y Hiopos con panel gerencial, reportes a medida y envíos por mail.',
     icon: ShoppingBag,
     href: '/ventas',
     available: true,

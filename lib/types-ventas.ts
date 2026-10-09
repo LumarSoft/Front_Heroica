@@ -1,6 +1,8 @@
-// Tipos del módulo de Ventas (panel gerencial, reportes e integración con Hiopos).
+// Tipos del módulo de Ventas (panel gerencial, reportes e integraciones con Bistrosoft y Hiopos).
 
-export type FuenteVentas = 'hiopos'
+export type FuenteVentas = 'bistrosoft' | 'hiopos'
+
+export const NOMBRE_FUENTE_VENTAS: Record<FuenteVentas, string> = { bistrosoft: 'Bistrosoft', hiopos: 'Hiopos' }
 export type TipoSincronizacionVentas = 'rango' | 'cambios'
 export type AgrupacionVentas = 'dia' | 'semana' | 'mes'
 export type ComparacionVentas = 'periodo_anterior' | 'anio_anterior'
@@ -132,9 +134,9 @@ export interface EstadoIntegracionVentas {
   fuente: FuenteVentas
   nombre: string
   disponible: boolean
-  /** HIOPOS_EMAIL / HIOPOS_PASSWORD cargadas en el servidor. */
+  /** Credenciales de la fuente cargadas en el servidor (BISTROSOFT_* / HIOPOS_*). */
   credenciales: boolean
-  /** Credenciales + dashboard de exportación. */
+  /** Lista para sincronizar (Hiopos además necesita el dashboard de exportación). */
   configurada: boolean
   syncAutomatica: boolean
   /** Trae solo lo modificado (filtro Fecha Modificado del dashboard). */

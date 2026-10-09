@@ -15,8 +15,8 @@ export function VentasSinDatos({ puedeImportar }: VentasSinDatosProps) {
       </span>
       <h2 className="text-lg font-bold text-[#002868]">Todavía no hay ventas importadas</h2>
       <p className="mt-1 max-w-md text-sm text-[#5A6B8C]">
-        Las ventas se traen desde Hiopos (HiOffice). Elegí desde qué fecha querés importarlas y el panel se completa
-        solo.
+        Las ventas se traen desde Bistrosoft y Hiopos (HiOffice). Elegí desde qué fecha querés importarlas y el panel se
+        completa solo.
       </p>
       {puedeImportar ? (
         <Link

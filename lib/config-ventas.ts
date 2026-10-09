@@ -32,8 +32,16 @@ export function createVentasEndpoints(API_URL: string) {
       DETALLE_OPERACION: (fuente: FuenteVentas, fecha: string, transaccionId: string) =>
         `${base}/operaciones/detalle?${new URLSearchParams({ fuente, fecha, transaccion_id: transaccionId }).toString()}`,
       EXPORTAR: (filtros: FiltrosVentas) => `${base}/exportar?${filtrosVentasQuery(filtros).toString()}`,
-      COBERTURA: (desde?: string, hasta?: string) =>
-        desde && hasta ? `${base}/cobertura?${new URLSearchParams({ desde, hasta }).toString()}` : `${base}/cobertura`,
+      COBERTURA: (desde?: string, hasta?: string, fuente?: FuenteVentas) => {
+        const params = new URLSearchParams()
+        if (desde && hasta) {
+          params.set('desde', desde)
+          params.set('hasta', hasta)
+        }
+        if (fuente) params.set('fuente', fuente)
+        const query = params.toString()
+        return query ? `${base}/cobertura?${query}` : `${base}/cobertura`
+      },
       INTEGRACIONES_ESTADO: `${base}/integraciones/estado`,
       SINCRONIZACIONES: `${base}/integraciones/sincronizaciones?limite=50`,
       SINCRONIZAR: `${base}/integraciones/sincronizar`,

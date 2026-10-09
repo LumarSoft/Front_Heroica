@@ -143,13 +143,13 @@ export function SincronizarVentasDialog({
                 {yaImportados === 0
                   ? 'Todos son días nuevos.'
                   : nuevos === 0
-                    ? `Todos ya estaban importados: se van a actualizar con lo último de Hiopos (no se duplica nada).`
+                    ? `Todos ya estaban importados: se van a actualizar con lo último de ${integracion?.nombre ?? 'la integración'} (no se duplica nada).`
                     : `${pluralDias(nuevos)} ${nuevos === 1 ? 'nuevo' : 'nuevos'} · ${pluralDias(yaImportados)} ya ${yaImportados === 1 ? 'importado se actualiza' : 'importados se actualizan'} (no se duplica nada).`}
               </p>
               <p className="flex items-start gap-2 text-xs text-[#5A6B8C]">
                 <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                Tarda {tiempoEstimado(dias)}. Avanza mientras esta pantalla esté abierta; si la cerrás, sigue la próxima
-                vez que alguien abra Ventas.
+                Tarda {tiempoEstimado(dias, integracion?.fuente)}. Avanza mientras esta pantalla esté abierta; si la
+                cerrás, sigue la próxima vez que alguien abra Ventas.
               </p>
             </div>
           )}

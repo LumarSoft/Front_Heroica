@@ -153,8 +153,8 @@ export default function VentasHorariosPage() {
                   <ContentLoadingSpinner />
                 ) : equipo.data && !disponible ? (
                   <p className="py-10 text-center text-sm text-[#7A93BB]">
-                    El export de Hiopos no trae {vista === 'vendedores' ? 'el vendedor' : 'la caja'} de cada ticket:
-                    agregá esa columna al dashboard de HiOffice y asignala en Integraciones.
+                    Las ventas importadas no traen {vista === 'vendedores' ? 'el vendedor' : 'la caja'} de cada ticket.
+                    En Hiopos, agregá esa columna al dashboard de HiOffice y asignala en Integraciones.
                   </p>
                 ) : (
                   <DesempenioTable filas={filasEquipo} etiqueta={vista === 'vendedores' ? 'Vendedor' : 'Caja'} />

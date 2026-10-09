@@ -1,5 +1,5 @@
 import { formatCantidad, pluralDias } from '@/lib/formatters'
-import type { SincronizacionVentas } from '@/lib/types'
+import { NOMBRE_FUENTE_VENTAS, type SincronizacionVentas } from '@/lib/types-ventas'
 
 /**
  * Qué dejó una importación. Distingue días nuevos de días que ya estaban y solo se
@@ -31,7 +31,9 @@ export function SincronizacionResultado({ sincronizacion: s }: { sincronizacion:
           </span>
         )}
       </p>
-      <p className="text-xs text-[#7A93BB]">{formatCantidad(s.importados)} líneas de Hiopos</p>
+      <p className="text-xs text-[#7A93BB]">
+        {formatCantidad(s.importados)} líneas de {NOMBRE_FUENTE_VENTAS[s.fuente] ?? s.fuente}
+      </p>
     </div>
   )
 }

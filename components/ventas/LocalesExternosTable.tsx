@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { VENTAS_SELECT_CLASS } from '@/lib/dialog-styles'
 import type { LocalExternoVentas } from '@/lib/types'
+import { NOMBRE_FUENTE_VENTAS } from '@/lib/types-ventas'
 import type { SucursalOpcion } from '@/hooks/use-ventas-locales'
 import { LocalVinculoEstado } from './LocalVinculoEstado'
 
@@ -51,8 +52,8 @@ export function LocalesExternosTable({
               </span>
               <div className="min-w-0">
                 <p className="font-semibold text-[#1E293B] truncate">{local.nombreExterno ?? local.codigoExterno}</p>
-                <p className="text-xs text-[#7A93BB] capitalize">
-                  {local.fuente} · código {local.codigoExterno}
+                <p className="text-xs text-[#7A93BB]">
+                  {NOMBRE_FUENTE_VENTAS[local.fuente] ?? local.fuente} · código {local.codigoExterno}
                 </p>
               </div>
             </div>

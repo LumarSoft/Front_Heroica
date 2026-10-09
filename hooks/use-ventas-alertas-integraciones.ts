@@ -15,7 +15,8 @@ export function useVentasAlertasIntegraciones(habilitado: boolean): string[] {
         if (!response.ok) return
         const json = await response.json()
         const mensajes = (json.data as EstadoIntegracionVentas[])
-          .filter(e => e.disponible)
+          // Una integración sin credenciales en el servidor no está en uso: no se avisa en el panel.
+          .filter(e => e.disponible && e.credenciales)
           .flatMap(e => [
             e.alerta ? `${e.nombre}: ${e.alerta}` : null,
             e.localesSinAsignar > 0
