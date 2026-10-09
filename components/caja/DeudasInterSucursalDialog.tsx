@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CircleDollarSign, Landmark } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
+import { downloadBlob } from '@/lib/downloadBlob'
 import {
   agruparDeudas,
   filtrarDeudas,
@@ -35,6 +37,7 @@ export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: De
   const [deudas, setDeudas] = useState<DeudaInterSucursal[]>([])
   const [abiertas, setAbiertas] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(false)
+  const [isExportando, setIsExportando] = useState(false)
   const [error, setError] = useState('')
 
   const sucursales = useMemo(() => sucursalesRelacionadas(deudas), [deudas])
@@ -67,6 +70,27 @@ export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: De
       setIsLoading(false)
     }
   }, [fechaFin, fechaInicio, sucursalId])
+
+  // Exporta lo mismo que se ve: período, tipo y sucursal relacionada.
+  const exportarExcel = useCallback(async () => {
+    setIsExportando(true)
+    try {
+      const url = API_ENDPOINTS.MOVIMIENTOS.EXPORT_DEUDAS_SUCURSAL_EXCEL(sucursalId, {
+        fechaInicio,
+        fechaFin,
+        tipo: filtroTipo,
+        sucursal: sucursalEfectiva,
+      })
+      const res = await apiFetch(url)
+      if (!res.ok) throw new Error('Error en la respuesta del servidor')
+      const blob = await res.blob()
+      downloadBlob(blob, `Deudas y prestamos ${fechaInicio} a ${fechaFin}.xlsx`)
+    } catch {
+      toast.error('Error al exportar el Excel.')
+    } finally {
+      setIsExportando(false)
+    }
+  }, [fechaFin, fechaInicio, filtroTipo, sucursalEfectiva, sucursalId])
 
   useEffect(() => {
     if (open) void fetchDeudas()
@@ -111,6 +135,9 @@ export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: De
           incluirTerceros={incluirTerceros}
           isLoading={isLoading}
           onActualizar={fetchDeudas}
+          puedeExportar={grupos.length > 0}
+          isExportando={isExportando}
+          onExportar={exportarExcel}
         />
         <div className="flex-1 overflow-y-auto p-7 space-y-3">
           {error && <p className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-700">{error}</p>}

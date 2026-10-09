@@ -1,5 +1,6 @@
 'use client'
 
+import { FileSpreadsheet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,6 +20,9 @@ interface DeudasFiltrosProps {
   incluirTerceros: boolean
   isLoading: boolean
   onActualizar: () => void
+  puedeExportar: boolean
+  isExportando: boolean
+  onExportar: () => void
 }
 
 const OPCIONES_TIPO: { value: FiltroTipoDeuda; label: string }[] = [
@@ -44,6 +48,9 @@ export function DeudasFiltros({
   incluirTerceros,
   isLoading,
   onActualizar,
+  puedeExportar,
+  isExportando,
+  onExportar,
 }: DeudasFiltrosProps) {
   return (
     <div className="px-7 py-4 border-b border-dashed flex flex-wrap items-end gap-4">
@@ -90,6 +97,15 @@ export function DeudasFiltros({
       </div>
       <Button onClick={onActualizar} disabled={isLoading} className="h-9 bg-[#002868] hover:bg-[#003d8f]">
         {isLoading ? 'Cargando...' : 'Actualizar'}
+      </Button>
+      <Button
+        variant="outline"
+        onClick={onExportar}
+        disabled={!puedeExportar || isExportando || isLoading}
+        className="h-9 border-emerald-600 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+      >
+        <FileSpreadsheet className="w-4 h-4" />
+        {isExportando ? 'Exportando...' : 'Exportar Excel'}
       </Button>
     </div>
   )

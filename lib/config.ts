@@ -51,6 +51,15 @@ export const API_ENDPOINTS = {
       return `${API_URL}/api/movimientos/deudas?${params.toString()}`
     },
     EXPORT_DEUDAS_EXCEL: `${API_URL}/api/movimientos/deudas/export`,
+    EXPORT_DEUDAS_SUCURSAL_EXCEL: (
+      sucursalId: number,
+      filtros: { fechaInicio?: string; fechaFin?: string; tipo: string; sucursal: string },
+    ) => {
+      const params = new URLSearchParams({ tipo: filtros.tipo, sucursal: filtros.sucursal })
+      if (filtros.fechaInicio) params.append('fechaInicio', filtros.fechaInicio)
+      if (filtros.fechaFin) params.append('fechaFin', filtros.fechaFin)
+      return `${API_URL}/api/movimientos/deudas/${sucursalId}/export?${params.toString()}`
+    },
     GET_RESUMEN_DIARIO: (sucursalId: number, moneda: string, fecha: string) =>
       `${API_URL}/api/movimientos/resumen-diario?sucursalId=${encodeURIComponent(sucursalId)}&moneda=${encodeURIComponent(moneda)}&fecha=${encodeURIComponent(fecha)}`,
     EMAIL_RESUMEN_DIARIO: `${API_URL}/api/movimientos/resumen-diario/email`,
