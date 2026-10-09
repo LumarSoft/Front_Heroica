@@ -53,7 +53,7 @@ export function DeudasFiltros({
   onExportar,
 }: DeudasFiltrosProps) {
   return (
-    <div className="px-7 py-4 border-b border-dashed flex flex-wrap items-end gap-4">
+    <div className="px-7 py-4 border-b border-dashed flex flex-wrap items-end gap-3">
       <div className="space-y-1.5">
         <Label className="text-xs font-semibold uppercase">Desde</Label>
         <Input type="date" value={fechaInicio} onChange={e => onFechaInicioChange(e.target.value)} className="h-9" />
