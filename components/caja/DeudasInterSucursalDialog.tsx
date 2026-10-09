@@ -107,7 +107,7 @@ export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: De
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[960px] max-h-[90vh] bg-white rounded-2xl p-0 gap-0 overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[1040px] max-h-[90vh] bg-white rounded-2xl p-0 gap-0 overflow-hidden flex flex-col">
         <div className="px-7 pt-7 pb-5 border-b border-[#F0F0F0]">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-[#1A1A1A] flex items-center gap-3">
