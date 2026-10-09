@@ -95,18 +95,21 @@ export function DeudasFiltros({
           </SelectContent>
         </Select>
       </div>
-      <Button onClick={onActualizar} disabled={isLoading} className="h-9 bg-[#002868] hover:bg-[#003d8f]">
-        {isLoading ? 'Cargando...' : 'Actualizar'}
-      </Button>
-      <Button
-        variant="outline"
-        onClick={onExportar}
-        disabled={!puedeExportar || isExportando || isLoading}
-        className="h-9 border-emerald-600 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
-      >
-        <FileSpreadsheet className="w-4 h-4" />
-        {isExportando ? 'Exportando...' : 'Exportar Excel'}
-      </Button>
+      {/* Juntos en un bloque para que al hacer wrap no se separen */}
+      <div className="flex items-end gap-2">
+        <Button onClick={onActualizar} disabled={isLoading} className="h-9 bg-[#002868] hover:bg-[#003d8f]">
+          {isLoading ? 'Cargando...' : 'Actualizar'}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={onExportar}
+          disabled={!puedeExportar || isExportando || isLoading}
+          className="h-9 border-emerald-600 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          {isExportando ? 'Exportando...' : 'Exportar Excel'}
+        </Button>
+      </div>
     </div>
   )
 }
