@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { Download, Loader2, Upload } from 'lucide-react'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -17,11 +18,13 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
-import type { Categoria, Subcategoria, DescripcionOption } from '@/lib/types'
+import type { Categoria, Subcategoria } from '@/lib/types'
 import { selectClasses, labelClasses } from '@/lib/dialog-styles'
+import { downloadBlob, toDateOnly } from '@/lib/downloadBlob'
+import { DescripcionesExcelDialog } from './DescripcionesExcelDialog'
+import { DescripcionesTabla, type FilaDescripcion } from './DescripcionesTabla'
 
 interface DescripcionForm {
-  id: number
   nombre: string
   tipo: 'ingreso' | 'egreso' | ''
   categoria_id: string
@@ -29,95 +32,103 @@ interface DescripcionForm {
 }
 
 const DEFAULT_FORM: DescripcionForm = {
-  id: 0,
   nombre: '',
   tipo: '',
   categoria_id: '',
   subcategoria_id: '',
 }
 
-const TIPO_LABELS: Record<string, string> = {
-  ingreso: 'Ingreso',
-  egreso: 'Egreso',
+interface DescripcionApi {
+  id: number
+  nombre: string
+  tipo: 'ingreso' | 'egreso' | null
+  categoria_id: number | null
+  subcategoria_id: number | null
+  activo: number | boolean | null
+}
+
+function aFila(d: DescripcionApi): FilaDescripcion {
+  return {
+    id: Number(d.id),
+    nombre: d.nombre ?? '',
+    tipo: d.tipo === 'ingreso' || d.tipo === 'egreso' ? d.tipo : null,
+    categoria_id: d.categoria_id ?? null,
+    subcategoria_id: d.subcategoria_id ?? null,
+    // MySQL devuelve 0/1; null (legacy) se toma como activa, igual que la API.
+    activo: d.activo === null || d.activo === undefined ? true : Boolean(Number(d.activo)),
+  }
 }
 
 export function DescripcionesSection() {
-  const [items, setItems] = useState<DescripcionOption[]>([])
+  const [items, setItems] = useState<FilaDescripcion[]>([])
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [subcategorias, setSubcategorias] = useState<Subcategoria[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [form, setForm] = useState<DescripcionForm>(DEFAULT_FORM)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
-  const [deleteTarget, setDeleteTarget] = useState<{
-    id: number
-    nombre: string
-  } | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<FilaDescripcion | null>(null)
+  const [deletedIds, setDeletedIds] = useState<number[]>([])
+  const [isExporting, setIsExporting] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
+
+  // Todas las descripciones no eliminadas (activas e inactivas): la grilla
+  // permite filtrar y reactivar.
+  const fetchItems = useCallback(async () => {
+    try {
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ALL)
+      const data = await res.json()
+      if (data.success) setItems((data.data as DescripcionApi[]).map(aFila))
+    } catch {
+      toast.error('Error al obtener descripciones')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  const fetchCatalogos = useCallback(async () => {
+    try {
+      const [resCat, resSub] = await Promise.all([
+        apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL),
+        apiFetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_ALL),
+      ])
+      const [dataCat, dataSub] = await Promise.all([resCat.json(), resSub.json()])
+      if (dataCat.success) setCategorias(dataCat.data || [])
+      if (dataSub.success) setSubcategorias(dataSub.data || [])
+    } catch {
+      // No crítico: la grilla muestra "no disponible" si faltan nombres.
+    }
+  }, [])
 
   useEffect(() => {
     fetchItems()
-    fetchCategorias()
-  }, [])
+    fetchCatalogos()
+  }, [fetchItems, fetchCatalogos])
 
-  // Recargar subcategorías cuando cambia la categoría en el form
-  useEffect(() => {
-    if (form.categoria_id) {
-      fetchSubcategorias(Number(form.categoria_id))
-    } else {
-      setSubcategorias([])
-    }
-  }, [form.categoria_id])
-
-  const fetchItems = async () => {
+  const handleExportar = async () => {
+    setIsExporting(true)
     try {
-      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.GET_ACTIVE)
-      const data = await res.json()
-      if (data.success) setItems(data.data)
-    } catch {
-      toast.error('Error al obtener descripciones')
-    }
-  }
-
-  const fetchCategorias = async () => {
-    try {
-      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.CATEGORIAS.GET_ALL)
-      const data = await res.json()
-      if (data.success) setCategorias(data.data || [])
-    } catch {
-      // Non-critical
-    }
-  }
-
-  const fetchSubcategorias = async (categoriaId: number) => {
-    try {
-      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.SUBCATEGORIAS.GET_BY_CATEGORIA(categoriaId))
-      const data = await res.json()
-      if (res.ok) setSubcategorias(data.data || [])
-    } catch {
-      // Non-critical
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.EXPORTAR, { cache: 'no-store' })
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}))
+        throw new Error(json.message || 'No se pudo generar el Excel')
+      }
+      downloadBlob(await res.blob(), `Descripciones_${toDateOnly(new Date())}.xlsx`)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'No se pudo generar el Excel')
+    } finally {
+      setIsExporting(false)
     }
   }
 
   const handleOpenNew = () => {
     setForm(DEFAULT_FORM)
-    setSubcategorias([])
     setError('')
     setIsDialogOpen(true)
   }
 
-  const handleOpenEdit = (item: DescripcionOption) => {
-    setForm({
-      id: item.id,
-      nombre: item.nombre,
-      tipo: (item.tipo as 'ingreso' | 'egreso') ?? '',
-      categoria_id: item.categoria_id?.toString() ?? '',
-      subcategoria_id: item.subcategoria_id?.toString() ?? '',
-    })
-    setError('')
-    setIsDialogOpen(true)
-  }
-
-  const handleSave = async () => {
+  const handleCreate = async () => {
     if (!form.nombre.trim()) {
       setError('El nombre es requerido')
       return
@@ -129,13 +140,10 @@ export function DescripcionesSection() {
     setIsSaving(true)
     setError('')
     try {
-      const url = form.id
-        ? API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.UPDATE(form.id)
-        : API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.CREATE
-      const res = await apiFetch(url, {
-        method: form.id ? 'PUT' : 'POST',
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.CREATE, {
+        method: 'POST',
         body: JSON.stringify({
-          nombre: form.nombre,
+          nombre: form.nombre.trim(),
           tipo: form.tipo,
           categoria_id: form.categoria_id ? Number(form.categoria_id) : null,
           subcategoria_id: form.subcategoria_id ? Number(form.subcategoria_id) : null,
@@ -158,14 +166,18 @@ export function DescripcionesSection() {
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return
+    const id = deleteTarget.id
     try {
-      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.DELETE(deleteTarget.id), {
+      const res = await apiFetch(API_ENDPOINTS.CONFIGURACION.DESCRIPCIONES.DELETE(id), {
         method: 'DELETE',
       })
       const data = await res.json()
       if (data.success) {
         toast.success(data.message)
+        setDeletedIds(prev => [...prev, id])
         await fetchItems()
+      } else {
+        toast.error(data.message || 'Error al eliminar descripción')
       }
     } catch {
       toast.error('Error al eliminar descripción')
@@ -174,74 +186,53 @@ export function DescripcionesSection() {
     }
   }
 
-  // Categorías filtradas según el tipo elegido en el form
+  // Opciones del formulario de alta, filtradas por tipo y categoría elegidos.
   const categoriasFiltradas = form.tipo ? categorias.filter(c => !c.tipo || c.tipo === form.tipo) : categorias
+  const subcategoriasForm = form.categoria_id
+    ? subcategorias.filter(s => s.categoria_id === Number(form.categoria_id))
+    : []
 
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-[#F0F0F0]">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#F0F0F0]">
           <CardTitle>Descripciones (Clasificación de Movimientos)</CardTitle>
-          <Button
-            onClick={handleOpenNew}
-            className="bg-[#002868] hover:bg-[#003d8f] text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
-          >
-            + Nueva Descripción
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={handleExportar}
+              disabled={isExporting}
+              className="text-xs sm:text-sm h-8 sm:h-9 px-3 border-[#E0E0E0] text-[#5A6070] hover:bg-[#EEF2FF] hover:border-[#002868] hover:text-[#002868]"
+            >
+              {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Exportar Excel
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsImportOpen(true)}
+              className="text-xs sm:text-sm h-8 sm:h-9 px-3 border-[#E0E0E0] text-[#5A6070] hover:bg-[#EEF2FF] hover:border-[#002868] hover:text-[#002868]"
+            >
+              <Upload className="h-4 w-4" />
+              Importar Excel
+            </Button>
+            <Button
+              onClick={handleOpenNew}
+              className="bg-[#002868] hover:bg-[#003d8f] text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
+            >
+              + Nueva Descripción
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 pt-4">
-            {items.length === 0 && (
-              <p className="text-sm text-[#8A8F9C] text-center py-6">No hay descripciones configuradas.</p>
-            )}
-            {items.map(item => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between gap-3 p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex flex-col gap-0.5 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-[#002868]">{item.nombre}</h3>
-                    {item.tipo && (
-                      <span
-                        className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
-                          item.tipo === 'ingreso'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-rose-50 text-rose-700 border border-rose-200'
-                        }`}
-                      >
-                        {TIPO_LABELS[item.tipo]}
-                      </span>
-                    )}
-                  </div>
-                  {(item.categoria_nombre || item.subcategoria_nombre) && (
-                    <p className="text-xs text-[#8A8F9C]">
-                      {item.categoria_nombre}
-                      {item.subcategoria_nombre && ` › ${item.subcategoria_nombre}`}
-                    </p>
-                  )}
-                </div>
-                <div className="flex gap-1.5 flex-shrink-0">
-                  <Button
-                    onClick={() => handleOpenEdit(item)}
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2.5 text-xs border-[#E0E0E0] text-[#5A6070] hover:bg-[#EEF2FF] hover:border-[#002868] hover:text-[#002868]"
-                  >
-                    Editar
-                  </Button>
-                  <Button
-                    onClick={() => setDeleteTarget({ id: item.id, nombre: item.nombre })}
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2.5 text-xs border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-400 hover:text-rose-600"
-                  >
-                    Eliminar
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <DescripcionesTabla
+            items={items}
+            categorias={categorias}
+            subcategorias={subcategorias}
+            isLoading={isLoading}
+            onSaved={fetchItems}
+            onDelete={setDeleteTarget}
+            deletedIds={deletedIds}
+          />
         </CardContent>
       </Card>
 
@@ -249,11 +240,9 @@ export function DescripcionesSection() {
         <DialogContent className="sm:max-w-[480px] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden">
           <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0]">
             <DialogHeader className="p-0 border-0">
-              <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">
-                {form.id ? 'Editar Descripción' : 'Nueva Descripción'}
-              </DialogTitle>
+              <DialogTitle className="text-xl font-bold text-[#1A1A1A] tracking-tight">Nueva Descripción</DialogTitle>
               <DialogDescription className="text-sm text-[#8A8F9C] mt-1">
-                {form.id ? 'Modifica los detalles de esta descripción' : 'Agrega una nueva descripción al sistema'}
+                Agrega una nueva descripción al sistema
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -283,15 +272,14 @@ export function DescripcionesSection() {
               <select
                 id="desc-tipo"
                 value={form.tipo}
-                onChange={e => {
+                onChange={e =>
                   setForm({
                     ...form,
                     tipo: e.target.value as 'ingreso' | 'egreso' | '',
                     categoria_id: '',
                     subcategoria_id: '',
                   })
-                  setSubcategorias([])
-                }}
+                }
                 className={selectClasses}
               >
                 <option value="">Seleccione tipo</option>
@@ -334,7 +322,7 @@ export function DescripcionesSection() {
                 className={`${selectClasses} disabled:opacity-40 disabled:cursor-not-allowed`}
               >
                 <option value="">Sin subcategoría</option>
-                {subcategorias.map(s => (
+                {subcategoriasForm.map(s => (
                   <option key={s.id} value={s.id}>
                     {s.nombre}
                   </option>
@@ -354,7 +342,7 @@ export function DescripcionesSection() {
                 Cancelar
               </Button>
               <Button
-                onClick={handleSave}
+                onClick={handleCreate}
                 disabled={isSaving || !form.nombre.trim() || !form.tipo}
                 className="h-10 px-6 rounded-lg bg-[#002868] text-white font-semibold hover:bg-[#003d8f] shadow-sm transition-all"
               >
@@ -364,6 +352,8 @@ export function DescripcionesSection() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <DescripcionesExcelDialog open={isImportOpen} onOpenChange={setIsImportOpen} onImported={fetchItems} />
 
       <DeleteDialog
         open={!!deleteTarget}
