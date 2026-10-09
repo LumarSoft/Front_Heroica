@@ -144,3 +144,52 @@ export interface CuentaBancaria {
   tipo_cuenta?: string
   banco?: string
 }
+
+// Resumen diario de tesorería (GET /api/movimientos/resumen-diario)
+export type ResumenAlcance = 'sucursal' | 'todas'
+
+export interface ResumenMovimiento {
+  id: number
+  descripcion: string | null
+  comentarios?: string
+  monto: number
+  tipo: 'ingreso' | 'egreso'
+  tipo_movimiento: 'efectivo' | 'banco'
+  estado: 'completado' | 'aprobado'
+  banco: string | null
+}
+
+export interface ResumenDia {
+  fecha: string
+  movimientos: ResumenMovimiento[]
+  ingresos: number
+  egresos: number
+}
+
+/** real = "Total Saldo Real" de la caja; necesario = "Saldo Necesario" (real + aprobados sin deuda). */
+export interface ResumenSaldosCaja {
+  real: number
+  necesario: number
+}
+
+export interface ResumenSaldos {
+  efectivo: ResumenSaldosCaja
+  banco: ResumenSaldosCaja
+  total: ResumenSaldosCaja
+}
+
+export interface ResumenSucursal {
+  sucursalId: number
+  sucursal: string
+  saldos: ResumenSaldos
+  bancos: Array<{ banco: string } & ResumenSaldosCaja>
+  dias: ResumenDia[]
+}
+
+export interface ResumenTesoreria {
+  alcance: ResumenAlcance
+  moneda: 'ARS' | 'USD'
+  fecha: string
+  sucursales: ResumenSucursal[]
+  totales: ResumenSaldos
+}
