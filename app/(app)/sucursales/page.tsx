@@ -23,6 +23,7 @@ import type { Sucursal } from '@/lib/types'
 import { sucursalSchema } from '@/lib/schemas'
 import { handleCuitChange } from '@/lib/validators'
 import { Building2, ExternalLink } from 'lucide-react'
+import { MasAccionesMenu } from '@/components/sucursales/MasAccionesMenu'
 
 export default function SucursalesPage() {
   const router = useRouter()
@@ -30,6 +31,7 @@ export default function SucursalesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const canGestionarSucursales = useAuthStore(state => state.canGestionarSucursales())
+  const canVerMovimientos = useAuthStore(state => state.canVerMovimientos())
 
   // Estados para el modal
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -367,25 +369,28 @@ export default function SucursalesPage() {
         </a>
       </footer>
 
-      {/* Botón flotante para agregar sucursal */}
-      {canGestionarSucursales && (
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="fixed bottom-8 right-8 w-16 h-16 bg-[#002868] text-white rounded-full shadow-2xl hover:bg-[#003d8f] hover:scale-110 transition-all flex items-center justify-center group cursor-pointer"
-          aria-label="Agregar sucursal"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2.5}
-            stroke="currentColor"
-            className="w-8 h-8"
+      {/* Botones flotantes: acciones extra (flecha) y agregar sucursal */}
+      <div className="fixed bottom-8 right-8 flex flex-col items-center gap-3">
+        {canVerMovimientos && <MasAccionesMenu />}
+        {canGestionarSucursales && (
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="w-16 h-16 bg-[#002868] text-white rounded-full shadow-2xl hover:bg-[#003d8f] hover:scale-110 transition-all flex items-center justify-center group cursor-pointer"
+            aria-label="Agregar sucursal"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-        </button>
-      )}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2.5}
+              stroke="currentColor"
+              className="w-8 h-8"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+          </button>
+        )}
+      </div>
 
       {/* Modal para crear sucursal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
