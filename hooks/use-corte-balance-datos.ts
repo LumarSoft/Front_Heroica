@@ -97,7 +97,16 @@ export function useCorteBalanceDatos(sucursalId: number, mes: string, moneda: st
         modificadaRef.current = false
         setPlantillaState(guardada)
         setPlantillaModificada(false)
-        setDatos(prev => (prev ? { ...prev, plantilla: guardada, plantillaEsPorDefecto: method === 'DELETE' } : prev))
+        setDatos(prev =>
+          prev
+            ? {
+                ...prev,
+                plantilla: guardada,
+                plantillaEsPorDefecto: method === 'DELETE',
+                plantillaActualizadaEn: method === 'PUT' ? new Date().toISOString() : null,
+              }
+            : prev,
+        )
         toast.success(method === 'PUT' ? 'Plantilla guardada para todas las sucursales' : 'Plantilla restablecida')
       } catch (err: unknown) {
         toast.error(mensajeDe(err, 'No se pudo guardar la plantilla'))
