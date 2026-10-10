@@ -31,6 +31,7 @@ export const PERMISOS = {
 
   // Reportes
   VER_REPORTES: 'ver_reportes',
+  EDITAR_PLANTILLA_REPORTES: 'editar_plantilla_reportes',
 
   // Configuración
   VER_CONFIGURACION: 'ver_configuracion',

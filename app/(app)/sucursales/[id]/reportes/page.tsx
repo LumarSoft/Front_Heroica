@@ -10,8 +10,7 @@ import { Label } from '@/components/ui/label'
 import { apiFetch } from '@/lib/api'
 import { formatMonto } from '@/lib/formatters'
 import type { Sucursal } from '@/lib/types'
-import { Download, TrendingUp, TrendingDown, AlertTriangle, ArrowLeft, Loader2 } from 'lucide-react'
-import { useAuthStore } from '@/store/authStore'
+import { FileBarChart, TrendingUp, TrendingDown, AlertTriangle, ArrowLeft } from 'lucide-react'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { SectionHeading } from '@/components/reportes/SectionHeading'
 import { SummaryCard } from '@/components/reportes/SummaryCard'
@@ -37,7 +36,6 @@ export default function ReportesPage() {
   const [monthlyData, setMonthlyData] = useState<MonthlyDataPoint[]>([])
   const [categoryData, setCategoryData] = useState<CategoryDataPoint[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isExporting, setIsExporting] = useState(false)
 
   const [selectedIngresoCategory, setSelectedIngresoCategory] = useState<string | null>(null)
   const [selectedEgresoCategory, setSelectedEgresoCategory] = useState<string | null>(null)
@@ -188,60 +186,6 @@ export default function ReportesPage() {
     }
   }, [monthlyData, debouncedMonth])
 
-  const handleDownloadPDF = useCallback(async () => {
-    if (isExporting) return
-    const token = useAuthStore.getState().token
-    if (!token) {
-      toast.error('Sesión expirada. Volvé a iniciar sesión.')
-      return
-    }
-    const rawId = Array.isArray(params.id) ? params.id[0] : params.id
-    const safeId = rawId != null ? encodeURIComponent(String(rawId)) : ''
-    if (!safeId) return
-
-    setIsExporting(true)
-    const loadingToast = toast.loading('Generando PDF…')
-    try {
-      const url = `/api/reportes/${safeId}/pdf?moneda=${moneda}&startDate=${startDate}&endDate=${endDate}`
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-
-      if (!response.ok) {
-        let detail = 'No se pudo generar el PDF'
-        try {
-          const errJson = await response.json()
-          detail = errJson.message || detail
-        } catch {
-          /* body no JSON */
-        }
-        throw new Error(detail)
-      }
-
-      const blob = await response.blob()
-      const disposition = response.headers.get('content-disposition') || ''
-      const match = disposition.match(/filename="?([^"]+)"?/i)
-      const suggested = match?.[1] ?? `Reporte_${debouncedMonth}_${moneda}.pdf`
-
-      const downloadUrl = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = downloadUrl
-      a.download = suggested
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(downloadUrl)
-
-      toast.success('PDF descargado')
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al generar PDF'
-      toast.error(message)
-    } finally {
-      toast.dismiss(loadingToast)
-      setIsExporting(false)
-    }
-  }, [isExporting, params.id, moneda, startDate, endDate, debouncedMonth])
-
   if (!sucursal && isLoading) {
     return (
       <div className="min-h-full bg-white flex items-center justify-center">
@@ -298,12 +242,13 @@ export default function ReportesPage() {
 
               <Button
                 variant="default"
-                className="ml-2 h-9 bg-[#002868] text-white hover:bg-[#003d8f] flex items-center gap-2 disabled:opacity-70"
-                onClick={handleDownloadPDF}
-                disabled={isExporting || isLoading || !reportData}
+                className="ml-2 h-9 bg-[#002868] text-white hover:bg-[#003d8f] flex items-center gap-2"
+                onClick={() =>
+                  router.push(`/sucursales/${params.id}/reportes/corte-balance?moneda=${moneda}&mes=${debouncedMonth}`)
+                }
               >
-                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                {isExporting ? 'Generando…' : 'Descargar PDF'}
+                <FileBarChart className="w-4 h-4" />
+                Corte de balance mensual
               </Button>
             </div>
           </div>
