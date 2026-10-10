@@ -12,6 +12,7 @@ import { AnexoManualEditor } from '@/components/reportes/corte-balance/AnexoManu
 import { BalanceTab } from '@/components/reportes/corte-balance/BalanceTab'
 import { OpcionesTab } from '@/components/reportes/corte-balance/OpcionesTab'
 import { PlantillaTab } from '@/components/reportes/corte-balance/PlantillaTab'
+import { VistaPreviaTab } from '@/components/reportes/corte-balance/vista-previa/VistaPreviaTab'
 import { useCorteBalanceDatos } from '@/hooks/use-corte-balance-datos'
 import { useCorteBalanceBorrador } from '@/hooks/use-corte-balance-borrador'
 import { useCorteBalanceExport } from '@/hooks/use-corte-balance-export'
@@ -29,6 +30,17 @@ function mesInicial(param: string | null): string {
   d.setMonth(d.getMonth() - 1)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }
+
+const PESTANAS = [
+  { valor: 'egresos', etiqueta: 'Egresos' },
+  { valor: 'ingresos', etiqueta: 'Ingresos' },
+  { valor: 'rrhh', etiqueta: 'Recursos Humanos' },
+  { valor: 'balance', etiqueta: 'Balance' },
+  { valor: 'conclusion', etiqueta: 'Conclusión' },
+  { valor: 'opciones', etiqueta: 'Diseño y opciones' },
+  { valor: 'vista-previa', etiqueta: 'Vista previa' },
+  { valor: 'plantilla', etiqueta: 'Plantilla' },
+]
 
 const AYUDAS: Record<ClaveAnexoManual, string> = {
   ingresos:
@@ -56,23 +68,23 @@ export default function CorteBalancePage() {
   useDocumentTitle(sucursalNombre ? `${sucursalNombre} · Corte de balance` : '')
 
   const onAnexoChange = useCallback((clave: ClaveAnexoManual) => (a: AnexoManual) => setAnexo(clave, a), [setAnexo])
+  const vista = exp.datosExport
   const ventasTotales = useMemo(
     () =>
-      borrador
-        ? ingresosDelBalance({ ...borrador, balance: { ...borrador.balance, ingresos: '' } }, exp.importes)
+      borrador && exp.contexto
+        ? ingresosDelBalance({ ...borrador, balance: { ...borrador.balance, ingresos: '' } }, exp.contexto)
         : null,
-    [borrador, exp.importes],
+    [borrador, exp.contexto],
   )
 
   if (!datos.sucursal && !datos.error) return <PageLoadingSpinner />
 
-  const listo = datos.datos && datos.plantilla && borrador && exp.resultado && exp.balance
   const anexoTab = (clave: ClaveAnexoManual) =>
-    borrador && (
+    vista && (
       <AnexoManualEditor
-        anexo={borrador.anexos[clave]}
+        anexo={vista.borrador.anexos[clave]}
         ayuda={AYUDAS[clave]}
-        importes={exp.importes}
+        contexto={vista.contexto}
         moneda={moneda}
         onChange={onAnexoChange(clave)}
       />
@@ -85,7 +97,7 @@ export default function CorteBalancePage() {
         moneda={moneda}
         mes={mesInput}
         exportando={exp.exportando}
-        puedeExportar={Boolean(listo)}
+        puedeExportar={Boolean(vista)}
         onMesChange={setMesInput}
         onBack={() => router.push(`/sucursales/${sucursalId}/reportes?moneda=${moneda}`)}
         onExportar={exp.exportar}
@@ -94,42 +106,27 @@ export default function CorteBalancePage() {
 
       <main className="container mx-auto space-y-6 px-4 py-6 sm:px-6">
         {datos.error && <ErrorBanner error={datos.error} />}
-        {datos.isLoading && !listo && <ContentLoadingSpinner />}
+        {datos.isLoading && !vista && <ContentLoadingSpinner />}
 
-        {listo && datos.datos && datos.plantilla && borrador && exp.resultado && exp.balance && (
+        {vista && datos.datos && datos.plantilla && (
           <>
-            <CorteBalanceResumen resultado={exp.resultado} balance={exp.balance} moneda={moneda} />
+            <CorteBalanceResumen resultado={vista.resultado} balance={vista.balance} moneda={moneda} />
 
             <Tabs defaultValue="egresos" className="gap-4">
               <TabsList className="h-auto w-full flex-wrap justify-start bg-white p-1 shadow-sm">
-                <TabsTrigger value="egresos" className="flex-none">
-                  Egresos
-                </TabsTrigger>
-                <TabsTrigger value="ingresos" className="flex-none">
-                  Ingresos
-                </TabsTrigger>
-                <TabsTrigger value="rrhh" className="flex-none">
-                  Recursos Humanos
-                </TabsTrigger>
-                <TabsTrigger value="balance" className="flex-none">
-                  Balance
-                </TabsTrigger>
-                <TabsTrigger value="conclusion" className="flex-none">
-                  Conclusión
-                </TabsTrigger>
-                <TabsTrigger value="opciones" className="flex-none">
-                  Diseño y opciones
-                </TabsTrigger>
-                <TabsTrigger value="plantilla" className="flex-none">
-                  Plantilla{datos.plantillaModificada ? ' •' : ''}
-                </TabsTrigger>
+                {PESTANAS.map(p => (
+                  <TabsTrigger key={p.valor} value={p.valor} className="flex-none">
+                    {p.etiqueta}
+                    {p.valor === 'plantilla' && datos.plantillaModificada ? ' •' : ''}
+                  </TabsTrigger>
+                ))}
               </TabsList>
 
               <TabsContent value="egresos">
                 <EgresosTab
-                  resultado={exp.resultado}
+                  resultado={vista.resultado}
                   plantilla={datos.plantilla}
-                  borrador={borrador}
+                  borrador={vista.borrador}
                   moneda={moneda}
                   onPlantillaChange={datos.setPlantilla}
                   onAjusteChange={borradorApi.setAjuste}
@@ -140,9 +137,10 @@ export default function CorteBalancePage() {
               <TabsContent value="rrhh">{anexoTab('rrhh')}</TabsContent>
               <TabsContent value="balance">
                 <BalanceTab
-                  balance={exp.balance}
-                  borrador={borrador}
-                  secciones={exp.secciones}
+                  balance={vista.balance}
+                  borrador={vista.borrador}
+                  secciones={vista.secciones}
+                  indicadores={vista.analisis.indicadores}
                   ventasTotales={ventasTotales}
                   operatividadPorDefecto={datos.plantilla.operatividadPct}
                   moneda={moneda}
@@ -151,7 +149,10 @@ export default function CorteBalancePage() {
               </TabsContent>
               <TabsContent value="conclusion">{anexoTab('conclusion')}</TabsContent>
               <TabsContent value="opciones">
-                <OpcionesTab opciones={borrador.opciones} onChange={borradorApi.setOpciones} />
+                <OpcionesTab opciones={vista.borrador.opciones} onChange={borradorApi.setOpciones} />
+              </TabsContent>
+              <TabsContent value="vista-previa">
+                <VistaPreviaTab datos={vista} />
               </TabsContent>
               <TabsContent value="plantilla">
                 <PlantillaTab

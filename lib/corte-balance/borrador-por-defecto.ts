@@ -1,12 +1,16 @@
-import type {
-  AnexoManual,
-  BorradorCorteBalance,
-  DiapositivaReporte,
-  FilaReporte,
-  FormatoValorReporte,
-  OpcionesCorteBalance,
-  TablaReporte,
-} from '@/lib/types'
+import { anexoIngresos } from '@/lib/corte-balance/anexo-ingresos-por-defecto'
+import {
+  conFormula,
+  conGrafico,
+  diapositiva,
+  fila,
+  nuevoId,
+  tabla,
+  tablaMixta,
+} from '@/lib/corte-balance/constructores-anexo'
+import type { AnexoManual, BorradorCorteBalance, DiapositivaReporte, OpcionesCorteBalance } from '@/lib/types'
+
+export { ID_FILA_VENTAS_TOTALES, nuevoId } from '@/lib/corte-balance/constructores-anexo'
 
 /**
  * Contenido inicial de las partes que se cargan a mano, con la misma estructura
@@ -16,72 +20,10 @@ import type {
 
 export const COLOR_PRINCIPAL_POR_DEFECTO = '#1B3D8F'
 
-/** Fila que se completa sola con la línea de egresos indicada si queda vacía. */
-export const ID_FILA_VENTAS_TOTALES = 'ingresos-ventas-total'
-
-export function nuevoId(prefijo: string): string {
-  return `${prefijo}-${Math.random().toString(36).slice(2, 9)}`
-}
-
-const fila = (etiqueta: string, formato: FormatoValorReporte, lineasVinculadas?: string[]): FilaReporte => ({
-  id: nuevoId('fila'),
-  etiqueta,
-  formato,
-  valor: '',
-  ...(lineasVinculadas ? { lineasVinculadas } : {}),
-})
-
-const tabla = (titulo: string, formato: FormatoValorReporte, etiquetas: string[]): TablaReporte => ({
-  id: nuevoId('tabla'),
-  titulo,
-  filas: etiquetas.map(e => fila(e, formato)),
-})
-
-const tablaMixta = (titulo: string, filas: [string, FormatoValorReporte][]): TablaReporte => ({
-  id: nuevoId('tabla'),
-  titulo,
-  filas: filas.map(([etiqueta, formato]) => fila(etiqueta, formato)),
-})
-
-const diapositiva = (subtitulo: string, tablas: TablaReporte[], texto = ''): DiapositivaReporte => ({
-  id: nuevoId('dia'),
-  subtitulo,
-  texto,
-  incluir: true,
-  tablas,
-})
-
-const SEMANAS = ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4', 'Semana 5']
-
-function anexoIngresos(): AnexoManual {
-  const ventas = tabla('Ventas', 'moneda', ['Ventas Totales', 'Máximo diario', 'Mínimo diario', 'Promedio diario'])
-  ventas.filas[0].id = ID_FILA_VENTAS_TOTALES
-  return {
-    clave: 'ingresos',
-    titulo: 'Anexo Ingresos',
-    incluir: true,
-    diapositivas: [
-      diapositiva('Ventas', [
-        ventas,
-        tabla('Facturación', 'moneda', ['Facturado', 'Comandado', 'IVA a pagar']),
-        tabla('', 'porcentaje', ['% Facturado', '% Comandado']),
-      ]),
-      diapositiva('Ventas por forma de pago', [tabla('', 'moneda', ['Efectivo', 'QR', 'Tarjetas', 'Pedidos Ya'])]),
-      diapositiva('Comportamiento semanal', [tabla('Ventas', 'moneda', SEMANAS)]),
-      diapositiva('Cantidad de TKT', [
-        tabla('TKT', 'numero', ['TKT totales', 'Máximo diario', 'Mínimo diario', 'Promedio diario']),
-      ]),
-      diapositiva('Comportamiento semanal de TKT', [
-        tabla('TKT', 'numero', SEMANAS),
-        tabla('% de variación semanal', 'porcentaje', SEMANAS.slice(1)),
-      ]),
-      diapositiva('TKT promedio', [
-        tabla('TKT promedio', 'moneda', SEMANAS),
-        tabla('Variación nominal semanal', 'moneda', SEMANAS.slice(1)),
-        tabla('', 'moneda', ['TKT promedio mensual']),
-      ]),
-    ],
-  }
+function dotacion(): DiapositivaReporte {
+  const porArea = conGrafico(tabla('Por área', 'numero', ['Salón', 'Cocina', 'Pastelería / Laminados']), 'torta')
+  const total = conFormula(fila('Dotación Total', 'numero'), { tipo: 'suma', filas: porArea.filas.map(f => f.id) })
+  return diapositiva('Dotación', [{ ...tabla('', 'numero', []), filas: [total] }, porArea])
 }
 
 function anexoRrhh(): AnexoManual {
@@ -92,7 +34,7 @@ function anexoRrhh(): AnexoManual {
     incluir: true,
     diapositivas: [
       diapositiva('Resumen mensual', [], ''),
-      diapositiva('Dotación', [tabla('', 'numero', ['Dotación Total', 'Salón', 'Cocina', 'Pastelería / Laminados'])]),
+      dotacion(),
       diapositiva('Escala Salarial', [
         tabla('', 'moneda', [
           'Runner / Recepción',
@@ -192,6 +134,12 @@ export function opcionesPorDefecto(sucursalNombre: string, periodo: string): Opc
     incluirCierre: true,
     ocultarLineasEnCero: false,
     incluirSinClasificar: false,
+    incluirComparativo: true,
+    incluirEvolucion: true,
+    incluirTopProveedores: true,
+    incluirIndicadores: true,
+    incluirCascada: true,
+    umbralVariacionPct: 10,
     textoCierre: 'Gracias',
     firmaCierre: 'Administración',
   }

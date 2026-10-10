@@ -59,7 +59,10 @@ export function useCorteBalanceBorrador(
 
   useEffect(() => {
     if (sucursalNombre === null) return
-    setBorrador(leer(key) ?? borradorPorDefecto(sucursalNombre, etiquetaPeriodo(mes)))
+    const porDefecto = borradorPorDefecto(sucursalNombre, etiquetaPeriodo(mes))
+    const guardado = leer(key)
+    // Borradores de versiones anteriores: completar las opciones nuevas
+    setBorrador(guardado ? { ...guardado, opciones: { ...porDefecto.opciones, ...guardado.opciones } } : porDefecto)
   }, [key, mes, sucursalNombre])
 
   // Guardado con debounce para no escribir en cada tecla

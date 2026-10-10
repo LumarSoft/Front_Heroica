@@ -73,7 +73,13 @@ export function nuevaLinea(nombre = 'Nueva línea'): LineaPlantilla {
 }
 
 export function nuevaSeccion(nombre = 'Nueva sección'): SeccionPlantilla {
-  return { id: `seccion-${Math.random().toString(36).slice(2, 10)}`, nombre, detalle: '', lineas: [nuevaLinea()] }
+  return {
+    id: `seccion-${Math.random().toString(36).slice(2, 10)}`,
+    nombre,
+    detalle: '',
+    tipoCosto: 'fijo',
+    lineas: [nuevaLinea()],
+  }
 }
 
 const TIPO_ETIQUETA = { categoria: 'Cat.', subcategoria: 'Subcat.', descripcion: 'Desc.' } as const

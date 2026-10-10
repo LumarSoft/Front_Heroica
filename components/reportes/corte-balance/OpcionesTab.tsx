@@ -24,6 +24,11 @@ const SWITCHES: { clave: ClaveBooleana; etiqueta: string; ayuda: string }[] = [
   { clave: 'incluirBalance', etiqueta: 'Balance mensual', ayuda: 'Ingresos, egresos y resultado' },
   { clave: 'incluirCierre', etiqueta: 'Diapositiva de cierre', ayuda: '"Gracias" + firma' },
   { clave: 'ocultarLineasEnCero', etiqueta: 'Ocultar líneas en $0', ayuda: 'En las tablas de egresos' },
+  { clave: 'incluirComparativo', etiqueta: 'Comparativo vs mes anterior', ayuda: 'Variación por sección, resaltada' },
+  { clave: 'incluirEvolucion', etiqueta: 'Evolución 6 meses', ayuda: 'Barras apiladas por sección' },
+  { clave: 'incluirTopProveedores', etiqueta: 'Principales proveedores', ayuda: 'Top 10 + banco vs efectivo' },
+  { clave: 'incluirCascada', etiqueta: 'Cascada del balance', ayuda: 'Del ingreso al resultado final' },
+  { clave: 'incluirIndicadores', etiqueta: 'Indicadores y equilibrio', ayuda: '% sobre ventas y punto de equilibrio' },
   {
     clave: 'incluirSinClasificar',
     etiqueta: 'Sumar egresos sin clasificar',
@@ -126,6 +131,17 @@ export function OpcionesTab({ opciones, onChange }: OpcionesTabProps) {
               </SelectContent>
             </Select>
           </div>
+        </div>
+        <div className="space-y-1">
+          <Label className={labelClasses}>Resaltar variaciones desde (%)</Label>
+          <Input
+            type="number"
+            min={0}
+            step="1"
+            value={opciones.umbralVariacionPct}
+            onChange={e => onChange({ umbralVariacionPct: Math.max(0, Number(e.target.value) || 0) })}
+            className="w-28"
+          />
         </div>
       </section>
 

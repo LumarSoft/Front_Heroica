@@ -1,14 +1,16 @@
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { MontoInput } from '@/components/ui/monto-input'
+import { IndicadoresCard } from '@/components/reportes/corte-balance/IndicadoresCard'
 import { corteCardClasses, labelClasses } from '@/lib/dialog-styles'
 import { formatearImporte } from '@/lib/corte-balance/valores'
-import type { BalanceCalculado, BorradorCorteBalance, SeccionCalculada } from '@/lib/types'
+import type { BalanceCalculado, BorradorCorteBalance, IndicadoresCorte, SeccionCalculada } from '@/lib/types'
 
 interface BalanceTabProps {
   balance: BalanceCalculado
   borrador: BorradorCorteBalance
   secciones: SeccionCalculada[]
+  indicadores: IndicadoresCorte | null
   ventasTotales: number | null
   operatividadPorDefecto: number
   moneda: 'ARS' | 'USD'
@@ -27,6 +29,7 @@ export function BalanceTab({
   balance,
   borrador,
   secciones,
+  indicadores,
   ventasTotales,
   operatividadPorDefecto,
   moneda,
@@ -88,6 +91,7 @@ export function BalanceTab({
           <span>{m(balance.egresos)}</span>
         </div>
       </section>
+      <IndicadoresCard indicadores={indicadores} moneda={moneda} />
     </div>
   )
 }

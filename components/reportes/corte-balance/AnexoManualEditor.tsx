@@ -1,3 +1,6 @@
+'use client'
+
+import { useMemo } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -7,12 +10,12 @@ import { DiapositivaEditor } from '@/components/reportes/corte-balance/Diapositi
 import { corteCardClasses, labelClasses } from '@/lib/dialog-styles'
 import { nuevoId } from '@/lib/corte-balance/borrador-por-defecto'
 import { mover, quitarEn, reemplazarEn } from '@/lib/corte-balance/edicion'
-import type { AnexoManual, DiapositivaReporte } from '@/lib/types'
+import type { ContextoValores, AnexoManual, DiapositivaReporte } from '@/lib/types'
 
 interface AnexoManualEditorProps {
   anexo: AnexoManual
   ayuda: string
-  importes: Map<string, number>
+  contexto: ContextoValores
   moneda: 'ARS' | 'USD'
   onChange: (anexo: AnexoManual) => void
 }
@@ -31,7 +34,22 @@ function duplicar(d: DiapositivaReporte): DiapositivaReporte {
   }
 }
 
-export function AnexoManualEditor({ anexo, ayuda, importes, moneda, onChange }: AnexoManualEditorProps) {
+export function AnexoManualEditor({ anexo, ayuda, contexto, moneda, onChange }: AnexoManualEditorProps) {
+  // Filas que se pueden usar en fórmulas: todas las numéricas del anexo
+  const filasDisponibles = useMemo(
+    () =>
+      anexo.diapositivas.flatMap(d =>
+        d.tablas.flatMap(t =>
+          t.filas
+            .filter(f => f.formato !== 'texto')
+            .map(f => ({
+              value: f.id,
+              label: [d.subtitulo, t.titulo, f.etiqueta || 'Sin etiqueta'].filter(Boolean).join(' › '),
+            })),
+        ),
+      ),
+    [anexo],
+  )
   const setDiapositivas = (diapositivas: DiapositivaReporte[]) => onChange({ ...anexo, diapositivas })
 
   return (
@@ -55,7 +73,8 @@ export function AnexoManualEditor({ anexo, ayuda, importes, moneda, onChange }: 
           numero={i + 1}
           esPrimera={i === 0}
           esUltima={i === anexo.diapositivas.length - 1}
-          importes={importes}
+          contexto={contexto}
+          filasDisponibles={filasDisponibles}
           moneda={moneda}
           onChange={dia => setDiapositivas(reemplazarEn(anexo.diapositivas, i, dia))}
           onMove={delta => setDiapositivas(mover(anexo.diapositivas, i, delta))}

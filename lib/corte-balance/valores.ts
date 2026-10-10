@@ -1,10 +1,11 @@
 import { aNumero, calcularBalance, redondear } from '@/lib/corte-balance/clasificar'
 import { ID_FILA_VENTAS_TOTALES } from '@/lib/corte-balance/borrador-por-defecto'
+import { resolverFila, type ValorResuelto } from '@/lib/corte-balance/formulas'
 import type {
   BalanceCalculado,
   BorradorCorteBalance,
+  ContextoValores,
   DiapositivaReporte,
-  FilaReporte,
   FormatoValorReporte,
   MostrarVacios,
   PlantillaCorteBalance,
@@ -36,23 +37,6 @@ export function importesPorLinea(resultado: ResultadoCorteBalance): Map<string, 
   return new Map(resultado.secciones.flatMap(s => s.lineas.map(l => [l.id, l.importe] as const)))
 }
 
-export interface ValorResuelto {
-  numero: number | null
-  texto: string
-  /** true si el valor salió de las líneas de egresos vinculadas (no lo escribió el usuario). */
-  automatico: boolean
-}
-
-export function resolverFila(fila: FilaReporte, importes: Map<string, number>): ValorResuelto {
-  if (fila.formato === 'texto') return { numero: null, texto: fila.valor.trim(), automatico: false }
-  const manual = aNumero(fila.valor)
-  if (manual !== null) return { numero: manual, texto: '', automatico: false }
-  const vinculadas = (fila.lineasVinculadas ?? []).filter(id => importes.has(id))
-  if (vinculadas.length === 0) return { numero: null, texto: '', automatico: false }
-  const numero = redondear(vinculadas.reduce((acc, id) => acc + (importes.get(id) ?? 0), 0))
-  return { numero, texto: '', automatico: true }
-}
-
 const numeroAR = (n: number, decimales: number) =>
   new Intl.NumberFormat('es-AR', { minimumFractionDigits: decimales, maximumFractionDigits: decimales }).format(n)
 
@@ -78,37 +62,35 @@ export function formatearValor(
   return numeroAR(n, Number.isInteger(n) ? 0 : 2)
 }
 
-export function diapositivaVacia(dia: DiapositivaReporte, importes: Map<string, number>): boolean {
+export function diapositivaVacia(dia: DiapositivaReporte, ctx: ContextoValores): boolean {
   if (dia.texto.trim()) return false
   return dia.tablas.every(t =>
     t.filas.every(f => {
-      const v = resolverFila(f, importes)
+      const v = resolverFila(f, ctx)
       return v.numero === null && !v.texto
     }),
   )
 }
 
 /** Ingresos del balance: el valor escrito en Balance o, si está vacío, "Ventas Totales" del anexo. */
-export function ingresosDelBalance(borrador: BorradorCorteBalance, importes: Map<string, number>): number | null {
+export function ingresosDelBalance(borrador: BorradorCorteBalance, ctx: ContextoValores): number | null {
   const manual = aNumero(borrador.balance.ingresos)
   if (manual !== null) return manual
-  const filaVentas = borrador.anexos.ingresos.diapositivas
-    .flatMap(d => d.tablas.flatMap(t => t.filas))
-    .find(f => f.id === ID_FILA_VENTAS_TOTALES)
-  return filaVentas ? resolverFila(filaVentas, importes).numero : null
+  const filaVentas = ctx.filas.get(ID_FILA_VENTAS_TOTALES)
+  return filaVentas ? resolverFila(filaVentas, ctx).numero : null
 }
 
 export function balanceDelBorrador(
   borrador: BorradorCorteBalance,
   resultado: ResultadoCorteBalance,
   plantilla: PlantillaCorteBalance,
+  ctx: ContextoValores,
 ): BalanceCalculado {
-  const importes = importesPorLinea(resultado)
   const egresos = redondear(
     resultado.totalEgresos + (borrador.opciones.incluirSinClasificar ? resultado.totalSinClasificar : 0),
   )
   const pct = aNumero(borrador.balance.operatividadPct) ?? plantilla.operatividadPct
-  return calcularBalance(ingresosDelBalance(borrador, importes) ?? 0, egresos, pct)
+  return calcularBalance(ingresosDelBalance(borrador, ctx) ?? 0, egresos, pct)
 }
 
 /** Nombre de archivo seguro: "Corte_de_balance_Heroica_Florida_2026-07" */

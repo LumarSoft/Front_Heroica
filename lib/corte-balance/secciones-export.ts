@@ -24,6 +24,7 @@ export function seccionesParaExportar(
       id: ID_SECCION_OTROS,
       nombre: 'Otros egresos',
       detalle: borrador.detalles[ID_SECCION_OTROS] ?? '',
+      tipoCosto: 'fijo',
       total: resultado.totalSinClasificar,
       lineas: resultado.sinClasificar.map(g => ({
         id: `${ID_SECCION_OTROS}--${g.clave}`,

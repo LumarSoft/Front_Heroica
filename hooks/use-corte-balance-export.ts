@@ -1,30 +1,32 @@
 import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { downloadBlob } from '@/lib/downloadBlob'
+import { analizarCorte } from '@/lib/corte-balance/analisis'
 import { clasificarEgresos } from '@/lib/corte-balance/clasificar'
+import { crearContexto } from '@/lib/corte-balance/formulas'
 import { seccionesParaExportar } from '@/lib/corte-balance/secciones-export'
 import { balanceDelBorrador, importesPorLinea, nombreArchivo } from '@/lib/corte-balance/valores'
 import type {
-  BalanceCalculado,
   BorradorCorteBalance,
+  ContextoValores,
   CorteBalanceResponse,
+  DatosExportCorteBalance,
   PlantillaCorteBalance,
   ResultadoCorteBalance,
-  SeccionCalculada,
 } from '@/lib/types'
 
 type FormatoExport = 'pptx' | 'xlsx'
 
 interface UseCorteBalanceExportResult {
   resultado: ResultadoCorteBalance | null
-  secciones: SeccionCalculada[]
-  balance: BalanceCalculado | null
-  importes: Map<string, number>
+  contexto: ContextoValores | null
+  /** Todo lo calculado para el mes: lo usan la vista previa, el PPTX y el Excel. */
+  datosExport: DatosExportCorteBalance | null
   exportando: FormatoExport | null
   exportar: (formato: FormatoExport) => Promise<void>
 }
 
-/** Clasifica los egresos con la plantilla y genera el PPTX / Excel en el navegador. */
+/** Clasifica los egresos con la plantilla, calcula el análisis y genera el PPTX / Excel en el navegador. */
 export function useCorteBalanceExport(
   datos: CorteBalanceResponse | null,
   plantilla: PlantillaCorteBalance | null,
@@ -37,38 +39,48 @@ export function useCorteBalanceExport(
     () => (datos && plantilla && borrador ? clasificarEgresos(datos.movimientos, plantilla, borrador.ajustes) : null),
     [datos, plantilla, borrador],
   )
-  const secciones = useMemo(
-    () => (resultado && borrador ? seccionesParaExportar(resultado, borrador) : []),
-    [resultado, borrador],
+  const contexto = useMemo(
+    () => (resultado && borrador && datos ? crearContexto(borrador, importesPorLinea(resultado), datos.mes) : null),
+    [resultado, borrador, datos],
   )
-  const importes = useMemo(() => (resultado ? importesPorLinea(resultado) : new Map<string, number>()), [resultado])
-  const balance = useMemo(
-    () => (resultado && borrador && plantilla ? balanceDelBorrador(borrador, resultado, plantilla) : null),
-    [resultado, borrador, plantilla],
-  )
+
+  const datosExport = useMemo((): DatosExportCorteBalance | null => {
+    if (!datos || !plantilla || !borrador || !resultado || !contexto) return null
+    const secciones = seccionesParaExportar(resultado, borrador)
+    const balance = balanceDelBorrador(borrador, resultado, plantilla, contexto)
+    const analisis = analizarCorte(
+      datos,
+      plantilla,
+      resultado,
+      secciones,
+      balance.ingresos,
+      borrador.opciones.incluirSinClasificar,
+    )
+    return {
+      borrador,
+      resultado,
+      secciones,
+      balance,
+      contexto,
+      movimientos: datos.movimientos,
+      analisis,
+      moneda: datos.moneda,
+      mes: datos.mes,
+      sucursalNombre,
+    }
+  }, [datos, plantilla, borrador, resultado, contexto, sucursalNombre])
 
   const exportar = useCallback(
     async (formato: FormatoExport) => {
-      if (!datos || !borrador || !resultado || !balance || exportando) return
+      if (!datosExport || exportando) return
       setExportando(formato)
       const aviso = toast.loading(formato === 'pptx' ? 'Generando presentación…' : 'Generando Excel…')
       try {
-        const payload = {
-          borrador,
-          resultado,
-          secciones,
-          balance,
-          importes,
-          movimientos: datos.movimientos,
-          moneda: datos.moneda,
-          mes: datos.mes,
-          sucursalNombre,
-        }
         const blob =
           formato === 'pptx'
-            ? await (await import('@/lib/corte-balance/pptx')).generarPptx(payload)
-            : await (await import('@/lib/corte-balance/excel')).generarExcel(payload)
-        downloadBlob(blob, `${nombreArchivo(sucursalNombre, datos.mes)}.${formato}`)
+            ? await (await import('@/lib/corte-balance/pptx')).generarPptx(datosExport)
+            : await (await import('@/lib/corte-balance/excel')).generarExcel(datosExport)
+        downloadBlob(blob, `${nombreArchivo(sucursalNombre, datosExport.mes)}.${formato}`)
         toast.success(formato === 'pptx' ? 'Presentación descargada' : 'Excel descargado')
       } catch (err: unknown) {
         toast.error(err instanceof Error ? err.message : 'No se pudo generar el archivo')
@@ -77,8 +89,8 @@ export function useCorteBalanceExport(
         setExportando(null)
       }
     },
-    [datos, borrador, resultado, secciones, balance, importes, sucursalNombre, exportando],
+    [datosExport, exportando, sucursalNombre],
   )
 
-  return { resultado, secciones, balance, importes, exportando, exportar }
+  return { resultado, contexto, datosExport, exportando, exportar }
 }

@@ -53,7 +53,12 @@ function indexarReglas(plantilla: PlantillaCorteBalance): Map<string, Candidato[
  * Destino de un movimiento: la regla más específica gana (descripción >
  * subcategoría > categoría; con medio > sin medio). Si empatan, la primera.
  */
-function candidatoDe(mov: MovimientoEgresoCorte, indice: Map<string, Candidato[]>): Candidato | null {
+type MovimientoClasificable = Pick<
+  MovimientoEgresoCorte,
+  'medio' | 'categoria_id' | 'subcategoria_id' | 'descripcion_id'
+>
+
+function candidatoDe(mov: MovimientoClasificable, indice: Map<string, Candidato[]>): Candidato | null {
   const claves = [
     mov.descripcion_id ? `descripcion:${mov.descripcion_id}` : null,
     mov.subcategoria_id ? `subcategoria:${mov.subcategoria_id}` : null,
@@ -154,6 +159,7 @@ export function clasificarEgresos(
       id: seccion.id,
       nombre: seccion.nombre,
       detalle: seccion.detalle,
+      tipoCosto: seccion.tipoCosto,
       lineas,
       total: redondear(lineas.reduce((acc, l) => acc + l.importe, 0)),
     }
@@ -172,6 +178,24 @@ export function clasificarEgresos(
     totalExcluido: suma(excluidos),
     destinoPorMovimiento,
   }
+}
+
+/**
+ * Total del sistema (sin ajustes manuales) por sección, para meses anteriores.
+ * Usa las mismas reglas que el mes actual, así la comparación es pareja.
+ */
+export function totalesPorSeccion(
+  movimientos: (MovimientoClasificable & { monto: number })[],
+  plantilla: PlantillaCorteBalance,
+): Map<string, number> {
+  const indice = indexarReglas(plantilla)
+  const seccionDeLinea = new Map(plantilla.secciones.flatMap(s => s.lineas.map(l => [l.id, s.id] as const)))
+  const totales = new Map(plantilla.secciones.map(s => [s.id, 0]))
+  for (const mov of movimientos) {
+    const seccionId = seccionDeLinea.get(candidatoDe(mov, indice)?.destino ?? '')
+    if (seccionId) totales.set(seccionId, redondear((totales.get(seccionId) ?? 0) + mov.monto))
+  }
+  return totales
 }
 
 export function calcularBalance(ingresos: number, egresos: number, operatividadPct: number): BalanceCalculado {

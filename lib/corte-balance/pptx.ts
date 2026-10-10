@@ -1,163 +1,131 @@
-import {
-  ALTO,
-  ANCHO,
-  AREA,
-  crearTema,
-  decorarBorde,
-  dibujarTablas,
-  encabezado,
-  textoLibre,
-  type Pptx,
-  type TablaPptx,
-  type Tema,
-} from '@/lib/corte-balance/pptx-base'
-import { graficoEgresos, seccionEgresos } from '@/lib/corte-balance/pptx-egresos'
-import { formatearImporte, formatearValor, resolverFila } from '@/lib/corte-balance/valores'
-import type { AnexoManual, DatosExportCorteBalance } from '@/lib/types'
+import type PptxGenJS from 'pptxgenjs'
+import { construirDiapositivas } from '@/lib/corte-balance/modelo/construir'
+import type { DatosExportCorteBalance, ElementoGrafico, ElementoModelo } from '@/lib/types'
 
-function portada(pptx: Pptx, tema: Tema, d: DatosExportCorteBalance): void {
-  const { opciones } = d.borrador
-  const slide = pptx.addSlide()
-  const franjas: [number, string][] = [
-    [8.4, tema.claro],
-    [10.0, tema.medio],
-    [11.6, tema.oscuro],
-  ]
-  for (const [x, color] of franjas) {
-    slide.addShape(pptx.ShapeType.roundRect, {
-      x,
-      y: 0,
-      w: ANCHO - x + 0.6,
-      h: ALTO,
-      rectRadius: 0.6,
-      fill: { color },
-      line: { color, width: 0 },
+type Pptx = PptxGenJS
+type Slide = PptxGenJS.Slide
+
+const FORMATO_NUMERO: Record<ElementoGrafico['formato'], string> = {
+  moneda: '"$" #,##0',
+  numero: '#,##0',
+  porcentaje: '0.0"%"',
+}
+
+function grafico(pptx: Pptx, slide: Slide, g: ElementoGrafico, fuente: string): void {
+  const caja = { x: g.x, y: g.y, w: g.w, h: g.h }
+  const datos = g.series.map(s => ({ name: s.nombre, labels: g.categorias, values: s.valores }))
+  const comun = {
+    ...caja,
+    showTitle: Boolean(g.titulo),
+    title: g.titulo,
+    titleFontFace: fuente,
+    titleFontSize: 16,
+    titleColor: '6B6B6B',
+    legendFontFace: fuente,
+    legendFontSize: 11,
+    chartColors: g.colores,
+  }
+  if (g.grafico === 'torta' || g.grafico === 'dona') {
+    slide.addChart(g.grafico === 'torta' ? pptx.ChartType.pie : pptx.ChartType.doughnut, datos, {
+      ...comun,
+      showLegend: true,
+      legendPos: 'r',
+      showPercent: true,
+      showValue: false,
+      dataLabelColor: 'FFFFFF',
+      dataLabelFontSize: 11,
+      holeSize: 55,
     })
+    return
   }
-  slide.addShape(pptx.ShapeType.roundRect, {
-    x: -0.8,
-    y: 0,
-    w: 9.8,
-    h: ALTO,
-    rectRadius: 0.6,
-    fill: { color: 'FFFFFF' },
-    line: { color: 'FFFFFF', width: 0 },
-  })
-  const base = { fontFace: tema.fuente, color: tema.color }
-  slide.addText(opciones.titulo, {
-    ...base,
-    x: 0.55,
-    y: 1.6,
-    w: 8.0,
-    h: 2.8,
-    fontSize: 54,
-    bold: true,
-    valign: 'middle',
-  })
-  slide.addText(opciones.subtitulo, { ...base, x: 1.7, y: 4.85, w: 6.5, h: 0.45, fontSize: 20, bold: true })
-  slide.addText(opciones.periodo, { ...base, x: 1.7, y: 5.3, w: 6.5, h: 0.45, fontSize: 20 })
-}
-
-function separador(pptx: Pptx, tema: Tema, titulo: string): void {
-  const slide = pptx.addSlide()
-  decorarBorde(pptx, slide, tema)
-  slide.addText(titulo, {
-    x: 0.8,
-    y: 2.5,
-    w: 11,
-    h: 2.4,
-    fontFace: tema.fuente,
-    fontSize: 60,
-    bold: true,
-    color: tema.color,
-    valign: 'middle',
-  })
-}
-
-function indice(pptx: Pptx, tema: Tema, capitulos: string[]): void {
-  const slide = pptx.addSlide()
-  decorarBorde(pptx, slide, tema)
-  encabezado(slide, tema, 'Contenidos', '')
-  slide.addText(
-    capitulos.map((c, i) => ({
-      text: `${String(i + 1).padStart(2, '0')} - ${c}`,
-      options: { breakLine: true, paraSpaceAfter: 18 },
-    })),
-    { x: 0.9, y: 1.7, w: 10, h: 5, fontFace: tema.fuente, fontSize: 26, color: tema.color, valign: 'top' },
-  )
-}
-
-function anexoManual(pptx: Pptx, tema: Tema, anexo: AnexoManual, d: DatosExportCorteBalance): void {
-  const { opciones } = d.borrador
-  for (const dia of anexo.diapositivas.filter(x => x.incluir)) {
-    const slide = pptx.addSlide()
-    decorarBorde(pptx, slide, tema)
-    encabezado(slide, tema, anexo.titulo, dia.subtitulo)
-    const tablas: TablaPptx[] = dia.tablas.map(t => ({
-      titulo: t.titulo,
-      filas: t.filas.map(f => ({
-        etiqueta: f.etiqueta,
-        valor: formatearValor(resolverFila(f, d.importes), f.formato, d.moneda, opciones.mostrarVacios),
-      })),
-    }))
-    const texto = dia.texto.trim()
-    if (tablas.length === 0) {
-      textoLibre(slide, tema, texto, { x: 0.8, y: 1.6, w: 11.6, h: 5.5 }, 18)
-    } else if (texto) {
-      textoLibre(slide, tema, texto, { x: AREA.x, y: 1.45, w: AREA.w, h: 1.0 }, 14)
-      dibujarTablas(slide, tema, tablas, { ...AREA, y: 2.55, h: AREA.h - 0.8 })
-    } else {
-      dibujarTablas(slide, tema, tablas, AREA)
-    }
+  const variasSeries = g.series.length > 1
+  const ejes = {
+    catAxisLabelFontFace: fuente,
+    catAxisLabelFontSize: 11,
+    valAxisLabelFontSize: 10,
+    valAxisLabelFormatCode: FORMATO_NUMERO[g.formato],
+    dataLabelFormatCode: FORMATO_NUMERO[g.formato],
+    dataLabelFontSize: 9,
+    showLegend: variasSeries,
+    legendPos: 'b' as const,
+    showValue: !variasSeries,
   }
+  if (g.grafico === 'lineas') {
+    slide.addChart(pptx.ChartType.line, datos, { ...comun, ...ejes, lineDataSymbol: 'circle', lineSize: 2 })
+    return
+  }
+  slide.addChart(pptx.ChartType.bar, datos, {
+    ...comun,
+    ...ejes,
+    barDir: 'col',
+    barGrouping: g.grafico === 'barras-apiladas' ? 'stacked' : 'clustered',
+    barGapWidthPct: 60,
+  })
 }
 
-function balance(pptx: Pptx, tema: Tema, d: DatosExportCorteBalance): void {
-  const slide = pptx.addSlide()
-  decorarBorde(pptx, slide, tema)
-  encabezado(slide, tema, 'Balance Mensual', '')
-  const m = (n: number) => formatearImporte(n, d.moneda)
-  const b = d.balance
-  const bloque = (titulo: string, valor: number, color: string) => [
-    {
-      text: `${titulo}\n${m(valor)}`,
-      options: { colspan: 2, fill: { color }, bold: true, fontSize: 18 },
-    },
-  ]
-  slide.addTable(
-    [
-      bloque('Ingresos', b.ingresos, '9AE07A'),
-      bloque('Egresos', b.egresos, 'FF5A5A'),
-      bloque('Resultado parcial', b.resultadoParcial, 'FFDE59'),
-      [
-        { text: `Operatividad (${b.operatividadPct}%)`, options: { bold: true, fontSize: 14 } },
-        { text: m(b.operatividad), options: { fontSize: 16 } },
-      ],
-      bloque('Resultado Final', b.resultadoFinal, '9CC3FF'),
-    ],
-    {
-      x: 0.8,
-      y: 1.75,
-      w: 5.9,
-      colW: [2.95, 2.95],
-      rowH: [0.95, 0.95, 0.95, 0.65, 0.95],
-      fontFace: tema.fuente,
-      color: '111111',
-      align: 'center',
-      valign: 'middle',
-      border: { type: 'solid', pt: 1.5, color: '000000' },
-    },
-  )
-  const filas = d.secciones.map(s => ({ etiqueta: s.nombre, valor: m(s.total) }))
-  dibujarTablas(slide, tema, [{ titulo: '', filas }], { x: 7.1, y: 0.55, w: 5.6, h: 6.6 })
-}
-
-function cierre(pptx: Pptx, tema: Tema, d: DatosExportCorteBalance): void {
-  const slide = pptx.addSlide()
-  decorarBorde(pptx, slide, tema)
-  const base = { fontFace: tema.fuente, color: tema.color, align: 'center' as const }
-  slide.addText(d.borrador.opciones.textoCierre, { ...base, x: 1, y: 2.4, w: 11.3, h: 1.6, fontSize: 64, bold: true })
-  slide.addText(d.borrador.opciones.firmaCierre, { ...base, x: 1, y: 4.1, w: 11.3, h: 0.6, fontSize: 22 })
+function dibujar(pptx: Pptx, slide: Slide, e: ElementoModelo, fuente: string): void {
+  if (e.tipo === 'forma') {
+    slide.addShape(e.radio ? pptx.ShapeType.roundRect : pptx.ShapeType.rect, {
+      x: e.x,
+      y: e.y,
+      w: e.w,
+      h: e.h,
+      rectRadius: e.radio || undefined,
+      fill: { color: e.color },
+      line: { color: e.color, width: 0 },
+    })
+  } else if (e.tipo === 'texto') {
+    slide.addText(
+      e.tramos.map(t => ({ text: t.texto, options: { bold: t.negrita, color: t.color } })),
+      {
+        x: e.x,
+        y: e.y,
+        w: e.w,
+        h: e.h,
+        fontFace: fuente,
+        fontSize: e.tamano,
+        color: e.color,
+        bold: e.negrita,
+        italic: e.cursiva,
+        underline: e.subrayado ? { style: 'sng' } : undefined,
+        align: e.alineacion ?? 'left',
+        valign: e.vertical ?? 'middle',
+        fit: e.vertical === 'top' ? 'shrink' : undefined,
+        paraSpaceAfter: e.vertical === 'top' ? 6 : undefined,
+      },
+    )
+  } else if (e.tipo === 'tabla') {
+    slide.addTable(
+      e.filas.map(fila =>
+        fila.map(c => ({
+          text: c.texto,
+          options: {
+            bold: c.negrita,
+            color: c.color,
+            fontSize: c.tamano,
+            colspan: c.colspan,
+            fill: c.fondo ? { color: c.fondo } : undefined,
+          },
+        })),
+      ),
+      {
+        x: e.x,
+        y: e.y,
+        w: e.w,
+        colW: e.anchos,
+        rowH: e.altos,
+        fontFace: fuente,
+        fontSize: e.tamano,
+        color: '111111',
+        align: 'center',
+        valign: 'middle',
+        border: { type: 'solid', pt: 1.5, color: '000000' },
+        fill: { color: 'FFFFFF' },
+      },
+    )
+  } else {
+    grafico(pptx, slide, e, fuente)
+  }
 }
 
 export async function generarPptx(d: DatosExportCorteBalance): Promise<Blob> {
@@ -166,44 +134,11 @@ export async function generarPptx(d: DatosExportCorteBalance): Promise<Blob> {
   pptx.layout = 'LAYOUT_WIDE'
   pptx.title = `${d.borrador.opciones.titulo} - ${d.sucursalNombre}`
   pptx.company = 'Heroica'
-
-  const { opciones, anexos } = d.borrador
-  const tema = crearTema(opciones.colorPrincipal, opciones.fuente)
-  const capitulos: { titulo: string; dibujar: () => void }[] = []
-
-  if (anexos.ingresos.incluir) {
-    capitulos.push({ titulo: anexos.ingresos.titulo, dibujar: () => anexoManual(pptx, tema, anexos.ingresos, d) })
+  const fuente = d.borrador.opciones.fuente
+  for (const diapositiva of construirDiapositivas(d)) {
+    const slide = pptx.addSlide()
+    slide.background = { color: 'FFFFFF' }
+    for (const e of diapositiva.elementos) dibujar(pptx, slide, e, fuente)
   }
-  if (anexos.rrhh.incluir) {
-    capitulos.push({ titulo: anexos.rrhh.titulo, dibujar: () => anexoManual(pptx, tema, anexos.rrhh, d) })
-  }
-  capitulos.push({
-    titulo: 'Anexo Egresos',
-    dibujar: () => {
-      d.secciones.forEach(s => seccionEgresos(pptx, tema, s, d))
-      if (opciones.incluirGraficoEgresos) graficoEgresos(pptx, tema, d.secciones)
-    },
-  })
-  if (opciones.incluirBalance) capitulos.push({ titulo: 'Balance Mensual', dibujar: () => balance(pptx, tema, d) })
-  if (anexos.conclusion.incluir) {
-    capitulos.push({
-      titulo: anexos.conclusion.titulo,
-      dibujar: () => anexoManual(pptx, tema, anexos.conclusion, d),
-    })
-  }
-
-  if (opciones.incluirPortada) portada(pptx, tema, d)
-  if (opciones.incluirIndice)
-    indice(
-      pptx,
-      tema,
-      capitulos.map(c => c.titulo),
-    )
-  for (const c of capitulos) {
-    if (opciones.incluirSeparadores) separador(pptx, tema, c.titulo)
-    c.dibujar()
-  }
-  if (opciones.incluirCierre) cierre(pptx, tema, d)
-
   return (await pptx.write({ outputType: 'blob' })) as Blob
 }

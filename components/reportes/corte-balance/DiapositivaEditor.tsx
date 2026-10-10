@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import type { ComboboxOption } from '@/components/ui/combobox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -8,14 +9,15 @@ import { TablaReporteEditor } from '@/components/reportes/corte-balance/TablaRep
 import { corteCardClasses, corteIconButtonClasses } from '@/lib/dialog-styles'
 import { nuevoId } from '@/lib/corte-balance/borrador-por-defecto'
 import { quitarEn, reemplazarEn } from '@/lib/corte-balance/edicion'
-import type { DiapositivaReporte } from '@/lib/types'
+import type { ContextoValores, DiapositivaReporte } from '@/lib/types'
 
 interface DiapositivaEditorProps {
   diapositiva: DiapositivaReporte
   numero: number
   esPrimera: boolean
   esUltima: boolean
-  importes: Map<string, number>
+  contexto: ContextoValores
+  filasDisponibles: ComboboxOption[]
   moneda: 'ARS' | 'USD'
   onChange: (diapositiva: DiapositivaReporte) => void
   onMove: (delta: -1 | 1) => void
@@ -28,7 +30,8 @@ export function DiapositivaEditor({
   numero,
   esPrimera,
   esUltima,
-  importes,
+  contexto,
+  filasDisponibles,
   moneda,
   onChange,
   onMove,
@@ -109,7 +112,8 @@ export function DiapositivaEditor({
           <TablaReporteEditor
             key={t.id}
             tabla={t}
-            importes={importes}
+            contexto={contexto}
+            filasDisponibles={filasDisponibles}
             moneda={moneda}
             onChange={tabla => onChange({ ...d, tablas: reemplazarEn(d.tablas, i, tabla) })}
             onRemove={() => onChange({ ...d, tablas: quitarEn(d.tablas, i) })}

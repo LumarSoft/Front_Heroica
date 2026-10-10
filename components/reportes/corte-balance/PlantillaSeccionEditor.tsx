@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { PlantillaLineaEditor } from '@/components/reportes/corte-balance/PlantillaLineaEditor'
 import type { OpcionesReglas } from '@/components/reportes/corte-balance/ReglaSelector'
@@ -40,6 +41,18 @@ export function PlantillaSeccionEditor({
           className="h-9 max-w-sm text-base font-bold text-[#002868]"
           aria-label="Nombre de la sección"
         />
+        <Select
+          value={seccion.tipoCosto}
+          onValueChange={v => (v === 'fijo' || v === 'variable') && onChange({ ...seccion, tipoCosto: v })}
+        >
+          <SelectTrigger className="h-8 w-[150px] bg-white text-xs" title="Para el punto de equilibrio">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="fijo">Costo fijo</SelectItem>
+            <SelectItem value="variable">Costo variable</SelectItem>
+          </SelectContent>
+        </Select>
         <div className="ml-auto flex items-center">
           <Button
             type="button"

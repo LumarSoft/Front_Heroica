@@ -1,6 +1,7 @@
 import type ExcelJS from 'exceljs'
 import { DESTINO_EXCLUIDO } from '@/lib/corte-balance/clasificar'
-import { etiquetaPeriodo, resolverFila } from '@/lib/corte-balance/valores'
+import { resolverFila } from '@/lib/corte-balance/formulas'
+import { etiquetaPeriodo } from '@/lib/corte-balance/valores'
 import type { AnexoManual, DatosExportCorteBalance, FormatoValorReporte } from '@/lib/types'
 
 /**
@@ -144,6 +145,72 @@ function hojaMovimientos(libro: ExcelJS.Workbook, d: DatosExportCorteBalance, co
   hoja.views = [{ state: 'frozen', ySplit: 1 }]
 }
 
+function hojaAnalisis(libro: ExcelJS.Workbook, d: DatosExportCorteBalance, color: string, sub: string): void {
+  const hoja = libro.addWorksheet('Análisis')
+  hoja.columns = [
+    { width: 34 },
+    { width: 18 },
+    { width: 18 },
+    { width: 18 },
+    { width: 18 },
+    { width: 18 },
+    { width: 18 },
+  ]
+  const a = d.analisis
+  titulo(hoja, 'Análisis del período', sub, color)
+
+  hoja.addRow(['Comparativo vs mes anterior (valores del sistema, sin ajustes manuales)']).font = { bold: true }
+  cabecera(hoja, ['Sección', etiquetaPeriodo(a.mesAnterior), etiquetaPeriodo(d.mes), 'Variación', 'Var. %'], color)
+  for (const c of a.comparativo) {
+    const fila = hoja.addRow([c.nombre, c.anterior, c.actual, c.variacion, c.variacionPct])
+    ;[2, 3, 4].forEach(i => (fila.getCell(i).numFmt = FORMATOS.moneda))
+    fila.getCell(5).numFmt = FORMATOS.porcentaje
+  }
+  hoja.addRow([])
+
+  hoja.addRow(['Evolución mensual por sección (valores del sistema)']).font = { bold: true }
+  cabecera(hoja, ['Sección', ...a.evolucion.meses.map(etiquetaPeriodo)], color)
+  for (const serie of a.evolucion.series) {
+    const fila = hoja.addRow([serie.nombre, ...serie.valores])
+    serie.valores.forEach((_, i) => (fila.getCell(i + 2).numFmt = FORMATOS.moneda))
+  }
+  hoja.addRow([])
+
+  hoja.addRow(['Principales proveedores / descripciones']).font = { bold: true }
+  cabecera(hoja, ['Proveedor', 'Movimientos', 'Total'], color)
+  for (const p of a.topProveedores) hoja.addRow([p.nombre, p.cantidad, p.total]).getCell(3).numFmt = FORMATOS.moneda
+  const medio = hoja.addRow(['Pagado por banco', null, a.porMedio.banco])
+  const efectivo = hoja.addRow(['Pagado en efectivo', null, a.porMedio.efectivo])
+  medio.getCell(3).numFmt = FORMATOS.moneda
+  efectivo.getCell(3).numFmt = FORMATOS.moneda
+  hoja.addRow([])
+
+  const ind = a.indicadores
+  if (!ind) {
+    hoja.addRow(['Indicadores: cargá las ventas del período para calcular incidencias y punto de equilibrio.'])
+    return
+  }
+  hoja.addRow(['Incidencia sobre ventas']).font = { bold: true }
+  cabecera(hoja, ['Sección', 'Tipo', 'Monto', '% sobre ventas'], color)
+  for (const i of ind.incidencias) {
+    const fila = hoja.addRow([i.nombre, i.tipoCosto === 'fijo' ? 'Fijo' : 'Variable', i.total, i.pct])
+    fila.getCell(3).numFmt = FORMATOS.moneda
+    fila.getCell(4).numFmt = FORMATOS.porcentaje
+  }
+  hoja.addRow([])
+  hoja.addRow(['Punto de equilibrio = costos fijos / (1 − costos variables / ventas)']).font = { bold: true }
+  const kpis: [string, number | null, string][] = [
+    ['Ventas', ind.ventas, FORMATOS.moneda],
+    ['Costos fijos', ind.costosFijos, FORMATOS.moneda],
+    ['Costos variables', ind.costosVariables, FORMATOS.moneda],
+    ['Margen de contribución', ind.margenContribucionPct, FORMATOS.porcentaje],
+    ['Punto de equilibrio', ind.puntoEquilibrio, FORMATOS.moneda],
+    ['Ventas / equilibrio', ind.coberturaPct, FORMATOS.porcentaje],
+    ['Diferencia (ventas − equilibrio)', ind.diferencia, FORMATOS.moneda],
+  ]
+  for (const [etiqueta, valor, formato] of kpis) hoja.addRow([etiqueta, valor]).getCell(2).numFmt = formato
+}
+
 function hojaManual(libro: ExcelJS.Workbook, anexo: AnexoManual, d: DatosExportCorteBalance, color: string): void {
   const hoja = libro.addWorksheet(anexo.titulo.slice(0, 31).replace(/[\\/?*[\]:]/g, '-'))
   hoja.columns = [{ width: 40 }, { width: 24 }]
@@ -159,7 +226,7 @@ function hojaManual(libro: ExcelJS.Workbook, anexo: AnexoManual, d: DatosExportC
     for (const t of dia.tablas) {
       if (t.titulo) hoja.addRow([t.titulo]).font = { bold: true, italic: true }
       for (const f of t.filas) {
-        const v = resolverFila(f, d.importes)
+        const v = resolverFila(f, d.contexto)
         const fila = hoja.addRow([f.etiqueta, f.formato === 'texto' ? v.texto : v.numero])
         fila.getCell(2).numFmt = FORMATOS[f.formato]
       }
@@ -181,6 +248,7 @@ export async function generarExcel(d: DatosExportCorteBalance): Promise<Blob> {
   const totales = hojaEgresos(libro.addWorksheet('Egresos'), d, color, sub)
   hojaBalance(balance, d, totales, color, sub)
   hojaMovimientos(libro, d, color)
+  hojaAnalisis(libro, d, color, sub)
   const { ingresos, rrhh, conclusion } = d.borrador.anexos
   for (const anexo of [ingresos, rrhh, conclusion]) if (anexo.incluir) hojaManual(libro, anexo, d, color)
 
