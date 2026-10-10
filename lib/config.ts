@@ -208,6 +208,9 @@ export const API_ENDPOINTS = {
       `${API_URL}/api/reportes/${sucursalId}?startDate=${startDate}T00:00:00&endDate=${endDate}T23:59:59&moneda=${moneda}`,
     GET_ANUAL: (sucursalId: number | string, moneda: string = 'ARS') =>
       `${API_URL}/api/reportes/${sucursalId}/anual?moneda=${moneda}`,
+    CORTE_BALANCE: (sucursalId: number | string, mes: string, moneda: string) =>
+      `${API_URL}/api/reportes/${sucursalId}/corte-balance?mes=${encodeURIComponent(mes)}&moneda=${encodeURIComponent(moneda)}`,
+    PLANTILLA_CORTE_BALANCE: `${API_URL}/api/reportes/corte-balance/plantilla`,
   },
   CUENTAS_BANCARIAS: {
     GET_BY_SUCURSAL: (sucursalId: number) => `${API_URL}/api/cuentas-bancarias/${sucursalId}`,

@@ -46,6 +46,7 @@ interface AuthState {
 
   // Reportes
   canVerReportes: () => boolean
+  canEditarPlantillaReportes: () => boolean
 
   // Sucursales
   canVerSucursales: () => boolean
@@ -148,6 +149,7 @@ export const useAuthStore = create<AuthState>()(
 
       // Reportes
       canVerReportes: () => get().hasPermiso('ver_reportes'),
+      canEditarPlantillaReportes: () => get().hasPermiso('editar_plantilla_reportes'),
 
       // Sucursales
       canVerSucursales: () => get().hasPermiso('ver_sucursales'),
