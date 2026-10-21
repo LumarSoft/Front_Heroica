@@ -101,6 +101,24 @@ export const API_ENDPOINTS = {
     REVERTIR: (id: number) => `${API_URL}/api/importacion-bancaria/${id}/revertir`,
   },
 
+  PRESTAMOS: {
+    SUCURSALES: `${API_URL}/api/prestamos/sucursales`,
+    CREATE: `${API_URL}/api/prestamos`,
+    ESTADO_CUENTA: (sucursalId: number, moneda: string) =>
+      `${API_URL}/api/prestamos/${sucursalId}/estado-cuenta?moneda=${moneda}`,
+    POR_CONFIRMAR: (sucursalId: number, caja: string, moneda: string) =>
+      `${API_URL}/api/prestamos/${sucursalId}/por-confirmar?caja=${caja}&moneda=${moneda}`,
+    PENDIENTES_DEVOLVER: (sucursalId: number, moneda: string) =>
+      `${API_URL}/api/prestamos/${sucursalId}/pendientes-devolver?moneda=${moneda}`,
+    ACEPTAR: (id: number) => `${API_URL}/api/prestamos/${id}/aceptar`,
+    RECHAZAR: (id: number) => `${API_URL}/api/prestamos/${id}/rechazar`,
+    CANCELAR: (id: number) => `${API_URL}/api/prestamos/${id}/cancelar`,
+    ANULAR: (id: number) => `${API_URL}/api/prestamos/${id}/anular`,
+    DEVOLVER: (id: number) => `${API_URL}/api/prestamos/${id}/devoluciones`,
+    CONFIRMAR_DEVOLUCION: (id: number) => `${API_URL}/api/prestamos/devoluciones/${id}/confirmar`,
+    RECHAZAR_DEVOLUCION: (id: number) => `${API_URL}/api/prestamos/devoluciones/${id}/rechazar`,
+    ANULAR_DEVOLUCION: (id: number) => `${API_URL}/api/prestamos/devoluciones/${id}/anular`,
+  },
   CAJA_BANCO: {
     GET_BY_SUCURSAL: (sucursalId: number, moneda: string = 'ARS') =>
       `${API_URL}/api/caja-banco/${sucursalId}?moneda=${moneda}`,

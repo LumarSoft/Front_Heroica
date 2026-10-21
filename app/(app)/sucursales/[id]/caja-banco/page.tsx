@@ -291,6 +291,9 @@ export default function CajaBancoPage() {
               isReadOnly={!canCrear}
               sucursalId={Number(params.id)}
               moneda={moneda}
+              cajaTipo="banco"
+              bancos={caja.bancos}
+              onPrestamosChange={caja.fetchMovimientos}
             />
 
             {caja.isLoading ? (

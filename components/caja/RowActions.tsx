@@ -62,6 +62,8 @@ function RowActionsBase({
 }: RowActionsProps) {
   const iconBtn =
     'h-7 w-7 p-0 border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none'
+  // Los movimientos de un préstamo solo se ven: se anulan desde el diálogo de Préstamos
+  const esPrestamo = transaction.origen === 'prestamo'
 
   return (
     <div className="flex flex-nowrap items-center justify-center gap-1">
@@ -91,7 +93,7 @@ function RowActionsBase({
       </ActionButton>
 
       {/* Cambiar estado */}
-      {onChangeState && (
+      {onChangeState && !esPrestamo && (
         <ActionButton
           label={isReadOnly ? 'Sucursal inactiva' : 'Cambiar estado'}
           onClick={() => !isReadOnly && onChangeState(transaction)}
@@ -116,7 +118,7 @@ function RowActionsBase({
       )}
 
       {/* Deuda */}
-      {onToggleDeuda && (
+      {onToggleDeuda && !esPrestamo && (
         <ActionButton
           label={isReadOnly ? 'Sucursal inactiva' : transaction.es_deuda ? 'Quitar deuda' : 'Marcar como deuda'}
           onClick={() => !isReadOnly && onToggleDeuda(transaction)}
@@ -132,7 +134,7 @@ function RowActionsBase({
       )}
 
       {/* Cheque rechazado */}
-      {onChequeRechazado && isMedioPagoChequeLike(transaction.medio_pago_nombre) && (
+      {onChequeRechazado && !esPrestamo && isMedioPagoChequeLike(transaction.medio_pago_nombre) && (
         <ActionButton
           label={
             isReadOnly
@@ -154,7 +156,7 @@ function RowActionsBase({
       )}
 
       {/* Mover */}
-      {onMove && (
+      {onMove && !esPrestamo && (
         <ActionButton
           label={isReadOnly ? 'Sucursal inactiva' : 'Mover transacción'}
           onClick={() => !isReadOnly && onMove(transaction)}
@@ -166,7 +168,7 @@ function RowActionsBase({
       )}
 
       {/* Eliminar */}
-      {onDelete && (
+      {onDelete && !esPrestamo && (
         <ActionButton
           label={isReadOnly ? 'Sucursal inactiva' : 'Eliminar movimiento'}
           onClick={() => !isReadOnly && onDelete(transaction)}

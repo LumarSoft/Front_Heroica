@@ -267,6 +267,9 @@ export default function CajaEfectivoPage() {
               isReadOnly={!canCrear}
               sucursalId={Number(params.id)}
               moneda={moneda}
+              cajaTipo="efectivo"
+              bancos={caja.bancos}
+              onPrestamosChange={caja.fetchMovimientos}
             />
 
             {caja.isLoading ? (
