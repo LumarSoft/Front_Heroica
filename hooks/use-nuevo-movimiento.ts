@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/authStore'
 import { parseInputMonto } from '@/lib/formatters'
 import { isMedioPagoChequeLike } from '@/lib/cheque'
 import { initialMovimientoForm, initialTransferenciaForm, fechaHoyMovimiento } from '@/lib/movimiento-form'
+import { periodoDeFecha, periodoAlCambiarFecha } from '@/lib/periodo'
 import { useMovimientoCatalogos } from './use-movimiento-catalogos'
 import type { NuevoMovimientoDialogProps, NuevoMovimientoContext, MovimientoInputEvent } from '@/lib/types'
 export function useNuevoMovimiento(props: NuevoMovimientoDialogProps): NuevoMovimientoContext {
@@ -35,11 +36,13 @@ export function useNuevoMovimiento(props: NuevoMovimientoDialogProps): NuevoMovi
   useEffect(() => {
     if (!isOpen) return
     const iv = valuesRef.current
+    const fechaAprobacion = iv?.fecha ?? fechaHoyMovimiento()
     setFormData({
       ...initialMovimientoForm(cajaTipo, isPagoPendiente),
       ...(isApprovalMode && iv
         ? {
-            fecha: iv.fecha ?? fechaHoyMovimiento(),
+            fecha: fechaAprobacion,
+            periodo: iv.periodo ?? periodoDeFecha(fechaAprobacion),
             concepto: iv.concepto ?? '',
             monto: iv.monto ?? '',
             comentarios: iv.comentarios ?? '',
@@ -61,7 +64,13 @@ export function useNuevoMovimiento(props: NuevoMovimientoDialogProps): NuevoMovi
         setFormData(prev => ({ ...prev, [name]: parseInputMonto(value) }))
         return
       }
-      if (name === 'tipo') {
+      if (name === 'fecha') {
+        setFormData(prev => ({
+          ...prev,
+          fecha: value,
+          periodo: periodoAlCambiarFecha(prev.periodo, prev.fecha, value),
+        }))
+      } else if (name === 'tipo') {
         setFormData(prev => ({
           ...prev,
           tipo: value === 'egreso' ? 'egreso' : 'ingreso',

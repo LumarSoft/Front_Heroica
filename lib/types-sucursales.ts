@@ -19,6 +19,8 @@ export interface Transaction {
   id: number
   sucursal_id: number
   fecha: string
+  /** Período contable 'YYYY-MM'. La API devuelve el mes de la fecha si no se eligió otro */
+  periodo?: string
   /** Posición manual dentro de su fecha (para inserción arriba/abajo). Fallback: id */
   orden?: number | null
   concepto: string
@@ -63,6 +65,8 @@ export interface PagoPendiente {
   id: number
   user_id?: number
   fecha: string
+  /** Período contable 'YYYY-MM' */
+  periodo?: string
   concepto: string
   monto: number
   comentarios?: string

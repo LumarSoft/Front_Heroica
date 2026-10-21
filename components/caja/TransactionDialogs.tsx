@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,6 +20,7 @@ import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { formatInputMonto } from '@/lib/formatters'
 import { isMedioPagoChequeLike, tieneNumeroChequeCargado } from '@/lib/cheque'
+import { opcionesPeriodo } from '@/lib/periodo'
 
 // =============================================
 // Dialog de Detalles (edición de movimiento)
@@ -37,6 +38,7 @@ interface DetailsDialogProps {
   onOpenChange: (open: boolean) => void
   formData: {
     fecha: string
+    periodo: string
     concepto: string
     monto: string
     comentarios: string
@@ -91,6 +93,7 @@ export function DetailsDialog({
   const selectedMedioPago = mediosPago.find(m => m.id.toString() === formData.medio_pago_id)
   const medioPagoEsCheque = showBancoFields && isMedioPagoChequeLike(selectedMedioPago?.nombre)
   const chequeTieneNumero = tieneNumeroChequeCargado(formData.numero_cheque)
+  const periodoOptions = useMemo(() => opcionesPeriodo(formData.periodo), [formData.periodo])
 
   const [documentos, setDocumentos] = useState<Documento[]>([])
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -243,7 +246,7 @@ export function DetailsDialog({
               Información general
             </h4>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="fecha" className={labelClasses}>
                   Fecha
@@ -257,6 +260,25 @@ export function DetailsDialog({
                   disabled={!canEditInfo}
                   className={`${inputClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="periodo" className={labelClasses}>
+                  Período
+                </Label>
+                <select
+                  id="periodo"
+                  name="periodo"
+                  value={formData.periodo}
+                  onChange={onInputChange}
+                  disabled={!canEditInfo}
+                  className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+                >
+                  {periodoOptions.map(p => (
+                    <option key={p.value} value={p.value}>
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="tipo" className={labelClasses}>
