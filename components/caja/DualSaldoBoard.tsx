@@ -38,6 +38,7 @@ interface DualSaldoBoardProps {
   onDelete?: (t: Transaction) => void
   onToggleDeuda?: (t: Transaction) => void
   onMove?: (t: Transaction) => void
+  onChequeRechazado?: (t: Transaction) => void
   onBulkDelete?: (ids: number[]) => void
   onBulkMove?: (ids: number[]) => void
   isReadOnly?: boolean
@@ -92,6 +93,7 @@ export function DualSaldoBoard({
   onDelete,
   onToggleDeuda,
   onMove,
+  onChequeRechazado,
   onBulkDelete,
   onBulkMove,
   isReadOnly,
@@ -223,6 +225,7 @@ export function DualSaldoBoard({
               onDelete={onDelete}
               onToggleDeuda={onToggleDeuda}
               onMove={onMove}
+              onChequeRechazado={onChequeRechazado}
               onBulkDelete={onBulkDelete}
               onBulkMove={onBulkMove}
               isReadOnly={isReadOnly}
@@ -258,6 +261,7 @@ export function DualSaldoBoard({
               onDelete={onDelete}
               onToggleDeuda={onToggleDeuda}
               onMove={onMove}
+              onChequeRechazado={onChequeRechazado}
               onBulkDelete={onBulkDelete}
               onBulkMove={onBulkMove}
               isReadOnly={isReadOnly}

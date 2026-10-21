@@ -6,10 +6,18 @@ import { toast } from 'sonner'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { parseInputMonto } from '@/lib/formatters'
-import { isMedioPagoChequeLike, tieneNumeroChequeCargado } from '@/lib/cheque'
+import { isMedioPagoChequeLike, coincideFiltroCheques } from '@/lib/cheque'
 import { DateRange } from 'react-day-picker'
 import { useAuthStore } from '@/store/authStore'
-import type { Transaction, BancoParcial, Categoria, Subcategoria, SelectOption, DescripcionOption } from '@/lib/types'
+import type {
+  Transaction,
+  BancoParcial,
+  Categoria,
+  Subcategoria,
+  SelectOption,
+  DescripcionOption,
+  FiltroCheques,
+} from '@/lib/types'
 
 // =============================================
 // Tipos internos del hook
@@ -169,7 +177,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
   // --- Filtro por deuda ---
   const [filtroDeuda, setFiltroDeuda] = useState<'todos' | 'solo_deudas' | 'sin_deudas'>('todos')
   // --- Filtro por cheques pendientes (cheque físico / eCheq sin número) ---
-  const [filtroChequesPendientes, setFiltroChequesPendientes] = useState(false)
+  const [filtroCheques, setFiltroCheques] = useState<FiltroCheques>('todos')
 
   // --- Catálogos ---
   const [categorias, setCategorias] = useState<Categoria[]>([])
@@ -745,16 +753,15 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     const filteredBySearch = searchText.trim()
       ? filteredByBanco.filter(m => matchesSearch(m, searchText.trim()))
       : filteredByBanco
-    const filteredByChequePendiente = filtroChequesPendientes
-      ? filteredBySearch.filter(
-          m => isMedioPagoChequeLike(m.medio_pago_nombre) && !tieneNumeroChequeCargado(m.numero_cheque),
-        )
-      : filteredBySearch
+    const filteredByCheque =
+      filtroCheques === 'todos'
+        ? filteredBySearch
+        : filteredBySearch.filter(m => coincideFiltroCheques(m, filtroCheques))
     // El filtro de deudas NO se aplica en saldo real: una deuda es plata que ya
     // salió de la cuenta, así que siempre tiene que estar contemplada en el saldo.
     // El control del filtro se oculta en esa pestaña (ver caja-banco/caja-efectivo).
-    return filteredByChequePendiente
-  }, [saldoReal, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroChequesPendientes])
+    return filteredByCheque
+  }, [saldoReal, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroCheques])
 
   const { saldoNecesarioFiltrado, saldoNecesarioSinDeudaFiltrado } = useMemo(() => {
     let filteredByDate = saldoNecesario
@@ -786,21 +793,20 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
       ? filteredByBanco.filter(m => matchesSearch(m, searchText.trim()))
       : filteredByBanco
 
-    const filteredByChequePendiente = filtroChequesPendientes
-      ? filteredBySearch.filter(
-          m => isMedioPagoChequeLike(m.medio_pago_nombre) && !tieneNumeroChequeCargado(m.numero_cheque),
-        )
-      : filteredBySearch
+    const filteredByCheque =
+      filtroCheques === 'todos'
+        ? filteredBySearch
+        : filteredBySearch.filter(m => coincideFiltroCheques(m, filtroCheques))
 
-    let filtered = filteredByChequePendiente
-    if (filtroDeuda === 'solo_deudas') filtered = filteredByChequePendiente.filter(m => m.es_deuda)
-    else if (filtroDeuda === 'sin_deudas') filtered = filteredByChequePendiente.filter(m => !m.es_deuda)
+    let filtered = filteredByCheque
+    if (filtroDeuda === 'solo_deudas') filtered = filteredByCheque.filter(m => m.es_deuda)
+    else if (filtroDeuda === 'sin_deudas') filtered = filteredByCheque.filter(m => !m.es_deuda)
 
     return {
       saldoNecesarioFiltrado: filtered,
       saldoNecesarioSinDeudaFiltrado: filtered.filter(m => !m.es_deuda),
     }
-  }, [saldoNecesario, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda, filtroChequesPendientes])
+  }, [saldoNecesario, dateRange, bancosFiltroSet, searchText, matchesSearch, filtroDeuda, filtroCheques])
 
   // Parciales filtrados: agrupar saldoReal + saldoNecesarioSinDeudaFiltrado por banco_id
   const parcialesFiltrados = useMemo<BancoParcial[]>(() => {
@@ -829,7 +835,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     setBancosFiltro([])
     setSearchText('')
     setFiltroDeuda('todos')
-    setFiltroChequesPendientes(false)
+    setFiltroCheques('todos')
   }
 
   return {
@@ -866,15 +872,15 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     setSearchText,
     filtroDeuda,
     setFiltroDeuda,
-    filtroChequesPendientes,
-    setFiltroChequesPendientes,
+    filtroCheques,
+    setFiltroCheques,
     limpiarFiltros,
     hayFiltroActivo:
       dateRange !== undefined ||
       bancosFiltro.length > 0 ||
       searchText !== '' ||
       filtroDeuda !== 'todos' ||
-      filtroChequesPendientes,
+      filtroCheques !== 'todos',
 
     // Estado de dialogs
     isDetailsDialogOpen,

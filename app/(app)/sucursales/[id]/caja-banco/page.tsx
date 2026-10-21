@@ -6,6 +6,8 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useCajaData } from '@/hooks/use-caja-data'
+import { useChequeRechazado } from '@/hooks/use-cheque-rechazado'
+import { ChequeRechazadoDialog } from '@/components/caja/ChequeRechazadoDialog'
 import { useDocumentTitle } from '@/hooks/use-document-title'
 import { formatMonto, calcularTotal } from '@/lib/formatters'
 import { cn } from '@/lib/utils'
@@ -61,6 +63,7 @@ export default function CajaBancoPage() {
   const searchParams = useSearchParams()
   const moneda = (searchParams.get('moneda') as 'ARS' | 'USD') || 'ARS'
   const caja = useCajaData('banco', moneda)
+  const chequeRechazado = useChequeRechazado(caja.fetchMovimientos)
   const [selectedBanco, setSelectedBanco] = useState<BancoParcial | null>(null)
   const [isBancoDialogOpen, setIsBancoDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('real')
@@ -121,7 +124,7 @@ export default function CajaBancoPage() {
       if (caja.searchText) qp.set('searchText', caja.searchText)
       if (caja.filtroDeuda !== 'todos') qp.set('filtroDeuda', caja.filtroDeuda)
       if (caja.bancosFiltro.length > 0) qp.set('bancos', caja.bancosFiltro.join(','))
-      if (caja.filtroChequesPendientes) qp.set('filtroChequesPendientes', 'true')
+      if (caja.filtroCheques !== 'todos') qp.set('filtroCheques', caja.filtroCheques)
       if (opciones.tipo !== 'todos') qp.set('tipoMovimiento', opciones.tipo === 'ingresos' ? 'ingreso' : 'egreso')
       if (opciones.saldo !== 'todos') qp.set('tipoSaldo', opciones.saldo)
       if (opciones.caja === 'ambas') qp.set('caja', 'ambas')
@@ -335,8 +338,8 @@ export default function CajaBancoPage() {
                   onSearchTextChange={caja.setSearchText}
                   filtroDeuda={caja.filtroDeuda}
                   onFiltroDeudeChange={viewMode !== 'dual' && activeTab === 'real' ? undefined : caja.setFiltroDeuda}
-                  filtroChequesPendientes={caja.filtroChequesPendientes}
-                  onFiltroChequesPendientesChange={caja.setFiltroChequesPendientes}
+                  filtroCheques={caja.filtroCheques}
+                  onFiltroChequesChange={caja.setFiltroCheques}
                   viewMode={viewMode}
                   onViewModeChange={setViewMode}
                 />
@@ -354,6 +357,7 @@ export default function CajaBancoPage() {
                     onDelete={canDelete ? caja.handleOpenDelete : undefined}
                     onToggleDeuda={canToggleDeuda ? caja.handleOpenDeuda : undefined}
                     onMove={canCrear ? caja.handleOpenMover : undefined}
+                    onChequeRechazado={canEditInfo ? chequeRechazado.abrir : undefined}
                     isReadOnly={isStrictlyReadOnly}
                     inlineEdit={inlineEdit}
                     onReorder={caja.reorderMovimiento}
@@ -395,6 +399,7 @@ export default function CajaBancoPage() {
                           onChangeState={canChangeState ? caja.handleOpenStateChange : undefined}
                           onDelete={canDelete ? caja.handleOpenDelete : undefined}
                           onMove={canCrear ? caja.handleOpenMover : undefined}
+                          onChequeRechazado={canEditInfo ? chequeRechazado.abrir : undefined}
                           onBulkDelete={canDelete ? handleBulkDelete : undefined}
                           onBulkMove={canCrear ? handleBulkMove : undefined}
                           isReadOnly={isStrictlyReadOnly}
@@ -438,6 +443,7 @@ export default function CajaBancoPage() {
                           onDelete={canDelete ? caja.handleOpenDelete : undefined}
                           onToggleDeuda={canToggleDeuda ? caja.handleOpenDeuda : undefined}
                           onMove={canCrear ? caja.handleOpenMover : undefined}
+                          onChequeRechazado={canEditInfo ? chequeRechazado.abrir : undefined}
                           onBulkDelete={canDelete ? handleBulkDelete : undefined}
                           onBulkMove={canCrear ? handleBulkMove : undefined}
                           isReadOnly={isStrictlyReadOnly}
@@ -540,6 +546,13 @@ export default function CajaBancoPage() {
           parcialesBancos={caja.parciales}
         />
       )}
+
+      <ChequeRechazadoDialog
+        transaction={chequeRechazado.transaction}
+        isSaving={chequeRechazado.isSaving}
+        onClose={chequeRechazado.cerrar}
+        onConfirm={chequeRechazado.confirmar}
+      />
 
       {caja.isMoverMovimientoDialogOpen && (
         <MoverMovimientoDialog

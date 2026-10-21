@@ -3,8 +3,9 @@
 import { memo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Clock, ArrowRightLeft, Trash2 } from 'lucide-react'
+import { Clock, ArrowRightLeft, Trash2, Ban } from 'lucide-react'
 import type { Transaction } from '@/lib/types'
+import { isMedioPagoChequeLike } from '@/lib/cheque'
 
 interface RowActionsProps {
   transaction: Transaction
@@ -14,6 +15,8 @@ interface RowActionsProps {
   onToggleDeuda?: (t: Transaction) => void
   onMove?: (t: Transaction) => void
   onDelete?: (t: Transaction) => void
+  /** Marcar / desmarcar el cheque o eCheq como rechazado (solo filas pagadas con cheque) */
+  onChequeRechazado?: (t: Transaction) => void
 }
 
 /** Botón de acción con tooltip Radix reutilizable */
@@ -55,6 +58,7 @@ function RowActionsBase({
   onToggleDeuda,
   onMove,
   onDelete,
+  onChequeRechazado,
 }: RowActionsProps) {
   const iconBtn =
     'h-7 w-7 p-0 border-none shadow-sm hover:shadow-md transition-all flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none'
@@ -124,6 +128,28 @@ function RowActionsBase({
           }`}
         >
           <Clock className="w-4 h-4" />
+        </ActionButton>
+      )}
+
+      {/* Cheque rechazado */}
+      {onChequeRechazado && isMedioPagoChequeLike(transaction.medio_pago_nombre) && (
+        <ActionButton
+          label={
+            isReadOnly
+              ? 'Sucursal inactiva'
+              : transaction.cheque_rechazado
+                ? 'Quitar marca de cheque rechazado'
+                : 'Marcar cheque como rechazado'
+          }
+          onClick={() => !isReadOnly && onChequeRechazado(transaction)}
+          disabled={isReadOnly}
+          className={`${iconBtn} ${
+            transaction.cheque_rechazado
+              ? 'bg-rose-600 hover:bg-rose-700 text-white'
+              : 'bg-rose-100 hover:bg-rose-200 text-rose-700'
+          }`}
+        >
+          <Ban className="w-4 h-4" />
         </ActionButton>
       )}
 

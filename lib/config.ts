@@ -111,6 +111,7 @@ export const API_ENDPOINTS = {
     PATCH_COMENTARIO: (id: number) => `${API_URL}/api/caja-banco/${id}/comentario`,
     UPDATE_ESTADO: (id: number) => `${API_URL}/api/caja-banco/${id}/estado`,
     TOGGLE_DEUDA: (id: number) => `${API_URL}/api/caja-banco/${id}/deuda`,
+    CHEQUE_RECHAZADO: (id: number) => `${API_URL}/api/caja-banco/${id}/cheque-rechazado`,
     UPDATE_ORDEN: (id: number) => `${API_URL}/api/caja-banco/${id}/orden`,
     DELETE: (id: number) => `${API_URL}/api/caja-banco/${id}`,
     BULK_DELETE: `${API_URL}/api/caja-banco/bulk`,

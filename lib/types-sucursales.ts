@@ -4,6 +4,9 @@
 
 export type TransactionEstado = 'pendiente' | 'aprobado' | 'rechazado' | 'completado'
 
+/** Filtro de la caja banco por estado del cheque / eCheq */
+export type FiltroCheques = 'todos' | 'pendientes' | 'cargados' | 'rechazados'
+
 export type ExportTipoMovimiento = 'todos' | 'ingresos' | 'egresos'
 export type ExportTipoSaldo = 'todos' | 'saldo_real' | 'saldo_necesario'
 /** 'actual' exporta solo la caja de la pantalla; 'ambas' incluye efectivo y banco */
@@ -44,6 +47,10 @@ export interface Transaction {
   es_deuda?: boolean
   fecha_original_vencimiento?: string
   numero_cheque?: string
+  /** Marca manual: el cheque / eCheq rebotó. Es solo una etiqueta, no cambia el saldo */
+  cheque_rechazado?: boolean
+  cheque_rechazado_at?: string | null
+  cheque_rechazo_motivo?: string | null
   banco?: string
   cuenta?: string
   cbu?: string
