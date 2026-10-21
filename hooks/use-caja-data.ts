@@ -7,6 +7,7 @@ import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { parseInputMonto } from '@/lib/formatters'
 import { isMedioPagoChequeLike, coincideFiltroCheques } from '@/lib/cheque'
+import { periodoDeFecha, periodoAlCambiarFecha } from '@/lib/periodo'
 import { DateRange } from 'react-day-picker'
 import { useAuthStore } from '@/store/authStore'
 import type {
@@ -25,6 +26,7 @@ import type {
 
 interface TransactionFormData {
   fecha: string
+  periodo: string
   concepto: string
   monto: string
   comentarios: string
@@ -42,6 +44,7 @@ interface TransactionFormData {
 
 const INITIAL_FORM: TransactionFormData = {
   fecha: '',
+  periodo: '',
   concepto: '',
   monto: '',
   comentarios: '',
@@ -443,8 +446,10 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
   // Handlers memoizados (sólo usan setters estables) → permiten memoizar las filas/acciones
   const handleOpenDetails = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction)
+    const fecha = transaction.fecha ? transaction.fecha.split('T')[0] : ''
     setFormData({
-      fecha: transaction.fecha ? transaction.fecha.split('T')[0] : '',
+      fecha,
+      periodo: transaction.periodo ?? periodoDeFecha(fecha),
       concepto: transaction.concepto,
       monto: transaction.monto.toString(),
       comentarios: transaction.comentarios || '',
@@ -529,6 +534,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
           method: 'PUT',
           body: JSON.stringify({
             fecha: formData.fecha,
+            periodo: formData.periodo || undefined,
             concepto: formData.concepto,
             monto: parseFloat(formData.monto),
             comentarios: formData.comentarios,
@@ -654,7 +660,9 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
       setFormData(prev => ({ ...prev, [name]: parseInputMonto(value) }))
       return
     }
-    if (name === 'tipo') {
+    if (name === 'fecha') {
+      setFormData(prev => ({ ...prev, fecha: value, periodo: periodoAlCambiarFecha(prev.periodo, prev.fecha, value) }))
+    } else if (name === 'tipo') {
       setFormData(prev => ({
         ...prev,
         [name]: value,
