@@ -2,9 +2,12 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { ArrowRightLeft, CalendarDays, CircleDollarSign, FileSpreadsheet, Plus, Upload } from 'lucide-react'
+import { ArrowRightLeft, CalendarDays, CircleDollarSign, FileSpreadsheet, HandCoins, Plus, Upload } from 'lucide-react'
 import { DeudasInterSucursalDialog } from './DeudasInterSucursalDialog'
 import { ResumenTesoreriaDialog } from './ResumenTesoreriaDialog'
+import { PrestamosDialog } from './PrestamosDialog'
+import { usePrestamosCaja } from '@/hooks/use-prestamos-caja'
+import type { SelectOption } from '@/lib/types'
 
 interface PageHeaderProps {
   title: string
@@ -17,6 +20,10 @@ interface PageHeaderProps {
   isReadOnly?: boolean
   sucursalId: number
   moneda: 'ARS' | 'USD'
+  cajaTipo: 'efectivo' | 'banco'
+  bancos: SelectOption[]
+  /** Aceptar o anular préstamos cambia los movimientos de la caja */
+  onPrestamosChange?: () => void
 }
 
 export function PageHeader({
@@ -30,8 +37,13 @@ export function PageHeader({
   isReadOnly = false,
   sucursalId,
   moneda,
+  cajaTipo,
+  bancos,
+  onPrestamosChange,
 }: PageHeaderProps) {
   const [showDeudas, setShowDeudas] = useState(false)
+  const [showPrestamos, setShowPrestamos] = useState(false)
+  const prestamos = usePrestamosCaja(sucursalId, cajaTipo, moneda)
   const [showResumen, setShowResumen] = useState(false)
 
   return (
@@ -49,6 +61,22 @@ export function PageHeader({
           >
             <CircleDollarSign className="w-5 h-5" />
             Deudas
+          </Button>
+          <Button
+            onClick={() => setShowPrestamos(true)}
+            variant="outline"
+            className="relative cursor-pointer border-indigo-300 text-indigo-700 hover:bg-indigo-50 font-semibold px-3 sm:px-5 flex items-center gap-2"
+          >
+            <HandCoins className="w-4 h-4" />
+            Préstamos
+            {prestamos.cantidadPorConfirmar > 0 && (
+              <span
+                className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-bold text-white"
+                aria-label={`${prestamos.cantidadPorConfirmar} por confirmar`}
+              >
+                {prestamos.cantidadPorConfirmar}
+              </span>
+            )}
           </Button>
           <Button
             onClick={() => setShowResumen(true)}
@@ -107,6 +135,16 @@ export function PageHeader({
       </div>
 
       <DeudasInterSucursalDialog open={showDeudas} onOpenChange={setShowDeudas} sucursalId={sucursalId} />
+      <PrestamosDialog
+        open={showPrestamos}
+        onOpenChange={setShowPrestamos}
+        prestamos={prestamos}
+        sucursalId={sucursalId}
+        cajaTipo={cajaTipo}
+        moneda={moneda}
+        bancos={bancos}
+        onMovimientosChange={onPrestamosChange}
+      />
       <ResumenTesoreriaDialog
         open={showResumen}
         onOpenChange={setShowResumen}

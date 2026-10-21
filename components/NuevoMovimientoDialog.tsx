@@ -1,7 +1,6 @@
 'use client'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import {
   Dialog,
@@ -18,9 +17,12 @@ import { labelClasses } from '@/lib/dialog-styles'
 import { useNuevoMovimiento } from '@/hooks/use-nuevo-movimiento'
 import { useMovimientoSubmit } from '@/hooks/use-movimiento-submit'
 import { useTransferenciaSubmit } from '@/hooks/use-transferencia-submit'
+import { usePrestamoForm } from '@/hooks/use-prestamo-form'
 import { MovimientoGeneralFields } from './movimientos/MovimientoGeneralFields'
 import { MovimientoFinancieroFields } from './movimientos/MovimientoFinancieroFields'
 import { MovimientoTransferenciaFields } from './movimientos/MovimientoTransferenciaFields'
+import { PrestamoFields } from './movimientos/PrestamoFields'
+import { OpcionMovimientoCard } from './movimientos/OpcionMovimientoCard'
 import { MovimientoComprobantes } from './movimientos/MovimientoComprobantes'
 import { MovimientoSelect } from './movimientos/MovimientoSelect'
 import type { NuevoMovimientoDialogProps } from '@/lib/types'
@@ -42,14 +44,32 @@ export default function NuevoMovimientoDialog(props: NuevoMovimientoDialogProps)
     error,
     transferenciaData,
     parcialesBancos,
+    bancos,
+    moneda,
   } = context
+  const [isPrestamo, setIsPrestamo] = useState(false)
+  const cerrar = () => {
+    setIsPrestamo(false)
+    handleClose()
+  }
+  const prestamo = usePrestamoForm({
+    activo: isOpen && isPrestamo,
+    sucursalId: props.sucursalId,
+    cajaTipo,
+    moneda,
+    onDone: () => {
+      cerrar()
+      props.onSuccess()
+    },
+  })
+  const permiteOperacionesEspeciales = !isApprovalMode && !isPagoPendiente
   const excedeSaldoTransferencia = useMemo(() => {
     if (!isTransferenciaInterna || !transferenciaData.banco_origen_id || !transferenciaData.monto) return false
     const parcial = parcialesBancos.find(p => String(p.banco_id) === transferenciaData.banco_origen_id)
     return parseFloat(transferenciaData.monto) > Number(parcial?.total_real ?? 0)
   }, [isTransferenciaInterna, transferenciaData.banco_origen_id, transferenciaData.monto, parcialesBancos])
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={cerrar}>
       <DialogContent className="sm:max-w-[560px] max-h-[90vh] bg-white border-0 shadow-2xl rounded-2xl p-0 gap-0 overflow-hidden flex flex-col">
         {/* ─── Header ─── */}
         <div className="px-8 pt-8 pb-5 border-b border-[#F0F0F0] flex-shrink-0">
@@ -76,30 +96,35 @@ export default function NuevoMovimientoDialog(props: NuevoMovimientoDialogProps)
 
         {/* ─── Body ─── */}
         <div className="px-8 py-6 space-y-6 overflow-y-auto flex-1">
-          {/* ── Checkbox: Transferencia interna (solo en caja banco, no aprobación) ── */}
-          {cajaTipo === 'banco' && !isApprovalMode && !isPagoPendiente && (
-            <div
-              className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer select-none transition-all ${
-                isTransferenciaInterna
-                  ? 'border-[#002868] bg-[#EEF3FF]'
-                  : 'border-[#E0E0E0] bg-[#FAFAFA] hover:border-[#002868]/40'
-              }`}
-              onClick={() => setIsTransferenciaInterna(v => !v)}
-            >
-              <Checkbox
-                id="transferencia_interna"
-                checked={isTransferenciaInterna}
-                onCheckedChange={v => setIsTransferenciaInterna(Boolean(v))}
-                className="pointer-events-none"
-              />
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-[#002868]">Transferencia entre bancos</span>
-                <span className="text-xs text-[#8A8F9C]">Mover dinero de un banco a otro dentro de esta sucursal</span>
-              </div>
-            </div>
+          {/* ── Operaciones especiales: transferencia (solo banco) y préstamo entre sucursales ── */}
+          {permiteOperacionesEspeciales && cajaTipo === 'banco' && (
+            <OpcionMovimientoCard
+              id="transferencia_interna"
+              activa={isTransferenciaInterna}
+              titulo="Transferencia entre bancos"
+              detalle="Mover dinero de un banco a otro dentro de esta sucursal"
+              onToggle={activa => {
+                setIsTransferenciaInterna(activa)
+                if (activa) setIsPrestamo(false)
+              }}
+            />
+          )}
+          {permiteOperacionesEspeciales && (
+            <OpcionMovimientoCard
+              id="prestamo_sucursales"
+              activa={isPrestamo}
+              titulo="Préstamo entre sucursales"
+              detalle="Pedirle plata a otra sucursal o devolver un préstamo"
+              onToggle={activa => {
+                setIsPrestamo(activa)
+                if (activa) setIsTransferenciaInterna(false)
+              }}
+            />
           )}
 
-          {isTransferenciaInterna ? (
+          {isPrestamo ? (
+            <PrestamoFields form={prestamo} bancos={bancos} cajaTipo={cajaTipo} moneda={moneda} />
+          ) : isTransferenciaInterna ? (
             <MovimientoTransferenciaFields context={context} />
           ) : (
             <>
@@ -137,37 +162,49 @@ export default function NuevoMovimientoDialog(props: NuevoMovimientoDialogProps)
               </section>
             </>
           )}
-          <MovimientoComprobantes context={context} />
+          {!isPrestamo && <MovimientoComprobantes context={context} />}
         </div>
         {/* ─── Footer ─── */}
         <div className="px-8 py-5 border-t border-[#F0F0F0] bg-[#FAFBFC] space-y-3 flex-shrink-0">
           {/* Error visible siempre en el footer */}
-          <ErrorBanner error={error} />
+          <ErrorBanner error={isPrestamo ? prestamo.error : error} />
           <DialogFooter className="sm:justify-end gap-3">
             <Button
               variant="outline"
-              onClick={handleClose}
-              disabled={isSaving}
+              onClick={cerrar}
+              disabled={isSaving || prestamo.isSaving}
               className="h-10 px-5 rounded-lg border-[#E0E0E0] text-[#5A6070] font-medium hover:bg-[#F0F0F0] hover:text-[#1A1A1A] hover:border-[#C0C0C0] transition-all cursor-pointer"
             >
               Cancelar
             </Button>
             <Button
-              onClick={isTransferenciaInterna ? handleSaveTransferencia : handleSave}
-              disabled={isSaving || excedeSaldoTransferencia}
+              onClick={isPrestamo ? prestamo.submit : isTransferenciaInterna ? handleSaveTransferencia : handleSave}
+              disabled={isPrestamo ? prestamo.isSaving : isSaving || excedeSaldoTransferencia}
               className={`h-10 px-6 rounded-lg text-white font-semibold shadow-sm hover:shadow-md transition-all cursor-pointer ${
-                isTransferenciaInterna
+                isTransferenciaInterna || isPrestamo
                   ? 'bg-emerald-600 hover:bg-emerald-700'
                   : isApprovalMode
                     ? 'bg-emerald-600 hover:bg-emerald-700'
                     : 'bg-[#002868] hover:bg-[#003d8f]'
               }`}
             >
-              {isSaving ? (
+              {isSaving || prestamo.isSaving ? (
                 <span className="flex items-center gap-2">
                   <LoadingSpinner className="w-4 h-4 border-2 border-white/30 border-t-white" />
-                  {isTransferenciaInterna ? 'Transfiriendo…' : isApprovalMode ? 'Aprobando…' : 'Creando…'}
+                  {isPrestamo
+                    ? 'Guardando…'
+                    : isTransferenciaInterna
+                      ? 'Transfiriendo…'
+                      : isApprovalMode
+                        ? 'Aprobando…'
+                        : 'Creando…'}
                 </span>
+              ) : isPrestamo ? (
+                prestamo.modo === 'pedir' ? (
+                  'Pedir préstamo'
+                ) : (
+                  'Registrar devolución'
+                )
               ) : isTransferenciaInterna ? (
                 'Confirmar transferencia'
               ) : isApprovalMode ? (

@@ -11,7 +11,18 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Trash2, ArrowRightLeft, Plus, ArrowUp, ArrowDown, GripVertical, AlertTriangle, Hash, Ban } from 'lucide-react'
+import {
+  Trash2,
+  ArrowRightLeft,
+  Plus,
+  ArrowUp,
+  ArrowDown,
+  GripVertical,
+  AlertTriangle,
+  Hash,
+  Ban,
+  HandCoins,
+} from 'lucide-react'
 import {
   DndContext,
   type DragEndEvent,
@@ -116,6 +127,17 @@ const DESCRIPCION_COLUMN: ColumnDef = {
               </span>
             </TooltipTrigger>
             <TooltipContent>Cheque N° {t.numero_cheque} cargado</TooltipContent>
+          </Tooltip>
+        )}
+        {t.origen === 'prestamo' && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex shrink-0 cursor-help items-center gap-0.5 rounded-md border border-indigo-200 bg-indigo-50 px-1 py-0.5 text-[10px] font-semibold text-indigo-700">
+                <HandCoins className="h-2.5 w-2.5" />
+                Préstamo
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Préstamo entre sucursales: se anula desde el botón Préstamos</TooltipContent>
           </Tooltip>
         )}
         {estado === 'rechazado' && (
@@ -679,7 +701,7 @@ export function TransactionTable({
                         : ''
                   }`}
                 >
-                  {spec && inlineEdit ? (
+                  {spec && inlineEdit && transaction.origen !== 'prestamo' ? (
                     <EditableCell
                       editing={editingThis}
                       saving={grid.isSaving(transaction.id)}

@@ -36,6 +36,8 @@ export interface Transaction {
   prioridad: 'baja' | 'media' | 'alta'
   tipo: 'ingreso' | 'egreso'
   tipo_movimiento: string
+  /** 'prestamo' = lo generó un préstamo entre sucursales: no se edita desde la caja */
+  origen?: 'manual' | 'importacion' | 'prestamo'
   estado: TransactionEstado
   categoria_id?: number
   subcategoria_id?: number
