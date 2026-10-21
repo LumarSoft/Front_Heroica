@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatFecha, formatMonto, calcularTotal, truncarTexto } from '@/lib/formatters'
-import { isMedioPagoChequeLike, tieneNumeroChequeCargado } from '@/lib/cheque'
+import { isMedioPagoChequeLike, tieneNumeroChequeCargado, estadoCheque } from '@/lib/cheque'
 import type { Transaction } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Trash2, ArrowRightLeft, Plus, ArrowUp, ArrowDown, GripVertical, AlertTriangle, Hash } from 'lucide-react'
+import { Trash2, ArrowRightLeft, Plus, ArrowUp, ArrowDown, GripVertical, AlertTriangle, Hash, Ban } from 'lucide-react'
 import {
   DndContext,
   type DragEndEvent,
@@ -78,8 +78,9 @@ const DESCRIPCION_COLUMN: ColumnDef = {
   editField: 'descripcion',
   render: t => {
     const text = t.descripcion_nombre || t.concepto || null
-    const chequePendiente = isMedioPagoChequeLike(t.medio_pago_nombre) && !tieneNumeroChequeCargado(t.numero_cheque)
-    const chequeCargado = tieneNumeroChequeCargado(t.numero_cheque)
+    const estado = estadoCheque(t)
+    const chequePendiente = estado === 'pendiente'
+    const chequeCargado = estado !== 'rechazado' && tieneNumeroChequeCargado(t.numero_cheque)
     return (
       <div className="flex items-center gap-1.5 min-w-0">
         <Tooltip>
@@ -117,6 +118,23 @@ const DESCRIPCION_COLUMN: ColumnDef = {
             <TooltipContent>Cheque N° {t.numero_cheque} cargado</TooltipContent>
           </Tooltip>
         )}
+        {estado === 'rechazado' && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex shrink-0 cursor-help items-center gap-0.5 rounded-md border border-rose-300 bg-rose-100 px-1 py-0.5 text-[10px] font-semibold text-rose-700">
+                <Ban className="h-2.5 w-2.5" />
+                Rechazado
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                Cheque {t.numero_cheque ? `N° ${t.numero_cheque} ` : ''}rechazado
+                {t.cheque_rechazado_at ? ` el ${formatFecha(t.cheque_rechazado_at)}` : ''}
+              </p>
+              {t.cheque_rechazo_motivo && <p className="mt-0.5 text-white/70">Motivo: {t.cheque_rechazo_motivo}</p>}
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
     )
   },
@@ -133,6 +151,7 @@ const BANCO_COLUMNS: ColumnDef[] = [
       const nombre = t.medio_pago_nombre || ''
       const chequeLike = isMedioPagoChequeLike(nombre)
       const conNumero = tieneNumeroChequeCargado(t.numero_cheque)
+      const rechazado = chequeLike && Boolean(t.cheque_rechazado)
       if (!nombre) {
         return <span className="block w-full text-[#666666]">-</span>
       }
@@ -147,11 +166,19 @@ const BANCO_COLUMNS: ColumnDef[] = [
         <span
           className={cn(
             'inline-flex max-w-full items-center px-1.5 py-0.5 rounded-md border text-[11px] font-semibold truncate',
-            conNumero
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : 'bg-amber-50 border-amber-200 text-amber-900',
+            rechazado
+              ? 'bg-rose-50 border-rose-300 text-rose-800'
+              : conNumero
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                : 'bg-amber-50 border-amber-200 text-amber-900',
           )}
-          title={conNumero ? `${nombre} — N° ${t.numero_cheque}` : `${nombre} — sin N° aún (pendiente en banco)`}
+          title={
+            rechazado
+              ? `${nombre} — rechazado`
+              : conNumero
+                ? `${nombre} — N° ${t.numero_cheque}`
+                : `${nombre} — sin N° aún (pendiente en banco)`
+          }
         >
           <span className="truncate">{nombre}</span>
         </span>
@@ -294,6 +321,8 @@ interface TransactionTableProps {
   onDelete?: (t: Transaction) => void
   onToggleDeuda?: (t: Transaction) => void
   onMove?: (t: Transaction) => void
+  /** Marcar / desmarcar el cheque o eCheq de la fila como rechazado */
+  onChequeRechazado?: (t: Transaction) => void
   onBulkDelete?: (ids: number[]) => void
   onBulkMove?: (ids: number[]) => void
   isReadOnly?: boolean
@@ -337,6 +366,7 @@ export function TransactionTable({
   onDelete,
   onToggleDeuda,
   onMove,
+  onChequeRechazado,
   onBulkDelete,
   onBulkMove,
   isReadOnly = false,
@@ -582,14 +612,24 @@ export function TransactionTable({
 
   // Render de una fila de movimiento. `measureRef` lo usa el virtualizador para medir la altura.
   const renderRow = (transaction: Transaction, index: number, measureRef?: (el: Element | null) => void) => {
-    const tint = rowTint?.(transaction) ?? null
+    // Un cheque rechazado se pinta de rojo por encima del tinte de la vista dual
+    const tint = estadoCheque(transaction) === 'rechazado' ? 'red' : (rowTint?.(transaction) ?? null)
     const tintRowClass =
-      tint === 'green'
-        ? 'bg-emerald-50/70 hover:bg-emerald-100/60'
-        : tint === 'yellow'
-          ? 'bg-amber-50/70 hover:bg-amber-100/60'
-          : 'hover:bg-[#F8F9FA]/50'
-    const tintCellClass = tint === 'green' ? 'bg-emerald-50/70' : tint === 'yellow' ? 'bg-amber-50/70' : 'bg-white'
+      tint === 'red'
+        ? 'bg-rose-50/70 hover:bg-rose-100/60'
+        : tint === 'green'
+          ? 'bg-emerald-50/70 hover:bg-emerald-100/60'
+          : tint === 'yellow'
+            ? 'bg-amber-50/70 hover:bg-amber-100/60'
+            : 'hover:bg-[#F8F9FA]/50'
+    const tintCellClass =
+      tint === 'red'
+        ? 'bg-rose-50/70'
+        : tint === 'green'
+          ? 'bg-emerald-50/70'
+          : tint === 'yellow'
+            ? 'bg-amber-50/70'
+            : 'bg-white'
     const isDropTarget = dropTargetRowId === transaction.id
     return (
       <SortableTransactionRow
@@ -678,6 +718,7 @@ export function TransactionTable({
                 onToggleDeuda={onToggleDeuda}
                 onMove={onMove}
                 onDelete={onDelete}
+                onChequeRechazado={onChequeRechazado}
               />
             </TableCell>
           </>

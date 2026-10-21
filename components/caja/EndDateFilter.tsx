@@ -17,10 +17,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import type { SelectOption } from '@/lib/types'
+import type { SelectOption, FiltroCheques } from '@/lib/types'
 import type { CajaViewMode } from '@/lib/caja-reorder'
 import { DateRange } from 'react-day-picker'
 import { cn } from '@/lib/utils'
+import { ChequesFiltroSelect } from './ChequesFiltroSelect'
 
 const VIEW_MODE_OPTIONS: { value: CajaViewMode; label: string; icon: typeof LayoutList }[] = [
   { value: 'tabla', label: 'Tabla', icon: LayoutList },
@@ -42,8 +43,8 @@ interface EndDateFilterProps {
   onViewModeChange?: (mode: CajaViewMode) => void
   filtroDeuda?: 'todos' | 'solo_deudas' | 'sin_deudas'
   onFiltroDeudeChange?: (v: 'todos' | 'solo_deudas' | 'sin_deudas') => void
-  filtroChequesPendientes?: boolean
-  onFiltroChequesPendientesChange?: (value: boolean) => void
+  filtroCheques?: FiltroCheques
+  onFiltroChequesChange?: (value: FiltroCheques) => void
 }
 
 export function EndDateFilter({
@@ -60,8 +61,8 @@ export function EndDateFilter({
   onViewModeChange,
   filtroDeuda = 'todos',
   onFiltroDeudeChange,
-  filtroChequesPendientes = false,
-  onFiltroChequesPendientesChange,
+  filtroCheques = 'todos',
+  onFiltroChequesChange,
 }: EndDateFilterProps) {
   const showBancoFilter = Boolean(bancos?.length && onBancosChange)
   const [isOpen, setIsOpen] = useState(false)
@@ -271,7 +272,7 @@ export function EndDateFilter({
       </div>
 
       {/* Row 2: Search + filtro deuda + cheque pendiente + limpiar */}
-      {(onSearchTextChange || onFiltroDeudeChange || onFiltroChequesPendientesChange) && (
+      {(onSearchTextChange || onFiltroDeudeChange || onFiltroChequesChange) && (
         <div className="flex flex-wrap items-center gap-2">
           {onSearchTextChange && (
             <div className="relative flex items-center flex-1 min-w-[160px]">
@@ -310,20 +311,7 @@ export function EndDateFilter({
               ))}
             </div>
           )}
-          {onFiltroChequesPendientesChange && (
-            <button
-              type="button"
-              onClick={() => onFiltroChequesPendientesChange(!filtroChequesPendientes)}
-              className={cn(
-                'h-9 px-3 rounded-lg text-xs sm:text-sm font-semibold transition-all border cursor-pointer flex-shrink-0',
-                filtroChequesPendientes
-                  ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
-                  : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 hover:border-amber-300',
-              )}
-            >
-              Cheques pendientes
-            </button>
-          )}
+          {onFiltroChequesChange && <ChequesFiltroSelect value={filtroCheques} onChange={onFiltroChequesChange} />}
           <Button
             variant="ghost"
             onClick={onLimpiar}
@@ -343,7 +331,7 @@ export function EndDateFilter({
       )}
 
       {/* Botón Limpiar (cuando no hay buscador ni filtro deuda) */}
-      {!onSearchTextChange && !onFiltroDeudeChange && !onFiltroChequesPendientesChange && hayFiltro && (
+      {!onSearchTextChange && !onFiltroDeudeChange && !onFiltroChequesChange && hayFiltro && (
         <Button
           variant="ghost"
           onClick={onLimpiar}
