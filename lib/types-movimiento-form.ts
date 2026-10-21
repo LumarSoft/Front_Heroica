@@ -7,6 +7,8 @@ export interface MovimientoInitialValues {
   monto?: string
   comentarios?: string
   fecha?: string
+  /** Período contable 'YYYY-MM' */
+  periodo?: string
   prioridad?: 'baja' | 'media' | 'alta'
   categoria_id?: string
   subcategoria_id?: string
@@ -37,6 +39,8 @@ export interface NuevoMovimientoDialogProps {
 }
 export interface MovimientoFormData {
   fecha: string
+  /** Período contable 'YYYY-MM' (se muestra MM/AA) */
+  periodo: string
   concepto: string
   monto: string
   comentarios: string

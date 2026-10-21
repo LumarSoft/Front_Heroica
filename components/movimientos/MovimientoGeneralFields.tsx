@@ -1,10 +1,12 @@
 'use client'
+import { useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { inputClasses, labelClasses } from '@/lib/dialog-styles'
 import type { NuevoMovimientoContext } from '@/lib/types'
 import { MovimientoSelect } from './MovimientoSelect'
 import { Combobox } from '@/components/ui/combobox'
+import { opcionesPeriodo } from '@/lib/periodo'
 interface Props {
   context: NuevoMovimientoContext
 }
@@ -19,6 +21,7 @@ export function MovimientoGeneralFields({ context }: Props) {
     categorias,
     subcategorias,
   } = context
+  const periodoOptions = useMemo(() => opcionesPeriodo(formData.periodo), [formData.periodo])
   return (
     <section className="space-y-4">
       <h4 className="text-xs font-bold text-[#002868] uppercase tracking-widest flex items-center gap-2">
@@ -26,7 +29,7 @@ export function MovimientoGeneralFields({ context }: Props) {
         Información general
       </h4>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="fecha" className={labelClasses}>
             Fecha
@@ -38,6 +41,19 @@ export function MovimientoGeneralFields({ context }: Props) {
             value={formData.fecha}
             onChange={handleInputChange}
             className={inputClasses}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="periodo" className={labelClasses}>
+            Período
+          </Label>
+          <MovimientoSelect
+            id="periodo"
+            allowEmpty={false}
+            value={formData.periodo}
+            onValueChange={value => handleInputChange({ target: { name: 'periodo', value } })}
+            options={periodoOptions}
+            placeholder="MM/AA"
           />
         </div>
         <div className="space-y-1.5">
