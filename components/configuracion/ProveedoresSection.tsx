@@ -17,7 +17,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
-import { handleCuitChange, isValidCuit } from '@/lib/validators'
+import { cuitToDigits, formatCuit, handleCuitChange, isValidCuit } from '@/lib/validators'
+import { CatalogoExcelBotones } from './CatalogoExcelBotones'
+import { ProveedoresExcelDialog } from './ProveedoresExcelDialog'
 
 interface ProveedorItem {
   id: number
@@ -64,6 +66,7 @@ export function ProveedoresSection() {
     nombre: string
   } | null>(null)
   const [detailTarget, setDetailTarget] = useState<ProveedorItem | null>(null)
+  const [isImportOpen, setIsImportOpen] = useState(false)
 
   useEffect(() => {
     fetchItems()
@@ -90,7 +93,7 @@ export function ProveedoresSection() {
       id: item.id,
       nombre: item.nombre,
       razon_social: item.razon_social ?? '',
-      cuit: item.cuit ?? '',
+      cuit: item.cuit ? formatCuit(cuitToDigits(item.cuit)) : '',
       cbu_alias: item.cbu_alias ?? '',
       telefono: item.telefono ?? '',
       email: item.email ?? '',
@@ -178,14 +181,21 @@ export function ProveedoresSection() {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-[#F0F0F0]">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#F0F0F0]">
           <CardTitle>Proveedores</CardTitle>
-          <Button
-            onClick={handleOpenNew}
-            className="bg-[#002868] hover:bg-[#003d8f] text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
-          >
-            + Nuevo Proveedor
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <CatalogoExcelBotones
+              exportarUrl={API_ENDPOINTS.CONFIGURACION.PROVEEDORES.EXPORTAR}
+              nombreArchivo="Proveedores"
+              onImportar={() => setIsImportOpen(true)}
+            />
+            <Button
+              onClick={handleOpenNew}
+              className="bg-[#002868] hover:bg-[#003d8f] text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
+            >
+              + Nuevo Proveedor
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -397,7 +407,8 @@ export function ProveedoresSection() {
               <span className="font-semibold text-[#1A1A1A]">Razón social:</span> {detailTarget?.razon_social || '-'}
             </div>
             <div>
-              <span className="font-semibold text-[#1A1A1A]">CUIT:</span> {detailTarget?.cuit || '-'}
+              <span className="font-semibold text-[#1A1A1A]">CUIT:</span>{' '}
+              {detailTarget?.cuit ? formatCuit(cuitToDigits(detailTarget.cuit)) : '-'}
             </div>
             <div>
               <span className="font-semibold text-[#1A1A1A]">CBU / Alias:</span> {detailTarget?.cbu_alias || '-'}
@@ -432,6 +443,8 @@ export function ProveedoresSection() {
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      <ProveedoresExcelDialog open={isImportOpen} onOpenChange={setIsImportOpen} onImported={fetchItems} />
     </>
   )
 }
