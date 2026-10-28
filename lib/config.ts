@@ -193,6 +193,9 @@ export const API_ENDPOINTS = {
       CREATE: `${API_URL}/api/configuracion/proveedores`,
       UPDATE: (id: number) => `${API_URL}/api/configuracion/proveedores/${id}`,
       DELETE: (id: number) => `${API_URL}/api/configuracion/proveedores/${id}`,
+      EXPORTAR: `${API_URL}/api/configuracion/proveedores/exportar`,
+      IMPORTAR_PREVIEW: `${API_URL}/api/configuracion/proveedores/importar/preview`,
+      IMPORTAR_CONFIRMAR: `${API_URL}/api/configuracion/proveedores/importar/confirmar`,
     },
     // Usuarios
     USUARIOS: {
