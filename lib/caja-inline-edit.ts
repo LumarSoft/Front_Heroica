@@ -1,4 +1,5 @@
 import type { Categoria, DescripcionOption, SelectOption, Transaction } from '@/lib/types'
+import { opcionesPeriodo, periodoAlCambiarFecha, periodoDeFecha } from '@/lib/periodo'
 
 /**
  * Lógica pura (sin JSX) de la edición "estilo Excel" de las celdas de la lista de
@@ -9,7 +10,7 @@ import type { Categoria, DescripcionOption, SelectOption, Transaction } from '@/
  * para el render optimista, de modo que el cambio se ve al instante sin re-fetch.
  */
 
-export type EditFieldKey = 'fecha' | 'monto' | 'categoria' | 'descripcion' | 'banco' | 'medio_pago'
+export type EditFieldKey = 'fecha' | 'periodo' | 'monto' | 'categoria' | 'descripcion' | 'banco' | 'medio_pago'
 
 export type EditFieldType = 'date' | 'monto' | 'select'
 
@@ -37,6 +38,11 @@ export interface EditFieldSpec {
   buildPatch: (value: string, t: Transaction, ctx: InlineEditContext) => Partial<Transaction>
 }
 
+/** Período efectivo del movimiento ('YYYY-MM'): el elegido o, si no hay, el mes de la fecha */
+export function periodoDe(t: Transaction): string {
+  return t.periodo || (t.fecha ? periodoDeFecha(t.fecha) : '')
+}
+
 function toOptions(items: SelectOption[]): EditOption[] {
   return items.map(i => ({ value: String(i.id), label: i.nombre }))
 }
@@ -45,7 +51,19 @@ export const EDIT_FIELD_SPECS: Record<EditFieldKey, EditFieldSpec> = {
   fecha: {
     type: 'date',
     getRaw: t => (t.fecha ? t.fecha.split('T')[0] : ''),
-    buildPatch: value => ({ fecha: value }),
+    // El período acompaña a la fecha salvo que se haya elegido otro mes a mano
+    buildPatch: (value, t) => ({
+      fecha: value,
+      periodo: periodoAlCambiarFecha(periodoDe(t), t.fecha ?? '', value),
+    }),
+  },
+
+  periodo: {
+    type: 'select',
+    placeholder: 'Período',
+    getRaw: t => periodoDe(t),
+    getOptions: t => opcionesPeriodo(periodoDe(t)),
+    buildPatch: value => ({ periodo: value }),
   },
 
   monto: {

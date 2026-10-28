@@ -5,6 +5,7 @@ import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { movimientoBaseSchema, movimientoBancoSchema } from '@/lib/schemas'
 import type { Categoria, Subcategoria, SelectOption, DescripcionOption } from '@/lib/types'
+import { opcionesPeriodo, periodoAlCambiarFecha, periodoDeFecha } from '@/lib/periodo'
 import { toast } from 'sonner'
 
 interface UseInlineMovimientoParams {
@@ -47,7 +48,8 @@ export function useInlineMovimiento({
 }: UseInlineMovimientoParams) {
   const isBanco = cajaTipo === 'banco'
   const [tipo, setTipo] = useState<'ingreso' | 'egreso'>('ingreso')
-  const [fecha, setFecha] = useState(defaultFecha)
+  const [fecha, setFechaState] = useState(defaultFecha)
+  const [periodo, setPeriodo] = useState(() => periodoDeFecha(defaultFecha))
   const [categoriaId, setCategoriaId] = useState('')
   const [subcategoriaId, setSubcategoriaId] = useState('')
   const [descripcionId, setDescripcionId] = useState('')
@@ -97,6 +99,13 @@ export function useInlineMovimiento({
     () => mediosPago.map(m => ({ value: m.id.toString(), label: m.nombre })),
     [mediosPago],
   )
+
+  const periodoOptions = useMemo(() => opcionesPeriodo(periodo), [periodo])
+
+  const setFecha = (nuevaFecha: string) => {
+    setPeriodo(prev => periodoAlCambiarFecha(prev, fecha, nuevaFecha))
+    setFechaState(nuevaFecha)
+  }
 
   const handleTipoChange = (nuevoTipo: 'ingreso' | 'egreso') => {
     setTipo(nuevoTipo)
@@ -153,6 +162,7 @@ export function useInlineMovimiento({
           sucursal_id: sucursalId,
           user_id: userId,
           fecha,
+          periodo,
           orden,
           concepto: '',
           monto: parseFloat(monto),
@@ -184,6 +194,7 @@ export function useInlineMovimiento({
   }, [
     isBanco,
     fecha,
+    periodo,
     orden,
     monto,
     categoriaId,
@@ -207,6 +218,9 @@ export function useInlineMovimiento({
     tipo,
     fecha,
     setFecha,
+    periodo,
+    setPeriodo,
+    periodoOptions,
     categoriaId,
     subcategoriaId,
     setSubcategoriaId,

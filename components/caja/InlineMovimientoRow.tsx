@@ -28,6 +28,8 @@ interface InlineMovimientoRowProps {
 }
 
 const labelClass = 'block text-[11px] font-semibold text-[#5A6070] mb-1'
+const selectClass =
+  'h-10 w-full rounded-lg border border-[#E0E0E0] bg-white px-3 text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-[#002868]/20 focus:border-[#002868]'
 
 export function InlineMovimientoRow({
   cajaTipo,
@@ -49,6 +51,9 @@ export function InlineMovimientoRow({
     tipo,
     fecha,
     setFecha,
+    periodo,
+    setPeriodo,
+    periodoOptions,
     categoriaId,
     subcategoriaId,
     setSubcategoriaId,
@@ -115,14 +120,26 @@ export function InlineMovimientoRow({
 
       {/* Campos */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        <div>
-          <label className={labelClass}>Fecha *</label>
-          <Input
-            type="date"
-            value={fecha}
-            onChange={e => setFecha(e.target.value)}
-            className={`h-10 ${errorRing('fecha')}`}
-          />
+        <div className="grid grid-cols-[1fr_84px] gap-2">
+          <div>
+            <label className={labelClass}>Fecha *</label>
+            <Input
+              type="date"
+              value={fecha}
+              onChange={e => setFecha(e.target.value)}
+              className={`h-10 ${errorRing('fecha')}`}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Período</label>
+            <select value={periodo} onChange={e => setPeriodo(e.target.value)} className={selectClass}>
+              {periodoOptions.map(p => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div>
           <label className={labelClass}>Descripción *</label>
@@ -210,7 +227,7 @@ export function InlineMovimientoRow({
           <select
             value={prioridad}
             onChange={e => setPrioridad(e.target.value as 'baja' | 'media' | 'alta')}
-            className="h-10 w-full rounded-lg border border-[#E0E0E0] bg-white px-3 text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-[#002868]/20 focus:border-[#002868]"
+            className={selectClass}
           >
             <option value="baja">Baja</option>
             <option value="media">Media</option>
