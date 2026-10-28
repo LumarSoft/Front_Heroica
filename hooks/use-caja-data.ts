@@ -300,6 +300,8 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
           method: 'PUT',
           body: JSON.stringify({
             fecha: merged.fecha ? merged.fecha.split('T')[0] : merged.fecha,
+            // Si el período es el mes de la fecha, la API lo guarda vacío y sigue a la fecha
+            periodo: merged.periodo || undefined,
             concepto: merged.concepto ?? '',
             monto: Math.abs(Number(merged.monto)),
             comentarios: merged.comentarios ?? '',

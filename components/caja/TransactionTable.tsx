@@ -39,7 +39,8 @@ import { SortableTransactionRow, type DragHandleProps } from './SortableTransact
 import { RowActions } from './RowActions'
 import { EditableCell } from './EditableCell'
 import { useGridEdit } from '@/hooks/use-grid-edit'
-import { EDIT_FIELD_SPECS, type EditFieldKey, type InlineEditContext } from '@/lib/caja-inline-edit'
+import { EDIT_FIELD_SPECS, periodoDe, type EditFieldKey, type InlineEditContext } from '@/lib/caja-inline-edit'
+import { formatPeriodo, periodoDeFecha } from '@/lib/periodo'
 import { computeReorderOrden, effOrden } from '@/lib/caja-reorder'
 
 // =============================================
@@ -65,6 +66,30 @@ const BASE_COLUMNS: ColumnDef[] = [
     widthClass: 'w-[100px]',
     editField: 'fecha',
     render: t => <span className="font-medium text-[#1A1A1A] whitespace-nowrap">{formatFecha(t.fecha)}</span>,
+  },
+  {
+    key: 'periodo',
+    label: 'Período',
+    widthClass: 'w-[72px]',
+    editField: 'periodo',
+    render: t => {
+      const periodo = periodoDe(t)
+      // Resaltado cuando el movimiento se imputa a un mes distinto al de su fecha
+      const otroMes = !!t.fecha && periodo !== periodoDeFecha(t.fecha)
+      return (
+        <span
+          className={cn(
+            'whitespace-nowrap',
+            otroMes
+              ? 'rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-xs font-semibold text-amber-800'
+              : 'text-[#666666]',
+          )}
+          title={otroMes ? 'Corresponde a un mes distinto al de la fecha' : undefined}
+        >
+          {periodo ? formatPeriodo(periodo) : '-'}
+        </span>
+      )
+    },
   },
   {
     key: 'categoria',
