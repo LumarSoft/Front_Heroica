@@ -12,11 +12,18 @@ import Image from 'next/image'
 interface Setup2FADialogProps {
   open: boolean
   userId: number
+  /** Token temporal del login para configurar el 2FA. Va como Authorization: Bearer. */
+  setupToken?: string
   onSuccess: (tempToken: string) => void
   onClose: () => void
 }
 
-export function Setup2FADialog({ open, userId, onSuccess, onClose }: Setup2FADialogProps) {
+export function Setup2FADialog({ open, userId, setupToken, onSuccess, onClose }: Setup2FADialogProps) {
+  // El userId sigue yendo en el body para ser compatible con versiones viejas de la API; la nueva usa solo el token.
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(setupToken ? { Authorization: `Bearer ${setupToken}` } : {}),
+  }
   const [step, setStep] = useState<'loading' | 'setup' | 'verify'>('loading')
   const [qrCode, setQrCode] = useState('')
   const [secret, setSecret] = useState('')
@@ -36,7 +43,7 @@ export function Setup2FADialog({ open, userId, onSuccess, onClose }: Setup2FADia
       setIsLoading(true)
       const response = await fetch(API_ENDPOINTS.AUTH.ENABLE_2FA, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ userId }),
       })
 
@@ -71,7 +78,7 @@ export function Setup2FADialog({ open, userId, onSuccess, onClose }: Setup2FADia
     try {
       const response = await fetch(API_ENDPOINTS.AUTH.CONFIRM_2FA, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ userId, code: verificationCode }),
       })
 
