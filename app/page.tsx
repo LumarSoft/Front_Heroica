@@ -28,6 +28,8 @@ export default function LoginPage() {
 
   const [requires2FA, setRequires2FA] = useState(false)
   const [tempToken, setTempToken] = useState('')
+  // Token temporal que da el login para configurar el 2FA (la API lo exige desde el 15/11/2026)
+  const [setupToken, setSetupToken] = useState('')
   const [code2FA, setCode2FA] = useState('')
   const [rememberDevice, setRememberDevice] = useState(false)
 
@@ -70,6 +72,7 @@ export default function LoginPage() {
 
       if (data.needsSetup2FA) {
         setPendingUserId(data.userId)
+        setSetupToken(data.tempToken || '')
         setNeedsSetup2FA(true)
         return
       }
@@ -132,11 +135,13 @@ export default function LoginPage() {
     setCode2FA('')
     setError('')
     setPendingUserId(null)
+    setSetupToken('')
   }
 
   const handleClose2FASetup = () => {
     setNeedsSetup2FA(false)
     setPendingUserId(null)
+    setSetupToken('')
     setError('Debes configurar 2FA para poder acceder al sistema')
   }
 
@@ -512,6 +517,7 @@ export default function LoginPage() {
         <Setup2FADialog
           open={needsSetup2FA}
           userId={pendingUserId}
+          setupToken={setupToken}
           onSuccess={handle2FASetupSuccess}
           onClose={handleClose2FASetup}
         />
