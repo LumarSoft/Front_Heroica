@@ -18,6 +18,7 @@ import type { ColumnDef } from '@/components/caja/TransactionTable'
 import { TransactionTable } from '@/components/caja/TransactionTable'
 import { DayCell, WeekTotalsCell, type DayData, type WeekTotals } from '@/components/caja/PaymentCalendarCells'
 import { formatMonto } from '@/lib/formatters'
+import { esTransferenciaEntreBancos } from '@/lib/transferencias'
 import { cn } from '@/lib/utils'
 
 // =============================================
@@ -99,9 +100,11 @@ export function PaymentCalendar({
   // Agrupar transactions por fecha ISO.
   // Con `acumularVencidosEnHoy`, todo lo que venció y sigue impago se reasigna al
   // día de hoy en lugar de quedar en su fecha original.
+  // Las transferencias entre bancos no se muestran: no entra ni sale plata de la sucursal.
   const dayMap = useMemo(() => {
     const map = new Map<string, DayData>()
     for (const t of transactions) {
+      if (esTransferenciaEntreBancos(t)) continue
       const datePart = t.fecha?.includes('T') ? t.fecha.split('T')[0] : t.fecha
       if (!datePart) continue
 
