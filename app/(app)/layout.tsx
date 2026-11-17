@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import AppSidebar, { MobileMenuButton } from '@/components/AppSidebar'
+import FloatingProveedores from '@/components/FloatingProveedores'
 import { useAuthGuard } from '@/hooks/use-auth-guard'
 import { PageLoadingSpinner } from '@/components/ui/loading-spinner'
 
@@ -31,6 +32,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Page content */}
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
+
+      <FloatingProveedores />
     </div>
   )
 }

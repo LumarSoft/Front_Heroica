@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
@@ -20,18 +21,8 @@ import { DeleteDialog } from '@/components/ui/delete-dialog'
 import { cuitToDigits, formatCuit, handleCuitChange, isValidCuit } from '@/lib/validators'
 import { CatalogoExcelBotones } from './CatalogoExcelBotones'
 import { ProveedoresExcelDialog } from './ProveedoresExcelDialog'
-
-interface ProveedorItem {
-  id: number
-  nombre: string
-  razon_social?: string | null
-  cuit?: string | null
-  cbu_alias?: string | null
-  telefono?: string | null
-  email?: string | null
-  direccion?: string | null
-  activo: boolean
-}
+import { filtrarProveedores } from '@/lib/proveedores'
+import type { Proveedor as ProveedorItem } from '@/lib/types'
 
 interface ProveedorForm {
   id: number
@@ -67,6 +58,8 @@ export function ProveedoresSection() {
   } | null>(null)
   const [detailTarget, setDetailTarget] = useState<ProveedorItem | null>(null)
   const [isImportOpen, setIsImportOpen] = useState(false)
+  const [busqueda, setBusqueda] = useState('')
+  const visibles = useMemo(() => filtrarProveedores(items, busqueda), [items, busqueda])
 
   useEffect(() => {
     fetchItems()
@@ -198,8 +191,21 @@ export function ProveedoresSection() {
           </div>
         </CardHeader>
         <CardContent>
+          <div className="relative mb-4 mt-4 max-w-md">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8A8F9C]" />
+            <Input
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+              placeholder="Buscar por nombre, razón social, CUIT o alias"
+              aria-label="Buscar proveedor"
+              className="h-9 pl-9 text-sm"
+            />
+          </div>
+          {busqueda && visibles.length === 0 && (
+            <p className="py-6 text-center text-sm text-[#8A8F9C]">No hay proveedores que coincidan.</p>
+          )}
           <div className="space-y-2">
-            {items.map(item => (
+            {visibles.map(item => (
               <div
                 key={item.id}
                 className="flex items-center justify-between gap-3 p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
