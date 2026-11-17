@@ -1,10 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CircleDollarSign, Landmark } from 'lucide-react'
+import { Landmark } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { API_ENDPOINTS } from '@/lib/config'
 import { apiFetch } from '@/lib/api'
 import { downloadBlob } from '@/lib/downloadBlob'
@@ -21,13 +19,17 @@ import {
 import { DeudasFiltros } from './DeudasFiltros'
 import { DeudaGrupoItem } from './DeudaGrupoItem'
 
-interface DeudasInterSucursalDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+interface Props {
+  /** La pestaña está visible: recién ahí se cargan las deudas */
+  activo: boolean
   sucursalId: number
 }
 
-export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: DeudasInterSucursalDialogProps) {
+/**
+ * Pestaña "Otras deudas" de Préstamos y deudas: lo marcado con "Marcar como deuda" (terceros) y
+ * las deudas entre sucursales del sistema anterior que todavía no pasaron a préstamos.
+ */
+export function DeudasAnterioresPanel({ activo, sucursalId }: Props) {
   const hoy = new Date().toISOString().split('T')[0]
   const haceTreintaDias = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
   const [fechaInicio, setFechaInicio] = useState(haceTreintaDias)
@@ -84,7 +86,7 @@ export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: De
       const res = await apiFetch(url)
       if (!res.ok) throw new Error('Error en la respuesta del servidor')
       const blob = await res.blob()
-      downloadBlob(blob, `Deudas y prestamos ${fechaInicio} a ${fechaFin}.xlsx`)
+      downloadBlob(blob, `Otras deudas ${fechaInicio} a ${fechaFin}.xlsx`)
     } catch {
       toast.error('Error al exportar el Excel.')
     } finally {
@@ -93,8 +95,8 @@ export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: De
   }, [fechaFin, fechaInicio, filtroTipo, sucursalEfectiva, sucursalId])
 
   useEffect(() => {
-    if (open) void fetchDeudas()
-  }, [open, fetchDeudas])
+    if (activo) void fetchDeudas()
+  }, [activo, fetchDeudas])
 
   const toggleGrupo = (key: string) => {
     setAbiertas(actual => {
@@ -106,66 +108,45 @@ export function DeudasInterSucursalDialog({ open, onOpenChange, sucursalId }: De
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[1040px] max-h-[90vh] bg-white rounded-2xl p-0 gap-0 overflow-hidden flex flex-col">
-        <div className="px-7 pt-7 pb-5 border-b border-[#F0F0F0]">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-[#1A1A1A] flex items-center gap-3">
-              <span className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-                <CircleDollarSign className="w-5 h-5 text-orange-600" />
-              </span>
-              Deudas y préstamos
-            </DialogTitle>
-            <DialogDescription>
-              Deudas pendientes con otras sucursales o terceros, y préstamos otorgados a otras sucursales. Abrí una fila
-              para ver el detalle.
-            </DialogDescription>
-          </DialogHeader>
-        </div>
-        <DeudasFiltros
-          fechaInicio={fechaInicio}
-          fechaFin={fechaFin}
-          onFechaInicioChange={setFechaInicio}
-          onFechaFinChange={setFechaFin}
-          tipo={filtroTipo}
-          onTipoChange={setFiltroTipo}
-          sucursal={sucursalEfectiva}
-          onSucursalChange={setFiltroSucursal}
-          sucursales={sucursales}
-          incluirTerceros={incluirTerceros}
-          isLoading={isLoading}
-          onActualizar={fetchDeudas}
-          puedeExportar={grupos.length > 0}
-          isExportando={isExportando}
-          onExportar={exportarExcel}
-        />
-        <div className="flex-1 overflow-y-auto p-7 space-y-3">
-          {error && <p className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-700">{error}</p>}
-          {!isLoading && grupos.length === 0 && (
-            <div className="h-32 flex flex-col items-center justify-center text-[#8A8F9C] gap-2">
-              <Landmark className="w-8 h-8" />
-              <span className="text-sm">No hay deudas ni préstamos pendientes con estos filtros</span>
-            </div>
-          )}
-          {grupos.map(grupo => {
-            const key = `${grupo.esTercero ? 'ter' : 'suc'}-${grupo.sucursal}-${grupo.moneda}`
-            return (
-              <DeudaGrupoItem
-                key={key}
-                grupo={grupo}
-                tipo={filtroTipo}
-                abierta={abiertas.has(key)}
-                onToggle={() => toggleGrupo(key)}
-              />
-            )
-          })}
-        </div>
-        <div className="px-7 py-4 border-t bg-[#FAFBFC] flex justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cerrar
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <div className="-mx-6 border-t border-[#F0F0F0]">
+      <DeudasFiltros
+        fechaInicio={fechaInicio}
+        fechaFin={fechaFin}
+        onFechaInicioChange={setFechaInicio}
+        onFechaFinChange={setFechaFin}
+        tipo={filtroTipo}
+        onTipoChange={setFiltroTipo}
+        sucursal={sucursalEfectiva}
+        onSucursalChange={setFiltroSucursal}
+        sucursales={sucursales}
+        incluirTerceros={incluirTerceros}
+        isLoading={isLoading}
+        onActualizar={fetchDeudas}
+        puedeExportar={grupos.length > 0}
+        isExportando={isExportando}
+        onExportar={exportarExcel}
+      />
+      <div className="space-y-3 px-6 pt-4">
+        {error && <p className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-700">{error}</p>}
+        {!isLoading && grupos.length === 0 && (
+          <div className="h-32 flex flex-col items-center justify-center text-[#8A8F9C] gap-2">
+            <Landmark className="w-8 h-8" />
+            <span className="text-sm">No hay deudas pendientes con estos filtros</span>
+          </div>
+        )}
+        {grupos.map(grupo => {
+          const key = `${grupo.esTercero ? 'ter' : 'suc'}-${grupo.sucursal}-${grupo.moneda}`
+          return (
+            <DeudaGrupoItem
+              key={key}
+              grupo={grupo}
+              tipo={filtroTipo}
+              abierta={abiertas.has(key)}
+              onToggle={() => toggleGrupo(key)}
+            />
+          )
+        })}
+      </div>
+    </div>
   )
 }

@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { ArrowRightLeft, CalendarDays, CircleDollarSign, FileSpreadsheet, HandCoins, Plus, Upload } from 'lucide-react'
-import { DeudasInterSucursalDialog } from './DeudasInterSucursalDialog'
+import { ArrowRightLeft, CalendarDays, FileSpreadsheet, HandCoins, Plus, Upload } from 'lucide-react'
 import { ResumenTesoreriaDialog } from './ResumenTesoreriaDialog'
 import { PrestamosDialog } from './PrestamosDialog'
 import { usePrestamosCaja } from '@/hooks/use-prestamos-caja'
@@ -41,7 +40,6 @@ export function PageHeader({
   bancos,
   onPrestamosChange,
 }: PageHeaderProps) {
-  const [showDeudas, setShowDeudas] = useState(false)
   const [showPrestamos, setShowPrestamos] = useState(false)
   const prestamos = usePrestamosCaja(sucursalId, cajaTipo, moneda)
   const [showResumen, setShowResumen] = useState(false)
@@ -55,20 +53,12 @@ export function PageHeader({
         </div>
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 flex-wrap">
           <Button
-            onClick={() => setShowDeudas(true)}
-            variant="outline"
-            className="cursor-pointer border-orange-300 bg-white text-orange-600 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-400 font-semibold px-3 sm:px-5 py-2 sm:py-3 shadow-sm hover:shadow-md transition-all flex items-center gap-2"
-          >
-            <CircleDollarSign className="w-5 h-5" />
-            Deudas
-          </Button>
-          <Button
             onClick={() => setShowPrestamos(true)}
             variant="outline"
             className="relative cursor-pointer border-indigo-300 text-indigo-700 hover:bg-indigo-50 font-semibold px-3 sm:px-5 flex items-center gap-2"
           >
             <HandCoins className="w-4 h-4" />
-            Préstamos
+            Préstamos y deudas
             {prestamos.cantidadPorConfirmar > 0 && (
               <span
                 className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[11px] font-bold text-white"
@@ -134,7 +124,6 @@ export function PageHeader({
         </div>
       </div>
 
-      <DeudasInterSucursalDialog open={showDeudas} onOpenChange={setShowDeudas} sucursalId={sucursalId} />
       <PrestamosDialog
         open={showPrestamos}
         onOpenChange={setShowPrestamos}

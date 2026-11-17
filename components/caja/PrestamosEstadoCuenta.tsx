@@ -80,7 +80,9 @@ export function PrestamosEstadoCuenta({ prestamos, sucursalId, moneda, userId, p
               const presto = p.sucursal_presta_id === sucursalId
               const abierto = expandido === p.id
               const devoluciones = p.devoluciones ?? []
-              const anulable = p.estado === 'vigente' && p.devuelto === 0 && p.por_confirmar === 0 && puedeAnular
+              // Un saldo inicial no se anula (no tiene movimientos): se cancela devolviéndolo
+              const anulable =
+                p.estado === 'vigente' && !p.es_apertura && p.devuelto === 0 && p.por_confirmar === 0 && puedeAnular
               const cancelable = p.estado === 'solicitado' && p.user_solicita_id === userId
               return (
                 <div key={p.id} className="px-4 py-3">
