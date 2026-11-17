@@ -24,7 +24,7 @@ export function PrestamoMontoInput({ id, value, moneda, onChange, disabled }: Pr
         inputMode="decimal"
         placeholder="0,00"
         value={formatInputMonto(value)}
-        onChange={e => onChange(parseInputMonto(e.target.value))}
+        onChange={e => onChange(parseInputMonto(e.target.value, value))}
         disabled={disabled}
         className={`${inputClasses} ${moneda === 'USD' ? 'pl-12' : 'pl-8'}`}
       />

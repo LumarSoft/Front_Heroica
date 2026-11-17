@@ -22,7 +22,7 @@ export function MontoInput({ value, onChange, className, ...props }: MontoInputP
         inputMode="decimal"
         className={cn('pl-7', className)}
         value={formatInputMonto(value)}
-        onChange={e => onChange(parseInputMonto(e.target.value))}
+        onChange={e => onChange(parseInputMonto(e.target.value, value))}
       />
     </div>
   )
