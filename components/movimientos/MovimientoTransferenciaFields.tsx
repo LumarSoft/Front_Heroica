@@ -61,12 +61,13 @@ export function MovimientoTransferenciaFields({ context }: Props) {
               inputMode="decimal"
               placeholder="0,00"
               value={formatInputMonto(transferenciaData.monto)}
-              onChange={e =>
+              onChange={e => {
+                const texto = e.target.value
                 setTransferenciaData(p => ({
                   ...p,
-                  monto: parseInputMonto(e.target.value),
+                  monto: parseInputMonto(texto, p.monto),
                 }))
-              }
+              }}
               className={`${inputClasses} ${moneda === 'USD' ? 'pl-12' : 'pl-8'}`}
             />
           </div>

@@ -26,9 +26,9 @@ interface DeudasFiltrosProps {
 }
 
 const OPCIONES_TIPO: { value: FiltroTipoDeuda; label: string }[] = [
-  { value: 'todos', label: 'Deudas y préstamos' },
-  { value: 'deudas', label: 'Solo deudas' },
-  { value: 'prestamos', label: 'Solo préstamos' },
+  { value: 'todos', label: 'A pagar y a cobrar' },
+  { value: 'deudas', label: 'Solo a pagar' },
+  { value: 'prestamos', label: 'Solo a cobrar' },
 ]
 
 function esFiltroTipo(value: string): value is FiltroTipoDeuda {

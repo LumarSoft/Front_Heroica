@@ -217,7 +217,7 @@ export function InlineMovimientoRow({
           <Input
             inputMode="decimal"
             value={formatInputMonto(monto)}
-            onChange={e => setMonto(parseInputMonto(e.target.value))}
+            onChange={e => setMonto(parseInputMonto(e.target.value, monto))}
             placeholder="0,00"
             className={`h-10 ${errorRing('monto')}`}
           />

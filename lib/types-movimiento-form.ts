@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction, RefObject } from 'react'
 import type { NotificarEventoData } from '@/components/notificaciones/NotificarEventoDialog'
 import type { Categoria, Subcategoria, BancoParcial } from './types-sucursales'
 import type { SelectOption, DescripcionOption } from './types-rrhh'
+import type { Impuesto } from './impuestos'
 export interface MovimientoInitialValues {
   concepto?: string
   monto?: string
@@ -9,6 +10,8 @@ export interface MovimientoInitialValues {
   fecha?: string
   /** Período contable 'YYYY-MM' */
   periodo?: string
+  /** Base impositiva ('' = no afecta) */
+  impuesto?: Impuesto | ''
   prioridad?: 'baja' | 'media' | 'alta'
   categoria_id?: string
   subcategoria_id?: string
@@ -41,6 +44,8 @@ export interface MovimientoFormData {
   fecha: string
   /** Período contable 'YYYY-MM' (se muestra MM/AA) */
   periodo: string
+  /** Base impositiva: solo egresos ('' = no afecta) */
+  impuesto: Impuesto | ''
   concepto: string
   monto: string
   comentarios: string

@@ -97,8 +97,19 @@ export function DevolverPrestamoFields({ form, bancos, cajaTipo, moneda }: Props
 
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-xl border border-[#E0E0E0] bg-[#FAFBFC] p-4 space-y-3">
-              <p className="text-xs font-bold text-[#002868] uppercase tracking-widest">Sale de esta caja</p>
-              {cajaTipo === 'banco' ? (
+              <p className="text-xs font-bold text-[#002868] uppercase tracking-widest">Sale de esta sucursal</p>
+              <MovimientoSelect
+                id="devolver_caja_salida"
+                allowEmpty={false}
+                value={devolver.caja_salida}
+                onValueChange={v => set({ caja_salida: v === 'efectivo' ? 'efectivo' : 'banco', banco_salida_id: '' })}
+                options={[
+                  { value: 'banco', label: 'Banco' },
+                  { value: 'efectivo', label: 'Efectivo' },
+                ]}
+                placeholder="Caja"
+              />
+              {devolver.caja_salida === 'banco' && (
                 <MovimientoSelect
                   id="devolver_banco_salida"
                   value={devolver.banco_salida_id}
@@ -106,8 +117,11 @@ export function DevolverPrestamoFields({ form, bancos, cajaTipo, moneda }: Props
                   options={opcionesBancos}
                   placeholder="Banco"
                 />
-              ) : (
-                <p className="text-xs text-[#5A6070]">Efectivo</p>
+              )}
+              {devolver.caja_salida !== cajaTipo && (
+                <p className="text-xs text-[#5A6070]">
+                  Queda registrado en la caja {devolver.caja_salida === 'efectivo' ? 'efectivo' : 'banco'}.
+                </p>
               )}
             </div>
             <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-4 space-y-3">

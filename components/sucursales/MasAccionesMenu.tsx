@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { CalendarDays, ChevronUp, FileSpreadsheet } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { CalendarDays, ChevronUp, FileSpreadsheet, Landmark } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -12,6 +13,7 @@ import { ResumenTesoreriaDialog } from '@/components/caja/ResumenTesoreriaDialog
 
 // Acciones poco frecuentes, a propósito discretas: se abren desde la flecha sobre el botón de nueva sucursal.
 export function MasAccionesMenu() {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isExportando, setIsExportando] = useState(false)
   const [showResumen, setShowResumen] = useState(false)
@@ -53,6 +55,17 @@ export function MasAccionesMenu() {
           >
             <CalendarDays className="w-4 h-4 text-sky-700" />
             Resumen diario (todas las sucursales)
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setOpen(false)
+              router.push('/sucursales/base-impositiva')
+            }}
+            className="w-full justify-start gap-2 text-[#1A1A1A]"
+          >
+            <Landmark className="w-4 h-4 text-[#002868]" />
+            Base impositiva
           </Button>
           <Button
             variant="ghost"

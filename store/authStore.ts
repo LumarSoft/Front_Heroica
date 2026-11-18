@@ -43,6 +43,8 @@ interface AuthState {
   canVerPendientes: () => boolean
   canCargarPendientes: () => boolean
   canAprobarPendientes: () => boolean
+  /** Mismos permisos con los que la API deja listar proveedores */
+  canBuscarProveedores: () => boolean
 
   // Reportes
   canVerReportes: () => boolean
@@ -146,6 +148,14 @@ export const useAuthStore = create<AuthState>()(
       canVerPendientes: () => get().hasPermiso('ver_pendientes'),
       canCargarPendientes: () => get().hasPermiso('cargar_pendientes'),
       canAprobarPendientes: () => get().hasPermiso('aprobar_pendientes'),
+      canBuscarProveedores: () =>
+        [
+          'ver_configuracion',
+          'crear_movimientos',
+          'aprobar_movimientos',
+          'cargar_pendientes',
+          'aprobar_pendientes',
+        ].some(clave => get().hasPermiso(clave)),
 
       // Reportes
       canVerReportes: () => get().hasPermiso('ver_reportes'),

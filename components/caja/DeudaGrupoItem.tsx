@@ -13,8 +13,8 @@ interface DeudaGrupoItemProps {
 }
 
 export function DeudaGrupoItem({ grupo, tipo, abierta, onToggle }: DeudaGrupoItemProps) {
-  const situacionDeuda = grupo.esTercero ? 'Deuda · debemos' : 'Deuda · le debemos'
-  const situacionPrestamo = grupo.esTercero ? 'Préstamo · nos deben' : 'Préstamo · nos debe'
+  const situacionDeuda = grupo.esTercero ? 'A pagar · debemos' : 'A pagar · le debemos'
+  const situacionPrestamo = grupo.esTercero ? 'A cobrar · nos deben' : 'A cobrar · nos debe'
 
   return (
     <div className="rounded-xl border border-[#E5E7EB] overflow-hidden">

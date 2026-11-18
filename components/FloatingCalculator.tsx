@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { X, Minus, Calculator, Copy, Check } from 'lucide-react'
 import { useCalculatorStore } from '@/store/calculatorStore'
+import { useDraggable } from '@/hooks/use-draggable'
 
 const BUTTONS = [
   ['C', '±', '%', '÷'],
@@ -45,10 +46,7 @@ export default function FloatingCalculator() {
   const [minimized, setMinimized] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const [position, setPosition] = useState({ x: 24, y: 80 })
-  const dragging = useRef(false)
-  const dragOffset = useRef({ x: 0, y: 0 })
-  const containerRef = useRef<HTMLDivElement>(null)
+  const { position, containerRef, handleMouseDown } = useDraggable({ x: 24, y: 80 })
 
   // Refs to always access latest state in event listeners without stale closures
   const displayRef = useRef(display)
@@ -68,42 +66,6 @@ export default function FloatingCalculator() {
   useEffect(() => {
     waitingForOperandRef.current = waitingForOperand
   }, [waitingForOperand])
-
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      dragging.current = true
-      dragOffset.current = {
-        x: e.clientX - position.x,
-        y: e.clientY - position.y,
-      }
-      e.preventDefault()
-    },
-    [position],
-  )
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!dragging.current) return
-      const el = containerRef.current
-      const w = el ? el.offsetWidth : 256
-      const h = el ? el.offsetHeight : 400
-      const rawX = e.clientX - dragOffset.current.x
-      const rawY = e.clientY - dragOffset.current.y
-      setPosition({
-        x: Math.min(Math.max(0, rawX), window.innerWidth - w),
-        y: Math.min(Math.max(0, rawY), window.innerHeight - h),
-      })
-    }
-    const handleMouseUp = () => {
-      dragging.current = false
-    }
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('mouseup', handleMouseUp)
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
-    }
-  }, [])
 
   const calculate = (a: number, b: number, op: string): number => {
     switch (op) {

@@ -104,20 +104,75 @@ export function capitalize(str: string): string {
 /**
  * Normaliza lo que escribe el usuario a un número "crudo" apto para parseFloat ("1234.56").
  *
- * Acepta indistintamente punto o coma como separador decimal: se toma el último separador
- * escrito y se decide por la cantidad de dígitos que lo siguen (los montos tienen como
- * máximo 2 decimales):
+ * Con `anterior` (el valor crudo que tenía el input antes de esta edición) se sabe qué puntos
+ * los puso el formato como separador de miles: así, borrar un dígito de "240.000" da 24.000
+ * y no 240,00. Sólo el separador que tipea el usuario cuenta como decimal.
+ *
+ * Sin `anterior`, o cuando se pega un número con separadores, acepta punto o coma como decimal:
+ * se toma el último separador y se decide por la cantidad de dígitos que lo siguen (los montos
+ * tienen como máximo 2 decimales):
  *   - 0, 1 o 2 dígitos  → es el separador decimal   ("1234.5" / "1234,5" → 1234.5)
  *   - 3 o más dígitos   → es separador de miles     ("1.000" → 1000, "1.0005" → 10005)
  * El resto de los separadores siempre se descartan (agrupación de miles).
  */
-export function parseInputMonto(value: string): string {
+export function parseInputMonto(value: string, anterior?: string | number): string {
   if (!value) return ''
 
   // Quedarse sólo con dígitos y separadores (descarta $, espacios, letras, etc.)
-  let clean = value.replace(/[^0-9.,]/g, '')
+  const clean = value.replace(/[^0-9.,]/g, '')
   if (!clean) return ''
 
+  const mostrado = anterior === undefined ? '' : formatInputMonto(anterior)
+  return (mostrado && editarSobreFormato(clean, mostrado)) || normalizarMontoLibre(clean)
+}
+
+/**
+ * Interpreta una edición hecha sobre el texto que mostraba el input (`mostrado`, con "." de
+ * miles y "," decimal). Devuelve null si se pegó un número con separadores propios.
+ */
+function editarSobreFormato(clean: string, mostrado: string): string | null {
+  // Lo que se insertó es lo que queda entre el prefijo y el sufijo que no cambiaron
+  let inicio = 0
+  while (inicio < clean.length && inicio < mostrado.length && clean[inicio] === mostrado[inicio]) inicio++
+  let fin = 0
+  while (
+    fin < clean.length - inicio &&
+    fin < mostrado.length - inicio &&
+    clean[clean.length - 1 - fin] === mostrado[mostrado.length - 1 - fin]
+  ) {
+    fin++
+  }
+  const insertado = clean.slice(inicio, clean.length - fin)
+
+  if (insertado === '.' || insertado === ',') {
+    const sinTecleado = clean.slice(0, inicio) + clean.slice(inicio + 1)
+    // Si ya tenía decimales, el separador nuevo se ignora
+    if (sinTecleado.includes(',')) return desdeFormato(sinTecleado)
+    const entero = clean.slice(0, inicio).replace(/[.,]/g, '') || '0'
+    const decimales = clean
+      .slice(inicio + 1)
+      .replace(/[.,]/g, '')
+      .slice(0, 2)
+    return `${entero}.${decimales}`
+  }
+  if (/[.,]/.test(insertado)) return null
+  return desdeFormato(clean)
+}
+
+/** Lee un texto con el formato del input: "." de miles y "," decimal (máximo 2 decimales) */
+function desdeFormato(texto: string): string {
+  const coma = texto.lastIndexOf(',')
+  if (coma === -1) return texto.replace(/\./g, '')
+  const entero = texto.slice(0, coma).replace(/[.,]/g, '') || '0'
+  const decimales = texto
+    .slice(coma + 1)
+    .replace(/\./g, '')
+    .slice(0, 2)
+  return `${entero}.${decimales}`
+}
+
+function normalizarMontoLibre(value: string): string {
+  let clean = value
   const lastSep = Math.max(clean.lastIndexOf('.'), clean.lastIndexOf(','))
   // Lo que sigue al último separador son siempre dígitos (no puede haber otro separador)
   const decimales = lastSep === -1 ? '' : clean.slice(lastSep + 1)

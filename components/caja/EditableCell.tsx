@@ -162,7 +162,7 @@ function CellEditor({ type, raw, options, align, placeholder, onCommit, onCancel
       onFocus={e => {
         if (type === 'monto') e.currentTarget.select()
       }}
-      onChange={e => setValue(type === 'monto' ? parseInputMonto(e.target.value) : e.target.value)}
+      onChange={e => setValue(type === 'monto' ? parseInputMonto(e.target.value, value) : e.target.value)}
       onKeyDown={handleKeyDown}
       onBlur={() => settle(() => onCommit(value, null))}
       onMouseDown={e => e.stopPropagation()}
