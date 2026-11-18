@@ -21,6 +21,7 @@ import { apiFetch } from '@/lib/api'
 import { formatInputMonto } from '@/lib/formatters'
 import { isMedioPagoChequeLike, tieneNumeroChequeCargado } from '@/lib/cheque'
 import { opcionesPeriodo } from '@/lib/periodo'
+import { OPCIONES_IMPUESTO } from '@/lib/impuestos'
 
 // =============================================
 // Dialog de Detalles (edición de movimiento)
@@ -39,6 +40,8 @@ interface DetailsDialogProps {
   formData: {
     fecha: string
     periodo: string
+    /** Base impositiva ('' = no afecta) */
+    impuesto: string
     concepto: string
     monto: string
     comentarios: string
@@ -297,6 +300,29 @@ export function DetailsDialog({
                 </select>
               </div>
             </div>
+
+            {formData.tipo === 'egreso' && (
+              <div className="space-y-1.5">
+                <Label htmlFor="impuesto" className={labelClasses}>
+                  Base impositiva
+                </Label>
+                <select
+                  id="impuesto"
+                  name="impuesto"
+                  value={formData.impuesto}
+                  onChange={onInputChange}
+                  disabled={!canEditInfo}
+                  className={`${selectClasses} ${!canEditInfo ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+                >
+                  <option value="">No afecta</option>
+                  {OPCIONES_IMPUESTO.map(o => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label htmlFor="descripcion_id" className={labelClasses}>

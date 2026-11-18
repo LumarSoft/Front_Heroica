@@ -278,6 +278,7 @@ export default function PagosPendientesPage() {
                 : selectedPago.fecha.substring(0, 10)
               : undefined,
             periodo: selectedPago.periodo,
+            impuesto: selectedPago.impuesto ?? '',
             prioridad: selectedPago.prioridad as 'baja' | 'media' | 'alta' | undefined,
             categoria_id: selectedPago.categoria_id != null ? String(selectedPago.categoria_id) : undefined,
             subcategoria_id: selectedPago.subcategoria_id != null ? String(selectedPago.subcategoria_id) : undefined,

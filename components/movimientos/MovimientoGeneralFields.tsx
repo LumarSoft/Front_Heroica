@@ -7,6 +7,7 @@ import type { NuevoMovimientoContext } from '@/lib/types'
 import { MovimientoSelect } from './MovimientoSelect'
 import { Combobox } from '@/components/ui/combobox'
 import { opcionesPeriodo } from '@/lib/periodo'
+import { impuestoSugerido, OPCIONES_IMPUESTO, esImpuesto } from '@/lib/impuestos'
 interface Props {
   context: NuevoMovimientoContext
 }
@@ -88,6 +89,8 @@ export function MovimientoGeneralFields({ context }: Props) {
               ...prev,
               descripcion_id: value,
               descripcion_nombre: '',
+              // Base impositiva: se precarga según la descripción (se puede cambiar abajo)
+              impuesto: prev.tipo === 'egreso' ? impuestoSugerido(selectedDesc?.nombre) : '',
               ...(selectedDesc?.categoria_id && { categoria_id: selectedDesc.categoria_id.toString() }),
               subcategoria_id: selectedDesc?.subcategoria_id ? selectedDesc.subcategoria_id.toString() : '',
             }))
@@ -97,6 +100,7 @@ export function MovimientoGeneralFields({ context }: Props) {
               ...prev,
               descripcion_id: '',
               descripcion_nombre: nombre,
+              impuesto: prev.tipo === 'egreso' ? impuestoSugerido(nombre) : '',
             }))
           }}
           pendingLabel={formData.descripcion_nombre || undefined}
@@ -136,6 +140,21 @@ export function MovimientoGeneralFields({ context }: Props) {
           />
         </div>
       </div>
+
+      {formData.tipo === 'egreso' && (
+        <div className="space-y-1.5">
+          <Label htmlFor="impuesto" className={labelClasses}>
+            Base impositiva
+          </Label>
+          <MovimientoSelect
+            id="impuesto"
+            value={formData.impuesto}
+            onValueChange={value => setFormData(prev => ({ ...prev, impuesto: esImpuesto(value) ? value : '' }))}
+            options={OPCIONES_IMPUESTO}
+            placeholder="No afecta"
+          />
+        </div>
+      )}
 
       <div className="space-y-1.5">
         <Label htmlFor="comentarios" className={labelClasses}>

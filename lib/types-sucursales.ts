@@ -1,3 +1,4 @@
+import type { Impuesto } from './impuestos'
 // =============================================
 // Tipos compartidos del módulo Sucursales
 // =============================================
@@ -24,6 +25,8 @@ export interface Transaction {
   fecha: string
   /** Período contable 'YYYY-MM'. La API devuelve el mes de la fecha si no se eligió otro */
   periodo?: string
+  /** Base impositiva: impuesto al que corresponde el egreso; null = no afecta */
+  impuesto?: Impuesto | null
   /** Posición manual dentro de su fecha (para inserción arriba/abajo). Fallback: id */
   orden?: number | null
   concepto: string
@@ -76,6 +79,8 @@ export interface PagoPendiente {
   fecha: string
   /** Período contable 'YYYY-MM' */
   periodo?: string
+  /** Base impositiva: impuesto al que corresponde el pago; null = no afecta */
+  impuesto?: Impuesto | null
   concepto: string
   monto: number
   comentarios?: string

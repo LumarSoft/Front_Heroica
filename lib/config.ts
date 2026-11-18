@@ -25,6 +25,16 @@ export const API_ENDPOINTS = {
     DISPOSITIVOS: `${API_URL}/api/auth/dispositivos`,
     DISPOSITIVO: (id: number) => `${API_URL}/api/auth/dispositivos/${id}`,
   },
+  BASE_IMPOSITIVA: {
+    GET: (f: { sucursalId: string; desde: string; hasta: string; impuesto: string; estado: string }) =>
+      `${API_URL}/api/base-impositiva?${new URLSearchParams({
+        sucursalId: f.sucursalId || 'todas',
+        desde: f.desde,
+        hasta: f.hasta,
+        impuesto: f.impuesto,
+        estado: f.estado,
+      }).toString()}`,
+  },
   SUCURSALES: {
     GET_ALL: `${API_URL}/api/sucursales`,
     GET_BY_ID: (id: number) => `${API_URL}/api/sucursales/${id}`,
