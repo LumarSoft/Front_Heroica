@@ -27,6 +27,8 @@ import type {
 interface TransactionFormData {
   fecha: string
   periodo: string
+  /** Base impositiva ('' = no afecta) */
+  impuesto: string
   concepto: string
   monto: string
   comentarios: string
@@ -45,6 +47,7 @@ interface TransactionFormData {
 const INITIAL_FORM: TransactionFormData = {
   fecha: '',
   periodo: '',
+  impuesto: '',
   concepto: '',
   monto: '',
   comentarios: '',
@@ -452,6 +455,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
     setFormData({
       fecha,
       periodo: transaction.periodo ?? periodoDeFecha(fecha),
+      impuesto: transaction.impuesto ?? '',
       concepto: transaction.concepto,
       monto: transaction.monto.toString(),
       comentarios: transaction.comentarios || '',
@@ -537,6 +541,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
           body: JSON.stringify({
             fecha: formData.fecha,
             periodo: formData.periodo || undefined,
+            impuesto: formData.tipo === 'egreso' ? formData.impuesto || null : null,
             concepto: formData.concepto,
             monto: parseFloat(formData.monto),
             comentarios: formData.comentarios,
@@ -670,6 +675,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
         [name]: value,
         categoria_id: '',
         subcategoria_id: '',
+        impuesto: value === 'egreso' ? prev.impuesto : '',
       }))
     } else if (name === 'medio_pago_id') {
       const medioSeleccionado = mediosPago.find(medio => String(medio.id) === value)

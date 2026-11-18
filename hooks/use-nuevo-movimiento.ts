@@ -43,6 +43,7 @@ export function useNuevoMovimiento(props: NuevoMovimientoDialogProps): NuevoMovi
         ? {
             fecha: fechaAprobacion,
             periodo: iv.periodo ?? periodoDeFecha(fechaAprobacion),
+            impuesto: iv.impuesto ?? '',
             concepto: iv.concepto ?? '',
             monto: iv.monto ?? '',
             comentarios: iv.comentarios ?? '',
@@ -74,6 +75,7 @@ export function useNuevoMovimiento(props: NuevoMovimientoDialogProps): NuevoMovi
         setFormData(prev => ({
           ...prev,
           tipo: value === 'egreso' ? 'egreso' : 'ingreso',
+          impuesto: '',
           descripcion_id: '',
           descripcion_nombre: '',
           categoria_id: '',

@@ -9,6 +9,7 @@ export function initialMovimientoForm(cajaTipo: 'efectivo' | 'banco', isPagoPend
   return {
     fecha,
     periodo: periodoDeFecha(fecha),
+    impuesto: '',
     concepto: '',
     monto: '',
     comentarios: '',
