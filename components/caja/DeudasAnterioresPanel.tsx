@@ -31,8 +31,8 @@ interface Props {
  */
 export function DeudasAnterioresPanel({ activo, sucursalId }: Props) {
   const hoy = new Date().toISOString().split('T')[0]
-  const haceTreintaDias = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
-  const [fechaInicio, setFechaInicio] = useState(haceTreintaDias)
+  // Sin "desde": son deudas pendientes y pueden ser viejas (el panel anterior mostraba solo 30 días)
+  const [fechaInicio, setFechaInicio] = useState('')
   const [fechaFin, setFechaFin] = useState(hoy)
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipoDeuda>('todos')
   const [filtroSucursal, setFiltroSucursal] = useState(FILTRO_SUCURSAL_TODAS)
@@ -86,7 +86,7 @@ export function DeudasAnterioresPanel({ activo, sucursalId }: Props) {
       const res = await apiFetch(url)
       if (!res.ok) throw new Error('Error en la respuesta del servidor')
       const blob = await res.blob()
-      downloadBlob(blob, `Otras deudas ${fechaInicio} a ${fechaFin}.xlsx`)
+      downloadBlob(blob, `Otras deudas ${fechaInicio ? `${fechaInicio} a ` : 'hasta '}${fechaFin}.xlsx`)
     } catch {
       toast.error('Error al exportar el Excel.')
     } finally {
