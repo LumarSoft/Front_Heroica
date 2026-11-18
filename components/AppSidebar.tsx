@@ -8,6 +8,7 @@ import {
   Building2,
   Users,
   Calculator,
+  BookUser,
   ClipboardList,
   Bell,
   Settings,
@@ -23,6 +24,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/store/authStore'
 import { useCalculatorStore } from '@/store/calculatorStore'
+import { useProveedoresPanelStore } from '@/store/proveedoresPanelStore'
 import { useSidebarStore } from '@/store/sidebarStore'
 import { apiFetch } from '@/lib/api'
 import { API_ENDPOINTS } from '@/lib/config'
@@ -212,6 +214,8 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
   // Solo se muestran los módulos a los que el usuario tiene acceso (superadmin: todos)
   const visibleModules = MODULES.filter(m => isSuperAdmin || (userModulos?.includes(m.modulo) ?? false))
   const { toggleCalculator, isOpen: isCalculatorOpen } = useCalculatorStore()
+  const { togglePanel: toggleProveedores, isOpen: isProveedoresOpen } = useProveedoresPanelStore()
+  const canBuscarProveedores = useAuthStore(state => state.canBuscarProveedores())
 
   // ── Collapse ─────────────────────────────────────────────────────────────────
   // `collapsed`       → ancho CSS (desde el store; otras vistas pueden colapsarla)
@@ -403,6 +407,17 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
               collapsed={isCollapsed}
               onClick={toggleCalculator}
             />
+            {canBuscarProveedores && (
+              <NavItem
+                icon={BookUser}
+                label="Proveedores"
+                shortcut={isCollapsed ? undefined : 'F2'}
+                tooltipLabel="Proveedores (F2)"
+                active={isProveedoresOpen}
+                collapsed={isCollapsed}
+                onClick={toggleProveedores}
+              />
+            )}
             <NavItem
               icon={ClipboardList}
               label="Tareas"
