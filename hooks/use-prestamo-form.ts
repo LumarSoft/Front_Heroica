@@ -34,11 +34,12 @@ const pedirInicial = (): PedirPrestamoForm => ({
   banco_entrada_id: '',
 })
 
-const devolverInicial = (): DevolverPrestamoForm => ({
+const devolverInicial = (cajaTipo: CajaPrestamo): DevolverPrestamoForm => ({
   prestamo_id: '',
   total: true,
   monto: '',
   fecha: fechaHoyMovimiento(),
+  caja_salida: cajaTipo,
   banco_salida_id: '',
   caja_entrada: 'banco',
   banco_entrada_id: '',
@@ -48,12 +49,12 @@ const aNumero = (valor: string) => (valor ? Number(valor) : null)
 
 /**
  * Estado y envío del préstamo entre sucursales de Nuevo Movimiento.
- * "Pedir": la plata entra en la caja actual. "Devolver": sale de la caja actual.
+ * "Pedir": la plata entra en la caja actual. "Devolver": sale de la caja actual o de la que se elija.
  */
 export function usePrestamoForm({ activo, sucursalId, cajaTipo, moneda, onDone }: Opciones) {
   const [modo, setModo] = useState<ModoPrestamo>('pedir')
   const [pedir, setPedir] = useState(pedirInicial)
-  const [devolver, setDevolver] = useState(devolverInicial)
+  const [devolver, setDevolver] = useState(() => devolverInicial(cajaTipo))
   const [sucursales, setSucursales] = useState<SucursalPrestamo[]>([])
   const [pendientes, setPendientes] = useState<Prestamo[]>([])
   const [isSaving, setIsSaving] = useState(false)
@@ -63,9 +64,9 @@ export function usePrestamoForm({ activo, sucursalId, cajaTipo, moneda, onDone }
     if (activo) return
     setModo('pedir')
     setPedir(pedirInicial())
-    setDevolver(devolverInicial())
+    setDevolver(devolverInicial(cajaTipo))
     setError('')
-  }, [activo])
+  }, [activo, cajaTipo])
 
   useEffect(() => {
     if (!activo) return
@@ -117,7 +118,7 @@ export function usePrestamoForm({ activo, sucursalId, cajaTipo, moneda, onDone }
     const monto = devolver.total ? disponible : parseFloat(devolver.monto)
     if (!(monto > 0)) return 'El monto debe ser mayor a cero.'
     if (monto > disponible) return 'El monto supera lo que queda por devolver.'
-    if (cajaTipo === 'banco' && !devolver.banco_salida_id) return 'Elegí de qué banco sale la plata.'
+    if (devolver.caja_salida === 'banco' && !devolver.banco_salida_id) return 'Elegí de qué banco sale la plata.'
     if (devolver.caja_entrada === 'banco' && !devolver.banco_entrada_id) return 'Elegí a qué banco entra la plata.'
     return null
   }
@@ -150,8 +151,8 @@ export function usePrestamoForm({ activo, sucursalId, cajaTipo, moneda, onDone }
             {
               monto: devolver.total ? disponible : parseFloat(devolver.monto),
               fecha: devolver.fecha,
-              caja_salida: cajaTipo,
-              banco_salida_id: cajaTipo === 'banco' ? aNumero(devolver.banco_salida_id) : null,
+              caja_salida: devolver.caja_salida,
+              banco_salida_id: devolver.caja_salida === 'banco' ? aNumero(devolver.banco_salida_id) : null,
               caja_entrada: devolver.caja_entrada,
               banco_entrada_id: devolver.caja_entrada === 'banco' ? aNumero(devolver.banco_entrada_id) : null,
             },

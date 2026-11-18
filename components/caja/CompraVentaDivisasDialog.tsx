@@ -74,7 +74,7 @@ export function CompraVentaDivisasDialog({ isOpen, onClose, sucursalId, onSucces
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     if (name === 'cantidad_usd' || name === 'cotizacion') {
-      setFormData(prev => ({ ...prev, [name]: parseInputMonto(value) }))
+      setFormData(prev => ({ ...prev, [name]: parseInputMonto(value, prev[name]) }))
     } else {
       setFormData(prev => ({ ...prev, [name]: value }))
     }

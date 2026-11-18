@@ -61,7 +61,7 @@ export function useNuevoMovimiento(props: NuevoMovimientoDialogProps): NuevoMovi
     (e: MovimientoInputEvent) => {
       const { name, value } = e.target
       if (name === 'monto' || name === 'tipo_cambio') {
-        setFormData(prev => ({ ...prev, [name]: parseInputMonto(value) }))
+        setFormData(prev => ({ ...prev, [name]: parseInputMonto(value, prev[name]) }))
         return
       }
       if (name === 'fecha') {

@@ -659,7 +659,7 @@ export function useCajaData(tipo: 'efectivo' | 'banco', moneda: 'ARS' | 'USD' = 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     if (name === 'monto' || name === 'tipo_cambio') {
-      setFormData(prev => ({ ...prev, [name]: parseInputMonto(value) }))
+      setFormData(prev => ({ ...prev, [name]: parseInputMonto(value, name === 'monto' ? prev.monto : undefined) }))
       return
     }
     if (name === 'fecha') {

@@ -87,6 +87,8 @@ export interface DevolverPrestamoForm {
   total: boolean
   monto: string
   fecha: string
+  /** Por defecto la caja desde la que se abre el formulario */
+  caja_salida: CajaPrestamo
   banco_salida_id: string
   caja_entrada: CajaPrestamo
   banco_entrada_id: string
