@@ -111,6 +111,14 @@ export const API_ENDPOINTS = {
     REVERTIR: (id: number) => `${API_URL}/api/importacion-bancaria/${id}/revertir`,
   },
 
+  ABONO: {
+    FACTURAS: `${API_URL}/api/abono/facturas`,
+    ESTADO: `${API_URL}/api/abono/facturas/estado`,
+    ABRIR: (id: number) => `${API_URL}/api/abono/facturas/${id}/abrir`,
+    DELETE: (id: number) => `${API_URL}/api/abono/facturas/${id}`,
+    HISTORIAL: `${API_URL}/api/abono/historial`,
+  },
+
   PRESTAMOS: {
     SUCURSALES: `${API_URL}/api/prestamos/sucursales`,
     CREATE: `${API_URL}/api/prestamos`,

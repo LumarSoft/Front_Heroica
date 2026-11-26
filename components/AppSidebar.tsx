@@ -20,6 +20,7 @@ import {
   X,
   Menu,
   PanelLeftClose,
+  ReceiptText,
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAuthStore } from '@/store/authStore'
@@ -433,6 +434,17 @@ export default function AppSidebar({ user, onLogout, mobileOpen, onMobileClose }
                 label="Configuración"
                 href="/configuracion"
                 active={isActive('/configuracion')}
+                collapsed={isCollapsed}
+                onClick={onMobileClose}
+              />
+            )}
+
+            {isSuperAdmin && (
+              <NavItem
+                icon={ReceiptText}
+                label="Abono del sistema"
+                href="/abono-sistema"
+                active={isActive('/abono-sistema')}
                 collapsed={isCollapsed}
                 onClick={onMobileClose}
               />
