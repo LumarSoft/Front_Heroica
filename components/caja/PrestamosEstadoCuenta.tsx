@@ -2,10 +2,11 @@
 import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { API_ENDPOINTS } from '@/lib/config'
 import { formatFecha, formatMonto } from '@/lib/formatters'
-import type { Prestamo } from '@/lib/types'
+import type { EstadoPrestamo, Prestamo } from '@/lib/types'
 import type { PrestamosCajaState } from '@/hooks/use-prestamos-caja'
 import { PrestamoEstadoBadge, estadoVista } from './PrestamoEstadoBadge'
 
@@ -22,13 +23,21 @@ interface Grupo {
   contraparte: string
   aCobrar: number
   aPagar: number
+  /** Los que se muestran según el filtro; los totales igual se calculan sobre todos */
   items: Prestamo[]
 }
+
+/** Préstamos ya cerrados: pagados, rechazados o anulados. Se ocultan por defecto para que no se acumulen. */
+const ESTADOS_SALDADOS: EstadoPrestamo[] = ['cancelado', 'rechazado', 'anulado']
+const esSaldado = (p: Prestamo) => ESTADOS_SALDADOS.includes(p.estado)
 
 /** Préstamos de la sucursal agrupados por la otra sucursal: lo que le deben, lo que debe y el neto */
 export function PrestamosEstadoCuenta({ prestamos, sucursalId, moneda, userId, puedeAnular, onCambio }: Props) {
   const { estadoCuenta, isLoadingCuenta, accion, enCurso } = prestamos
   const [expandido, setExpandido] = useState<number | null>(null)
+  const [mostrarSaldados, setMostrarSaldados] = useState(false)
+
+  const cantidadSaldados = useMemo(() => estadoCuenta.filter(esSaldado).length, [estadoCuenta])
 
   const grupos = useMemo(() => {
     const mapa = new Map<string, Grupo>()
@@ -38,11 +47,13 @@ export function PrestamosEstadoCuenta({ prestamos, sucursalId, moneda, userId, p
       const g = mapa.get(contraparte) ?? { contraparte, aCobrar: 0, aPagar: 0, items: [] }
       if (presto) g.aCobrar += p.pendiente
       else g.aPagar += p.pendiente
-      g.items.push(p)
+      if (mostrarSaldados || !esSaldado(p)) g.items.push(p)
       mapa.set(contraparte, g)
     }
-    return [...mapa.values()].sort((a, b) => b.aCobrar + b.aPagar - (a.aCobrar + a.aPagar))
-  }, [estadoCuenta, sucursalId])
+    return [...mapa.values()]
+      .filter(g => g.items.length > 0)
+      .sort((a, b) => b.aCobrar + b.aPagar - (a.aCobrar + a.aPagar))
+  }, [estadoCuenta, sucursalId, mostrarSaldados])
 
   const ejecutar = async (clave: string, url: string) => {
     if (await accion(clave, url)) onCambio()
@@ -55,7 +66,7 @@ export function PrestamosEstadoCuenta({ prestamos, sucursalId, moneda, userId, p
       </div>
     )
   }
-  if (grupos.length === 0) {
+  if (estadoCuenta.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-[#E0E0E0] bg-[#FAFBFC] p-6 text-center text-sm text-[#5A6070]">
         Esta sucursal no tiene préstamos en {moneda}.
@@ -65,6 +76,17 @@ export function PrestamosEstadoCuenta({ prestamos, sucursalId, moneda, userId, p
 
   return (
     <div className="space-y-4">
+      {cantidadSaldados > 0 && (
+        <label className="flex w-fit items-center gap-2 text-sm text-[#5A6070] cursor-pointer select-none">
+          <Checkbox checked={mostrarSaldados} onCheckedChange={v => setMostrarSaldados(v === true)} />
+          Mostrar saldados ({cantidadSaldados})
+        </label>
+      )}
+      {grupos.length === 0 && (
+        <p className="rounded-xl border border-dashed border-[#E0E0E0] bg-[#FAFBFC] p-6 text-center text-sm text-[#5A6070]">
+          No hay préstamos pendientes en {moneda}.
+        </p>
+      )}
       {grupos.map(g => (
         <div key={g.contraparte} className="rounded-xl border border-[#E0E0E0] bg-white">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F0F0F0] px-4 py-3">
